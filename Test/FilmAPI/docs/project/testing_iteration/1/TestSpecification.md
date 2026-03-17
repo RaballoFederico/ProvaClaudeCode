@@ -45,7 +45,6 @@ Questo progetto prevede **due tipologie di test** complementari:
 ### 2.1 Regole per Unit Tests
 
 I test unitari devono:
-- Usare **Moq** per simulare le dipendenze
 - Usare **EF Core InMemory** o **SQLite** per il database di test
 - Testare **solo la logica del service**, non gli endpoint HTTP
 - Essere **veloci** (< 100ms per test)
@@ -113,7 +112,7 @@ I test unitari devono:
 I test di integrazione devono:
 - Usare **WebApplicationFactory** per creare l'app in-memory
 - Usare **HttpClient** per chiamare gli endpoint
-- Usare **SQLite in-memory** per il database di test
+- Usare **in-memory** per il database di test
 - Testare il **flusso completo** HTTP → Service → Database
 - Verificare **codici HTTP** e **serializzazione JSON**
 
