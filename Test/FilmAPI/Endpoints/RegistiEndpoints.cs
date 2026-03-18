@@ -32,6 +32,9 @@ public static class RegistiEndpoints
 
         group.MapPost("/", async (RegistaCreateDTO dto, FilmDbContext db) =>
         {
+            if (string.IsNullOrWhiteSpace(dto.Nome) || string.IsNullOrWhiteSpace(dto.Cognome))
+                return Results.BadRequest("Nome and Cognome are required");
+
             var regista = new Regista
             {
                 Nome = dto.Nome,
@@ -53,6 +56,9 @@ public static class RegistiEndpoints
         {
             var regista = await db.Registi.FindAsync(id);
             if (regista is null) return Results.NotFound();
+
+            if (string.IsNullOrWhiteSpace(dto.Nome) || string.IsNullOrWhiteSpace(dto.Cognome))
+                return Results.BadRequest("Nome and Cognome are required");
 
             regista.Nome = dto.Nome;
             regista.Cognome = dto.Cognome;
