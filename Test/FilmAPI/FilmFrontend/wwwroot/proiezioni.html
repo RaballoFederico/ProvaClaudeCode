@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proyecciones | The Cinematic Director's Suite</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#e50914",
+                        "secondary": "#e9c176",
+                        "background": "#131313",
+                        "surface": "#131313",
+                        "surface-container": "#201f1f",
+                        "surface-container-low": "#1c1b1b",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-container-highest": "#353534",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-surface": "#e5e2e1",
+                        "on-surface-variant": "#e9bcb6",
+                        "outline-variant": "#5e3f3b",
+                        "tertiary-container": "#0076c5",
+                        "tertiary": "#9ecaff",
+                        "error-container": "#93000a",
+                        "error": "#ffb4ab",
+                        "secondary-container": "#604403",
+                        "on-secondary-container": "#dab36a",
+                        "on-primary-container": "#fff7f6",
+                        "on-tertiary-container": "#f8f9ff",
+                        "inverse-primary": "#c0000c"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                    }
+                },
+            },
+        }
+    </script>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-background text-on-background font-body min-h-screen flex flex-col">
+    <div id="navbar-container"></div>
+    
+    <div class="flex flex-1">
+        <div id="sidebar-container"></div>
+        
+        <main class="flex-1 p-4 md:p-8 lg:p-12 overflow-x-hidden">
+            <section class="space-y-2 mb-8 md:mb-12">
+                <h2 class="text-3xl md:text-5xl font-extralight font-headline tracking-tight text-white">Operations Control</h2>
+                <p class="text-secondary tracking-widest uppercase text-xs font-label opacity-80">Infrastructure & Scheduling Intelligence</p>
+            </section>
+
+            <section class="space-y-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                    <div class="space-y-1">
+                        <h3 class="text-xl md:text-2xl font-headline text-white">Active Projections</h3>
+                        <p class="text-on-surface-variant text-sm font-body">Timeline of scheduled cinematic engagements across the network.</p>
+                    </div>
+                    <button onclick="openCreateModal()" class="bg-primary-container text-on-primary-container px-4 md:px-6 py-2 md:py-3 rounded-xl font-headline font-bold text-sm flex items-center gap-2 hover:scale-95 transition-all duration-150 shadow-lg shadow-primary-container/20">
+                        <span class="material-symbols-outlined">schedule_send</span>
+                        Schedule Projection
+                    </button>
+                </div>
+
+                <div id="projections-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                </div>
+                <div id="empty-state" class="hidden bg-surface-container-low rounded-xl p-12 text-center">
+                    <span class="material-symbols-outlined text-5xl text-on-surface-variant opacity-50">event_busy</span>
+                    <p class="mt-4 text-on-surface-variant text-lg">No projections scheduled</p>
+                    <p class="text-on-surface-variant/60 text-sm mt-1">Create your first projection to get started.</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <div id="modal-container"></div>
+
+    <script src="/js/template-loader.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        let currentProiezioni = [];
+        let allFilms = [];
+        let allCinemas = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllComponents();
+            await loadData();
+
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('action') === 'create') {
+                openCreateModal();
+            }
+        });
+
+        async function loadData() {
+            try {
+                Utils.showLoading();
+                [currentProiezioni, allFilms, allCinemas] = await Promise.all([
+                    ApiClient.get('/proiezioni'),
+                    ApiClient.get('/films'),
+                    ApiClient.get('/cinemas')
+                ]);
+                renderProjections();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                Utils.showNotification('Errore nel caricamento dei dati', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        function getStatusBadge(proiezione) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const projDate = new Date(proiezione.data);
+            projDate.setHours(0, 0, 0, 0);
+
+            if (projDate.getTime() === today.getTime()) {
+                return { text: 'Now Showing', class: 'bg-primary-container/10 text-primary-container' };
+            } else if (projDate < today) {
+                return { text: 'Ended', class: 'bg-surface-variant/20 text-on-surface-variant' };
+            } else {
+                return { text: 'Scheduled', class: 'bg-secondary-container/20 text-secondary' };
+            }
+        }
+
+        function renderProjections() {
+            const grid = document.getElementById('projections-grid');
+            const emptyState = document.getElementById('empty-state');
+
+            if (currentProiezioni.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            
+            grid.innerHTML = currentProiezioni.map(proiezione => {
+                const film = allFilms.find(f => f.id === proiezione.filmId);
+                const cinema = allCinemas.find(c => c.id === proiezione.cinemaId);
+                const status = getStatusBadge(proiezione);
+
+                return `
+                    <div class="group relative bg-surface-container-low rounded-xl overflow-hidden p-4 md:p-6 border border-outline-variant/10 hover:border-primary-container/40 transition-all duration-500">
+                        <div class="flex justify-between items-start mb-4 md:mb-6">
+                            <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded ${status.class}">${status.text}</span>
+                            <span class="text-xs font-mono text-on-surface-variant opacity-50">PRJ-${String(proiezione.id).padStart(4, '0')}</span>
+                        </div>
+                        <div class="space-y-3 md:space-y-4">
+                            <div>
+                                <p class="text-[10px] md:text-xs text-on-surface-variant uppercase tracking-tighter mb-1">Film Selection</p>
+                                <h4 class="text-lg md:text-xl font-headline font-bold text-white group-hover:text-primary transition-colors truncate">${film?.titolo || 'Unknown'}</h4>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3 md:gap-4">
+                                <div>
+                                    <p class="text-[10px] text-on-surface-variant uppercase tracking-widest opacity-60">Cinema Venue</p>
+                                    <p class="text-sm text-secondary font-medium truncate">${cinema?.nome || 'Unknown'}</p>
+                                </div>
+                                <div>
+                                    <p class="text-[10px] text-on-surface-variant uppercase tracking-widest opacity-60">Theater Slot</p>
+                                    <p class="text-sm text-white truncate">${cinema?.citta || '-'}</p>
+                                </div>
+                            </div>
+                            <div class="pt-3 md:pt-4 border-t border-outline-variant/10 flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary-container text-base md:text-lg">calendar_today</span>
+                                    <span class="text-sm font-body">${Utils.formatDateShort(proiezione.data)}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary-container text-base md:text-lg">schedule</span>
+                                    <span class="text-sm font-body">${Utils.formatTime(proiezione.ora)}</span>
+                                </div>
+                            </div>
+                            <div class="flex justify-end gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onclick="openEditModal(${proiezione.id})" class="p-2 hover:bg-surface-container-highest rounded-lg transition-colors">
+                                    <span class="material-symbols-outlined text-secondary">edit</span>
+                                </button>
+                                <button onclick="deleteProiezione(${proiezione.id})" class="p-2 hover:bg-error-container/20 rounded-lg transition-colors">
+                                    <span class="material-symbols-outlined text-error">delete</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openCreateModal() {
+            showModal('Schedule Projection', `
+                <form id="proiezione-form" onsubmit="handleSubmit(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Film *</label>
+                            <select name="filmId" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary appearance-none">
+                                <option value="">Select a film</option>
+                                ${allFilms.map(f => `<option value="${f.id}">${escapeHtml(f.titolo)}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Cinema *</label>
+                            <select name="cinemaId" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary appearance-none">
+                                <option value="">Select a cinema</option>
+                                ${allCinemas.map(c => `<option value="${c.id}">${escapeHtml(c.nome)} - ${escapeHtml(c.citta)}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Data *</label>
+                                <input type="date" name="data" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                            </div>
+                            <div>
+                                <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Ora *</label>
+                                <input type="time" name="ora" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Cancel</button>
+                        <button type="submit" class="bg-primary-container text-on-primary-container px-6 py-2 rounded-lg font-bold hover:opacity-90 transition-opacity">Schedule</button>
+                    </div>
+                </form>
+            `);
+        }
+
+        function openEditModal(id) {
+            const proiezione = currentProiezioni.find(p => p.id === id);
+            if (!proiezione) return;
+
+            const data = proiezione.data ? proiezione.data.split('T')[0] : '';
+
+            showModal('Edit Projection', `
+                <form id="proiezione-form" onsubmit="handleSubmit(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Film *</label>
+                            <select name="filmId" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary appearance-none">
+                                ${allFilms.map(f => `<option value="${f.id}" ${f.id === proiezione.filmId ? 'selected' : ''}>${escapeHtml(f.titolo)}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Cinema *</label>
+                            <select name="cinemaId" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary appearance-none">
+                                ${allCinemas.map(c => `<option value="${c.id}" ${c.id === proiezione.cinemaId ? 'selected' : ''}>${escapeHtml(c.nome)} - ${escapeHtml(c.citta)}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Data *</label>
+                                <input type="date" name="data" value="${data}" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                            </div>
+                            <div>
+                                <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Ora *</label>
+                                <input type="time" name="ora" value="${Utils.formatTime(proiezione.ora)}" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="id" value="${id}">
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Cancel</button>
+                        <button type="submit" class="bg-primary-container text-on-primary-container px-6 py-2 rounded-lg font-bold hover:opacity-90 transition-opacity">Save</button>
+                    </div>
+                </form>
+            `);
+        }
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const id = form.id?.value;
+            const data = {
+                filmId: parseInt(form.filmId.value),
+                cinemaId: parseInt(form.cinemaId.value),
+                data: form.data.value,
+                ora: form.ora.value
+            };
+
+            try {
+                Utils.showLoading();
+                if (id) {
+                    await ApiClient.put(`/proiezioni/${id}`, data);
+                    Utils.showNotification('Projection updated successfully', 'success');
+                } else {
+                    await ApiClient.post('/proiezioni', data);
+                    Utils.showNotification('Projection scheduled successfully', 'success');
+                }
+                closeModal();
+                await loadData();
+            } catch (error) {
+                if (error.message && error.message.includes('409')) {
+                    Utils.showNotification('A projection with the same film, cinema, date and time already exists.', 'error');
+                } else {
+                    Utils.showNotification(error.message || 'Error saving projection', 'error');
+                }
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        async function deleteProiezione(id) {
+            if (!Utils.confirmDialog('Are you sure you want to delete this projection?')) return;
+
+            try {
+                Utils.showLoading();
+                await ApiClient.delete(`/proiezioni/${id}`);
+                Utils.showNotification('Projection deleted successfully', 'success');
+                await loadData();
+            } catch (error) {
+                Utils.showNotification(error.message || 'Error deleting projection', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        function showModal(title, content) {
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+                <div class="modal-backdrop" onclick="if(event.target === this) closeModal()">
+                    <div class="modal-content">
+                        <h3 class="font-headline text-xl font-bold mb-6">${title}</h3>
+                        ${content}
+                    </div>
+                </div>
+            `;
+        }
+
+        function closeModal() {
+            document.getElementById('modal-container').innerHTML = '';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

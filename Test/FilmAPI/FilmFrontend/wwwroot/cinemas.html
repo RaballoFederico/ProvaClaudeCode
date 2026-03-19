@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cines | The Cinematic Director's Suite</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#e50914",
+                        "secondary": "#e9c176",
+                        "background": "#131313",
+                        "surface": "#131313",
+                        "surface-container": "#201f1f",
+                        "surface-container-low": "#1c1b1b",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-container-highest": "#353534",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-surface": "#e5e2e1",
+                        "on-surface-variant": "#e9bcb6",
+                        "outline-variant": "#5e3f3b",
+                        "tertiary-container": "#0076c5",
+                        "tertiary": "#9ecaff",
+                        "error-container": "#93000a",
+                        "error": "#ffb4ab",
+                        "on-primary-container": "#fff7f6",
+                        "on-tertiary-container": "#f8f9ff",
+                        "inverse-primary": "#c0000c"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                    }
+                },
+            },
+        }
+    </script>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-background text-on-background font-body min-h-screen flex flex-col">
+    <div id="navbar-container"></div>
+    
+    <div class="flex flex-1">
+        <div id="sidebar-container"></div>
+        
+        <main class="flex-1 p-4 md:p-8 lg:p-12 overflow-x-hidden">
+            <section class="space-y-2 mb-8 md:mb-12">
+                <h2 class="text-3xl md:text-5xl font-extralight font-headline tracking-tight text-white">Operations Control</h2>
+                <p class="text-secondary tracking-widest uppercase text-xs font-label opacity-80">Infrastructure & Scheduling Intelligence</p>
+            </section>
+
+            <section class="space-y-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                    <div class="space-y-1">
+                        <h3 class="text-xl md:text-2xl font-headline text-white">Cinemas Inventory</h3>
+                        <p class="text-on-surface-variant text-sm font-body">Global theatre network management and location mapping.</p>
+                    </div>
+                    <button onclick="openCreateModal()" class="bg-primary-container text-on-primary-container px-4 md:px-6 py-2 md:py-3 rounded-xl font-headline font-bold text-sm flex items-center gap-2 hover:scale-95 transition-all duration-150 shadow-lg shadow-primary-container/20">
+                        <span class="material-symbols-outlined">add_location</span>
+                        Add New Cinema
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 gap-1">
+                    <div class="grid grid-cols-12 px-4 md:px-8 py-3 md:py-4 bg-surface-container-lowest text-secondary uppercase text-[10px] tracking-widest font-label font-bold rounded-t-xl">
+                        <div class="col-span-2 md:col-span-1">ID</div>
+                        <div class="col-span-5 md:col-span-4">Nome</div>
+                        <div class="col-span-3 md:col-span-4">Indirizzo</div>
+                        <div class="col-span-2 md:col-span-2">Città</div>
+                        <div class="col-span-0 md:col-span-1 text-right hidden md:block">Actions</div>
+                    </div>
+                    <div id="cinemas-list"></div>
+                    <div id="empty-state" class="hidden bg-surface-container-low rounded-b-xl p-8 text-center">
+                        <span class="material-symbols-outlined text-4xl text-on-surface-variant opacity-50">theaters</span>
+                        <p class="mt-2 text-on-surface-variant">No cinemas found. Add your first cinema!</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <div id="modal-container"></div>
+
+    <script src="/js/template-loader.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        let currentCinemas = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllComponents();
+            await loadCinemas();
+        });
+
+        async function loadCinemas() {
+            try {
+                Utils.showLoading();
+                currentCinemas = await ApiClient.get('/cinemas');
+                renderCinemas();
+            } catch (error) {
+                console.error('Error loading cinemas:', error);
+                Utils.showNotification('Errore nel caricamento dei cinema', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        function renderCinemas() {
+            const list = document.getElementById('cinemas-list');
+            const emptyState = document.getElementById('empty-state');
+
+            if (currentCinemas.length === 0) {
+                list.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            
+            list.innerHTML = currentCinemas.map((cinema, index) => `
+                <div class="grid grid-cols-12 px-4 md:px-8 py-4 md:py-6 bg-surface-container-low md:bg-surface-container items-center hover:bg-surface-container-high transition-colors duration-300 group ${index === currentCinemas.length - 1 ? 'rounded-b-xl' : ''}">
+                    <div class="col-span-2 md:col-span-1 font-mono text-on-surface-variant text-sm">#C-${String(cinema.id).padStart(3, '0')}</div>
+                    <div class="col-span-5 md:col-span-4 font-headline text-base md:text-lg text-white">${escapeHtml(cinema.nome)}</div>
+                    <div class="col-span-3 md:col-span-4 font-body text-sm text-on-surface-variant">${escapeHtml(cinema.indirizzo)}</div>
+                    <div class="col-span-5 md:col-span-2 font-body text-sm text-on-surface-variant">${escapeHtml(cinema.citta)}</div>
+                    <div class="col-span-2 md:col-span-1 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onclick="openEditModal(${cinema.id})" class="p-2 hover:bg-surface-container-highest rounded-lg transition-colors">
+                            <span class="material-symbols-outlined text-secondary cursor-pointer">edit_square</span>
+                        </button>
+                        <button onclick="deleteCinema(${cinema.id})" class="p-2 hover:bg-error-container/20 rounded-lg transition-colors">
+                            <span class="material-symbols-outlined text-error cursor-pointer">delete</span>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openCreateModal() {
+            showModal('Add New Cinema', `
+                <form id="cinema-form" onsubmit="handleSubmit(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Nome *</label>
+                            <input type="text" name="nome" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Indirizzo *</label>
+                            <input type="text" name="indirizzo" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Città *</label>
+                            <input type="text" name="citta" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Cancel</button>
+                        <button type="submit" class="bg-primary-container text-on-primary-container px-6 py-2 rounded-lg font-bold hover:opacity-90 transition-opacity">Create</button>
+                    </div>
+                </form>
+            `);
+        }
+
+        function openEditModal(id) {
+            const cinema = currentCinemas.find(c => c.id === id);
+            if (!cinema) return;
+
+            showModal('Edit Cinema', `
+                <form id="cinema-form" onsubmit="handleSubmit(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Nome *</label>
+                            <input type="text" name="nome" value="${escapeHtml(cinema.nome)}" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Indirizzo *</label>
+                            <input type="text" name="indirizzo" value="${escapeHtml(cinema.indirizzo)}" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Città *</label>
+                            <input type="text" name="citta" value="${escapeHtml(cinema.citta)}" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                    </div>
+                    <input type="hidden" name="id" value="${id}">
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Cancel</button>
+                        <button type="submit" class="bg-primary-container text-on-primary-container px-6 py-2 rounded-lg font-bold hover:opacity-90 transition-opacity">Save</button>
+                    </div>
+                </form>
+            `);
+        }
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const id = form.id?.value;
+            const data = {
+                nome: form.nome.value,
+                indirizzo: form.indirizzo.value,
+                citta: form.citta.value
+            };
+
+            try {
+                Utils.showLoading();
+                if (id) {
+                    await ApiClient.put(`/cinemas/${id}`, data);
+                    Utils.showNotification('Cinema updated successfully', 'success');
+                } else {
+                    await ApiClient.post('/cinemas', data);
+                    Utils.showNotification('Cinema created successfully', 'success');
+                }
+                closeModal();
+                await loadCinemas();
+            } catch (error) {
+                Utils.showNotification(error.message || 'Error saving cinema', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        async function deleteCinema(id) {
+            if (!Utils.confirmDialog('Are you sure you want to delete this cinema? This may affect associated projections.')) return;
+
+            try {
+                Utils.showLoading();
+                await ApiClient.delete(`/cinemas/${id}`);
+                Utils.showNotification('Cinema deleted successfully', 'success');
+                await loadCinemas();
+            } catch (error) {
+                Utils.showNotification(error.message || 'Error deleting cinema. It may have associated projections.', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        function showModal(title, content) {
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+                <div class="modal-backdrop" onclick="if(event.target === this) closeModal()">
+                    <div class="modal-content">
+                        <h3 class="font-headline text-xl font-bold mb-6">${title}</h3>
+                        ${content}
+                    </div>
+                </div>
+            `;
+        }
+
+        function closeModal() {
+            document.getElementById('modal-container').innerHTML = '';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

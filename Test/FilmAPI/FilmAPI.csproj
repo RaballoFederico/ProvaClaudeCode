@@ -6,11 +6,17 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-<ItemGroup>
-  <Compile Remove="tests\**\*.cs" />
-  <Content Remove="tests\**\*" />
-  <None Remove="tests\**\*" />
-</ItemGroup>
+  <ItemGroup>
+    <Compile Remove="FilmFrontend\**" />
+    <Content Remove="FilmFrontend\**" />
+    <None Remove="FilmFrontend\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="tests\**\*.cs" />
+    <Content Remove="tests\**\*" />
+    <None Remove="tests\**\*" />
+  </ItemGroup>
 
 <ItemGroup>
   <PackageReference Include="DotNetEnv" Version="3.1.1" />

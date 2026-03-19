@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Directors | The Cinematic Director's Suite</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#e50914",
+                        "secondary": "#e9c176",
+                        "background": "#131313",
+                        "surface": "#131313",
+                        "surface-container": "#201f1f",
+                        "surface-container-low": "#1c1b1b",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-container-highest": "#353534",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-surface": "#e5e2e1",
+                        "on-surface-variant": "#e9bcb6",
+                        "outline-variant": "#5e3f3b",
+                        "tertiary-container": "#0076c5",
+                        "tertiary": "#9ecaff",
+                        "error-container": "#93000a",
+                        "error": "#ffb4ab",
+                        "on-primary-container": "#fff7f6",
+                        "on-tertiary-container": "#f8f9ff",
+                        "inverse-primary": "#c0000c"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                    }
+                },
+            },
+        }
+    </script>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-background text-on-background font-body min-h-screen flex flex-col">
+    <div id="navbar-container"></div>
+    
+    <div class="flex flex-1">
+        <div id="sidebar-container"></div>
+        
+        <main class="flex-1 p-4 md:p-8 lg:p-12 max-w-7xl mx-auto w-full">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-12 gap-4 md:gap-6">
+                <div class="max-w-2xl">
+                    <span class="text-secondary uppercase tracking-[0.3em] text-[10px] font-bold mb-2 block">Management Portal</span>
+                    <h2 class="font-headline text-3xl md:text-5xl lg:text-6xl font-extralight tracking-tight text-on-surface">Director <span class="text-primary-container font-black italic">Registry</span></h2>
+                    <p class="mt-2 md:mt-4 text-on-surface-variant font-body leading-relaxed opacity-80 text-sm md:text-base">Manage the elite roster of cinematic visionaries. From industry veterans to rising auteurs, oversee their portfolio and collaborative history within the database.</p>
+                </div>
+                <button onclick="openCreateModal()" class="flex items-center gap-3 bg-gradient-to-br from-primary-container to-inverse-primary text-on-primary-container px-6 md:px-8 py-3 md:py-4 rounded-xl font-headline font-bold uppercase tracking-wider text-xs md:text-sm hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-xl shadow-primary-container/20">
+                    <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+                    Add New Director
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
+                <div class="lg:col-span-3 space-y-4 md:space-y-6">
+                    <div class="bg-surface-container-high p-4 md:p-6 rounded-xl border border-outline-variant/5">
+                        <p class="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Total Auteurs</p>
+                        <h3 id="total-registi" class="text-3xl md:text-4xl font-headline font-light text-secondary">0</h3>
+                    </div>
+                    <div class="bg-surface-container-high p-4 md:p-6 rounded-xl border border-outline-variant/5">
+                        <p class="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Global Diversity</p>
+                        <h3 id="nations-count" class="text-3xl md:text-4xl font-headline font-light text-on-surface">0 <span class="text-lg text-on-surface-variant font-body tracking-normal">Nations</span></h3>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-9 bg-surface-container-low rounded-xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-surface-container-lowest">
+                                    <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">ID Ref</th>
+                                    <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">Nome</th>
+                                    <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">Cognome</th>
+                                    <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">Nazionalità</th>
+                                    <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="registi-table-body" class="divide-y divide-outline-variant/10">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="empty-state" class="hidden p-8 text-center">
+                        <span class="material-symbols-outlined text-4xl text-on-surface-variant opacity-50">person_off</span>
+                        <p class="mt-2 text-on-surface-variant">No directors found. Add your first director!</p>
+                    </div>
+                    <div class="flex items-center justify-between px-4 md:px-8 py-3 md:py-4 bg-surface-container-lowest/50">
+                        <span id="pagination-info" class="text-[10px] font-headline text-on-surface-variant/60 uppercase tracking-widest">Showing 0 entries</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <div id="modal-container"></div>
+
+    <script src="/js/template-loader.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        let currentRegisti = [];
+        let editingId = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllComponents();
+            await loadRegisti();
+
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('action') === 'create') {
+                openCreateModal();
+            }
+        });
+
+        async function loadRegisti() {
+            try {
+                Utils.showLoading();
+                currentRegisti = await ApiClient.get('/registi');
+                renderRegisti();
+                updateStats();
+            } catch (error) {
+                console.error('Error loading registi:', error);
+                Utils.showNotification('Errore nel caricamento dei registi', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        function renderRegisti() {
+            const tbody = document.getElementById('registi-table-body');
+            const emptyState = document.getElementById('empty-state');
+            const paginationInfo = document.getElementById('pagination-info');
+
+            if (currentRegisti.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                paginationInfo.textContent = 'No entries';
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            paginationInfo.textContent = `Showing ${currentRegisti.length} entries`;
+            
+            tbody.innerHTML = currentRegisti.map(regista => `
+                <tr class="hover:bg-surface-container-high transition-colors duration-200 group">
+                    <td class="px-4 md:px-6 py-4 md:py-6 text-sm font-mono text-primary/70">DIR-${String(regista.id).padStart(3, '0')}</td>
+                    <td class="px-4 md:px-6 py-4 md:py-6 text-sm font-semibold text-on-surface">${escapeHtml(regista.nome)}</td>
+                    <td class="px-4 md:px-6 py-4 md:py-6 text-sm font-semibold text-on-surface">${escapeHtml(regista.cognome)}</td>
+                    <td class="px-4 md:px-6 py-4 md:py-6">
+                        <span class="inline-flex items-center px-2 md:px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-surface-variant text-secondary tracking-widest">${escapeHtml(regista.nazionalita)}</span>
+                    </td>
+                    <td class="px-4 md:px-6 py-4 md:py-6 text-right">
+                        <div class="flex items-center justify-end gap-1 md:gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="openEditModal(${regista.id})" class="p-1 md:p-2 text-on-surface-variant hover:text-secondary transition-colors">
+                                <span class="material-symbols-outlined text-lg">edit</span>
+                            </button>
+                            <button onclick="deleteRegista(${regista.id})" class="p-1 md:p-2 text-on-surface-variant hover:text-primary-container transition-colors">
+                                <span class="material-symbols-outlined text-lg">delete</span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function updateStats() {
+            document.getElementById('total-registi').textContent = currentRegisti.length;
+            const nations = new Set(currentRegisti.map(r => r.nazionalita));
+            document.getElementById('nations-count').innerHTML = `${nations.size} <span class="text-lg text-on-surface-variant font-body tracking-normal">Nations</span>`;
+        }
+
+        function openCreateModal() {
+            editingId = null;
+            showModal('Create Director', `
+                <form id="regista-form" onsubmit="handleSubmit(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Nome</label>
+                            <input type="text" name="nome" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary placeholder:text-on-surface-variant/50">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Cognome</label>
+                            <input type="text" name="cognome" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary placeholder:text-on-surface-variant/50">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Nazionalità</label>
+                            <input type="text" name="nazionalita" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary placeholder:text-on-surface-variant/50">
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Cancel</button>
+                        <button type="submit" class="px-6 py-2 bg-primary-container text-on-primary-container rounded-lg font-bold hover:opacity-90 transition-opacity">Create</button>
+                    </div>
+                </form>
+            `);
+        }
+
+        function openEditModal(id) {
+            editingId = id;
+            const regista = currentRegisti.find(r => r.id === id);
+            if (!regista) return;
+
+            showModal('Edit Director', `
+                <form id="regista-form" onsubmit="handleSubmit(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Nome</label>
+                            <input type="text" name="nome" value="${escapeHtml(regista.nome)}" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Cognome</label>
+                            <input type="text" name="cognome" value="${escapeHtml(regista.cognome)}" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Nazionalità</label>
+                            <input type="text" name="nazionalita" value="${escapeHtml(regista.nazionalita)}" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Cancel</button>
+                        <button type="submit" class="px-6 py-2 bg-primary-container text-on-primary-container rounded-lg font-bold hover:opacity-90 transition-opacity">Save</button>
+                    </div>
+                </form>
+            `);
+        }
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const data = {
+                nome: form.nome.value,
+                cognome: form.cognome.value,
+                nazionalita: form.nazionalita.value
+            };
+
+            try {
+                Utils.showLoading();
+                if (editingId) {
+                    await ApiClient.put(`/registi/${editingId}`, data);
+                    Utils.showNotification('Director updated successfully', 'success');
+                } else {
+                    await ApiClient.post('/registi', data);
+                    Utils.showNotification('Director created successfully', 'success');
+                }
+                closeModal();
+                await loadRegisti();
+            } catch (error) {
+                Utils.showNotification(error.message || 'Error saving director', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        async function deleteRegista(id) {
+            if (!Utils.confirmDialog('Are you sure you want to delete this director?')) return;
+
+            try {
+                Utils.showLoading();
+                await ApiClient.delete(`/registi/${id}`);
+                Utils.showNotification('Director deleted successfully', 'success');
+                await loadRegisti();
+            } catch (error) {
+                Utils.showNotification(error.message || 'Error deleting director', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        function showModal(title, content) {
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+                <div class="modal-backdrop" onclick="if(event.target === this) closeModal()">
+                    <div class="modal-content">
+                        <h3 class="font-headline text-xl font-bold mb-6">${title}</h3>
+                        ${content}
+                    </div>
+                </div>
+            `;
+        }
+
+        function closeModal() {
+            document.getElementById('modal-container').innerHTML = '';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

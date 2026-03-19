@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Películas | The Cinematic Director's Suite</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#e50914",
+                        "secondary": "#e9c176",
+                        "background": "#131313",
+                        "surface": "#131313",
+                        "surface-container": "#201f1f",
+                        "surface-container-low": "#1c1b1b",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-container-highest": "#353534",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-surface": "#e5e2e1",
+                        "on-surface-variant": "#e9bcb6",
+                        "outline-variant": "#5e3f3b",
+                        "tertiary-container": "#0076c5",
+                        "tertiary": "#9ecaff",
+                        "error-container": "#93000a",
+                        "error": "#ffb4ab",
+                        "on-primary-container": "#fff7f6",
+                        "on-tertiary-container": "#f8f9ff",
+                        "inverse-primary": "#c0000c"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                    }
+                },
+            },
+        }
+    </script>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-background text-on-background font-body min-h-screen flex flex-col">
+    <div id="navbar-container"></div>
+    
+    <div class="flex flex-1">
+        <div id="sidebar-container"></div>
+        
+        <main class="flex-1 p-4 md:p-8 lg:p-12 overflow-x-hidden">
+            <header class="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 mb-8 md:mb-12">
+                <div>
+                    <h1 class="font-headline text-3xl md:text-5xl font-extrabold tracking-tighter text-on-surface mb-2">Film Management</h1>
+                    <p class="font-body text-on-surface-variant max-w-xl text-sm md:text-base">Curate your cinematic universe. Manage the database of masterpieces, independent features, and avant-garde projections.</p>
+                </div>
+                <button onclick="openCreateModal()" class="noir-gradient text-on-primary-container px-6 md:px-8 py-3 md:py-4 rounded-xl font-headline font-bold flex items-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary-container/10">
+                    <span class="material-symbols-outlined">add</span>
+                    Add New Film
+                </button>
+            </header>
+
+            <section class="bg-surface-container-low p-4 md:p-6 rounded-xl mb-6 md:mb-8 flex flex-col lg:flex-row items-start lg:items-center gap-4">
+                <div class="flex-1 w-full lg:min-w-[300px] relative">
+                    <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant opacity-50">search</span>
+                    <input id="search-input" class="w-full bg-surface-container-highest border-none rounded-lg pl-12 pr-4 py-3 text-on-surface focus:ring-1 focus:ring-primary ring-inset placeholder:text-on-surface-variant/40 text-sm" placeholder="Search by Title or ID..." type="text" oninput="filterFilms()">
+                </div>
+                <div class="flex items-center gap-3 w-full lg:w-auto flex-wrap">
+                    <div class="relative w-full lg:w-auto">
+                        <select id="filter-regista" onchange="filterFilms()" class="w-full lg:w-auto bg-surface-container-highest border-none rounded-lg pl-4 pr-10 py-3 text-sm font-medium text-on-surface appearance-none focus:ring-1 focus:ring-primary">
+                            <option value="">All Directors</option>
+                        </select>
+                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">expand_more</span>
+                    </div>
+                    <div class="relative w-full lg:w-auto">
+                        <select id="filter-year" onchange="filterFilms()" class="w-full lg:w-auto bg-surface-container-highest border-none rounded-lg pl-4 pr-10 py-3 text-sm font-medium text-on-surface appearance-none focus:ring-1 focus:ring-primary">
+                            <option value="">All Years</option>
+                        </select>
+                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">expand_more</span>
+                    </div>
+                </div>
+            </section>
+
+            <div class="bg-surface-container-low rounded-xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-separate border-spacing-0">
+                        <thead class="bg-surface-container-lowest">
+                            <tr>
+                                <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-xs uppercase tracking-widest text-on-surface-variant opacity-70">ID</th>
+                                <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-xs uppercase tracking-widest text-on-surface-variant opacity-70">Titolo</th>
+                                <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-xs uppercase tracking-widest text-on-surface-variant opacity-70 hidden md:table-cell">Data Produzione</th>
+                                <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-xs uppercase tracking-widest text-on-surface-variant opacity-70">Regista</th>
+                                <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-xs uppercase tracking-widest text-on-surface-variant opacity-70 hidden lg:table-cell">Durata</th>
+                                <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-xs uppercase tracking-widest text-on-surface-variant opacity-70 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="films-table-body" class="divide-y divide-outline-variant/10">
+                        </tbody>
+                    </table>
+                </div>
+                <div id="empty-state" class="hidden p-8 text-center">
+                    <span class="material-symbols-outlined text-4xl text-on-surface-variant opacity-50">movie_filter</span>
+                    <p class="mt-2 text-on-surface-variant">No films found.</p>
+                </div>
+                <div class="px-4 md:px-6 py-3 md:py-4 flex items-center justify-between bg-surface-container-lowest">
+                    <span id="pagination-info" class="text-xs text-on-surface-variant font-label uppercase tracking-tighter">Showing 0 of 0 films</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <div id="modal-container"></div>
+
+    <script src="/js/template-loader.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        let allFilms = [];
+        let allRegisti = [];
+        let filteredFilms = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllComponents();
+            await loadData();
+
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('action') === 'create') {
+                openCreateModal();
+            }
+        });
+
+        async function loadData() {
+            try {
+                Utils.showLoading();
+                [allFilms, allRegisti] = await Promise.all([
+                    ApiClient.get('/films'),
+                    ApiClient.get('/registi')
+                ]);
+                populateFilters();
+                filterFilms();
+            } catch (error) {
+                console.error('Error loading data:', error);
+                Utils.showNotification('Errore nel caricamento dei dati', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        function populateFilters() {
+            const registaSelect = document.getElementById('filter-regista');
+            const yearSelect = document.getElementById('filter-year');
+            const years = new Set();
+
+            allRegisti.forEach(r => {
+                const option = document.createElement('option');
+                option.value = r.id;
+                option.textContent = `${r.nome} ${r.cognome}`;
+                registaSelect.appendChild(option);
+            });
+
+            allFilms.forEach(f => {
+                if (f.dataProduzione) {
+                    years.add(new Date(f.dataProduzione).getFullYear());
+                }
+            });
+
+            Array.from(years).sort((a, b) => b - a).forEach(year => {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year;
+                yearSelect.appendChild(option);
+            });
+        }
+
+        function filterFilms() {
+            const search = document.getElementById('search-input').value.toLowerCase();
+            const registaId = document.getElementById('filter-regista').value;
+            const year = document.getElementById('filter-year').value;
+
+            filteredFilms = allFilms.filter(film => {
+                const matchesSearch = film.titolo.toLowerCase().includes(search) || 
+                    `FLM-${String(film.id).padStart(3, '0')}`.toLowerCase().includes(search);
+                const matchesRegista = !registaId || film.registaId === parseInt(registaId);
+                const matchesYear = !year || (film.dataProduzione && new Date(film.dataProduzione).getFullYear().toString() === year);
+                return matchesSearch && matchesRegista && matchesYear;
+            });
+
+            renderFilms();
+        }
+
+        function renderFilms() {
+            const tbody = document.getElementById('films-table-body');
+            const emptyState = document.getElementById('empty-state');
+            const paginationInfo = document.getElementById('pagination-info');
+
+            if (filteredFilms.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                paginationInfo.textContent = 'No films found';
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            paginationInfo.textContent = `Showing ${filteredFilms.length} of ${allFilms.length} films`;
+
+            tbody.innerHTML = filteredFilms.map(film => {
+                const regista = allRegisti.find(r => r.id === film.registaId);
+                const registaLabel = regista ? `${regista.nome.charAt(0)}${regista.cognome.charAt(0)}-${String(regista.id).padStart(3, '0')}` : 'N/A';
+                return `
+                    <tr class="hover:bg-surface-container transition-colors group">
+                        <td class="px-4 md:px-6 py-4 md:py-5 text-sm font-mono text-secondary">#FLM-${String(film.id).padStart(4, '0')}</td>
+                        <td class="px-4 md:px-6 py-4 md:py-5">
+                            <div class="font-headline font-bold text-on-surface">${escapeHtml(film.titolo)}</div>
+                        </td>
+                        <td class="px-4 md:px-6 py-4 md:py-5 text-sm text-on-surface-variant hidden md:table-cell">${Utils.formatDateShort(film.dataProduzione)}</td>
+                        <td class="px-4 md:px-6 py-4 md:py-5">
+                            <span class="bg-surface-container-highest px-2 md:px-3 py-1 rounded-full text-xs text-on-tertiary-container border border-outline-variant/20">${registaLabel}</span>
+                        </td>
+                        <td class="px-4 md:px-6 py-4 md:py-5 text-sm font-medium hidden lg:table-cell">${film.durata} min</td>
+                        <td class="px-4 md:px-6 py-4 md:py-5 text-right">
+                            <div class="flex items-center justify-end gap-1 md:gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onclick="openEditModal(${film.id})" class="p-1 md:p-2 hover:bg-surface-bright rounded-lg transition-colors text-secondary">
+                                    <span class="material-symbols-outlined">edit</span>
+                                </button>
+                                <button onclick="deleteFilm(${film.id})" class="p-1 md:p-2 hover:bg-error-container/20 rounded-lg transition-colors text-error">
+                                    <span class="material-symbols-outlined">delete</span>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function openCreateModal() {
+            showModal('Add New Film', `
+                <form id="film-form" onsubmit="handleSubmit(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Titolo *</label>
+                            <input type="text" name="titolo" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Regista *</label>
+                            <select name="registaId" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary appearance-none">
+                                <option value="">Select a director</option>
+                                ${allRegisti.map(r => `<option value="${r.id}">${escapeHtml(r.nome)} ${escapeHtml(r.cognome)}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Data Produzione</label>
+                                <input type="date" name="dataProduzione" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                            </div>
+                            <div>
+                                <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Durata (min)</label>
+                                <input type="number" name="durata" min="1" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Copertina Path</label>
+                            <input type="text" name="copertinaPath" placeholder="/media/defaults/cover.jpg" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Filmato Path</label>
+                            <input type="text" name="filmatoPath" placeholder="/media/videos/film.mp4" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Cancel</button>
+                        <button type="submit" class="noir-gradient px-6 py-2 text-white rounded-lg font-bold hover:opacity-90 transition-opacity">Create</button>
+                    </div>
+                </form>
+            `);
+        }
+
+        function openEditModal(id) {
+            const film = allFilms.find(f => f.id === id);
+            if (!film) return;
+
+            const dataProduzione = film.dataProduzione ? film.dataProduzione.split('T')[0] : '';
+
+            showModal('Edit Film', `
+                <form id="film-form" onsubmit="handleSubmit(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Titolo *</label>
+                            <input type="text" name="titolo" value="${escapeHtml(film.titolo)}" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Regista *</label>
+                            <select name="registaId" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary appearance-none">
+                                ${allRegisti.map(r => `<option value="${r.id}" ${r.id === film.registaId ? 'selected' : ''}>${escapeHtml(r.nome)} ${escapeHtml(r.cognome)}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Data Produzione</label>
+                                <input type="date" name="dataProduzione" value="${dataProduzione}" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                            </div>
+                            <div>
+                                <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Durata (min)</label>
+                                <input type="number" name="durata" value="${film.durata || ''}" min="1" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Copertina Path</label>
+                            <input type="text" name="copertinaPath" value="${escapeHtml(film.copertinaPath || '')}" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Filmato Path</label>
+                            <input type="text" name="filmatoPath" value="${escapeHtml(film.filmatoPath || '')}" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                    </div>
+                    <input type="hidden" name="id" value="${id}">
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Cancel</button>
+                        <button type="submit" class="noir-gradient px-6 py-2 text-white rounded-lg font-bold hover:opacity-90 transition-opacity">Save</button>
+                    </div>
+                </form>
+            `);
+        }
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+            const form = event.target;
+            const id = form.id?.value;
+            const data = {
+                titolo: form.titolo.value,
+                registaId: parseInt(form.registaId.value),
+                dataProduzione: form.dataProduzione.value || null,
+                durata: parseInt(form.durata.value) || null,
+                copertinaPath: form.copertinaPath.value || null,
+                filmatoPath: form.filmatoPath.value || null
+            };
+
+            try {
+                Utils.showLoading();
+                if (id) {
+                    await ApiClient.put(`/films/${id}`, data);
+                    Utils.showNotification('Film updated successfully', 'success');
+                } else {
+                    await ApiClient.post('/films', data);
+                    Utils.showNotification('Film created successfully', 'success');
+                }
+                closeModal();
+                await loadData();
+            } catch (error) {
+                Utils.showNotification(error.message || 'Error saving film', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        async function deleteFilm(id) {
+            if (!Utils.confirmDialog('Are you sure you want to delete this film?')) return;
+
+            try {
+                Utils.showLoading();
+                await ApiClient.delete(`/films/${id}`);
+                Utils.showNotification('Film deleted successfully', 'success');
+                await loadData();
+            } catch (error) {
+                Utils.showNotification(error.message || 'Error deleting film', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        function showModal(title, content) {
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+                <div class="modal-backdrop" onclick="if(event.target === this) closeModal()">
+                    <div class="modal-content max-w-lg">
+                        <h3 class="font-headline text-xl font-bold mb-6">${title}</h3>
+                        ${content}
+                    </div>
+                </div>
+            `;
+        }
+
+        function closeModal() {
+            document.getElementById('modal-container').innerHTML = '';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
