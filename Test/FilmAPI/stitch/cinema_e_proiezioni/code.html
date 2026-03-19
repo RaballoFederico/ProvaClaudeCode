@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary-container": "#e50914",
+            "outline-variant": "#5e3f3b",
+            "on-primary": "#690003",
+            "secondary-fixed": "#ffdea5",
+            "surface-container-highest": "#353534",
+            "on-tertiary-container": "#f8f9ff",
+            "on-surface": "#e5e2e1",
+            "surface-bright": "#393939",
+            "on-tertiary": "#003258",
+            "surface-tint": "#ffb4aa",
+            "error-container": "#93000a",
+            "tertiary-fixed-dim": "#9ecaff",
+            "on-background": "#e5e2e1",
+            "surface-container": "#201f1f",
+            "background": "#131313",
+            "on-primary-fixed": "#410001",
+            "on-error-container": "#ffdad6",
+            "on-surface-variant": "#e9bcb6",
+            "tertiary-fixed": "#d1e4ff",
+            "outline": "#af8782",
+            "on-secondary-fixed-variant": "#5d4201",
+            "on-primary-container": "#fff7f6",
+            "on-secondary": "#412d00",
+            "on-tertiary-fixed": "#001d36",
+            "surface-variant": "#353534",
+            "primary-fixed-dim": "#ffb4aa",
+            "inverse-on-surface": "#313030",
+            "surface-container-high": "#2a2a2a",
+            "tertiary-container": "#0076c5",
+            "inverse-primary": "#c0000c",
+            "tertiary": "#9ecaff",
+            "surface-container-lowest": "#0e0e0e",
+            "secondary": "#e9c176",
+            "primary": "#ffb4aa",
+            "on-secondary-container": "#dab36a",
+            "inverse-surface": "#e5e2e1",
+            "secondary-fixed-dim": "#e9c176",
+            "surface-dim": "#131313",
+            "secondary-container": "#604403",
+            "surface-container-low": "#1c1b1b",
+            "error": "#ffb4ab",
+            "on-primary-fixed-variant": "#930007",
+            "on-secondary-fixed": "#261900",
+            "primary-fixed": "#ffdad5",
+            "on-error": "#690005",
+            "surface": "#131313",
+            "on-tertiary-fixed-variant": "#00497d"
+          },
+          fontFamily: {
+            "headline": ["Manrope"],
+            "body": ["Inter"],
+            "label": ["Inter"]
+          },
+          borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    body {
+      background-color: #131313;
+      color: #e5e2e1;
+      font-family: 'Inter', sans-serif;
+    }
+    .glass-card {
+      background: rgba(53, 53, 52, 0.6);
+      backdrop-filter: blur(20px);
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+  </style>
+</head>
+<body class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 left-0 top-0 sticky flex flex-col py-12 gap-y-4 bg-[#201F1F] font-['Manrope'] font-medium text-sm">
+<div class="px-8 mb-8">
+<h1 class="text-lg font-bold text-[#E9C176]">Director's Suite</h1>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant opacity-60">Backstage Access</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">movie</span>
+<span>Películas</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">theater_comedy</span>
+<span>Directores</span>
+</a>
+<!-- Active Tab: Cines (Cinemas) -->
+<a class="flex items-center gap-3 px-6 py-3 bg-[#2A2A2A] text-[#E50914] rounded-lg mx-2 transition-transform duration-200 opacity-80" href="#">
+<span class="material-symbols-outlined">theaters</span>
+<span>Cines</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">schedule</span>
+<span>Proyecciones</span>
+</a>
+</nav>
+<div class="mt-auto px-2 space-y-1 border-t border-outline-variant/15 pt-4">
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:bg-[#2A2A2A]/50 transition-transform duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">help</span>
+<span>Help</span>
+</a>
+<a class="flex items-center gap-3 px-6 py-3 text-on-surface-variant hover:bg-[#2A2A2A]/50 transition-transform duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col bg-surface min-h-screen">
+<!-- TopAppBar -->
+<header class="flex justify-between items-center w-full px-8 py-4 bg-[#1C1B1B] z-50 sticky top-0">
+<div class="flex items-center gap-8">
+<span class="text-2xl font-black text-[#E50914] tracking-tighter uppercase font-['Manrope']">The Cinematic Director’s Suite</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative hidden lg:block">
+<input class="bg-surface-container-highest border-none rounded-full px-6 py-2 text-sm focus:ring-1 focus:ring-primary-container w-64 transition-all" placeholder="Search facilities..." type="text"/>
+<span class="material-symbols-outlined absolute right-4 top-2 text-on-surface-variant text-sm">search</span>
+</div>
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-white transition-colors">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-white transition-colors">settings</span>
+</div>
+<img class="w-10 h-10 rounded-full border border-outline-variant/30" data-alt="User profile avatar circle" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDi93SIPGoTv3kco5SCb0kPFR38c1x4EeA6wnrCVwIpmgrBqxF3eQqsAKVjT8-cxTwv1GntFqxBbmCyAbVifH0Yx7wfdde-aDDOcvQ-dBdLARbhuAsOO0rUe06N8FBOQ3s7Hm9jUlouBQtRif9m8mBfqfZTQL8mVT0lvcKGPSlac4mJQsebyMeXXE9QXIXjH0X71QsYT9R_4k7vxgZoeyf9123jqJSkCtTPtp5ZSOlQINReLCaE9qyrihWo8w2V7yz-oLUXAq5gpyE"/>
+</div>
+</header>
+<!-- Content Canvas -->
+<div class="p-12 space-y-16 max-w-7xl mx-auto w-full">
+<!-- Page Hero Header -->
+<section class="space-y-2">
+<h2 class="text-5xl font-extralight font-headline tracking-tight text-white">Operations Control</h2>
+<p class="text-secondary tracking-widest uppercase text-xs font-label opacity-80">Infrastructure &amp; Scheduling Intelligence</p>
+</section>
+<!-- Section 1: Cinemas (Bento Style Layout) -->
+<section class="space-y-6">
+<div class="flex justify-between items-end">
+<div class="space-y-1">
+<h3 class="text-2xl font-headline text-white">Cinemas Inventory</h3>
+<p class="text-on-surface-variant text-sm font-body">Global theatre network management and location mapping.</p>
+</div>
+<button class="bg-primary-container text-on-primary-container px-6 py-3 rounded-xl font-headline font-bold text-sm flex items-center gap-2 hover:scale-95 transition-all duration-150 shadow-lg shadow-primary-container/20">
+<span class="material-symbols-outlined">add_location</span>
+            Add New Cinema
+          </button>
+</div>
+<!-- Cinema List (Table-less Table) -->
+<div class="grid grid-cols-1 gap-1">
+<!-- Table Header -->
+<div class="grid grid-cols-12 px-8 py-4 bg-surface-container-lowest text-secondary uppercase text-[10px] tracking-widest font-label font-bold rounded-t-xl">
+<div class="col-span-1">ID</div>
+<div class="col-span-4">Nome</div>
+<div class="col-span-3">Indirizzo</div>
+<div class="col-span-3">Città</div>
+<div class="col-span-1 text-right">Actions</div>
+</div>
+<!-- Cinema Rows -->
+<div class="grid grid-cols-12 px-8 py-6 bg-surface-container-low items-center hover:bg-surface-container-high transition-colors duration-300 group">
+<div class="col-span-1 font-mono text-on-surface-variant">#C-801</div>
+<div class="col-span-4 font-headline text-lg text-white">Grand Rex Luminaire</div>
+<div class="col-span-3 font-body text-sm text-on-surface-variant">Via delle Rose, 12</div>
+<div class="col-span-3 font-body text-sm text-on-surface-variant">Milan, IT</div>
+<div class="col-span-1 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-secondary cursor-pointer">edit_square</span>
+</div>
+</div>
+<div class="grid grid-cols-12 px-8 py-6 bg-surface-container items-center hover:bg-surface-container-high transition-colors duration-300 group">
+<div class="col-span-1 font-mono text-on-surface-variant">#C-802</div>
+<div class="col-span-4 font-headline text-lg text-white">The Onyx Gallery</div>
+<div class="col-span-3 font-body text-sm text-on-surface-variant">Avenue des Champs-Élysées</div>
+<div class="col-span-3 font-body text-sm text-on-surface-variant">Paris, FR</div>
+<div class="col-span-1 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-secondary cursor-pointer">edit_square</span>
+</div>
+</div>
+<div class="grid grid-cols-12 px-8 py-6 bg-surface-container-low items-center hover:bg-surface-container-high transition-colors duration-300 group rounded-b-xl">
+<div class="col-span-1 font-mono text-on-surface-variant">#C-805</div>
+<div class="col-span-4 font-headline text-lg text-white">Starlight Pavilion</div>
+<div class="col-span-3 font-body text-sm text-on-surface-variant">9th Street Plaza, 404</div>
+<div class="col-span-3 font-body text-sm text-on-surface-variant">Rome, IT</div>
+<div class="col-span-1 text-right opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-secondary cursor-pointer">edit_square</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 2: Projections (Asymmetric Cards Layout) -->
+<section class="space-y-6">
+<div class="flex justify-between items-end">
+<div class="space-y-1">
+<h3 class="text-2xl font-headline text-white">Active Projections</h3>
+<p class="text-on-surface-variant text-sm font-body">Timeline of scheduled cinematic engagements across the network.</p>
+</div>
+<button class="bg-primary-container text-on-primary-container px-6 py-3 rounded-xl font-headline font-bold text-sm flex items-center gap-2 hover:scale-95 transition-all duration-150 shadow-lg shadow-primary-container/20">
+<span class="material-symbols-outlined">schedule_send</span>
+            Schedule Projection
+          </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Projection Card 1 -->
+<div class="group relative bg-surface-container-low rounded-xl overflow-hidden p-6 border border-outline-variant/10 hover:border-primary-container/40 transition-all duration-500">
+<div class="flex justify-between items-start mb-6">
+<span class="text-[10px] font-bold text-primary-container uppercase tracking-widest bg-primary-container/10 px-2 py-1 rounded">Now Showing</span>
+<span class="text-xs font-mono text-on-surface-variant opacity-50">PRJ-2901</span>
+</div>
+<div class="space-y-4">
+<div>
+<p class="text-xs text-on-surface-variant uppercase tracking-tighter mb-1">Film Selection</p>
+<h4 class="text-xl font-headline font-bold text-white group-hover:text-primary transition-colors">Interstellar: Final Cut</h4>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest opacity-60">Cinema Venue</p>
+<p class="text-sm text-secondary font-medium">Grand Rex Luminaire</p>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest opacity-60">Theater Slot</p>
+<p class="text-sm text-white">Hall A / IMAX</p>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant/10 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-lg">calendar_today</span>
+<span class="text-sm font-body">Dec 24, 2024</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-lg">schedule</span>
+<span class="text-sm font-body">20:30</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Projection Card 2 -->
+<div class="group relative bg-surface-container-low rounded-xl overflow-hidden p-6 border border-outline-variant/10 hover:border-primary-container/40 transition-all duration-500">
+<div class="flex justify-between items-start mb-6">
+<span class="text-[10px] font-bold text-secondary uppercase tracking-widest bg-secondary-container/20 px-2 py-1 rounded">Scheduled</span>
+<span class="text-xs font-mono text-on-surface-variant opacity-50">PRJ-2905</span>
+</div>
+<div class="space-y-4">
+<div>
+<p class="text-xs text-on-surface-variant uppercase tracking-tighter mb-1">Film Selection</p>
+<h4 class="text-xl font-headline font-bold text-white group-hover:text-primary transition-colors">The Grand Budapest Hotel</h4>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest opacity-60">Cinema Venue</p>
+<p class="text-sm text-secondary font-medium">The Onyx Gallery</p>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest opacity-60">Theater Slot</p>
+<p class="text-sm text-white">Private Suite 4</p>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant/10 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-lg">calendar_today</span>
+<span class="text-sm font-body">Dec 25, 2024</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-lg">schedule</span>
+<span class="text-sm font-body">18:00</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Projection Card 3 (Featured/Large Variant) -->
+<div class="group relative bg-surface-container-low rounded-xl overflow-hidden p-6 border border-outline-variant/10 hover:border-primary-container/40 transition-all duration-500">
+<div class="flex justify-between items-start mb-6">
+<span class="text-[10px] font-bold text-tertiary uppercase tracking-widest bg-tertiary-container/20 px-2 py-1 rounded">Premiere</span>
+<span class="text-xs font-mono text-on-surface-variant opacity-50">PRJ-3001</span>
+</div>
+<div class="space-y-4">
+<div>
+<p class="text-xs text-on-surface-variant uppercase tracking-tighter mb-1">Film Selection</p>
+<h4 class="text-xl font-headline font-bold text-white group-hover:text-primary transition-colors">Oppenheimer: Re-Entry</h4>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest opacity-60">Cinema Venue</p>
+<p class="text-sm text-secondary font-medium">Starlight Pavilion</p>
+</div>
+<div>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest opacity-60">Theater Slot</p>
+<p class="text-sm text-white">Main Deck 70mm</p>
+</div>
+</div>
+<div class="pt-4 border-t border-outline-variant/10 flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-lg">calendar_today</span>
+<span class="text-sm font-body">Dec 26, 2024</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-container text-lg">schedule</span>
+<span class="text-sm font-body">21:45</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+<!-- Footer -->
+<footer class="w-full py-6 mt-auto flex justify-between items-center px-12 border-t border-[#5E3F3B]/15 bg-[#131313]">
+<div class="flex gap-8">
+<a class="font-['Inter'] text-[10px] uppercase tracking-widest text-gray-500 hover:text-white transition-colors" href="#">Support</a>
+<a class="font-['Inter'] text-[10px] uppercase tracking-widest text-gray-500 hover:text-white transition-colors" href="#">Privacy Policy</a>
+<a class="font-['Inter'] text-[10px] uppercase tracking-widest text-gray-500 hover:text-white transition-colors" href="#">Terms of Service</a>
+</div>
+<p class="font-['Inter'] text-[10px] uppercase tracking-widest text-gray-500">© 2024 Cinematic Director’s Suite. All rights reserved.</p>
+</footer>
+</main>
+<!-- Mobile Floating Action Button (FAB) - Suppressed as per instructions for Details/Transactional pages but included for Dashboard/Main flow context if needed -->
+<!-- <div class="fixed bottom-8 right-8 md:hidden">
+    <button class="w-14 h-14 bg-primary-container rounded-full shadow-2xl flex items-center justify-center text-white">
+      <span class="material-symbols-outlined">add</span>
+    </button>
+  </div> -->
+</body></html>
