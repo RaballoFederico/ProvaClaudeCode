@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Películas | The Cinematic Director's Suite</title>
+    <title>Film | FilmAPI</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -49,63 +49,48 @@
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
         
-        <main class="flex-1 p-4 md:p-8 lg:p-12 overflow-x-hidden">
+        <main class="flex-1 p-4 md:p-8 lg:p-12 overflow-x-hidden pb-20 md:pb-0">
             <header class="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 mb-8 md:mb-12">
                 <div>
-                    <h1 class="font-headline text-3xl md:text-5xl font-extrabold tracking-tighter text-on-surface mb-2">Film Management</h1>
-                    <p class="font-body text-on-surface-variant max-w-xl text-sm md:text-base">Curate your cinematic universe. Manage the database of masterpieces, independent features, and avant-garde projections.</p>
+                    <h1 class="font-headline text-3xl md:text-5xl font-extrabold tracking-tighter text-on-surface mb-2">Gestione Film</h1>
+                    <p class="font-body text-on-surface-variant max-w-xl text-sm md:text-base">Gestisci il tuo catalogo cinematografico. Database di capolavori, film indipendenti e proiezioni.</p>
                 </div>
                 <button onclick="openCreateModal()" class="noir-gradient text-on-primary-container px-6 md:px-8 py-3 md:py-4 rounded-xl font-headline font-bold flex items-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary-container/10">
                     <span class="material-symbols-outlined">add</span>
-                    Add New Film
+                    Nuovo Film
                 </button>
             </header>
 
             <section class="bg-surface-container-low p-4 md:p-6 rounded-xl mb-6 md:mb-8 flex flex-col lg:flex-row items-start lg:items-center gap-4">
                 <div class="flex-1 w-full lg:min-w-[300px] relative">
                     <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant opacity-50">search</span>
-                    <input id="search-input" class="w-full bg-surface-container-highest border-none rounded-lg pl-12 pr-4 py-3 text-on-surface focus:ring-1 focus:ring-primary ring-inset placeholder:text-on-surface-variant/40 text-sm" placeholder="Search by Title or ID..." type="text" oninput="filterFilms()">
+                    <input id="search-input" class="w-full bg-surface-container-highest border-none rounded-lg pl-12 pr-4 py-3 text-on-surface focus:ring-1 focus:ring-primary ring-inset placeholder:text-on-surface-variant/40 text-sm" placeholder="Cerca per titolo o ID..." type="text" oninput="filterFilms()">
                 </div>
                 <div class="flex items-center gap-3 w-full lg:w-auto flex-wrap">
                     <div class="relative w-full lg:w-auto">
                         <select id="filter-regista" onchange="filterFilms()" class="w-full lg:w-auto bg-surface-container-highest border-none rounded-lg pl-4 pr-10 py-3 text-sm font-medium text-on-surface appearance-none focus:ring-1 focus:ring-primary">
-                            <option value="">All Directors</option>
+                            <option value="">Tutti i Registi</option>
                         </select>
                         <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">expand_more</span>
                     </div>
                     <div class="relative w-full lg:w-auto">
                         <select id="filter-year" onchange="filterFilms()" class="w-full lg:w-auto bg-surface-container-highest border-none rounded-lg pl-4 pr-10 py-3 text-sm font-medium text-on-surface appearance-none focus:ring-1 focus:ring-primary">
-                            <option value="">All Years</option>
+                            <option value="">Tutti gli Anni</option>
                         </select>
                         <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">expand_more</span>
                     </div>
                 </div>
             </section>
 
-            <div class="bg-surface-container-low rounded-xl overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-separate border-spacing-0">
-                        <thead class="bg-surface-container-lowest">
-                            <tr>
-                                <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-xs uppercase tracking-widest text-on-surface-variant opacity-70">ID</th>
-                                <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-xs uppercase tracking-widest text-on-surface-variant opacity-70">Titolo</th>
-                                <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-xs uppercase tracking-widest text-on-surface-variant opacity-70 hidden md:table-cell">Data Produzione</th>
-                                <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-xs uppercase tracking-widest text-on-surface-variant opacity-70">Regista</th>
-                                <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-xs uppercase tracking-widest text-on-surface-variant opacity-70 hidden lg:table-cell">Durata</th>
-                                <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-xs uppercase tracking-widest text-on-surface-variant opacity-70 text-right">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="films-table-body" class="divide-y divide-outline-variant/10">
-                        </tbody>
-                    </table>
+            <div class="bg-surface-container-low rounded-xl p-4 md:p-6">
+                <div id="films-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
                 </div>
-                <div id="empty-state" class="hidden p-8 text-center">
-                    <span class="material-symbols-outlined text-4xl text-on-surface-variant opacity-50">movie_filter</span>
-                    <p class="mt-2 text-on-surface-variant">No films found.</p>
+                <div id="empty-state" class="hidden p-12 text-center">
+                    <span class="material-symbols-outlined text-5xl text-on-surface-variant opacity-50">movie_filter</span>
+                    <p class="mt-4 text-on-surface-variant text-lg">Nessun film trovato.</p>
+                    <button onclick="openCreateModal()" class="mt-4 px-6 py-3 bg-primary-container text-white rounded-xl font-bold">Aggiungi Film</button>
                 </div>
-                <div class="px-4 md:px-6 py-3 md:py-4 flex items-center justify-between bg-surface-container-lowest">
-                    <span id="pagination-info" class="text-xs text-on-surface-variant font-label uppercase tracking-tighter">Showing 0 of 0 films</span>
-                </div>
+                <div id="pagination-info" class="mt-4 text-center text-xs text-on-surface-variant uppercase tracking-widest"></div>
             </div>
         </main>
     </div>
@@ -192,47 +177,117 @@
         }
 
         function renderFilms() {
-            const tbody = document.getElementById('films-table-body');
+            const grid = document.getElementById('films-grid');
             const emptyState = document.getElementById('empty-state');
             const paginationInfo = document.getElementById('pagination-info');
 
             if (filteredFilms.length === 0) {
-                tbody.innerHTML = '';
+                grid.innerHTML = '';
                 emptyState.classList.remove('hidden');
-                paginationInfo.textContent = 'No films found';
+                grid.classList.add('hidden');
+                paginationInfo.textContent = '';
                 return;
             }
 
             emptyState.classList.add('hidden');
-            paginationInfo.textContent = `Showing ${filteredFilms.length} of ${allFilms.length} films`;
+            grid.classList.remove('hidden');
+            paginationInfo.textContent = `${filteredFilms.length} film trovati`;
 
-            tbody.innerHTML = filteredFilms.map(film => {
+            grid.innerHTML = filteredFilms.map(film => {
                 const regista = allRegisti.find(r => r.id === film.registaId);
-                const registaLabel = regista ? `${regista.nome.charAt(0)}${regista.cognome.charAt(0)}-${String(regista.id).padStart(3, '0')}` : 'N/A';
+                const imageUrl = film.copertinaPath || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300&h=450&fit=crop';
                 return `
-                    <tr class="hover:bg-surface-container transition-colors group">
-                        <td class="px-4 md:px-6 py-4 md:py-5 text-sm font-mono text-secondary">#FLM-${String(film.id).padStart(4, '0')}</td>
-                        <td class="px-4 md:px-6 py-4 md:py-5">
-                            <div class="font-headline font-bold text-on-surface">${escapeHtml(film.titolo)}</div>
-                        </td>
-                        <td class="px-4 md:px-6 py-4 md:py-5 text-sm text-on-surface-variant hidden md:table-cell">${Utils.formatDateShort(film.dataProduzione)}</td>
-                        <td class="px-4 md:px-6 py-4 md:py-5">
-                            <span class="bg-surface-container-highest px-2 md:px-3 py-1 rounded-full text-xs text-on-tertiary-container border border-outline-variant/20">${registaLabel}</span>
-                        </td>
-                        <td class="px-4 md:px-6 py-4 md:py-5 text-sm font-medium hidden lg:table-cell">${film.durata} min</td>
-                        <td class="px-4 md:px-6 py-4 md:py-5 text-right">
-                            <div class="flex items-center justify-end gap-1 md:gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button onclick="openEditModal(${film.id})" class="p-1 md:p-2 hover:bg-surface-bright rounded-lg transition-colors text-secondary">
-                                    <span class="material-symbols-outlined">edit</span>
-                                </button>
-                                <button onclick="deleteFilm(${film.id})" class="p-1 md:p-2 hover:bg-error-container/20 rounded-lg transition-colors text-error">
-                                    <span class="material-symbols-outlined">delete</span>
-                                </button>
+                    <div class="group relative">
+                        <div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-surface-container-high cursor-pointer"
+                             onclick="openDetailModal(${film.id})">
+                            <img src="${imageUrl}" 
+                                 alt="${escapeHtml(film.titolo)}" 
+                                 class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                 loading="lazy">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                            <div class="absolute bottom-0 left-0 right-0 p-2">
+                                <h4 class="font-headline text-xs font-bold text-white truncate">${escapeHtml(film.titolo)}</h4>
+                                <p class="text-[10px] text-white/70 truncate">${regista ? escapeHtml(`${regista.nome} ${regista.cognome}`) : ''}</p>
                             </div>
-                        </td>
-                    </tr>
+                            <div class="absolute top-2 left-2">
+                                <span class="px-2 py-0.5 bg-black/60 backdrop-blur-sm rounded text-[10px] text-white font-bold">${film.durata || '-'} min</span>
+                            </div>
+                            <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-white text-2xl">visibility</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-2 text-center">
+                            <p class="text-xs text-on-surface-variant truncate">${film.dataProduzione ? new Date(film.dataProduzione).getFullYear() : '-'}</p>
+                        </div>
+                    </div>
                 `;
             }).join('');
+        }
+
+        function openDetailModal(id) {
+            const film = allFilms.find(f => f.id === id);
+            if (!film) return;
+
+            const regista = allRegisti.find(r => r.id === film.registaId);
+            const imageUrl = film.copertinaPath || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=600&h=900&fit=crop';
+
+            showModal(`
+                <div class="flex flex-col md:flex-row gap-6">
+                    <div class="w-full md:w-2/5 flex-shrink-0">
+                        <div class="aspect-[2/3] rounded-xl overflow-hidden bg-surface-container-high shadow-2xl">
+                            <img src="${imageUrl}" alt="${escapeHtml(film.titolo)}" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h2 class="font-headline text-2xl md:text-3xl font-bold text-white mb-1">${escapeHtml(film.titolo)}</h2>
+                        
+                        <div class="mt-6 space-y-4">
+                            <div class="bg-surface-container-high rounded-xl p-4">
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">Anno</p>
+                                        <p class="font-semibold text-on-surface">${film.dataProduzione ? new Date(film.dataProduzione).getFullYear() : '-'}</p>
+                                    </div>
+                                    <div>
+                                        <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">Durata</p>
+                                        <p class="font-semibold text-on-surface">${film.durata ? film.durata + ' minuti' : '-'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-surface-container-high rounded-xl p-4">
+                                <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-2">Regista</p>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-secondary to-yellow-600 flex items-center justify-center">
+                                        <span class="text-white font-bold text-lg">${regista ? regista.nome.charAt(0) + regista.cognome.charAt(0) : '?'}</span>
+                                    </div>
+                                    <div>
+                                        <p class="font-semibold text-on-surface">${regista ? escapeHtml(`${regista.nome} ${regista.cognome}`) : 'Non specificato'}</p>
+                                        <p class="text-sm text-on-surface-variant">${regista ? escapeHtml(regista.nazionalita) : ''}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-surface-container-high rounded-xl p-4">
+                                <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-2">Data Produzione</p>
+                                <p class="font-semibold text-on-surface">${film.dataProduzione ? Utils.formatDate(film.dataProduzione) : 'Non specificata'}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex gap-3 mt-6">
+                            <button onclick="closeModal(); openEditModal(${film.id})" class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-secondary hover:bg-secondary/80 text-on-secondary rounded-xl font-bold transition-colors">
+                                <span class="material-symbols-outlined">edit</span>
+                                Modifica
+                            </button>
+                            <button onclick="closeModal(); deleteFilm(${film.id})" class="flex items-center justify-center gap-2 px-4 py-3 bg-error-container/20 hover:bg-error-container/40 text-error rounded-xl font-bold transition-colors">
+                                <span class="material-symbols-outlined">delete</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `, '');
         }
 
         function openCreateModal() {
@@ -356,15 +411,15 @@
         }
 
         async function deleteFilm(id) {
-            if (!Utils.confirmDialog('Are you sure you want to delete this film?')) return;
+            if (!Utils.confirmDialog('Sei sicuro di voler eliminare questo film?')) return;
 
             try {
                 Utils.showLoading();
                 await ApiClient.delete(`/films/${id}`);
-                Utils.showNotification('Film deleted successfully', 'success');
+                Utils.showNotification('Film eliminato con successo', 'success');
                 await loadData();
             } catch (error) {
-                Utils.showNotification(error.message || 'Error deleting film', 'error');
+                Utils.showNotification(error.message || 'Errore nell\'eliminazione del film', 'error');
             } finally {
                 Utils.hideLoading();
             }
@@ -372,10 +427,11 @@
 
         function showModal(title, content) {
             const container = document.getElementById('modal-container');
+            const titleHtml = title ? `<h3 class="font-headline text-xl font-bold mb-6">${title}</h3>` : '';
             container.innerHTML = `
                 <div class="modal-backdrop" onclick="if(event.target === this) closeModal()">
-                    <div class="modal-content max-w-lg">
-                        <h3 class="font-headline text-xl font-bold mb-6">${title}</h3>
+                    <div class="modal-content ${title ? 'max-w-lg' : 'max-w-2xl'}">
+                        ${titleHtml}
                         ${content}
                     </div>
                 </div>

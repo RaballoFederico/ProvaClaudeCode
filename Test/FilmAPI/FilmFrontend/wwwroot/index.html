@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard | The Cinematic Director's Suite</title>
+    <title>Dashboard | FilmAPI</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -42,6 +42,33 @@
         }
     </script>
     <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .hero-gradient {
+            background: linear-gradient(135deg, rgba(229, 9, 20, 0.15) 0%, rgba(19, 19, 19, 0) 50%);
+        }
+        .card-glow:hover {
+            box-shadow: 0 0 30px rgba(229, 9, 20, 0.2);
+        }
+        .stat-pulse {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .film-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .film-card:hover {
+            transform: translateY(-8px) scale(1.02);
+        }
+        .film-card:hover .film-overlay {
+            opacity: 1;
+        }
+        .film-overlay {
+            transition: opacity 0.3s ease;
+        }
+    </style>
 </head>
 <body class="bg-background text-on-background font-body min-h-screen flex flex-col">
     <div id="navbar-container"></div>
@@ -49,100 +76,213 @@
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
         
-        <main class="flex-1 p-4 md:p-8 lg:p-12 space-y-12 overflow-y-auto">
-            <section>
-                <h2 class="font-headline text-4xl md:text-5xl font-extrabold tracking-tighter text-on-surface mb-2">Director's Dashboard</h2>
-                <p class="text-on-surface-variant font-light max-w-2xl">Manage your cinematic empire from a single interface. Real-time statistics, projection schedules, and global film inventory.</p>
-            </section>
-
-            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                <div class="bg-surface-container-low p-4 md:p-6 rounded-xl border border-outline-variant/5 hover:bg-surface-container-high transition-colors">
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="material-symbols-outlined text-primary-container">movie</span>
-                    </div>
-                    <p id="stats-films" class="font-headline text-3xl md:text-4xl font-light mb-1">-</p>
-                    <p class="text-xs uppercase tracking-widest text-on-surface-variant font-semibold">Total Films</p>
-                </div>
-                <div class="bg-surface-container-low p-4 md:p-6 rounded-xl border border-outline-variant/5 hover:bg-surface-container-high transition-colors">
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="material-symbols-outlined text-secondary">person</span>
-                    </div>
-                    <p id="stats-registi" class="font-headline text-3xl md:text-4xl font-light mb-1">-</p>
-                    <p class="text-xs uppercase tracking-widest text-on-surface-variant font-semibold">Total Directors</p>
-                </div>
-                <div class="bg-surface-container-low p-4 md:p-6 rounded-xl border border-outline-variant/5 hover:bg-surface-container-high transition-colors">
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="material-symbols-outlined text-tertiary">theaters</span>
-                    </div>
-                    <p id="stats-cinemas" class="font-headline text-3xl md:text-4xl font-light mb-1">-</p>
-                    <p class="text-xs uppercase tracking-widest text-on-surface-variant font-semibold">Total Cinemas</p>
-                </div>
-                <div class="primary-gradient p-4 md:p-6 rounded-xl shadow-2xl">
-                    <div class="flex justify-between items-start mb-4">
-                        <span class="material-symbols-outlined text-white">confirmation_number</span>
-                    </div>
-                    <p id="stats-proiezioni" class="font-headline text-3xl md:text-4xl font-bold text-white mb-1">-</p>
-                    <p class="text-xs uppercase tracking-widest text-white/80 font-semibold">Today's Projections</p>
-                </div>
-            </section>
-
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-                <section class="lg:col-span-2 space-y-6">
-                    <div class="flex justify-between items-end mb-4">
+        <main class="flex-1 overflow-y-auto pb-24 md:pb-12">
+            <!-- Hero Section -->
+            <div class="hero-gradient px-4 md:px-8 lg:px-12 pt-8 pb-12">
+                <div class="max-w-7xl mx-auto">
+                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                         <div>
-                            <h3 class="font-headline text-xl md:text-2xl font-bold">Recent Additions</h3>
-                            <p class="text-sm text-on-surface-variant">The latest entries to your catalog</p>
+                            <p class="text-secondary uppercase tracking-[0.3em] text-xs font-bold mb-2">Benvenuto in</p>
+                            <h1 class="font-headline text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-4">
+                                Film<span class="text-primary-container">API</span>
+                            </h1>
+                            <p class="text-on-surface-variant text-lg max-w-xl">Il tuo cinema, la tua visione. Gestisci film, registi e proiezioni in un'unica piattaforma elegante.</p>
                         </div>
-                        <a href="films.html" class="text-secondary text-xs font-bold uppercase tracking-widest hover:underline hidden md:block">View Catalog</a>
+                        <div class="flex gap-4">
+                            <a href="films.html?action=create" class="px-6 py-3 bg-primary-container text-white rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-lg shadow-primary-container/30">
+                                <span class="material-symbols-outlined">add</span>
+                                Nuovo Film
+                            </a>
+                            <a href="proiezioni.html?action=create" class="px-6 py-3 bg-surface-container-high text-on-surface rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-transform border border-outline-variant/20">
+                                <span class="material-symbols-outlined">schedule</span>
+                                Proiezione
+                            </a>
+                        </div>
                     </div>
-                    <div id="films-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    </div>
-                </section>
+                </div>
+            </div>
 
-                <aside class="space-y-6">
-                    <div class="bg-surface-container-low p-4 md:p-6 rounded-xl border border-outline-variant/10">
-                        <h3 class="font-headline text-lg md:text-xl font-bold mb-6">Quick Actions</h3>
-                        <div class="space-y-3">
-                            <a href="films.html?action=create" class="w-full flex items-center justify-between p-4 rounded-lg bg-surface-container-high border border-outline-variant/20 hover:border-primary-container/50 transition-all group">
-                                <div class="flex items-center gap-3">
-                                    <span class="material-symbols-outlined text-primary-container">add_circle</span>
-                                    <span class="text-sm font-medium">Add new Film</span>
+            <!-- Stats Cards -->
+            <div class="px-4 md:px-8 lg:px-12 -mt-6">
+                <div class="max-w-7xl mx-auto">
+                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-surface-container-low p-5 rounded-2xl border border-outline-variant/10 hover:border-primary-container/30 transition-all card-glow cursor-pointer" onclick="location.href='films.html'">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="w-12 h-12 rounded-xl bg-primary-container/20 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-primary-container text-2xl">movie</span>
                                 </div>
-                                <span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
-                            </a>
-                            <a href="proiezioni.html?action=create" class="w-full flex items-center justify-between p-4 rounded-lg bg-surface-container-high border border-outline-variant/20 hover:border-primary-container/50 transition-all group">
-                                <div class="flex items-center gap-3">
-                                    <span class="material-symbols-outlined text-secondary">calendar_today</span>
-                                    <span class="text-sm font-medium">Schedule Projection</span>
+                                <span id="stats-films" class="font-headline text-4xl font-bold text-white">-</span>
+                            </div>
+                            <p class="text-on-surface-variant text-sm">Film in catalogo</p>
+                            <div class="mt-3 flex items-center gap-1 text-primary-container text-xs">
+                                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                                <span>Scopri</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-surface-container-low p-5 rounded-2xl border border-outline-variant/10 hover:border-secondary/30 transition-all card-glow cursor-pointer" onclick="location.href='registi.html'">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="w-12 h-12 rounded-xl bg-secondary/20 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-secondary text-2xl">theater_comedy</span>
                                 </div>
-                                <span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
-                            </a>
-                            <a href="registi.html?action=create" class="w-full flex items-center justify-between p-4 rounded-lg bg-surface-container-high border border-outline-variant/20 hover:border-primary-container/50 transition-all group">
-                                <div class="flex items-center gap-3">
-                                    <span class="material-symbols-outlined text-tertiary">person_add</span>
-                                    <span class="text-sm font-medium">Register Director</span>
+                                <span id="stats-registi" class="font-headline text-4xl font-bold text-white">-</span>
+                            </div>
+                            <p class="text-on-surface-variant text-sm">Registi talentuosi</p>
+                            <div class="mt-3 flex items-center gap-1 text-secondary text-xs">
+                                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                                <span>Esplora</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-surface-container-low p-5 rounded-2xl border border-outline-variant/10 hover:border-tertiary/30 transition-all card-glow cursor-pointer" onclick="location.href='cinemas.html'">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="w-12 h-12 rounded-xl bg-tertiary/20 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-tertiary text-2xl">theaters</span>
                                 </div>
-                                <span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity">chevron_right</span>
-                            </a>
+                                <span id="stats-cinemas" class="font-headline text-4xl font-bold text-white">-</span>
+                            </div>
+                            <p class="text-on-surface-variant text-sm">Sale cinematografiche</p>
+                            <div class="mt-3 flex items-center gap-1 text-tertiary text-xs">
+                                <span class="material-symbols-outlined text-sm">arrow_forward</span>
+                                <span>Vedi</span>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gradient-to-br from-primary-container to-red-700 p-5 rounded-2xl shadow-2xl shadow-primary-container/30">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-white text-2xl">confirmation_number</span>
+                                </div>
+                                <span id="stats-proiezioni" class="font-headline text-4xl font-bold text-white">-</span>
+                            </div>
+                            <p class="text-white/80 text-sm">Proiezioni programmate</p>
+                            <div class="mt-3 flex items-center gap-1 text-white/60 text-xs">
+                                <span class="material-symbols-outlined text-sm">schedule</span>
+                                <span>In corso</span>
+                            </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
-                    <div class="bg-surface-container-low p-4 md:p-6 rounded-xl border border-outline-variant/10">
-                        <h4 class="font-headline text-lg font-bold mb-6">Upcoming Projections</h4>
-                        <div id="upcoming-projections" class="space-y-4">
+            <!-- Main Content -->
+            <div class="px-4 md:px-8 lg:px-12 mt-10">
+                <div class="max-w-7xl mx-auto space-y-10">
+                    
+                    <!-- Featured Films Section -->
+                    <section>
+                        <div class="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 class="font-headline text-2xl md:text-3xl font-bold text-white">Film in Evidenza</h2>
+                                <p class="text-on-surface-variant text-sm mt-1">I capolavori del tuo catalogo</p>
+                            </div>
+                            <a href="films.html" class="text-secondary hover:text-white transition-colors flex items-center gap-1 text-sm font-bold">
+                                Vedi tutti
+                                <span class="material-symbols-outlined text-lg">chevron_right</span>
+                            </a>
+                        </div>
+                        <div id="films-carousel" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                        </div>
+                        <div id="films-empty" class="hidden bg-surface-container-low rounded-2xl p-12 text-center">
+                            <span class="material-symbols-outlined text-6xl text-on-surface-variant opacity-30">movie_filter</span>
+                            <p class="mt-4 text-on-surface-variant text-lg">Nessun film nel catalogo</p>
+                            <a href="films.html?action=create" class="inline-block mt-4 px-6 py-3 bg-primary-container text-white rounded-xl font-bold">Aggiungi il primo film</a>
+                        </div>
+                    </section>
+
+                    <!-- Bottom Grid: Projections + Quick Actions -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        
+                        <!-- Upcoming Projections -->
+                        <div class="lg:col-span-2">
+                            <div class="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10">
+                                <div class="flex items-center justify-between mb-6">
+                                    <div>
+                                        <h3 class="font-headline text-xl font-bold text-white">Prossime Proiezioni</h3>
+                                        <p class="text-on-surface-variant text-sm">Appuntamenti da non perdere</p>
+                                    </div>
+                                    <a href="proiezioni.html" class="text-secondary hover:text-white transition-colors text-sm font-bold flex items-center gap-1">
+                                        Tutte
+                                        <span class="material-symbols-outlined text-lg">arrow_forward</span>
+                                    </a>
+                                </div>
+                                <div id="projections-list" class="space-y-3">
+                                </div>
+                                <div id="projections-empty" class="hidden text-center py-8">
+                                    <span class="material-symbols-outlined text-5xl text-on-surface-variant opacity-30">event_busy</span>
+                                    <p class="mt-3 text-on-surface-variant">Nessuna proiezione in programma</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Actions -->
+                        <div class="space-y-4">
+                            <div class="bg-surface-container-low rounded-2xl p-6 border border-outline-variant/10">
+                                <h3 class="font-headline text-lg font-bold text-white mb-4">Azioni Rapide</h3>
+                                <div class="space-y-3">
+                                    <a href="films.html?action=create" class="flex items-center gap-4 p-4 bg-surface-container-high rounded-xl hover:bg-primary-container/20 border border-transparent hover:border-primary-container/30 transition-all group">
+                                        <div class="w-10 h-10 rounded-xl bg-primary-container/20 flex items-center justify-center">
+                                            <span class="material-symbols-outlined text-primary-container">movie</span>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="font-medium text-on-surface">Nuovo Film</p>
+                                            <p class="text-xs text-on-surface-variant">Aggiungi al catalogo</p>
+                                        </div>
+                                        <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary-container transition-colors">add_circle</span>
+                                    </a>
+                                    
+                                    <a href="registi.html?action=create" class="flex items-center gap-4 p-4 bg-surface-container-high rounded-xl hover:bg-secondary/20 border border-transparent hover:border-secondary/30 transition-all group">
+                                        <div class="w-10 h-10 rounded-xl bg-secondary/20 flex items-center justify-center">
+                                            <span class="material-symbols-outlined text-secondary">person_add</span>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="font-medium text-on-surface">Nuovo Regista</p>
+                                            <p class="text-xs text-on-surface-variant">Espandi il roster</p>
+                                        </div>
+                                        <span class="material-symbols-outlined text-on-surface-variant group-hover:text-secondary transition-colors">add_circle</span>
+                                    </a>
+                                    
+                                    <a href="cinemas.html?action=create" class="flex items-center gap-4 p-4 bg-surface-container-high rounded-xl hover:bg-tertiary/20 border border-transparent hover:border-tertiary/30 transition-all group">
+                                        <div class="w-10 h-10 rounded-xl bg-tertiary/20 flex items-center justify-center">
+                                            <span class="material-symbols-outlined text-tertiary">add_location</span>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="font-medium text-on-surface">Nuovo Cinema</p>
+                                            <p class="text-xs text-on-surface-variant">Amplia la rete</p>
+                                        </div>
+                                        <span class="material-symbols-outlined text-on-surface-variant group-hover:text-tertiary transition-colors">add_circle</span>
+                                    </a>
+                                    
+                                    <a href="proiezioni.html?action=create" class="flex items-center gap-4 p-4 bg-surface-container-high rounded-xl hover:bg-primary-container/20 border border-transparent hover:border-primary-container/30 transition-all group">
+                                        <div class="w-10 h-10 rounded-xl bg-primary-container/20 flex items-center justify-center">
+                                            <span class="material-symbols-outlined text-primary-container">schedule_send</span>
+                                        </div>
+                                        <div class="flex-1">
+                                            <p class="font-medium text-on-surface">Programma</p>
+                                            <p class="text-xs text-on-surface-variant">Nuova proiezione</p>
+                                        </div>
+                                        <span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary-container transition-colors">add_circle</span>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </aside>
+                </div>
             </div>
         </main>
     </div>
 
     <div id="footer-container"></div>
 
-    <script src="/js/template-loader.js"></script>
     <script src="/js/api-client.js"></script>
     <script src="/js/utils.js"></script>
+    <script src="/js/template-loader.js"></script>
     <script>
+        let filmsData = [];
+        let registiData = [];
+        let cinemasData = [];
+        let proiezioniData = [];
+
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();
             await loadDashboardData();
@@ -157,71 +297,127 @@
                     ApiClient.get('/proiezioni')
                 ]);
 
-                document.getElementById('stats-films').textContent = films.length;
-                document.getElementById('stats-registi').textContent = registi.length;
-                document.getElementById('stats-cinemas').textContent = cinemas.length;
-                document.getElementById('stats-proiezioni').textContent = proiezioni.length;
+                filmsData = films || [];
+                registiData = registi || [];
+                cinemasData = cinemas || [];
+                proiezioniData = proiezioni || [];
 
-                const filmsGrid = document.getElementById('films-grid');
-                films.slice(0, 4).forEach(film => {
-                    const card = createFilmCard(film);
-                    filmsGrid.appendChild(card);
-                });
-
-                if (filmsGrid.children.length === 0) {
-                    filmsGrid.innerHTML = '<p class="text-on-surface-variant col-span-2">No films available. Add your first film!</p>';
-                }
-
-                const projectionsList = document.getElementById('upcoming-projections');
-                proiezioni.slice(0, 3).forEach(proj => {
-                    const film = films.find(f => f.id === proj.filmId);
-                    const cinema = cinemas.find(c => c.id === proj.cinemaId);
-                    const item = createProjectionItem(proj, film, cinema);
-                    projectionsList.appendChild(item);
-                });
-
-                if (projectionsList.children.length === 0) {
-                    projectionsList.innerHTML = '<p class="text-on-surface-variant text-sm">No upcoming projections.</p>';
-                }
+                updateStats();
+                renderFilmCards();
+                renderProjections();
             } catch (error) {
                 console.error('Error loading dashboard data:', error);
                 Utils.showNotification('Errore nel caricamento dei dati', 'error');
             }
         }
 
-        function createFilmCard(film) {
-            const div = document.createElement('div');
-            div.className = 'group relative overflow-hidden rounded-xl bg-surface-container-low border border-outline-variant/10 hover:border-primary-container/30 transition-all duration-300';
-            div.innerHTML = `
-                <div class="h-32 md:h-48 w-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" 
-                     style="background-image: url('${film.copertinaPath || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&h=600&fit=crop'}')"></div>
-                <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
-                <div class="absolute bottom-0 left-0 p-4 w-full">
-                    <div class="flex items-center gap-2 mb-1">
-                        <span class="text-[10px] text-on-surface-variant">${film.durata} min</span>
-                    </div>
-                    <h4 class="font-headline text-lg font-bold text-white truncate">${film.titolo}</h4>
-                </div>
-            `;
-            return div;
+        function updateStats() {
+            document.getElementById('stats-films').textContent = filmsData.length;
+            document.getElementById('stats-registi').textContent = registiData.length;
+            document.getElementById('stats-cinemas').textContent = cinemasData.length;
+            document.getElementById('stats-proiezioni').textContent = proiezioniData.length;
         }
 
-        function createProjectionItem(proiezione, film, cinema) {
-            const div = document.createElement('div');
-            div.className = 'flex items-center justify-between py-2 border-b border-outline-variant/10 last:border-0 hover:bg-surface-container-high transition-colors rounded px-2';
-            div.innerHTML = `
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded bg-surface-container-highest flex items-center justify-center font-headline font-bold text-primary-container text-sm">${Utils.formatTime(proiezione.ora)}</div>
-                    <div>
-                        <p class="text-sm font-bold truncate max-w-[150px]">${film?.titolo || 'Unknown'}</p>
-                        <p class="text-[10px] text-on-surface-variant uppercase tracking-widest">${cinema?.nome || 'Unknown'}</p>
+        function renderFilmCards() {
+            const carousel = document.getElementById('films-carousel');
+            const emptyState = document.getElementById('films-empty');
+
+            if (filmsData.length === 0) {
+                carousel.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            carousel.classList.remove('hidden');
+            carousel.innerHTML = '';
+
+            const featuredFilms = filmsData.slice(0, 6);
+            featuredFilms.forEach((film, index) => {
+                const regista = registiData.find(r => r.id === film.registaId);
+                const imageUrl = film.copertinaPath || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300&h=450&fit=crop';
+                
+                const card = document.createElement('div');
+                card.className = 'film-card relative rounded-xl overflow-hidden bg-surface-container-low cursor-pointer group';
+                card.onclick = () => location.href = 'films.html';
+                
+                card.innerHTML = `
+                    <div class="aspect-[2/3] relative">
+                        <img src="${imageUrl}" alt="${escapeHtml(film.titolo)}" class="w-full h-full object-cover" loading="lazy">
+                        <div class="film-overlay absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent opacity-80"></div>
+                        <div class="absolute bottom-0 left-0 right-0 p-3">
+                            <span class="inline-block px-2 py-0.5 bg-primary-container text-white text-[10px] font-bold rounded mb-1">${film.durata || '-'} min</span>
+                            <h4 class="font-headline text-sm font-bold text-white line-clamp-2">${escapeHtml(film.titolo)}</h4>
+                            <p class="text-[10px] text-white/70 truncate">${regista ? escapeHtml(`${regista.nome} ${regista.cognome}`) : ''}</p>
+                        </div>
+                        <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <span class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                                <span class="material-symbols-outlined text-white text-sm">play_arrow</span>
+                            </span>
+                        </div>
                     </div>
-                </div>
-                <div class="text-right">
-                    <span class="text-xs text-on-surface-variant">${Utils.formatDateShort(proiezione.data)}</span>
-                </div>
-            `;
-            return div;
+                `;
+                carousel.appendChild(card);
+            });
+        }
+
+        function renderProjections() {
+            const list = document.getElementById('projections-list');
+            const emptyState = document.getElementById('projections-empty');
+
+            if (proiezioniData.length === 0) {
+                list.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            list.classList.remove('hidden');
+            list.innerHTML = '';
+
+            const sorted = [...proiezioniData]
+                .sort((a, b) => new Date(a.data) - new Date(b.data))
+                .slice(0, 5);
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            sorted.forEach((proj, index) => {
+                const film = filmsData.find(f => f.id === proj.filmId);
+                const cinema = cinemasData.find(c => c.id === proj.cinemaId);
+                const projDate = new Date(proj.data);
+                projDate.setHours(0, 0, 0, 0);
+                const isToday = projDate.getTime() === today.getTime();
+                const isPast = projDate < today;
+
+                const item = document.createElement('div');
+                item.className = `flex items-center gap-4 p-3 rounded-xl transition-all ${isPast ? 'opacity-50' : 'hover:bg-surface-container-high cursor-pointer'}`;
+                item.onclick = () => location.href = 'proiezioni.html';
+                
+                item.innerHTML = `
+                    <div class="w-14 h-14 rounded-xl ${isToday ? 'bg-primary-container' : 'bg-surface-container-high'} flex flex-col items-center justify-center flex-shrink-0">
+                        <span class="font-headline text-lg font-bold ${isToday ? 'text-white' : 'text-primary-container'}">${Utils.formatTime(proj.ora)}</span>
+                        <span class="text-[10px] ${isToday ? 'text-white/70' : 'text-on-surface-variant'}">${Utils.formatDateShort(proj.data).split(' ')[0]}</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="font-medium text-on-surface truncate">${film ? escapeHtml(film.titolo) : 'Film sconosciuto'}</p>
+                        <p class="text-xs text-on-surface-variant flex items-center gap-1">
+                            <span class="material-symbols-outlined text-sm">place</span>
+                            ${cinema ? escapeHtml(cinema.nome) : 'Cinema sconosciuto'}
+                        </p>
+                    </div>
+                    ${isToday ? '<span class="px-2 py-1 bg-primary-container/20 text-primary-container text-[10px] font-bold rounded-full">OGGI</span>' : ''}
+                    ${isPast ? '<span class="text-[10px] text-on-surface-variant">Passata</span>' : ''}
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     </script>
 </body>

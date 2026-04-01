@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cines | The Cinematic Director's Suite</title>
+    <title>Cinema | FilmAPI</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -49,38 +49,32 @@
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
         
-        <main class="flex-1 p-4 md:p-8 lg:p-12 overflow-x-hidden">
+        <main class="flex-1 p-4 md:p-8 lg:p-12 overflow-x-hidden pb-20 md:pb-0">
             <section class="space-y-2 mb-8 md:mb-12">
-                <h2 class="text-3xl md:text-5xl font-extralight font-headline tracking-tight text-white">Operations Control</h2>
-                <p class="text-secondary tracking-widest uppercase text-xs font-label opacity-80">Infrastructure & Scheduling Intelligence</p>
+                <h2 class="text-3xl md:text-5xl font-extralight font-headline tracking-tight text-white">Controllo Operazioni</h2>
+                <p class="text-secondary tracking-widest uppercase text-xs font-label opacity-80">Gestione Infrastruttura e Programmazione</p>
             </section>
 
             <section class="space-y-6">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                     <div class="space-y-1">
-                        <h3 class="text-xl md:text-2xl font-headline text-white">Cinemas Inventory</h3>
-                        <p class="text-on-surface-variant text-sm font-body">Global theatre network management and location mapping.</p>
+                        <h3 class="text-xl md:text-2xl font-headline text-white">Inventario Cinema</h3>
+                        <p class="text-on-surface-variant text-sm font-body">Gestione della rete cinematografica e localizzazione.</p>
                     </div>
                     <button onclick="openCreateModal()" class="bg-primary-container text-on-primary-container px-4 md:px-6 py-2 md:py-3 rounded-xl font-headline font-bold text-sm flex items-center gap-2 hover:scale-95 transition-all duration-150 shadow-lg shadow-primary-container/20">
                         <span class="material-symbols-outlined">add_location</span>
-                        Add New Cinema
+                        Nuovo Cinema
                     </button>
                 </div>
 
-                <div class="grid grid-cols-1 gap-1">
-                    <div class="grid grid-cols-12 px-4 md:px-8 py-3 md:py-4 bg-surface-container-lowest text-secondary uppercase text-[10px] tracking-widest font-label font-bold rounded-t-xl">
-                        <div class="col-span-2 md:col-span-1">ID</div>
-                        <div class="col-span-5 md:col-span-4">Nome</div>
-                        <div class="col-span-3 md:col-span-4">Indirizzo</div>
-                        <div class="col-span-2 md:col-span-2">Città</div>
-                        <div class="col-span-0 md:col-span-1 text-right hidden md:block">Actions</div>
-                    </div>
-                    <div id="cinemas-list"></div>
-                    <div id="empty-state" class="hidden bg-surface-container-low rounded-b-xl p-8 text-center">
-                        <span class="material-symbols-outlined text-4xl text-on-surface-variant opacity-50">theaters</span>
-                        <p class="mt-2 text-on-surface-variant">No cinemas found. Add your first cinema!</p>
-                    </div>
+                <div id="cinemas-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                 </div>
+                <div id="empty-state" class="hidden bg-surface-container-low rounded-xl p-12 text-center">
+                    <span class="material-symbols-outlined text-5xl text-on-surface-variant opacity-50">theaters</span>
+                    <p class="mt-4 text-on-surface-variant text-lg">Nessun cinema trovato.</p>
+                    <button onclick="openCreateModal()" class="mt-4 px-6 py-3 bg-primary-container text-white rounded-xl font-bold">Aggiungi Cinema</button>
+                </div>
+                <div id="pagination-info" class="mt-4 text-center text-xs text-on-surface-variant uppercase tracking-widest"></div>
             </section>
         </main>
     </div>
@@ -114,33 +108,60 @@
         }
 
         function renderCinemas() {
-            const list = document.getElementById('cinemas-list');
+            const grid = document.getElementById('cinemas-grid');
             const emptyState = document.getElementById('empty-state');
+            const paginationInfo = document.getElementById('pagination-info');
 
             if (currentCinemas.length === 0) {
-                list.innerHTML = '';
+                grid.innerHTML = '';
                 emptyState.classList.remove('hidden');
+                grid.classList.add('hidden');
+                paginationInfo.textContent = '';
                 return;
             }
 
             emptyState.classList.add('hidden');
+            grid.classList.remove('hidden');
+            paginationInfo.textContent = `${currentCinemas.length} cinema trovati`;
+
+            const icons = ['local_movies', 'movie', 'theaters', 'tv', 'live_tv', 'videocam', 'movie_filter', 'personal_video'];
             
-            list.innerHTML = currentCinemas.map((cinema, index) => `
-                <div class="grid grid-cols-12 px-4 md:px-8 py-4 md:py-6 bg-surface-container-low md:bg-surface-container items-center hover:bg-surface-container-high transition-colors duration-300 group ${index === currentCinemas.length - 1 ? 'rounded-b-xl' : ''}">
-                    <div class="col-span-2 md:col-span-1 font-mono text-on-surface-variant text-sm">#C-${String(cinema.id).padStart(3, '0')}</div>
-                    <div class="col-span-5 md:col-span-4 font-headline text-base md:text-lg text-white">${escapeHtml(cinema.nome)}</div>
-                    <div class="col-span-3 md:col-span-4 font-body text-sm text-on-surface-variant">${escapeHtml(cinema.indirizzo)}</div>
-                    <div class="col-span-5 md:col-span-2 font-body text-sm text-on-surface-variant">${escapeHtml(cinema.citta)}</div>
-                    <div class="col-span-2 md:col-span-1 text-right opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onclick="openEditModal(${cinema.id})" class="p-2 hover:bg-surface-container-highest rounded-lg transition-colors">
-                            <span class="material-symbols-outlined text-secondary cursor-pointer">edit_square</span>
-                        </button>
-                        <button onclick="deleteCinema(${cinema.id})" class="p-2 hover:bg-error-container/20 rounded-lg transition-colors">
-                            <span class="material-symbols-outlined text-error cursor-pointer">delete</span>
-                        </button>
+            grid.innerHTML = currentCinemas.map((cinema, index) => {
+                const icon = icons[index % icons.length];
+                return `
+                    <div class="group relative bg-surface-container-low rounded-xl overflow-hidden border border-outline-variant/10 hover:border-primary-container/30 transition-all duration-300">
+                        <div class="h-24 bg-gradient-to-br from-surface-container-high to-surface-container flex items-center justify-center">
+                            <span class="material-symbols-outlined text-6xl md:text-7xl text-primary-container/40">${icon}</span>
+                        </div>
+                        <div class="p-4">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="min-w-0 flex-1">
+                                    <h4 class="font-headline text-base md:text-lg font-bold text-on-surface truncate">${escapeHtml(cinema.nome)}</h4>
+                                    <p class="text-xs text-on-surface-variant mt-1 flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">location_on</span>
+                                        ${escapeHtml(cinema.indirizzo)}
+                                    </p>
+                                    <p class="text-xs text-secondary mt-1 flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">place</span>
+                                        ${escapeHtml(cinema.citta)}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex justify-between items-center">
+                                <span class="text-[10px] font-mono text-on-surface-variant/50">#C-${String(cinema.id).padStart(3, '0')}</span>
+                                <div class="flex gap-2">
+                                    <button onclick="openEditModal(${cinema.id})" class="p-2 bg-surface-container-high hover:bg-secondary/20 rounded-lg transition-colors">
+                                        <span class="material-symbols-outlined text-sm text-secondary">edit</span>
+                                    </button>
+                                    <button onclick="deleteCinema(${cinema.id})" class="p-2 bg-surface-container-high hover:bg-error-container/20 rounded-lg transition-colors">
+                                        <span class="material-symbols-outlined text-sm text-error">delete</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function openCreateModal() {

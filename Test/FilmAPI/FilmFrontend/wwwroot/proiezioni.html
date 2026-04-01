@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Proyecciones | The Cinematic Director's Suite</title>
+    <title>Proiezioni | FilmAPI</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -51,21 +51,21 @@
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
         
-        <main class="flex-1 p-4 md:p-8 lg:p-12 overflow-x-hidden">
+        <main class="flex-1 p-4 md:p-8 lg:p-12 overflow-x-hidden pb-20 md:pb-0">
             <section class="space-y-2 mb-8 md:mb-12">
-                <h2 class="text-3xl md:text-5xl font-extralight font-headline tracking-tight text-white">Operations Control</h2>
-                <p class="text-secondary tracking-widest uppercase text-xs font-label opacity-80">Infrastructure & Scheduling Intelligence</p>
+                <h2 class="text-3xl md:text-5xl font-extralight font-headline tracking-tight text-white">Controllo Operazioni</h2>
+                <p class="text-secondary tracking-widest uppercase text-xs font-label opacity-80">Gestione Infrastruttura e Programmazione</p>
             </section>
 
             <section class="space-y-6">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                     <div class="space-y-1">
-                        <h3 class="text-xl md:text-2xl font-headline text-white">Active Projections</h3>
-                        <p class="text-on-surface-variant text-sm font-body">Timeline of scheduled cinematic engagements across the network.</p>
+                        <h3 class="text-xl md:text-2xl font-headline text-white">Proiezioni Attive</h3>
+                        <p class="text-on-surface-variant text-sm font-body">Timeline delle proiezioni cinematografiche programmate.</p>
                     </div>
                     <button onclick="openCreateModal()" class="bg-primary-container text-on-primary-container px-4 md:px-6 py-2 md:py-3 rounded-xl font-headline font-bold text-sm flex items-center gap-2 hover:scale-95 transition-all duration-150 shadow-lg shadow-primary-container/20">
                         <span class="material-symbols-outlined">schedule_send</span>
-                        Schedule Projection
+                        Nuova Proiezione
                     </button>
                 </div>
 
@@ -73,8 +73,8 @@
                 </div>
                 <div id="empty-state" class="hidden bg-surface-container-low rounded-xl p-12 text-center">
                     <span class="material-symbols-outlined text-5xl text-on-surface-variant opacity-50">event_busy</span>
-                    <p class="mt-4 text-on-surface-variant text-lg">No projections scheduled</p>
-                    <p class="text-on-surface-variant/60 text-sm mt-1">Create your first projection to get started.</p>
+                    <p class="mt-4 text-on-surface-variant text-lg">Nessuna proiezione programmata</p>
+                    <p class="text-on-surface-variant/60 text-sm mt-1">Crea la tua prima proiezione.</p>
                 </div>
             </section>
         </main>

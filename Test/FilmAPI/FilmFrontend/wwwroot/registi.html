@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Directors | The Cinematic Director's Suite</title>
+    <title>Registi | FilmAPI</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -50,53 +50,39 @@
         <div id="sidebar-container"></div>
         
         <main class="flex-1 p-4 md:p-8 lg:p-12 max-w-7xl mx-auto w-full">
-            <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-12 gap-4 md:gap-6">
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 md:mb-12 gap-4 md:gap-6 pb-20 md:pb-0">
                 <div class="max-w-2xl">
-                    <span class="text-secondary uppercase tracking-[0.3em] text-[10px] font-bold mb-2 block">Management Portal</span>
-                    <h2 class="font-headline text-3xl md:text-5xl lg:text-6xl font-extralight tracking-tight text-on-surface">Director <span class="text-primary-container font-black italic">Registry</span></h2>
-                    <p class="mt-2 md:mt-4 text-on-surface-variant font-body leading-relaxed opacity-80 text-sm md:text-base">Manage the elite roster of cinematic visionaries. From industry veterans to rising auteurs, oversee their portfolio and collaborative history within the database.</p>
+                    <span class="text-secondary uppercase tracking-[0.3em] text-[10px] font-bold mb-2 block">Gestione</span>
+                    <h2 class="font-headline text-3xl md:text-5xl lg:text-6xl font-extralight tracking-tight text-on-surface">Registro <span class="text-primary-container font-black italic">Registi</span></h2>
+                    <p class="mt-2 md:mt-4 text-on-surface-variant font-body leading-relaxed opacity-80 text-sm md:text-base">Gestisci il roster dei registi cinematografici. Supervisiona il loro portafoglio e la storia collaborativa.</p>
                 </div>
                 <button onclick="openCreateModal()" class="flex items-center gap-3 bg-gradient-to-br from-primary-container to-inverse-primary text-on-primary-container px-6 md:px-8 py-3 md:py-4 rounded-xl font-headline font-bold uppercase tracking-wider text-xs md:text-sm hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-xl shadow-primary-container/20">
                     <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add_circle</span>
-                    Add New Director
+                    Nuovo Regista
                 </button>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6">
                 <div class="lg:col-span-3 space-y-4 md:space-y-6">
                     <div class="bg-surface-container-high p-4 md:p-6 rounded-xl border border-outline-variant/5">
-                        <p class="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Total Auteurs</p>
+                        <p class="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Totale Registi</p>
                         <h3 id="total-registi" class="text-3xl md:text-4xl font-headline font-light text-secondary">0</h3>
                     </div>
                     <div class="bg-surface-container-high p-4 md:p-6 rounded-xl border border-outline-variant/5">
-                        <p class="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Global Diversity</p>
-                        <h3 id="nations-count" class="text-3xl md:text-4xl font-headline font-light text-on-surface">0 <span class="text-lg text-on-surface-variant font-body tracking-normal">Nations</span></h3>
+                        <p class="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Nazionalità</p>
+                        <h3 id="nations-count" class="text-3xl md:text-4xl font-headline font-light text-on-surface">0 <span class="text-lg text-on-surface-variant font-body tracking-normal">Paesi</span></h3>
                     </div>
                 </div>
 
-                <div class="lg:col-span-9 bg-surface-container-low rounded-xl overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead>
-                                <tr class="bg-surface-container-lowest">
-                                    <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">ID Ref</th>
-                                    <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">Nome</th>
-                                    <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">Cognome</th>
-                                    <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">Nazionalità</th>
-                                    <th class="px-4 md:px-6 py-3 md:py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold text-right">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody id="registi-table-body" class="divide-y divide-outline-variant/10">
-                            </tbody>
-                        </table>
+                <div class="lg:col-span-9">
+                    <div id="registi-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
                     </div>
-                    <div id="empty-state" class="hidden p-8 text-center">
-                        <span class="material-symbols-outlined text-4xl text-on-surface-variant opacity-50">person_off</span>
-                        <p class="mt-2 text-on-surface-variant">No directors found. Add your first director!</p>
+                    <div id="empty-state" class="hidden bg-surface-container-low rounded-xl p-12 text-center">
+                        <span class="material-symbols-outlined text-5xl text-on-surface-variant opacity-50">person_off</span>
+                        <p class="mt-4 text-on-surface-variant text-lg">Nessun regista trovato.</p>
+                        <button onclick="openCreateModal()" class="mt-4 px-6 py-3 bg-primary-container text-white rounded-xl font-bold">Aggiungi Regista</button>
                     </div>
-                    <div class="flex items-center justify-between px-4 md:px-8 py-3 md:py-4 bg-surface-container-lowest/50">
-                        <span id="pagination-info" class="text-[10px] font-headline text-on-surface-variant/60 uppercase tracking-widest">Showing 0 entries</span>
-                    </div>
+                    <div id="pagination-info" class="mt-4 text-center text-xs text-on-surface-variant uppercase tracking-widest"></div>
                 </div>
             </div>
         </main>
@@ -138,46 +124,66 @@
         }
 
         function renderRegisti() {
-            const tbody = document.getElementById('registi-table-body');
+            const grid = document.getElementById('registi-grid');
             const emptyState = document.getElementById('empty-state');
             const paginationInfo = document.getElementById('pagination-info');
 
             if (currentRegisti.length === 0) {
-                tbody.innerHTML = '';
+                grid.innerHTML = '';
                 emptyState.classList.remove('hidden');
-                paginationInfo.textContent = 'No entries';
+                grid.classList.add('hidden');
+                paginationInfo.textContent = '';
                 return;
             }
 
             emptyState.classList.add('hidden');
-            paginationInfo.textContent = `Showing ${currentRegisti.length} entries`;
-            
-            tbody.innerHTML = currentRegisti.map(regista => `
-                <tr class="hover:bg-surface-container-high transition-colors duration-200 group">
-                    <td class="px-4 md:px-6 py-4 md:py-6 text-sm font-mono text-primary/70">DIR-${String(regista.id).padStart(3, '0')}</td>
-                    <td class="px-4 md:px-6 py-4 md:py-6 text-sm font-semibold text-on-surface">${escapeHtml(regista.nome)}</td>
-                    <td class="px-4 md:px-6 py-4 md:py-6 text-sm font-semibold text-on-surface">${escapeHtml(regista.cognome)}</td>
-                    <td class="px-4 md:px-6 py-4 md:py-6">
-                        <span class="inline-flex items-center px-2 md:px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-surface-variant text-secondary tracking-widest">${escapeHtml(regista.nazionalita)}</span>
-                    </td>
-                    <td class="px-4 md:px-6 py-4 md:py-6 text-right">
-                        <div class="flex items-center justify-end gap-1 md:gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onclick="openEditModal(${regista.id})" class="p-1 md:p-2 text-on-surface-variant hover:text-secondary transition-colors">
-                                <span class="material-symbols-outlined text-lg">edit</span>
+            grid.classList.remove('hidden');
+            paginationInfo.textContent = `${currentRegisti.length} registi trovati`;
+
+            const colors = [
+                'from-red-500 to-pink-500',
+                'from-blue-500 to-cyan-500',
+                'from-green-500 to-emerald-500',
+                'from-yellow-500 to-orange-500',
+                'from-purple-500 to-violet-500',
+                'from-pink-500 to-rose-500',
+                'from-indigo-500 to-blue-500',
+                'from-teal-500 to-green-500'
+            ];
+
+            grid.innerHTML = currentRegisti.map((regista, index) => {
+                const initials = `${regista.nome.charAt(0)}${regista.cognome.charAt(0)}`.toUpperCase();
+                const colorClass = colors[index % colors.length];
+                return `
+                    <div class="group relative bg-surface-container-low rounded-xl p-4 border border-outline-variant/10 hover:border-primary-container/30 transition-all duration-300 cursor-pointer"
+                         onclick="openEditModal(${regista.id})">
+                        <div class="flex flex-col items-center text-center">
+                            <div class="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br ${colorClass} flex items-center justify-center mb-3 shadow-lg">
+                                <span class="text-white font-headline text-xl md:text-2xl font-bold">${initials}</span>
+                            </div>
+                            <h4 class="font-headline text-sm md:text-base font-bold text-on-surface truncate w-full">${escapeHtml(regista.nome)}</h4>
+                            <p class="font-headline text-sm md:text-base font-bold text-on-surface/80 truncate w-full">${escapeHtml(regista.cognome)}</p>
+                            <span class="mt-2 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-surface-container-high text-secondary tracking-widest">${escapeHtml(regista.nazionalita)}</span>
+                        </div>
+                        <div class="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="event.stopPropagation(); openEditModal(${regista.id})" 
+                                    class="p-1.5 bg-surface-container-high/90 backdrop-blur-sm rounded-lg hover:bg-secondary/80 transition-colors">
+                                <span class="material-symbols-outlined text-sm text-white">edit</span>
                             </button>
-                            <button onclick="deleteRegista(${regista.id})" class="p-1 md:p-2 text-on-surface-variant hover:text-primary-container transition-colors">
-                                <span class="material-symbols-outlined text-lg">delete</span>
+                            <button onclick="event.stopPropagation(); deleteRegista(${regista.id})" 
+                                    class="p-1.5 bg-surface-container-high/90 backdrop-blur-sm rounded-lg hover:bg-error-container/80 transition-colors">
+                                <span class="material-symbols-outlined text-sm text-white">delete</span>
                             </button>
                         </div>
-                    </td>
-                </tr>
-            `).join('');
+                    </div>
+                `;
+            }).join('');
         }
 
         function updateStats() {
             document.getElementById('total-registi').textContent = currentRegisti.length;
             const nations = new Set(currentRegisti.map(r => r.nazionalita));
-            document.getElementById('nations-count').innerHTML = `${nations.size} <span class="text-lg text-on-surface-variant font-body tracking-normal">Nations</span>`;
+            document.getElementById('nations-count').innerHTML = `${nations.size} <span class="text-lg text-on-surface-variant font-body tracking-normal">Paesi</span>`;
         }
 
         function openCreateModal() {
