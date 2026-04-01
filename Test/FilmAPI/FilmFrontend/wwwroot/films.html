@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html class="dark" lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -291,7 +291,7 @@
         }
 
         function openCreateModal() {
-            showModal('Add New Film', `
+            showModal('Nuovo Film', `
                 <form id="film-form" onsubmit="handleSubmit(event)">
                     <div class="space-y-4">
                         <div>
@@ -301,7 +301,7 @@
                         <div>
                             <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Regista *</label>
                             <select name="registaId" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary appearance-none">
-                                <option value="">Select a director</option>
+                                <option value="">Seleziona un regista</option>
                                 ${allRegisti.map(r => `<option value="${r.id}">${escapeHtml(r.nome)} ${escapeHtml(r.cognome)}</option>`).join('')}
                             </select>
                         </div>
@@ -325,8 +325,8 @@
                         </div>
                     </div>
                     <div class="flex justify-end gap-3 mt-6">
-                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Cancel</button>
-                        <button type="submit" class="noir-gradient px-6 py-2 text-white rounded-lg font-bold hover:opacity-90 transition-opacity">Create</button>
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Annulla</button>
+                        <button type="submit" class="noir-gradient px-6 py-2 text-white rounded-lg font-bold hover:opacity-90 transition-opacity">Crea</button>
                     </div>
                 </form>
             `);
@@ -338,7 +338,7 @@
 
             const dataProduzione = film.dataProduzione ? film.dataProduzione.split('T')[0] : '';
 
-            showModal('Edit Film', `
+            showModal('Modifica Film', `
                 <form id="film-form" onsubmit="handleSubmit(event)">
                     <div class="space-y-4">
                         <div>
@@ -372,8 +372,8 @@
                     </div>
                     <input type="hidden" name="id" value="${id}">
                     <div class="flex justify-end gap-3 mt-6">
-                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Cancel</button>
-                        <button type="submit" class="noir-gradient px-6 py-2 text-white rounded-lg font-bold hover:opacity-90 transition-opacity">Save</button>
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Annulla</button>
+                        <button type="submit" class="noir-gradient px-6 py-2 text-white rounded-lg font-bold hover:opacity-90 transition-opacity">Salva</button>
                     </div>
                 </form>
             `);
@@ -396,15 +396,15 @@
                 Utils.showLoading();
                 if (id) {
                     await ApiClient.put(`/films/${id}`, data);
-                    Utils.showNotification('Film updated successfully', 'success');
+                    Utils.showNotification('Film aggiornato con successo', 'success');
                 } else {
                     await ApiClient.post('/films', data);
-                    Utils.showNotification('Film created successfully', 'success');
+                    Utils.showNotification('Film creato con successo', 'success');
                 }
                 closeModal();
                 await loadData();
             } catch (error) {
-                Utils.showNotification(error.message || 'Error saving film', 'error');
+                Utils.showNotification(error.message || 'Errore durante il salvataggio', 'error');
             } finally {
                 Utils.hideLoading();
             }

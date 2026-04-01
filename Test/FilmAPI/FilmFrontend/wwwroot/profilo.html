@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Area Personale - FilmAPI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        body {
+            background-color: #131313;
+            color: #e5e2e1;
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(53, 53, 52, 0.6);
+            backdrop-filter: blur(20px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#e50914",
+                        "secondary": "#e9c176",
+                        "background": "#131313",
+                        "surface": "#131313",
+                        "surface-container": "#201f1f",
+                        "surface-container-low": "#1c1b1b",
+                        "surface-container-high": "#2a2a2a",
+                        "on-surface": "#e5e2e1",
+                        "on-surface-variant": "#e9bcb6",
+                        "outline-variant": "#5e3f3b",
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col md:flex-row">
+    <!-- Sidebar -->
+    <div id="sidebar-container"></div>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col min-h-screen">
+        <!-- Navbar -->
+        <div id="navbar-container"></div>
+
+        <!-- Content -->
+        <main class="flex-1 p-4 md:p-8 pb-24 md:pb-8">
+            <div class="max-w-6xl mx-auto">
+                <!-- Header -->
+                <div class="mb-8">
+                    <h1 class="text-3xl font-black text-white font-['Manrope']">Area Personale</h1>
+                    <p class="text-on-surface-variant mt-2">Gestisci il tuo profilo e le tue proiezioni salvate</p>
+                </div>
+
+                <!-- Loading State -->
+                <div id="loading" class="flex items-center justify-center py-20">
+                    <span class="material-symbols-outlined text-4xl animate-spin text-[#e50914]">refresh</span>
+                </div>
+
+                <!-- Content -->
+                <div id="content" class="hidden space-y-8">
+                    <!-- Profilo Utente -->
+                    <div class="bg-surface-container rounded-2xl p-6 border border-outline-variant/20">
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-[#e50914] to-[#c0000c] flex items-center justify-center">
+                                <span id="user-initials" class="text-2xl font-bold text-white"></span>
+                            </div>
+                            <div>
+                                <h2 id="user-fullname" class="text-xl font-bold text-white"></h2>
+                                <p id="user-username" class="text-on-surface-variant text-sm"></p>
+                                <div id="user-roles" class="flex gap-2 mt-2"></div>
+                            </div>
+                            <button id="edit-profile-btn" class="ml-auto px-4 py-2 bg-[#e50914] hover:bg-[#c0000c] text-white rounded-lg text-sm transition-colors flex items-center gap-2">
+                                <span class="material-symbols-outlined text-sm">edit</span>
+                                Modifica
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="text-xs text-on-surface-variant uppercase tracking-wider">Email</label>
+                                <p id="profile-email" class="text-white mt-1"></p>
+                            </div>
+                            <div>
+                                <label class="text-xs text-on-surface-variant uppercase tracking-wider">Telefono</label>
+                                <p id="profile-telefono" class="text-white mt-1"></p>
+                            </div>
+                            <div>
+                                <label class="text-xs text-on-surface-variant uppercase tracking-wider">Data Registrazione</label>
+                                <p id="profile-data-reg" class="text-white mt-1"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Proiezioni Salvate -->
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold text-white font-['Manrope']">Proiezioni Salvate</h3>
+                            <a href="proiezioni-pubblico.html" class="text-[#e50914] hover:text-[#c0000c] text-sm flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">add</span>
+                                Scopri proiezioni
+                            </a>
+                        </div>
+
+                        <div id="proiezioni-list" class="space-y-4">
+                            <!-- Proiezioni verranno caricate qui -->
+                        </div>
+
+                        <div id="no-proiezioni" class="hidden text-center py-12 bg-surface-container rounded-2xl border border-outline-variant/20">
+                            <span class="material-symbols-outlined text-4xl text-on-surface-variant/50 mb-4">movie</span>
+                            <p class="text-on-surface-variant">Nessuna proiezione salvata</p>
+                            <a href="proiezioni-pubblico.html" class="text-[#e50914] hover:text-[#c0000c] text-sm mt-2 inline-block">Scopri le proiezioni disponibili</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Error State -->
+                <div id="error" class="hidden text-center py-20">
+                    <span class="material-symbols-outlined text-4xl text-red-400 mb-4">error</span>
+                    <p id="error-text" class="text-on-surface-variant"></p>
+                    <button onclick="loadProfile()" class="mt-4 px-4 py-2 bg-[#e50914] hover:bg-[#c0000c] text-white rounded-lg text-sm transition-colors">
+                        Riprova
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <div id="footer-container"></div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="edit-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-surface-container rounded-2xl p-6 w-full max-w-md border border-outline-variant/20">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-white">Modifica Profilo</h3>
+                <button id="close-modal" class="text-on-surface-variant hover:text-white">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <form id="edit-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-on-surface-variant mb-1">Email *</label>
+                    <input type="email" id="edit-email" required class="w-full px-4 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-on-surface-variant mb-1">Nome</label>
+                        <input type="text" id="edit-nome" class="w-full px-4 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-on-surface-variant mb-1">Cognome</label>
+                        <input type="text" id="edit-cognome" class="w-full px-4 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm text-on-surface-variant mb-1">Telefono</label>
+                    <input type="tel" id="edit-telefono" class="w-full px-4 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-white">
+                </div>
+
+                <div id="edit-error" class="hidden text-sm text-red-400 bg-red-400/10 p-3 rounded-lg"></div>
+
+                <div class="flex gap-3 mt-6">
+                    <button type="button" id="cancel-edit" class="flex-1 py-2 px-4 border border-outline-variant/30 rounded-lg text-white hover:bg-surface-container-high transition-colors">
+                        Annulla
+                    </button>
+                    <button type="submit" id="save-btn" class="flex-1 py-2 px-4 bg-[#e50914] hover:bg-[#c0000c] text-white rounded-lg transition-colors flex items-center justify-center gap-2">
+                        <span id="save-text">Salva</span>
+                        <span id="save-loading" class="material-symbols-outlined animate-spin hidden">refresh</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Prenotazione Modal -->
+    <div id="prenota-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-surface-container rounded-2xl p-6 w-full max-w-md border border-outline-variant/20">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-white">Prenota Posti</h3>
+                <button id="close-prenota-modal" class="text-on-surface-variant hover:text-white">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <div id="prenota-info" class="mb-4 p-4 bg-surface-container-high rounded-lg">
+                <p id="prenota-film" class="font-semibold text-white"></p>
+                <p id="prenota-cinema" class="text-sm text-on-surface-variant"></p>
+                <p id="prenota-data" class="text-sm text-on-surface-variant"></p>
+            </div>
+
+            <form id="prenota-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-on-surface-variant mb-1">Numero di posti *</label>
+                    <input type="number" id="prenota-posti" min="1" max="10" value="1" required class="w-full px-4 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-white">
+                </div>
+
+                <div id="prenota-error" class="hidden text-sm text-red-400 bg-red-400/10 p-3 rounded-lg"></div>
+
+                <div class="flex gap-3 mt-6">
+                    <button type="button" id="cancel-prenota" class="flex-1 py-2 px-4 border border-outline-variant/30 rounded-lg text-white hover:bg-surface-container-high transition-colors">
+                        Annulla
+                    </button>
+                    <button type="submit" id="prenota-btn" class="flex-1 py-2 px-4 bg-[#e50914] hover:bg-[#c0000c] text-white rounded-lg transition-colors flex items-center justify-center gap-2">
+                        <span id="prenota-text">Prenota</span>
+                        <span id="prenota-loading" class="material-symbols-outlined animate-spin hidden">refresh</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script src="js/api-client.js"></script>
+    <script src="js/template-loader.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/pages/profilo.js"></script>
+</body>
+</html>

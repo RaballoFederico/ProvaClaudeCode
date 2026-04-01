@@ -1,6 +1,7 @@
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace FilmAPI.Endpoints;
@@ -9,16 +10,18 @@ public static class ProiezioniEndpoints
 {
     public static RouteGroupBuilder MapProiezioniEndpoints(this RouteGroupBuilder group)
     {
+        // GET /proiezioni - Visibile a tutti (proiezioni in corso)
         group.MapGet("/", async (FilmDbContext db) =>
-            await db.Proiezioni.Select(p => new ProiezioneDTO
-            {
-                Id = p.Id,
-                CinemaId = p.CinemaId,
-                FilmId = p.FilmId,
-                Data = p.Data,
-                Ora = p.Ora
-            }).ToListAsync());
+        await db.Proiezioni.Select(p => new ProiezioneDTO
+        {
+            Id = p.Id,
+            CinemaId = p.CinemaId,
+            FilmId = p.FilmId,
+            Data = p.Data,
+            Ora = p.Ora
+        }).ToListAsync());
 
+        // GET /proiezioni/{id} - Visibile a tutti
         group.MapGet("/{id}", async (int id, FilmDbContext db) =>
         {
             var proiezione = await db.Proiezioni.FindAsync(id);
@@ -32,7 +35,8 @@ public static class ProiezioniEndpoints
             });
         });
 
-        group.MapPost("/", async (ProiezioneCreateDTO dto, FilmDbContext db) =>
+        // POST /proiezioni - Solo Admin e PowerUser
+        group.MapPost("/", [Authorize(Roles = "Admin,PowerUser")] async (ProiezioneCreateDTO dto, FilmDbContext db) =>
         {
             var cinemaExists = await db.Cinemas.AnyAsync(c => c.Id == dto.CinemaId);
             if (!cinemaExists)
@@ -47,7 +51,7 @@ public static class ProiezioniEndpoints
                 p.FilmId == dto.FilmId &&
                 p.Data == dto.Data &&
                 p.Ora == dto.Ora);
-            
+
             if (exists)
                 return Results.Conflict("Proiezione already exists with same CinemaId, FilmId, Data and Ora");
 
@@ -80,7 +84,8 @@ public static class ProiezioniEndpoints
             });
         });
 
-        group.MapPut("/{id}", async (int id, ProiezioneUpdateDTO dto, FilmDbContext db) =>
+        // PUT /proiezioni/{id} - Solo Admin e PowerUser
+        group.MapPut("/{id}", [Authorize(Roles = "Admin,PowerUser")] async (int id, ProiezioneUpdateDTO dto, FilmDbContext db) =>
         {
             var proiezione = await db.Proiezioni.FindAsync(id);
             if (proiezione is null) return Results.NotFound();
@@ -99,7 +104,7 @@ public static class ProiezioniEndpoints
                 p.FilmId == dto.FilmId &&
                 p.Data == dto.Data &&
                 p.Ora == dto.Ora);
-            
+
             if (exists)
                 return Results.Conflict("Proiezione already exists with same CinemaId, FilmId, Data and Ora");
 
@@ -107,7 +112,7 @@ public static class ProiezioniEndpoints
             proiezione.FilmId = dto.FilmId;
             proiezione.Data = dto.Data;
             proiezione.Ora = dto.Ora;
-            
+
             try
             {
                 await db.SaveChangesAsync();
@@ -129,7 +134,8 @@ public static class ProiezioniEndpoints
             });
         });
 
-        group.MapDelete("/{id}", async (int id, FilmDbContext db) =>
+        // DELETE /proiezioni/{id} - Solo Admin e PowerUser
+        group.MapDelete("/{id}", [Authorize(Roles = "Admin,PowerUser")] async (int id, FilmDbContext db) =>
         {
             var proiezione = await db.Proiezioni.FindAsync(id);
             if (proiezione is null) return Results.NotFound();

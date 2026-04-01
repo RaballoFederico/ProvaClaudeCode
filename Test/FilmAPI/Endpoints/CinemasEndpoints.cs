@@ -1,6 +1,7 @@
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 
 namespace FilmAPI.Endpoints;
@@ -9,15 +10,17 @@ public static class CinemasEndpoints
 {
     public static RouteGroupBuilder MapCinemasEndpoints(this RouteGroupBuilder group)
     {
+        // GET /cinemas - Visibile a tutti
         group.MapGet("/", async (FilmDbContext db) =>
-            await db.Cinemas.Select(c => new CinemaDTO
-            {
-                Id = c.Id,
-                Nome = c.Nome,
-                Indirizzo = c.Indirizzo,
-                Citta = c.Citta
-            }).ToListAsync());
+        await db.Cinemas.Select(c => new CinemaDTO
+        {
+            Id = c.Id,
+            Nome = c.Nome,
+            Indirizzo = c.Indirizzo,
+            Citta = c.Citta
+        }).ToListAsync());
 
+        // GET /cinemas/{id} - Visibile a tutti
         group.MapGet("/{id}", async (int id, FilmDbContext db) =>
         {
             var cinema = await db.Cinemas.FindAsync(id);
@@ -30,7 +33,8 @@ public static class CinemasEndpoints
             });
         });
 
-        group.MapPost("/", async (CinemaCreateDTO dto, FilmDbContext db) =>
+        // POST /cinemas - Solo Admin (PowerUser può solo leggere)
+        group.MapPost("/", [Authorize(Roles = "Admin")] async (CinemaCreateDTO dto, FilmDbContext db) =>
         {
             var cinema = new Cinema
             {
@@ -49,7 +53,8 @@ public static class CinemasEndpoints
             });
         });
 
-        group.MapPut("/{id}", async (int id, CinemaUpdateDTO dto, FilmDbContext db) =>
+        // PUT /cinemas/{id} - Solo Admin
+        group.MapPut("/{id}", [Authorize(Roles = "Admin")] async (int id, CinemaUpdateDTO dto, FilmDbContext db) =>
         {
             var cinema = await db.Cinemas.FindAsync(id);
             if (cinema is null) return Results.NotFound();
@@ -57,7 +62,7 @@ public static class CinemasEndpoints
             cinema.Nome = dto.Nome;
             cinema.Indirizzo = dto.Indirizzo;
             cinema.Citta = dto.Citta;
-            
+
             await db.SaveChangesAsync();
             return Results.Ok(new CinemaDTO
             {
@@ -68,7 +73,8 @@ public static class CinemasEndpoints
             });
         });
 
-        group.MapDelete("/{id}", async (int id, FilmDbContext db) =>
+        // DELETE /cinemas/{id} - Solo Admin
+        group.MapDelete("/{id}", [Authorize(Roles = "Admin")] async (int id, FilmDbContext db) =>
         {
             var cinema = await db.Cinemas.FindAsync(id);
             if (cinema is null) return Results.NotFound();

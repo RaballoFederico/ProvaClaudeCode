@@ -13,6 +13,12 @@ public class FilmDbContext : DbContext
     public DbSet<Film> Films { get; set; } = null!;
     public DbSet<Cinema> Cinemas { get; set; } = null!;
     public DbSet<Proiezione> Proiezioni { get; set; } = null!;
+    public DbSet<Utente> Utenti { get; set; } = null!;
+    public DbSet<Ruolo> Ruoli { get; set; } = null!;
+    public DbSet<UtenteRuolo> UtentiRuoli { get; set; } = null!;
+    public DbSet<Categoria> Categorie { get; set; } = null!;
+    public DbSet<FilmCategoria> FilmsCategorie { get; set; } = null!;
+    public DbSet<ProiezioneSalvata> ProiezioniSalvate { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -66,6 +72,88 @@ public class FilmDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => new { e.CinemaId, e.FilmId, e.Data, e.Ora }).IsUnique();
+        });
+
+        modelBuilder.Entity<Utente>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Username).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.PasswordHash).IsRequired();
+            entity.Property(e => e.Nome).HasMaxLength(100);
+            entity.Property(e => e.Cognome).HasMaxLength(100);
+            entity.Property(e => e.Telefono).HasMaxLength(20);
+            entity.Property(e => e.DataRegistrazione).IsRequired();
+            entity.Property(e => e.Attivo).IsRequired();
+
+            entity.HasIndex(e => e.Username).IsUnique();
+            entity.HasIndex(e => e.Email).IsUnique();
+        });
+
+        modelBuilder.Entity<Ruolo>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Nome).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Descrizione).HasMaxLength(255);
+
+            entity.HasIndex(e => e.Nome).IsUnique();
+        });
+
+        modelBuilder.Entity<UtenteRuolo>(entity =>
+        {
+            entity.HasKey(e => new { e.UtenteId, e.RuoloId });
+
+            entity.HasOne(e => e.Utente)
+                .WithMany(u => u.UtentiRuoli)
+                .HasForeignKey(e => e.UtenteId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Ruolo)
+                .WithMany(r => r.UtentiRuoli)
+                .HasForeignKey(e => e.RuoloId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Categoria>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Nome).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Descrizione).HasMaxLength(500);
+
+            entity.HasIndex(e => e.Nome).IsUnique();
+        });
+
+        modelBuilder.Entity<FilmCategoria>(entity =>
+        {
+            entity.HasKey(e => new { e.FilmId, e.CategoriaId });
+
+            entity.HasOne(e => e.Film)
+                .WithMany(f => f.FilmsCategorie)
+                .HasForeignKey(e => e.FilmId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Categoria)
+                .WithMany(c => c.FilmsCategorie)
+                .HasForeignKey(e => e.CategoriaId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ProiezioneSalvata>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.DataSalvataggio).IsRequired();
+            entity.Property(e => e.Prenotato).IsRequired();
+            entity.Property(e => e.NumeroPosti).IsRequired();
+
+            entity.HasOne(e => e.Utente)
+                .WithMany(u => u.ProiezioniSalvate)
+                .HasForeignKey(e => e.UtenteId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Proiezione)
+                .WithMany()
+                .HasForeignKey(e => e.ProiezioneId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

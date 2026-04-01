@@ -33,4 +33,6 @@ public class Film
     public string? FilmatoPath { get; set; }
 
     public ICollection<Proiezione> Proiezioni { get; set; } = new List<Proiezione>();
+
+    public ICollection<FilmCategoria> FilmsCategorie { get; set; } = new List<FilmCategoria>();
 }

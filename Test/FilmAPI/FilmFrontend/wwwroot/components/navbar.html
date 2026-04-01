@@ -1,25 +1,70 @@
-<header class="flex justify-between items-center w-full px-4 md:px-8 py-4 bg-[#1C1B1B] sticky top-0 z-50">
+<header id="navbar" class="flex justify-between items-center w-full px-4 md:px-8 py-4 bg-[#1C1B1B] sticky top-0 z-50">
     <div class="flex items-center gap-4">
         <button id="mobile-menu-toggle" class="md:hidden p-2 text-on-surface-variant hover:bg-[#2A2A2A] rounded-lg">
             <span class="material-symbols-outlined">menu</span>
         </button>
-        <span class="text-xl md:text-2xl font-black text-[#E50914] tracking-tighter uppercase font-['Manrope']">FilmAPI</span>
+        <a href="index.html" class="text-xl md:text-2xl font-black text-[#E50914] tracking-tighter uppercase font-['Manrope']">FilmAPI</a>
     </div>
     <div class="flex items-center gap-4 md:gap-6">
         <div class="hidden lg:flex items-center bg-[#2A2A2A] rounded-full px-4 py-1.5 gap-3">
             <span class="material-symbols-outlined text-on-surface-variant text-sm">search</span>
             <input class="bg-transparent border-none focus:ring-0 text-sm text-on-surface w-48 placeholder:text-on-surface-variant/50" placeholder="Cerca..." type="text"/>
         </div>
-        <div class="flex items-center gap-2 md:gap-4">
-            <button class="p-2 text-on-surface-variant hover:bg-[#2A2A2A] rounded-full transition-all duration-300">
-                <span class="material-symbols-outlined">notifications</span>
-            </button>
-            <button class="p-2 text-on-surface-variant hover:bg-[#2A2A2A] rounded-full transition-all duration-300">
-                <span class="material-symbols-outlined">settings</span>
-            </button>
-            <div class="w-8 h-8 md:w-10 md:h-10 rounded-full overflow-hidden border-2 border-outline-variant/30">
-                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&h=100&fit=crop" alt="Avatar utente" class="w-full h-full object-cover"/>
-            </div>
+        <div id="nav-auth-section" class="flex items-center gap-2 md:gap-4">
+            <!-- Contenuto dinamico: login/registrazione o dati utente -->
         </div>
     </div>
 </header>
+
+<script>
+    // Aggiorna navbar in base allo stato di autenticazione
+    function updateNavbar() {
+        const navAuthSection = document.getElementById('nav-auth-section');
+        if (!navAuthSection) return;
+        
+        if (typeof Auth !== 'undefined' && Auth.isAuthenticated()) {
+            const user = Auth.getUser();
+            const initials = (user.nome?.[0] || '') + (user.cognome?.[0] || '') || user.username[0].toUpperCase();
+            const fullName = user.nome && user.cognome ? `${user.nome} ${user.cognome}` : user.username;
+            
+            navAuthSection.innerHTML = `
+                <button class="p-2 text-on-surface-variant hover:bg-[#2A2A2A] rounded-full transition-all duration-300">
+                    <span class="material-symbols-outlined">notifications</span>
+                </button>
+                <div class="relative group">
+                    <button class="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-[#2A2A2A] transition-all duration-300">
+                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#e50914] to-[#c0000c] flex items-center justify-center text-white font-bold text-sm">
+                            ${initials.toUpperCase()}
+                        </div>
+                        <span class="hidden md:block text-sm text-on-surface">${fullName}</span>
+                        <span class="material-symbols-outlined text-on-surface-variant text-sm">expand_more</span>
+                    </button>
+                    <div class="absolute right-0 top-full mt-2 w-48 bg-surface-container rounded-xl shadow-xl border border-outline-variant/20 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                        <a href="profilo.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high rounded-t-xl transition-colors">
+                            <span class="material-symbols-outlined text-sm">person</span>
+                            Area Personale
+                        </a>
+                        <a href="proiezioni-pubblico.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
+                            <span class="material-symbols-outlined text-sm">movie</span>
+                            Proiezioni
+                        </a>
+                        <button onclick="Auth.logout()" class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-red-400/10 rounded-b-xl transition-colors text-left">
+                            <span class="material-symbols-outlined text-sm">logout</span>
+                            Esci
+                        </button>
+                    </div>
+                </div>
+            `;
+        } else {
+            navAuthSection.innerHTML = `
+                <a href="login.html" class="hidden md:block text-sm text-on-surface-variant hover:text-white transition-colors">Accedi</a>
+                <a href="register.html" class="px-4 py-2 bg-[#e50914] hover:bg-[#c0000c] text-white rounded-lg text-sm font-medium transition-colors">
+                    Registrati
+                </a>
+            `;
+        }
+    }
+    
+    // Inizializza
+    document.addEventListener('DOMContentLoaded', updateNavbar);
+</script>

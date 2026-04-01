@@ -1,7 +1,11 @@
+using System.Text;
 using DotNetEnv;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using FilmAPI.Data;
 using FilmAPI.Endpoints;
+using FilmAPI.Services;
 
 Env.Load();
 
@@ -23,6 +27,31 @@ if (!isTesting)
         options.UseMySql(connectionString, ServerVersion.Parse("8.0.29-mysql")));
 }
 
+// Configurazione JWT
+var jwtSecretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ??
+    builder.Configuration["Jwt:SecretKey"] ??
+    "your-super-secret-key-min-32-characters-for-jwt";
+
+builder.Services.AddSingleton(new JwtService(builder.Configuration));
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? builder.Configuration["Jwt:Issuer"] ?? "FilmAPI",
+            ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? builder.Configuration["Jwt:Audience"] ?? "FilmFrontend",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecretKey)),
+            ClockSkew = TimeSpan.Zero
+        };
+    });
+
+builder.Services.AddAuthorization();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 
@@ -31,14 +60,19 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins("http://localhost:5001")
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
     });
 });
 
 var app = builder.Build();
 
 app.UseCors("AllowFrontend");
+
+// Middleware di autenticazione e autorizzazione
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
@@ -49,6 +83,22 @@ if (app.Environment.IsDevelopment())
 {
     app.UseDeveloperExceptionPage();
 }
+
+// Seed dati iniziali (solo se non in testing)
+if (!isTesting)
+{
+    using (var scope = app.Services.CreateScope())
+    {
+        var db = scope.ServiceProvider.GetRequiredService<FilmDbContext>();
+        await DbInitializer.InitializeAsync(db);
+    }
+}
+
+// Registrazione endpoints
+app.MapAuthEndpoints();
+app.MapUserEndpoints();
+app.MapAdminEndpoints();
+app.MapCategorieEndpoints();
 
 app.MapGroup("/registi").MapRegistiEndpoints();
 app.MapGroup("/films").MapFilmsEndpoints();

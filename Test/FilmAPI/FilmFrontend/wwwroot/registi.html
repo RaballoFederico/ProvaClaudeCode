@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html class="dark" lang="en">
+<html class="dark" lang="it">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -188,7 +188,7 @@
 
         function openCreateModal() {
             editingId = null;
-            showModal('Create Director', `
+            showModal('Nuovo Regista', `
                 <form id="regista-form" onsubmit="handleSubmit(event)">
                     <div class="space-y-4">
                         <div>
@@ -201,12 +201,12 @@
                         </div>
                         <div>
                             <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Nazionalità</label>
-                            <input type="text" name="nazionalita" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary placeholder:text-on-surface-variant/50">
+                            <input type="text" name="nazionalita" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary placeholder:text-on-surface-variant/50">
                         </div>
                     </div>
                     <div class="flex justify-end gap-3 mt-6">
-                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Cancel</button>
-                        <button type="submit" class="px-6 py-2 bg-primary-container text-on-primary-container rounded-lg font-bold hover:opacity-90 transition-opacity">Create</button>
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Annulla</button>
+                        <button type="submit" class="px-6 py-2 bg-primary-container text-on-primary-container rounded-lg font-bold hover:opacity-90 transition-opacity">Crea</button>
                     </div>
                 </form>
             `);
@@ -217,7 +217,7 @@
             const regista = currentRegisti.find(r => r.id === id);
             if (!regista) return;
 
-            showModal('Edit Director', `
+            showModal('Modifica Regista', `
                 <form id="regista-form" onsubmit="handleSubmit(event)">
                     <div class="space-y-4">
                         <div>
@@ -230,12 +230,12 @@
                         </div>
                         <div>
                             <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Nazionalità</label>
-                            <input type="text" name="nazionalita" value="${escapeHtml(regista.nazionalita)}" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                            <input type="text" name="nazionalita" value="${escapeHtml(regista.nazionalita)}" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
                         </div>
                     </div>
                     <div class="flex justify-end gap-3 mt-6">
-                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Cancel</button>
-                        <button type="submit" class="px-6 py-2 bg-primary-container text-on-primary-container rounded-lg font-bold hover:opacity-90 transition-opacity">Save</button>
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Annulla</button>
+                        <button type="submit" class="px-6 py-2 bg-primary-container text-on-primary-container rounded-lg font-bold hover:opacity-90 transition-opacity">Salva</button>
                     </div>
                 </form>
             `);
@@ -254,30 +254,30 @@
                 Utils.showLoading();
                 if (editingId) {
                     await ApiClient.put(`/registi/${editingId}`, data);
-                    Utils.showNotification('Director updated successfully', 'success');
+                    Utils.showNotification('Regista aggiornato con successo', 'success');
                 } else {
                     await ApiClient.post('/registi', data);
-                    Utils.showNotification('Director created successfully', 'success');
+                    Utils.showNotification('Regista creato con successo', 'success');
                 }
                 closeModal();
                 await loadRegisti();
             } catch (error) {
-                Utils.showNotification(error.message || 'Error saving director', 'error');
+                Utils.showNotification(error.message || 'Errore durante il salvataggio', 'error');
             } finally {
                 Utils.hideLoading();
             }
         }
 
         async function deleteRegista(id) {
-            if (!Utils.confirmDialog('Are you sure you want to delete this director?')) return;
+            if (!Utils.confirmDialog('Sei sicuro di voler eliminare questo regista?')) return;
 
             try {
                 Utils.showLoading();
                 await ApiClient.delete(`/registi/${id}`);
-                Utils.showNotification('Director deleted successfully', 'success');
+                Utils.showNotification('Regista eliminato con successo', 'success');
                 await loadRegisti();
             } catch (error) {
-                Utils.showNotification(error.message || 'Error deleting director', 'error');
+                Utils.showNotification(error.message || 'Errore durante l\'eliminazione del regista', 'error');
             } finally {
                 Utils.hideLoading();
             }
