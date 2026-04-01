@@ -16,26 +16,29 @@
             <span class="material-symbols-outlined">movie</span>
             <span>Proiezioni</span>
         </a>
-        <!-- Admin Links - mostrati solo a Admin e PowerUser -->
+        <div class="px-8 py-4">
+            <p class="text-[10px] uppercase tracking-widest text-on-surface-variant opacity-40">Catalogo</p>
+        </div>
+        <a href="films.html" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
+            <span class="material-symbols-outlined">movie_edit</span>
+            <span>Film</span>
+        </a>
+        <a href="cinemas.html" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
+            <span class="material-symbols-outlined">theaters</span>
+            <span>Cinema</span>
+        </a>
+        <a href="proiezioni.html" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
+            <span class="material-symbols-outlined">schedule</span>
+            <span>Proiezioni</span>
+        </a>
+
         <div id="admin-links" class="hidden">
             <div class="px-8 py-4">
-                <p class="text-[10px] uppercase tracking-widest text-on-surface-variant opacity-40">Amministrazione</p>
+                <p class="text-[10px] uppercase tracking-widest text-on-surface-variant opacity-40">Admin</p>
             </div>
-            <a href="films.html" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-                <span class="material-symbols-outlined">movie_edit</span>
-                <span>Gestione Film</span>
-            </a>
             <a href="registi.html" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
                 <span class="material-symbols-outlined">theater_comedy</span>
-                <span>Gestione Registi</span>
-            </a>
-            <a href="cinemas.html" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-                <span class="material-symbols-outlined">theaters</span>
-                <span>Gestione Cinema</span>
-            </a>
-            <a href="proiezioni.html" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-                <span class="material-symbols-outlined">schedule</span>
-                <span>Gestione Proiezioni</span>
+                <span>Registi</span>
             </a>
         </div>
     </nav>
@@ -51,18 +54,30 @@
     </div>
 </aside>
 
-<nav class="md:hidden fixed bottom-0 left-0 right-0 glass-panel border-t border-outline-variant/10 z-50 flex justify-around items-center h-16 px-4">
-    <a href="index.html" class="flex flex-col items-center gap-1 text-on-surface-variant">
+<nav class="md:hidden fixed bottom-0 left-0 right-0 glass-panel border-t border-outline-variant/10 z-50 flex items-center gap-2 h-16 px-3 overflow-x-auto">
+    <a href="index.html" class="flex flex-col items-center justify-center min-w-14 gap-1 text-on-surface-variant">
         <span class="material-symbols-outlined text-2xl">dashboard</span>
         <span class="text-[8px] uppercase font-bold">Home</span>
     </a>
-    <a href="profilo.html" class="flex flex-col items-center gap-1 text-on-surface-variant">
+    <a href="films.html" class="flex flex-col items-center justify-center min-w-14 gap-1 text-on-surface-variant">
+        <span class="material-symbols-outlined text-2xl">movie_edit</span>
+        <span class="text-[8px] uppercase">Film</span>
+    </a>
+    <a href="cinemas.html" class="flex flex-col items-center justify-center min-w-14 gap-1 text-on-surface-variant">
+        <span class="material-symbols-outlined text-2xl">theaters</span>
+        <span class="text-[8px] uppercase">Cinema</span>
+    </a>
+    <a href="proiezioni.html" class="flex flex-col items-center justify-center min-w-14 gap-1 text-on-surface-variant">
+        <span class="material-symbols-outlined text-2xl">schedule</span>
+        <span class="text-[8px] uppercase">Proiez.</span>
+    </a>
+    <a href="profilo.html" class="flex flex-col items-center justify-center min-w-14 gap-1 text-on-surface-variant">
         <span class="material-symbols-outlined text-2xl">person</span>
         <span class="text-[8px] uppercase">Profilo</span>
     </a>
-    <a href="proiezioni-pubblico.html" class="flex flex-col items-center gap-1 text-on-surface-variant">
+    <a href="proiezioni-pubblico.html" class="flex flex-col items-center justify-center min-w-14 gap-1 text-on-surface-variant">
         <span class="material-symbols-outlined text-2xl">movie</span>
-        <span class="text-[8px] uppercase">Proiezioni</span>
+        <span class="text-[8px] uppercase">Pubblico</span>
     </a>
 </nav>
 
@@ -72,7 +87,7 @@
         if (typeof Auth !== 'undefined' && Auth.isAuthenticated()) {
             const user = Auth.getUser();
             if (user && user.ruoli) {
-                const isPowerUser = user.ruoli.includes('Admin') || user.ruoli.includes('PowerUser');
+                const isPowerUser = user.ruoli.includes('Admin');
                 const adminLinks = document.getElementById('admin-links');
                 if (adminLinks && isPowerUser) {
                     adminLinks.classList.remove('hidden');

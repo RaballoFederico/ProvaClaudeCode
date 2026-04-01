@@ -285,7 +285,7 @@
         let proiezioniData = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
-            if (typeof Auth !== 'undefined' && !Auth.isPowerUser()) {
+            if (typeof Auth !== 'undefined' && !Auth.canManageCatalog()) {
                 window.location.href = '/proiezioni-pubblico.html';
                 return;
             }

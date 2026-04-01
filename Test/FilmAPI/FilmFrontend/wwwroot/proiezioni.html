@@ -92,7 +92,7 @@
         let currentProiezioni = [];
         let allFilms = [];
         let allCinemas = [];
-        const isManager = () => typeof Auth !== 'undefined' && Auth.isPowerUser();
+        const isManager = () => typeof Auth !== 'undefined' && Auth.canManageCatalog();
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();

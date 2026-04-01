@@ -89,7 +89,7 @@
     <script src="/js/utils.js"></script>
     <script>
         let currentCinemas = [];
-        const isManager = () => typeof Auth !== 'undefined' && Auth.isPowerUser();
+        const isManager = () => typeof Auth !== 'undefined' && Auth.canManageCatalog();
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();

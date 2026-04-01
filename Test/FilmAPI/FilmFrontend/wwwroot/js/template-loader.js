@@ -36,7 +36,7 @@ function getCurrentUser() {
 
 function isManagerUser() {
     if (typeof Auth === 'undefined' || !Auth.isAuthenticated()) return false;
-    return Auth.isPowerUser();
+    return Auth.canManageCatalog();
 }
 
 function isAuthenticatedUser() {

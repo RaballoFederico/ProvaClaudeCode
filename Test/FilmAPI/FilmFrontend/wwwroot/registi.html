@@ -99,7 +99,7 @@
     <script>
         let currentRegisti = [];
         let editingId = null;
-        const isManager = () => typeof Auth !== 'undefined' && Auth.isPowerUser();
+        const isManager = () => typeof Auth !== 'undefined' && Auth.canManageCatalog();
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();

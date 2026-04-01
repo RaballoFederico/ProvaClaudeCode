@@ -153,6 +153,10 @@ const Auth = {
         return this.hasRole('Admin') || this.hasRole('PowerUser');
     },
 
+    canManageCatalog() {
+        return this.hasRole('Admin');
+    },
+
     getUser() {
         return this.user;
     }
