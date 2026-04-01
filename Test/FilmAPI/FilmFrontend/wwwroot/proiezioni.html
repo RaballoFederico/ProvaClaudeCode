@@ -63,7 +63,7 @@
                         <h3 class="text-xl md:text-2xl font-headline text-white">Proiezioni Attive</h3>
                         <p class="text-on-surface-variant text-sm font-body">Timeline delle proiezioni cinematografiche programmate.</p>
                     </div>
-                    <button onclick="openCreateModal()" class="bg-primary-container text-on-primary-container px-4 md:px-6 py-2 md:py-3 rounded-xl font-headline font-bold text-sm flex items-center gap-2 hover:scale-95 transition-all duration-150 shadow-lg shadow-primary-container/20">
+                    <button id="new-proiezione-btn" onclick="openCreateModal()" class="bg-primary-container text-on-primary-container px-4 md:px-6 py-2 md:py-3 rounded-xl font-headline font-bold text-sm flex items-center gap-2 hover:scale-95 transition-all duration-150 shadow-lg shadow-primary-container/20">
                         <span class="material-symbols-outlined">schedule_send</span>
                         Nuova Proiezione
                     </button>
@@ -84,6 +84,7 @@
 
     <div id="modal-container"></div>
 
+    <script src="/js/auth.js"></script>
     <script src="/js/template-loader.js"></script>
     <script src="/js/api-client.js"></script>
     <script src="/js/utils.js"></script>
@@ -91,9 +92,11 @@
         let currentProiezioni = [];
         let allFilms = [];
         let allCinemas = [];
+        const isManager = () => typeof Auth !== 'undefined' && Auth.isPowerUser();
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();
+            applyRoleUI();
             await loadData();
 
             const params = new URLSearchParams(window.location.search);
@@ -117,6 +120,12 @@
             } finally {
                 Utils.hideLoading();
             }
+        }
+
+        function applyRoleUI() {
+            const canManage = isManager();
+            const newProiezioneBtn = document.getElementById('new-proiezione-btn');
+            if (newProiezioneBtn) newProiezioneBtn.classList.toggle('hidden', !canManage);
         }
 
         function getStatusBadge(proiezione) {
@@ -182,7 +191,7 @@
                                     <span class="text-sm font-body">${Utils.formatTime(proiezione.ora)}</span>
                                 </div>
                             </div>
-                            <div class="flex justify-end gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div class="flex justify-end gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity ${isManager() ? '' : 'hidden'}">
                                 <button onclick="openEditModal(${proiezione.id})" class="p-2 hover:bg-surface-container-highest rounded-lg transition-colors">
                                     <span class="material-symbols-outlined text-secondary">edit</span>
                                 </button>
@@ -197,6 +206,10 @@
         }
 
         function openCreateModal() {
+            if (!isManager()) {
+                Utils.showNotification('Non hai i permessi per creare proiezioni', 'error');
+                return;
+            }
             showModal('Nuova Proiezione', `
                 <form id="proiezione-form" onsubmit="handleSubmit(event)">
                     <div class="space-y-4">
@@ -234,6 +247,10 @@
         }
 
         function openEditModal(id) {
+            if (!isManager()) {
+                Utils.showNotification('Non hai i permessi per modificare proiezioni', 'error');
+                return;
+            }
             const proiezione = currentProiezioni.find(p => p.id === id);
             if (!proiezione) return;
 
@@ -276,6 +293,10 @@
 
         async function handleSubmit(event) {
             event.preventDefault();
+            if (!isManager()) {
+                Utils.showNotification('Non hai i permessi per salvare proiezioni', 'error');
+                return;
+            }
             const form = event.target;
             const id = form.id?.value;
             const data = {
@@ -308,6 +329,10 @@
         }
 
         async function deleteProiezione(id) {
+            if (!isManager()) {
+                Utils.showNotification('Non hai i permessi per eliminare proiezioni', 'error');
+                return;
+            }
             if (!Utils.confirmDialog('Sei sicuro di voler eliminare questa proiezione?')) return;
 
             try {

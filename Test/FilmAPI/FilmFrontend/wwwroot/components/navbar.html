@@ -26,6 +26,7 @@
             const user = Auth.getUser();
             const initials = (user.nome?.[0] || '') + (user.cognome?.[0] || '') || user.username[0].toUpperCase();
             const fullName = user.nome && user.cognome ? `${user.nome} ${user.cognome}` : user.username;
+            const isManager = user.ruoli && (user.ruoli.includes('Admin') || user.ruoli.includes('PowerUser'));
             
             navAuthSection.innerHTML = `
                 <button class="p-2 text-on-surface-variant hover:bg-[#2A2A2A] rounded-full transition-all duration-300">
@@ -39,7 +40,7 @@
                         <span class="hidden md:block text-sm text-on-surface">${fullName}</span>
                         <span class="material-symbols-outlined text-on-surface-variant text-sm">expand_more</span>
                     </button>
-                    <div class="absolute right-0 top-full mt-2 w-48 bg-surface-container rounded-xl shadow-xl border border-outline-variant/20 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div class="absolute right-0 top-full mt-2 w-56 bg-surface-container rounded-xl shadow-xl border border-outline-variant/20 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
                         <a href="profilo.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high rounded-t-xl transition-colors">
                             <span class="material-symbols-outlined text-sm">person</span>
                             Area Personale
@@ -48,6 +49,24 @@
                             <span class="material-symbols-outlined text-sm">movie</span>
                             Proiezioni
                         </a>
+                        ${isManager ? `
+                        <a href="films.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
+                            <span class="material-symbols-outlined text-sm">movie_edit</span>
+                            Gestione Film
+                        </a>
+                        <a href="proiezioni.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
+                            <span class="material-symbols-outlined text-sm">schedule</span>
+                            Gestione Proiezioni
+                        </a>
+                        <a href="cinemas.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
+                            <span class="material-symbols-outlined text-sm">theaters</span>
+                            Gestione Cinema
+                        </a>
+                        <a href="registi.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
+                            <span class="material-symbols-outlined text-sm">theater_comedy</span>
+                            Gestione Registi
+                        </a>
+                        ` : ''}
                         <button onclick="Auth.logout()" class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-red-400/10 rounded-b-xl transition-colors text-left">
                             <span class="material-symbols-outlined text-sm">logout</span>
                             Esci

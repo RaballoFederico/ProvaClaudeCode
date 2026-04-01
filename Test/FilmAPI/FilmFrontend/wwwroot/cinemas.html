@@ -61,7 +61,7 @@
                         <h3 class="text-xl md:text-2xl font-headline text-white">Inventario Cinema</h3>
                         <p class="text-on-surface-variant text-sm font-body">Gestione della rete cinematografica e localizzazione.</p>
                     </div>
-                    <button onclick="openCreateModal()" class="bg-primary-container text-on-primary-container px-4 md:px-6 py-2 md:py-3 rounded-xl font-headline font-bold text-sm flex items-center gap-2 hover:scale-95 transition-all duration-150 shadow-lg shadow-primary-container/20">
+                    <button id="new-cinema-btn" onclick="openCreateModal()" class="bg-primary-container text-on-primary-container px-4 md:px-6 py-2 md:py-3 rounded-xl font-headline font-bold text-sm flex items-center gap-2 hover:scale-95 transition-all duration-150 shadow-lg shadow-primary-container/20">
                         <span class="material-symbols-outlined">add_location</span>
                         Nuovo Cinema
                     </button>
@@ -72,7 +72,7 @@
                 <div id="empty-state" class="hidden bg-surface-container-low rounded-xl p-12 text-center">
                     <span class="material-symbols-outlined text-5xl text-on-surface-variant opacity-50">theaters</span>
                     <p class="mt-4 text-on-surface-variant text-lg">Nessun cinema trovato.</p>
-                    <button onclick="openCreateModal()" class="mt-4 px-6 py-3 bg-primary-container text-white rounded-xl font-bold">Aggiungi Cinema</button>
+                    <button id="empty-add-cinema-btn" onclick="openCreateModal()" class="mt-4 px-6 py-3 bg-primary-container text-white rounded-xl font-bold">Aggiungi Cinema</button>
                 </div>
                 <div id="pagination-info" class="mt-4 text-center text-xs text-on-surface-variant uppercase tracking-widest"></div>
             </section>
@@ -83,16 +83,27 @@
 
     <div id="modal-container"></div>
 
+    <script src="/js/auth.js"></script>
     <script src="/js/template-loader.js"></script>
     <script src="/js/api-client.js"></script>
     <script src="/js/utils.js"></script>
     <script>
         let currentCinemas = [];
+        const isManager = () => typeof Auth !== 'undefined' && Auth.isPowerUser();
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();
+            applyRoleUI();
             await loadCinemas();
         });
+
+        function applyRoleUI() {
+            const canManage = isManager();
+            const newCinemaBtn = document.getElementById('new-cinema-btn');
+            const emptyAddCinemaBtn = document.getElementById('empty-add-cinema-btn');
+            if (newCinemaBtn) newCinemaBtn.classList.toggle('hidden', !canManage);
+            if (emptyAddCinemaBtn) emptyAddCinemaBtn.classList.toggle('hidden', !canManage);
+        }
 
         async function loadCinemas() {
             try {
@@ -149,7 +160,7 @@
                             </div>
                             <div class="mt-4 flex justify-between items-center">
                                 <span class="text-[10px] font-mono text-on-surface-variant/50">#C-${String(cinema.id).padStart(3, '0')}</span>
-                                <div class="flex gap-2">
+                                <div class="flex gap-2 ${isManager() ? '' : 'hidden'}">
                                     <button onclick="openEditModal(${cinema.id})" class="p-2 bg-surface-container-high hover:bg-secondary/20 rounded-lg transition-colors">
                                         <span class="material-symbols-outlined text-sm text-secondary">edit</span>
                                     </button>
@@ -165,6 +176,10 @@
         }
 
         function openCreateModal() {
+            if (!isManager()) {
+                Utils.showNotification('Non hai i permessi per creare cinema', 'error');
+                return;
+            }
             showModal('Nuovo Cinema', `
                 <form id="cinema-form" onsubmit="handleSubmit(event)">
                     <div class="space-y-4">
@@ -190,6 +205,10 @@
         }
 
         function openEditModal(id) {
+            if (!isManager()) {
+                Utils.showNotification('Non hai i permessi per modificare cinema', 'error');
+                return;
+            }
             const cinema = currentCinemas.find(c => c.id === id);
             if (!cinema) return;
 
@@ -220,6 +239,10 @@
 
         async function handleSubmit(event) {
             event.preventDefault();
+            if (!isManager()) {
+                Utils.showNotification('Non hai i permessi per salvare cinema', 'error');
+                return;
+            }
             const form = event.target;
             const id = form.id?.value;
             const data = {
@@ -247,6 +270,10 @@
         }
 
         async function deleteCinema(id) {
+            if (!isManager()) {
+                Utils.showNotification('Non hai i permessi per eliminare cinema', 'error');
+                return;
+            }
             if (!Utils.confirmDialog('Sei sicuro di voler eliminare questo cinema? Questo potrebbe influenzare le proiezioni associate.')) return;
 
             try {

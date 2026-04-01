@@ -31,17 +31,17 @@ public class JwtService
             claims.Add(new Claim(ClaimTypes.Role, ruolo));
         }
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-            _configuration["Jwt:SecretKey"]!));
+        var secretKey = GetJwtValue("Jwt:SecretKey", "JWT_SECRET_KEY", "your-super-secret-key-min-32-characters-for-jwt");
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var expiryMinutes = int.Parse(_configuration["Jwt:AccessTokenExpiryMinutes"] ?? "15");
+        var expiryMinutes = int.Parse(GetJwtValue("Jwt:AccessTokenExpiryMinutes", "JWT_ACCESS_TOKEN_EXPIRY_MINUTES", "15"));
 
         var token = new JwtSecurityToken(
-            issuer: _configuration["Jwt:Issuer"],
-            audience: _configuration["Jwt:Audience"],
+            issuer: GetJwtValue("Jwt:Issuer", "JWT_ISSUER", "FilmAPI"),
+            audience: GetJwtValue("Jwt:Audience", "JWT_AUDIENCE", "FilmFrontend"),
             claims: claims,
-            expires: DateTime.Now.AddMinutes(expiryMinutes),
+            expires: DateTime.UtcNow.AddMinutes(expiryMinutes),
             signingCredentials: creds);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
@@ -60,7 +60,7 @@ public class JwtService
     public ClaimsPrincipal? ValidateToken(string token, bool isRefreshToken = false)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"]!);
+        var key = Encoding.UTF8.GetBytes(GetJwtValue("Jwt:SecretKey", "JWT_SECRET_KEY", "your-super-secret-key-min-32-characters-for-jwt"));
 
         try
         {
@@ -69,9 +69,9 @@ public class JwtService
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(key),
                 ValidateIssuer = true,
-                ValidIssuer = _configuration["Jwt:Issuer"],
+                ValidIssuer = GetJwtValue("Jwt:Issuer", "JWT_ISSUER", "FilmAPI"),
                 ValidateAudience = true,
-                ValidAudience = _configuration["Jwt:Audience"],
+                ValidAudience = GetJwtValue("Jwt:Audience", "JWT_AUDIENCE", "FilmFrontend"),
                 ValidateLifetime = true,
                 ClockSkew = TimeSpan.Zero
             }, out SecurityToken validatedToken);
@@ -86,13 +86,20 @@ public class JwtService
 
     public DateTime GetAccessTokenExpiry()
     {
-        var expiryMinutes = int.Parse(_configuration["Jwt:AccessTokenExpiryMinutes"] ?? "15");
+        var expiryMinutes = int.Parse(GetJwtValue("Jwt:AccessTokenExpiryMinutes", "JWT_ACCESS_TOKEN_EXPIRY_MINUTES", "15"));
         return DateTime.UtcNow.AddMinutes(expiryMinutes);
     }
 
     public DateTime GetRefreshTokenExpiry()
     {
-        var expiryDays = int.Parse(_configuration["Jwt:RefreshTokenExpiryDays"] ?? "7");
+        var expiryDays = int.Parse(GetJwtValue("Jwt:RefreshTokenExpiryDays", "JWT_REFRESH_TOKEN_EXPIRY_DAYS", "7"));
         return DateTime.UtcNow.AddDays(expiryDays);
+    }
+
+    private string GetJwtValue(string configKey, string envKey, string fallback)
+    {
+        return Environment.GetEnvironmentVariable(envKey)
+            ?? _configuration[configKey]
+            ?? fallback;
     }
 }

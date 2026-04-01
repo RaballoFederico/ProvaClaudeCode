@@ -274,6 +274,7 @@
 
     <div id="footer-container"></div>
 
+    <script src="/js/auth.js"></script>
     <script src="/js/api-client.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/template-loader.js"></script>
@@ -284,6 +285,10 @@
         let proiezioniData = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
+            if (typeof Auth !== 'undefined' && !Auth.isPowerUser()) {
+                window.location.href = '/proiezioni-pubblico.html';
+                return;
+            }
             await loadAllComponents();
             await loadDashboardData();
         });

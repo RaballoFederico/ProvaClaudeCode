@@ -26,6 +26,30 @@ async function loadAllComponents() {
     );
 
     initNavigation();
+    applyPageAccessControl();
+}
+
+function getCurrentUser() {
+    if (typeof Auth === 'undefined') return null;
+    return Auth.getUser();
+}
+
+function isManagerUser() {
+    if (typeof Auth === 'undefined' || !Auth.isAuthenticated()) return false;
+    return Auth.isPowerUser();
+}
+
+function isAuthenticatedUser() {
+    return typeof Auth !== 'undefined' && Auth.isAuthenticated();
+}
+
+function applyPageAccessControl() {
+    const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+
+    const managerOnlyPages = ['index.html', 'registi.html'];
+    if (managerOnlyPages.includes(currentPath) && !isManagerUser()) {
+        window.location.href = '/proiezioni-pubblico.html';
+    }
 }
 
 function initNavigation() {
@@ -53,7 +77,11 @@ function initNavigation() {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            Utils.showNotification('Funzionalità di logout non implementata in questa versione', 'info');
+            if (typeof Auth !== 'undefined' && Auth.isAuthenticated()) {
+                Auth.logout();
+            } else {
+                window.location.href = '/login.html';
+            }
         });
     }
 }
