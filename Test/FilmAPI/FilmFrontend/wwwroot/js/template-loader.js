@@ -46,9 +46,9 @@ function isAuthenticatedUser() {
 function applyPageAccessControl() {
     const currentPath = window.location.pathname.split('/').pop() || 'index.html';
 
-    const managerOnlyPages = ['index.html', 'registi.html'];
+    const managerOnlyPages = ['index.html', 'registi.html', 'proiezioni.html'];
     if (managerOnlyPages.includes(currentPath) && !isManagerUser()) {
-        window.location.href = '/proiezioni-pubblico.html';
+        window.location.href = '/programmazione.html';
     }
 }
 

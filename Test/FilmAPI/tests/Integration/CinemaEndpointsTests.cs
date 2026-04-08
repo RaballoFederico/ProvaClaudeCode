@@ -34,9 +34,10 @@ public class CinemaEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task C2_PostCinemas_ValidData_ReturnsCreated()
     {
         await _factory.ResetDatabaseAsync();
+        var adminClient = await _factory.CreateAdminClientAsync();
         
         var request = new CinemaCreateDTO { Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Milano" };
-        var response = await _client.PostAsJsonAsync("/cinemas/", request);
+        var response = await adminClient.PostAsJsonAsync("/cinemas/", request);
         
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var result = await response.Content.ReadFromJsonAsync<CinemaDTO>();
@@ -48,9 +49,10 @@ public class CinemaEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task C3_GetCinemaById_Existing_ReturnsOk()
     {
         await _factory.ResetDatabaseAsync();
+        var adminClient = await _factory.CreateAdminClientAsync();
         
         var createRequest = new CinemaCreateDTO { Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Milano" };
-        var createResponse = await _client.PostAsJsonAsync("/cinemas/", createRequest);
+        var createResponse = await adminClient.PostAsJsonAsync("/cinemas/", createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<CinemaDTO>();
         
         var response = await _client.GetAsync($"/cinemas/{created!.Id}");
@@ -64,13 +66,14 @@ public class CinemaEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task C4_PutCinema_ValidData_ReturnsOk()
     {
         await _factory.ResetDatabaseAsync();
+        var adminClient = await _factory.CreateAdminClientAsync();
         
         var createRequest = new CinemaCreateDTO { Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Milano" };
-        var createResponse = await _client.PostAsJsonAsync("/cinemas/", createRequest);
+        var createResponse = await adminClient.PostAsJsonAsync("/cinemas/", createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<CinemaDTO>();
         
         var updateRequest = new CinemaUpdateDTO { Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Roma" };
-        var response = await _client.PutAsJsonAsync($"/cinemas/{created!.Id}", updateRequest);
+        var response = await adminClient.PutAsJsonAsync($"/cinemas/{created!.Id}", updateRequest);
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<CinemaDTO>();
@@ -81,12 +84,13 @@ public class CinemaEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task C5_DeleteCinema_Existing_ReturnsNoContent()
     {
         await _factory.ResetDatabaseAsync();
+        var adminClient = await _factory.CreateAdminClientAsync();
         
         var createRequest = new CinemaCreateDTO { Nome = "Cinema Odeon", Indirizzo = "Via Roma 10", Citta = "Milano" };
-        var createResponse = await _client.PostAsJsonAsync("/cinemas/", createRequest);
+        var createResponse = await adminClient.PostAsJsonAsync("/cinemas/", createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<CinemaDTO>();
         
-        var response = await _client.DeleteAsync($"/cinemas/{created!.Id}");
+        var response = await adminClient.DeleteAsync($"/cinemas/{created!.Id}");
         
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
     }

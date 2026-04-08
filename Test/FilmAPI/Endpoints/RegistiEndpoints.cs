@@ -33,8 +33,8 @@ public static class RegistiEndpoints
             });
         });
 
-        // POST /registi - Solo Admin
-        group.MapPost("/", [Authorize(Roles = "Admin")] async (RegistaCreateDTO dto, FilmDbContext db) =>
+        // POST /registi - Admin e PowerUser
+        group.MapPost("/", [Authorize(Roles = "Admin,PowerUser")] async (RegistaCreateDTO dto, FilmDbContext db) =>
         {
             if (string.IsNullOrWhiteSpace(dto.Nome) || string.IsNullOrWhiteSpace(dto.Cognome))
                 return Results.BadRequest("Nome and Cognome are required");
@@ -56,8 +56,8 @@ public static class RegistiEndpoints
             });
         });
 
-        // PUT /registi/{id} - Solo Admin
-        group.MapPut("/{id}", [Authorize(Roles = "Admin")] async (int id, RegistaUpdateDTO dto, FilmDbContext db) =>
+        // PUT /registi/{id} - Admin e PowerUser
+        group.MapPut("/{id}", [Authorize(Roles = "Admin,PowerUser")] async (int id, RegistaUpdateDTO dto, FilmDbContext db) =>
         {
             var regista = await db.Registi.FindAsync(id);
             if (regista is null) return Results.NotFound();
@@ -79,8 +79,8 @@ public static class RegistiEndpoints
             });
         });
 
-        // DELETE /registi/{id} - Solo Admin
-        group.MapDelete("/{id}", [Authorize(Roles = "Admin")] async (int id, FilmDbContext db) =>
+        // DELETE /registi/{id} - Admin e PowerUser
+        group.MapDelete("/{id}", [Authorize(Roles = "Admin,PowerUser")] async (int id, FilmDbContext db) =>
         {
             var regista = await db.Registi.FindAsync(id);
             if (regista is null) return Results.NotFound();

@@ -41,6 +41,10 @@ public class Utente
 
     public DateTime? RefreshTokenExpiry { get; set; }
 
+    public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
+
+    public ICollection<Prenotazione> Prenotazioni { get; set; } = new List<Prenotazione>();
+
     public ICollection<UtenteRuolo> UtentiRuoli { get; set; } = new List<UtenteRuolo>();
 
     public ICollection<ProiezioneSalvata> ProiezioniSalvate { get; set; } = new List<ProiezioneSalvata>();

@@ -35,9 +35,10 @@ public class FilmEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task F2_PostFilms_ValidData_ReturnsCreated()
     {
         await _factory.ResetDatabaseAsync();
+        var adminClient = await _factory.CreateAdminClientAsync();
         
         var registaRequest = new RegistaCreateDTO { Nome = "Christopher", Cognome = "Nolan" };
-        var registaResponse = await _client.PostAsJsonAsync("/registi/", registaRequest);
+        var registaResponse = await adminClient.PostAsJsonAsync("/registi/", registaRequest);
         var regista = await registaResponse.Content.ReadFromJsonAsync<RegistaDTO>();
         
         var request = new FilmCreateDTO 
@@ -49,7 +50,7 @@ public class FilmEndpointsTests : IClassFixture<CustomWebApplicationFactory>
             CopertinaPath = "/media/inception.jpg",
             FilmatoPath = "/media/inception.mp4"
         };
-        var response = await _client.PostAsJsonAsync("/films/", request);
+        var response = await adminClient.PostAsJsonAsync("/films/", request);
         
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var result = await response.Content.ReadFromJsonAsync<FilmDTO>();
@@ -61,9 +62,10 @@ public class FilmEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task F3_PostFilms_DefaultCoverPath_ReturnsCreatedWithDefault()
     {
         await _factory.ResetDatabaseAsync();
+        var adminClient = await _factory.CreateAdminClientAsync();
         
         var registaRequest = new RegistaCreateDTO { Nome = "Christopher", Cognome = "Nolan" };
-        var registaResponse = await _client.PostAsJsonAsync("/registi/", registaRequest);
+        var registaResponse = await adminClient.PostAsJsonAsync("/registi/", registaRequest);
         var regista = await registaResponse.Content.ReadFromJsonAsync<RegistaDTO>();
         
         var request = new FilmCreateDTO 
@@ -73,7 +75,7 @@ public class FilmEndpointsTests : IClassFixture<CustomWebApplicationFactory>
             RegistaId = regista!.Id, 
             Durata = 169
         };
-        var response = await _client.PostAsJsonAsync("/films/", request);
+        var response = await adminClient.PostAsJsonAsync("/films/", request);
         
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var result = await response.Content.ReadFromJsonAsync<FilmDTO>();
@@ -84,6 +86,7 @@ public class FilmEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task F4_PostFilms_InvalidFK_ReturnsBadRequest()
     {
         await _factory.ResetDatabaseAsync();
+        var adminClient = await _factory.CreateAdminClientAsync();
         
         var request = new FilmCreateDTO 
         { 
@@ -92,7 +95,7 @@ public class FilmEndpointsTests : IClassFixture<CustomWebApplicationFactory>
             RegistaId = 99999, 
             Durata = 148
         };
-        var response = await _client.PostAsJsonAsync("/films/", request);
+        var response = await adminClient.PostAsJsonAsync("/films/", request);
         
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
@@ -101,9 +104,10 @@ public class FilmEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task F5_GetFilmById_Existing_ReturnsOk()
     {
         await _factory.ResetDatabaseAsync();
+        var adminClient = await _factory.CreateAdminClientAsync();
         
         var registaRequest = new RegistaCreateDTO { Nome = "Christopher", Cognome = "Nolan" };
-        var registaResponse = await _client.PostAsJsonAsync("/registi/", registaRequest);
+        var registaResponse = await adminClient.PostAsJsonAsync("/registi/", registaRequest);
         var regista = await registaResponse.Content.ReadFromJsonAsync<RegistaDTO>();
         
         var filmRequest = new FilmCreateDTO 
@@ -113,7 +117,7 @@ public class FilmEndpointsTests : IClassFixture<CustomWebApplicationFactory>
             RegistaId = regista!.Id, 
             Durata = 148
         };
-        var filmResponse = await _client.PostAsJsonAsync("/films/", filmRequest);
+        var filmResponse = await adminClient.PostAsJsonAsync("/films/", filmRequest);
         var film = await filmResponse.Content.ReadFromJsonAsync<FilmDTO>();
         
         var response = await _client.GetAsync($"/films/{film!.Id}");
@@ -127,9 +131,10 @@ public class FilmEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task F6_PutFilm_ValidData_ReturnsOk()
     {
         await _factory.ResetDatabaseAsync();
+        var adminClient = await _factory.CreateAdminClientAsync();
         
         var registaRequest = new RegistaCreateDTO { Nome = "Christopher", Cognome = "Nolan" };
-        var registaResponse = await _client.PostAsJsonAsync("/registi/", registaRequest);
+        var registaResponse = await adminClient.PostAsJsonAsync("/registi/", registaRequest);
         var regista = await registaResponse.Content.ReadFromJsonAsync<RegistaDTO>();
         
         var filmRequest = new FilmCreateDTO 
@@ -139,7 +144,7 @@ public class FilmEndpointsTests : IClassFixture<CustomWebApplicationFactory>
             RegistaId = regista!.Id, 
             Durata = 148
         };
-        var filmResponse = await _client.PostAsJsonAsync("/films/", filmRequest);
+        var filmResponse = await adminClient.PostAsJsonAsync("/films/", filmRequest);
         var film = await filmResponse.Content.ReadFromJsonAsync<FilmDTO>();
         
         var updateRequest = new FilmUpdateDTO 
@@ -149,7 +154,7 @@ public class FilmEndpointsTests : IClassFixture<CustomWebApplicationFactory>
             RegistaId = regista.Id, 
             Durata = 148
         };
-        var response = await _client.PutAsJsonAsync($"/films/{film!.Id}", updateRequest);
+        var response = await adminClient.PutAsJsonAsync($"/films/{film!.Id}", updateRequest);
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<FilmDTO>();
@@ -160,9 +165,10 @@ public class FilmEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task F7_PutFilm_InvalidFK_ReturnsBadRequest()
     {
         await _factory.ResetDatabaseAsync();
+        var adminClient = await _factory.CreateAdminClientAsync();
         
         var registaRequest = new RegistaCreateDTO { Nome = "Christopher", Cognome = "Nolan" };
-        var registaResponse = await _client.PostAsJsonAsync("/registi/", registaRequest);
+        var registaResponse = await adminClient.PostAsJsonAsync("/registi/", registaRequest);
         var regista = await registaResponse.Content.ReadFromJsonAsync<RegistaDTO>();
         
         var filmRequest = new FilmCreateDTO 
@@ -172,7 +178,7 @@ public class FilmEndpointsTests : IClassFixture<CustomWebApplicationFactory>
             RegistaId = regista!.Id, 
             Durata = 148
         };
-        var filmResponse = await _client.PostAsJsonAsync("/films/", filmRequest);
+        var filmResponse = await adminClient.PostAsJsonAsync("/films/", filmRequest);
         var film = await filmResponse.Content.ReadFromJsonAsync<FilmDTO>();
         
         var updateRequest = new FilmUpdateDTO 
@@ -182,7 +188,7 @@ public class FilmEndpointsTests : IClassFixture<CustomWebApplicationFactory>
             RegistaId = 99999, 
             Durata = 148
         };
-        var response = await _client.PutAsJsonAsync($"/films/{film!.Id}", updateRequest);
+        var response = await adminClient.PutAsJsonAsync($"/films/{film!.Id}", updateRequest);
         
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
@@ -191,9 +197,10 @@ public class FilmEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task F8_DeleteFilm_Existing_ReturnsNoContent()
     {
         await _factory.ResetDatabaseAsync();
+        var adminClient = await _factory.CreateAdminClientAsync();
         
         var registaRequest = new RegistaCreateDTO { Nome = "Christopher", Cognome = "Nolan" };
-        var registaResponse = await _client.PostAsJsonAsync("/registi/", registaRequest);
+        var registaResponse = await adminClient.PostAsJsonAsync("/registi/", registaRequest);
         var regista = await registaResponse.Content.ReadFromJsonAsync<RegistaDTO>();
         
         var filmRequest = new FilmCreateDTO 
@@ -203,10 +210,10 @@ public class FilmEndpointsTests : IClassFixture<CustomWebApplicationFactory>
             RegistaId = regista!.Id, 
             Durata = 148
         };
-        var filmResponse = await _client.PostAsJsonAsync("/films/", filmRequest);
+        var filmResponse = await adminClient.PostAsJsonAsync("/films/", filmRequest);
         var film = await filmResponse.Content.ReadFromJsonAsync<FilmDTO>();
         
-        var response = await _client.DeleteAsync($"/films/{film!.Id}");
+        var response = await adminClient.DeleteAsync($"/films/{film!.Id}");
         
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
         

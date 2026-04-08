@@ -35,8 +35,8 @@ public static class ProiezioniEndpoints
             });
         });
 
-        // POST /proiezioni - Solo Admin
-        group.MapPost("/", [Authorize(Roles = "Admin")] async (ProiezioneCreateDTO dto, FilmDbContext db) =>
+        // POST /proiezioni - Admin e PowerUser
+        group.MapPost("/", [Authorize(Roles = "Admin,PowerUser")] async (ProiezioneCreateDTO dto, FilmDbContext db) =>
         {
             var cinemaExists = await db.Cinemas.AnyAsync(c => c.Id == dto.CinemaId);
             if (!cinemaExists)
@@ -84,8 +84,8 @@ public static class ProiezioniEndpoints
             });
         });
 
-        // PUT /proiezioni/{id} - Solo Admin
-        group.MapPut("/{id}", [Authorize(Roles = "Admin")] async (int id, ProiezioneUpdateDTO dto, FilmDbContext db) =>
+        // PUT /proiezioni/{id} - Admin e PowerUser
+        group.MapPut("/{id}", [Authorize(Roles = "Admin,PowerUser")] async (int id, ProiezioneUpdateDTO dto, FilmDbContext db) =>
         {
             var proiezione = await db.Proiezioni.FindAsync(id);
             if (proiezione is null) return Results.NotFound();
@@ -134,8 +134,8 @@ public static class ProiezioniEndpoints
             });
         });
 
-        // DELETE /proiezioni/{id} - Solo Admin
-        group.MapDelete("/{id}", [Authorize(Roles = "Admin")] async (int id, FilmDbContext db) =>
+        // DELETE /proiezioni/{id} - Admin e PowerUser
+        group.MapDelete("/{id}", [Authorize(Roles = "Admin,PowerUser")] async (int id, FilmDbContext db) =>
         {
             var proiezione = await db.Proiezioni.FindAsync(id);
             if (proiezione is null) return Results.NotFound();

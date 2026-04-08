@@ -36,7 +36,11 @@ public static class DbInitializer
                 new Categoria { Nome = "Azione", Descrizione = "Film d'azione" },
                 new Categoria { Nome = "Thriller", Descrizione = "Film thriller" },
                 new Categoria { Nome = "Romantico", Descrizione = "Film romantici" },
-                new Categoria { Nome = "Sci-Fi", Descrizione = "Film di fantascienza" }
+                new Categoria { Nome = "Sci-Fi", Descrizione = "Film di fantascienza" },
+                new Categoria { Nome = "Animazione", Descrizione = "Film di animazione" },
+                new Categoria { Nome = "Documentario", Descrizione = "Film documentari" },
+                new Categoria { Nome = "Avventura", Descrizione = "Film di avventura" },
+                new Categoria { Nome = "Storico", Descrizione = "Film storici" }
             };
 
             await context.Categorie.AddRangeAsync(categorie);

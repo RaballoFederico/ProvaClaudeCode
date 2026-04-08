@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using FilmAPI.Data;
 using FilmAPI.Endpoints;
 using FilmAPI.Services;
+using FilmAPI.Services.Interfaces;
 
 Env.Load();
 
@@ -33,6 +34,8 @@ var jwtSecretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ??
     "your-super-secret-key-min-32-characters-for-jwt";
 
 builder.Services.AddSingleton(new JwtService(builder.Configuration));
+builder.Services.AddScoped<ICategoriaService, CategoriaService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -50,7 +53,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("PowerUserOrAdmin", policy => policy.RequireRole("Admin", "PowerUser"));
+    options.AddPolicy("Authenticated", policy => policy.RequireAuthenticatedUser());
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
@@ -61,7 +69,7 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:5001")
             .AllowAnyMethod()
-            .AllowAnyHeader()
+            .WithHeaders("Content-Type", "Authorization")
             .AllowCredentials();
     });
 });

@@ -1,6 +1,10 @@
 using System;
 using System.Linq;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using FilmAPI.Data;
+using FilmAPI.DTO;
+using FilmAPI.Model;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -55,9 +59,68 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
         var db = scope.ServiceProvider.GetRequiredService<FilmDbContext>();
         await db.Database.EnsureDeletedAsync();
         await db.Database.EnsureCreatedAsync();
+        await SeedAuthDataAsync(db);
         if (seed is not null)
         {
             await seed(db);
+            await db.SaveChangesAsync();
+        }
+    }
+
+    public async Task ResetDatabaseExtendedAsync(Func<FilmDbContext, Task>? seed = null)
+    {
+        await ResetDatabaseAsync(seed);
+    }
+
+    public async Task<HttpClient> CreateAdminClientAsync()
+    {
+        var client = CreateClient();
+        var login = await client.PostAsJsonAsync("/auth/login", new LoginRequestDTO
+        {
+            Username = "admin",
+            Password = "Admin123!"
+        });
+
+        var data = await login.Content.ReadFromJsonAsync<LoginResponseDTO>();
+        if (data?.AccessToken != null)
+        {
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", data.AccessToken);
+        }
+
+        return client;
+    }
+
+    private static async Task SeedAuthDataAsync(FilmDbContext db)
+    {
+        if (!await db.Ruoli.AnyAsync())
+        {
+            await db.Ruoli.AddRangeAsync(
+                new Ruolo { Nome = "Admin", Descrizione = "Amministratore" },
+                new Ruolo { Nome = "PowerUser", Descrizione = "Power user" },
+                new Ruolo { Nome = "User", Descrizione = "Utente" }
+            );
+            await db.SaveChangesAsync();
+        }
+
+        if (!await db.Utenti.AnyAsync(u => u.Username == "admin"))
+        {
+            var adminRuolo = await db.Ruoli.FirstAsync(r => r.Nome == "Admin");
+            var admin = new Utente
+            {
+                Username = "admin",
+                Email = "admin@test.local",
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
+                Nome = "Admin",
+                Cognome = "Test",
+                Attivo = true,
+                DataRegistrazione = DateTime.UtcNow,
+                UtentiRuoli = new List<UtenteRuolo>
+                {
+                    new UtenteRuolo { RuoloId = adminRuolo.Id }
+                }
+            };
+
+            db.Utenti.Add(admin);
             await db.SaveChangesAsync();
         }
     }

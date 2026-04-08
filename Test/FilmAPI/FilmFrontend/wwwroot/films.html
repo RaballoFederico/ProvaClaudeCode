@@ -79,6 +79,12 @@
                         </select>
                         <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">expand_more</span>
                     </div>
+                    <div class="relative w-full lg:w-auto">
+                        <select id="filter-categoria" onchange="filterFilms()" class="w-full lg:w-auto bg-surface-container-highest border-none rounded-lg pl-4 pr-10 py-3 text-sm font-medium text-on-surface appearance-none focus:ring-1 focus:ring-primary">
+                            <option value="">Tutte le Categorie</option>
+                        </select>
+                        <span class="material-symbols-outlined absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-on-surface-variant">expand_more</span>
+                    </div>
                 </div>
             </section>
 
@@ -100,12 +106,14 @@
     <div id="modal-container"></div>
 
     <script src="/js/auth.js"></script>
+    <script src="/js/route-guard.js"></script>
     <script src="/js/template-loader.js"></script>
     <script src="/js/api-client.js"></script>
     <script src="/js/utils.js"></script>
     <script>
         let allFilms = [];
         let allRegisti = [];
+        let allCategorie = [];
         let filteredFilms = [];
         const isManager = () => typeof Auth !== 'undefined' && Auth.canManageCatalog();
 
@@ -123,9 +131,10 @@
         async function loadData() {
             try {
                 Utils.showLoading();
-                [allFilms, allRegisti] = await Promise.all([
+                [allFilms, allRegisti, allCategorie] = await Promise.all([
                     ApiClient.get('/films'),
-                    ApiClient.get('/registi')
+                    ApiClient.get('/registi'),
+                    ApiClient.get('/categorie')
                 ]);
                 populateFilters();
                 filterFilms();
@@ -161,6 +170,7 @@
         function populateFilters() {
             const registaSelect = document.getElementById('filter-regista');
             const yearSelect = document.getElementById('filter-year');
+            const categoriaSelect = document.getElementById('filter-categoria');
             const years = new Set();
 
             allRegisti.forEach(r => {
@@ -182,19 +192,28 @@
                 option.textContent = year;
                 yearSelect.appendChild(option);
             });
+
+            allCategorie.forEach(c => {
+                const option = document.createElement('option');
+                option.value = c.id;
+                option.textContent = c.nome;
+                categoriaSelect.appendChild(option);
+            });
         }
 
         function filterFilms() {
             const search = document.getElementById('search-input').value.toLowerCase();
             const registaId = document.getElementById('filter-regista').value;
             const year = document.getElementById('filter-year').value;
+            const categoriaId = document.getElementById('filter-categoria').value;
 
             filteredFilms = allFilms.filter(film => {
                 const matchesSearch = film.titolo.toLowerCase().includes(search) || 
                     `FLM-${String(film.id).padStart(3, '0')}`.toLowerCase().includes(search);
                 const matchesRegista = !registaId || film.registaId === parseInt(registaId);
                 const matchesYear = !year || (film.dataProduzione && new Date(film.dataProduzione).getFullYear().toString() === year);
-                return matchesSearch && matchesRegista && matchesYear;
+                const matchesCategoria = !categoriaId || (Array.isArray(film.categorieIds) && film.categorieIds.includes(parseInt(categoriaId)));
+                return matchesSearch && matchesRegista && matchesYear && matchesCategoria;
             });
 
             renderFilms();
@@ -232,6 +251,9 @@
                             <div class="absolute bottom-0 left-0 right-0 p-2">
                                 <h4 class="font-headline text-xs font-bold text-white truncate">${escapeHtml(film.titolo)}</h4>
                                 <p class="text-[10px] text-white/70 truncate">${regista ? escapeHtml(`${regista.nome} ${regista.cognome}`) : ''}</p>
+                                <div class="flex flex-wrap gap-1 mt-1">
+                                    ${(film.categorie || []).slice(0, 2).map(c => `<span class="px-1.5 py-0.5 rounded bg-black/60 text-[9px] text-secondary">${escapeHtml(c.nome)}</span>`).join('')}
+                                </div>
                             </div>
                             <div class="absolute top-2 left-2">
                                 <span class="px-2 py-0.5 bg-black/60 backdrop-blur-sm rounded text-[10px] text-white font-bold">${film.durata || '-'} min</span>
@@ -299,6 +321,14 @@
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-2">Data Produzione</p>
                                 <p class="font-semibold text-on-surface">${film.dataProduzione ? Utils.formatDate(film.dataProduzione) : 'Non specificata'}</p>
                             </div>
+                            <div class="bg-surface-container-high rounded-xl p-4">
+                                <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-2">Categorie</p>
+                                <div class="flex flex-wrap gap-1">
+                                    ${(film.categorie || []).length
+                                        ? (film.categorie || []).map(c => `<span class=\"px-2 py-1 rounded-full text-[10px] bg-surface-container-highest text-secondary\">${escapeHtml(c.nome)}</span>`).join('')
+                                        : '<span class="text-sm text-on-surface-variant">Nessuna</span>'}
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="flex gap-3 mt-6">
@@ -357,6 +387,12 @@
                             <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Filmato Path</label>
                             <input type="text" name="filmatoPath" placeholder="/media/videos/film.mp4" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
                         </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Categorie</label>
+                            <select name="categorieIds" multiple class="w-full min-h-24 bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                                ${allCategorie.map(c => `<option value="${c.id}">${escapeHtml(c.nome)}</option>`).join('')}
+                            </select>
+                        </div>
                     </div>
                     <div class="flex justify-end gap-3 mt-6">
                         <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Annulla</button>
@@ -407,6 +443,12 @@
                             <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Filmato Path</label>
                             <input type="text" name="filmatoPath" value="${escapeHtml(film.filmatoPath || '')}" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
                         </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Categorie</label>
+                            <select name="categorieIds" multiple class="w-full min-h-24 bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                                ${allCategorie.map(c => `<option value="${c.id}" ${(film.categorieIds || []).includes(c.id) ? 'selected' : ''}>${escapeHtml(c.nome)}</option>`).join('')}
+                            </select>
+                        </div>
                     </div>
                     <input type="hidden" name="id" value="${id}">
                     <div class="flex justify-end gap-3 mt-6">
@@ -431,7 +473,8 @@
                 dataProduzione: form.dataProduzione.value || null,
                 durata: parseInt(form.durata.value) || null,
                 copertinaPath: form.copertinaPath.value || null,
-                filmatoPath: form.filmatoPath.value || null
+                filmatoPath: form.filmatoPath.value || null,
+                categoriaIds: Array.from(form.categorieIds.selectedOptions).map(o => parseInt(o.value))
             };
 
             try {

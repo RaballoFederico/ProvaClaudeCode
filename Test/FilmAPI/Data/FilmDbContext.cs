@@ -16,6 +16,8 @@ public class FilmDbContext : DbContext
     public DbSet<Utente> Utenti { get; set; } = null!;
     public DbSet<Ruolo> Ruoli { get; set; } = null!;
     public DbSet<UtenteRuolo> UtentiRuoli { get; set; } = null!;
+    public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
+    public DbSet<Prenotazione> Prenotazioni { get; set; } = null!;
     public DbSet<Categoria> Categorie { get; set; } = null!;
     public DbSet<FilmCategoria> FilmsCategorie { get; set; } = null!;
     public DbSet<ProiezioneSalvata> ProiezioniSalvate { get; set; } = null!;
@@ -111,6 +113,36 @@ public class FilmDbContext : DbContext
             entity.HasOne(e => e.Ruolo)
                 .WithMany(r => r.UtentiRuoli)
                 .HasForeignKey(e => e.RuoloId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<RefreshToken>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Token).IsRequired().HasMaxLength(256);
+            entity.Property(e => e.ExpiresAt).IsRequired();
+            entity.HasIndex(e => e.Token).IsUnique();
+
+            entity.HasOne(e => e.Utente)
+                .WithMany(u => u.RefreshTokens)
+                .HasForeignKey(e => e.UtenteId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Prenotazione>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.DataPrenotazione).IsRequired();
+            entity.Property(e => e.NumeroPosti).IsRequired();
+
+            entity.HasOne(e => e.Utente)
+                .WithMany(u => u.Prenotazioni)
+                .HasForeignKey(e => e.UtenteId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Proiezione)
+                .WithMany()
+                .HasForeignKey(e => e.ProiezioneId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

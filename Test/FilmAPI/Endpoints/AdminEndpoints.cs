@@ -11,6 +11,7 @@ public static class AdminEndpoints
     public static IEndpointRouteBuilder MapAdminEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/admin");
+        var utentiGroup = app.MapGroup("/admin/utenti").RequireAuthorization("AdminOnly");
 
         // GET /admin/users - Lista tutti gli utenti (solo Admin)
         group.MapGet("/users", [Authorize(Roles = "Admin")] async (FilmDbContext db) =>
@@ -90,6 +91,22 @@ public static class AdminEndpoints
                 return Results.BadRequest(new { message = "Uno o più ruoli non esistono" });
             }
 
+            var adminRuolo = await db.Ruoli.FirstOrDefaultAsync(r => r.Nome == "Admin");
+            if (adminRuolo != null)
+            {
+                var adminRichiesto = request.RuoloIds.Contains(adminRuolo.Id);
+                var adminCorrente = utente.UtentiRuoli.Any(ur => ur.RuoloId == adminRuolo.Id);
+
+                if (adminCorrente && !adminRichiesto)
+                {
+                    var altriAdmin = await db.UtentiRuoli.CountAsync(ur => ur.RuoloId == adminRuolo.Id && ur.UtenteId != id);
+                    if (altriAdmin == 0)
+                    {
+                        return Results.BadRequest(new { message = "Impossibile rimuovere il ruolo dall'ultimo admin" });
+                    }
+                }
+            }
+
             // Rimuovi ruoli esistenti
             utente.UtentiRuoli.Clear();
 
@@ -142,6 +159,71 @@ public static class AdminEndpoints
             await db.SaveChangesAsync();
 
             return Results.Ok(new { message = "Utente riattivato con successo" });
+        });
+
+        utentiGroup.MapGet("/", [Authorize(Roles = "Admin")] async (FilmDbContext db) =>
+        {
+            var utenti = await db.Utenti
+                .Include(u => u.UtentiRuoli)
+                .ThenInclude(ur => ur.Ruolo)
+                .Select(u => new
+                {
+                    u.Id,
+                    u.Username,
+                    u.Email,
+                    u.Nome,
+                    u.Cognome,
+                    u.Telefono,
+                    u.DataRegistrazione,
+                    u.DataUltimoAccesso,
+                    u.Attivo,
+                    Ruoli = u.UtentiRuoli.Select(ur => ur.Ruolo.Nome).ToList()
+                })
+                .ToListAsync();
+
+            return Results.Ok(utenti);
+        });
+
+        utentiGroup.MapPut("/{id}/ruoli", [Authorize(Roles = "Admin")] async (int id, UpdateRuoliRequestDTO request, FilmDbContext db) =>
+        {
+            var utente = await db.Utenti
+                .Include(u => u.UtentiRuoli)
+                .FirstOrDefaultAsync(u => u.Id == id);
+
+            if (utente == null)
+            {
+                return Results.NotFound();
+            }
+
+            var ruoliEsistenti = await db.Ruoli.Where(r => request.RuoloIds.Contains(r.Id)).ToListAsync();
+            if (ruoliEsistenti.Count != request.RuoloIds.Count)
+            {
+                return Results.BadRequest(new { message = "Uno o piu' ruoli non esistono" });
+            }
+
+            var adminRuolo = await db.Ruoli.FirstOrDefaultAsync(r => r.Nome == "Admin");
+            if (adminRuolo != null)
+            {
+                var adminRichiesto = request.RuoloIds.Contains(adminRuolo.Id);
+                var adminCorrente = utente.UtentiRuoli.Any(ur => ur.RuoloId == adminRuolo.Id);
+                if (adminCorrente && !adminRichiesto)
+                {
+                    var altriAdmin = await db.UtentiRuoli.CountAsync(ur => ur.RuoloId == adminRuolo.Id && ur.UtenteId != id);
+                    if (altriAdmin == 0)
+                    {
+                        return Results.BadRequest(new { message = "Impossibile rimuovere il ruolo dall'ultimo admin" });
+                    }
+                }
+            }
+
+            utente.UtentiRuoli.Clear();
+            foreach (var ruoloId in request.RuoloIds)
+            {
+                utente.UtentiRuoli.Add(new UtenteRuolo { RuoloId = ruoloId });
+            }
+
+            await db.SaveChangesAsync();
+            return Results.Ok(new { message = "Ruoli aggiornati con successo" });
         });
 
         return app;

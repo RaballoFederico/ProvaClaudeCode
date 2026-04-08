@@ -27,6 +27,7 @@ public static class FilmsEndpoints
                 Durata = f.Durata,
                 CopertinaPath = f.CopertinaPath,
                 FilmatoPath = f.FilmatoPath,
+                CategorieIds = f.FilmsCategorie.Select(fc => fc.CategoriaId).ToList(),
                 Categorie = f.FilmsCategorie.Select(fc => new CategoriaDTO
                 {
                     Id = fc.Categoria.Id,
@@ -54,6 +55,7 @@ public static class FilmsEndpoints
                 Durata = film.Durata,
                 CopertinaPath = film.CopertinaPath,
                 FilmatoPath = film.FilmatoPath,
+                CategorieIds = film.FilmsCategorie.Select(fc => fc.CategoriaId).ToList(),
                 Categorie = film.FilmsCategorie.Select(fc => new CategoriaDTO
                 {
                     Id = fc.Categoria.Id,
@@ -63,8 +65,8 @@ public static class FilmsEndpoints
             });
         });
 
-        // POST /films - Solo Admin (con categorie)
-        group.MapPost("/", [Authorize(Roles = "Admin")] async (FilmCreateDTO dto, FilmDbContext db) =>
+        // POST /films - Admin e PowerUser
+        group.MapPost("/", [Authorize(Roles = "Admin,PowerUser")] async (FilmCreateDTO dto, FilmDbContext db) =>
         {
             var registaExists = await db.Registi.AnyAsync(r => r.Id == dto.RegistaId);
             if (!registaExists)
@@ -102,6 +104,8 @@ public static class FilmsEndpoints
             db.Films.Add(film);
             await db.SaveChangesAsync();
 
+            await db.Entry(film).Collection(f => f.FilmsCategorie).Query().Include(fc => fc.Categoria).LoadAsync();
+
             return Results.Created($"/films/{film.Id}", new FilmDTO
             {
                 Id = film.Id,
@@ -111,6 +115,7 @@ public static class FilmsEndpoints
                 Durata = film.Durata,
                 CopertinaPath = film.CopertinaPath,
                 FilmatoPath = film.FilmatoPath,
+                CategorieIds = film.FilmsCategorie.Select(fc => fc.CategoriaId).ToList(),
                 Categorie = film.FilmsCategorie.Select(fc => new CategoriaDTO
                 {
                     Id = fc.CategoriaId,
@@ -120,8 +125,8 @@ public static class FilmsEndpoints
             });
         });
 
-        // PUT /films/{id} - Solo Admin (con categorie)
-        group.MapPut("/{id}", [Authorize(Roles = "Admin")] async (int id, FilmUpdateDTO dto, FilmDbContext db) =>
+        // PUT /films/{id} - Admin e PowerUser
+        group.MapPut("/{id}", [Authorize(Roles = "Admin,PowerUser")] async (int id, FilmUpdateDTO dto, FilmDbContext db) =>
         {
             var film = await db.Films
                 .Include(f => f.FilmsCategorie)
@@ -166,7 +171,7 @@ public static class FilmsEndpoints
             await db.SaveChangesAsync();
 
             // Ricarica le categorie per il response
-            await db.Entry(film).Collection(f => f.FilmsCategorie).LoadAsync();
+            await db.Entry(film).Collection(f => f.FilmsCategorie).Query().Include(fc => fc.Categoria).LoadAsync();
 
             return Results.Ok(new FilmDTO
             {
@@ -177,6 +182,7 @@ public static class FilmsEndpoints
                 Durata = film.Durata,
                 CopertinaPath = film.CopertinaPath,
                 FilmatoPath = film.FilmatoPath,
+                CategorieIds = film.FilmsCategorie.Select(fc => fc.CategoriaId).ToList(),
                 Categorie = film.FilmsCategorie.Select(fc => new CategoriaDTO
                 {
                     Id = fc.CategoriaId,
@@ -186,8 +192,8 @@ public static class FilmsEndpoints
             });
         });
 
-        // DELETE /films/{id} - Solo Admin
-        group.MapDelete("/{id}", [Authorize(Roles = "Admin")] async (int id, FilmDbContext db) =>
+        // DELETE /films/{id} - Admin e PowerUser
+        group.MapDelete("/{id}", [Authorize(Roles = "Admin,PowerUser")] async (int id, FilmDbContext db) =>
         {
             var film = await db.Films.FindAsync(id);
             if (film is null) return Results.NotFound();

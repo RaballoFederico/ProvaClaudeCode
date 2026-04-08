@@ -275,6 +275,7 @@
     <div id="footer-container"></div>
 
     <script src="/js/auth.js"></script>
+    <script src="/js/route-guard.js"></script>
     <script src="/js/api-client.js"></script>
     <script src="/js/utils.js"></script>
     <script src="/js/template-loader.js"></script>
@@ -283,10 +284,11 @@
         let registiData = [];
         let cinemasData = [];
         let proiezioniData = [];
+        let categorieData = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (typeof Auth !== 'undefined' && !Auth.canManageCatalog()) {
-                window.location.href = '/proiezioni-pubblico.html';
+                window.location.href = '/programmazione.html';
                 return;
             }
             await loadAllComponents();
@@ -295,17 +297,19 @@
 
         async function loadDashboardData() {
             try {
-                const [films, registi, cinemas, proiezioni] = await Promise.all([
+                const [films, registi, cinemas, proiezioni, categorie] = await Promise.all([
                     ApiClient.get('/films'),
                     ApiClient.get('/registi'),
                     ApiClient.get('/cinemas'),
-                    ApiClient.get('/proiezioni')
+                    ApiClient.get('/proiezioni'),
+                    ApiClient.get('/categorie')
                 ]);
 
                 filmsData = films || [];
                 registiData = registi || [];
                 cinemasData = cinemas || [];
                 proiezioniData = proiezioni || [];
+                categorieData = categorie || [];
 
                 updateStats();
                 renderFilmCards();
@@ -354,6 +358,9 @@
                             <span class="inline-block px-2 py-0.5 bg-primary-container text-white text-[10px] font-bold rounded mb-1">${film.durata || '-'} min</span>
                             <h4 class="font-headline text-sm font-bold text-white line-clamp-2">${escapeHtml(film.titolo)}</h4>
                             <p class="text-[10px] text-white/70 truncate">${regista ? escapeHtml(`${regista.nome} ${regista.cognome}`) : ''}</p>
+                            <div class="flex flex-wrap gap-1 mt-1">
+                                ${(film.categorie || []).slice(0, 2).map(c => `<span class="px-1 py-0.5 rounded bg-black/60 text-secondary text-[9px]">${escapeHtml(c.nome)}</span>`).join('')}
+                            </div>
                         </div>
                         <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <span class="w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">

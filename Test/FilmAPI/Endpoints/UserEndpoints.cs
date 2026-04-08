@@ -11,6 +11,8 @@ public static class UserEndpoints
     public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/user").RequireAuthorization();
+        var profiloGroup = app.MapGroup("/profilo").RequireAuthorization("Authenticated");
+        var prenotazioniGroup = app.MapGroup("/prenotazioni").RequireAuthorization("Authenticated");
 
         // GET /user/profile - Profilo utente corrente
         group.MapGet("/profile", async (HttpContext context, FilmDbContext db) =>
@@ -209,6 +211,16 @@ public static class UserEndpoints
             salvata.DataPrenotazione = DateTime.UtcNow;
             salvata.NumeroPosti = request.NumeroPosti;
 
+            var prenotazione = new Prenotazione
+            {
+                UtenteId = userId.Value,
+                ProiezioneId = salvata.ProiezioneId,
+                DataPrenotazione = salvata.DataPrenotazione.Value,
+                NumeroPosti = request.NumeroPosti
+            };
+
+            await db.Prenotazioni.AddAsync(prenotazione);
+
             await db.SaveChangesAsync();
 
             return Results.Ok(new { message = "Prenotazione effettuata con successo" });
@@ -238,9 +250,68 @@ public static class UserEndpoints
             salvata.DataPrenotazione = null;
             salvata.NumeroPosti = 0;
 
+            var ultimaPrenotazione = await db.Prenotazioni
+                .Where(p => p.UtenteId == userId && p.ProiezioneId == salvata.ProiezioneId && p.DataAnnullamento == null)
+                .OrderByDescending(p => p.DataPrenotazione)
+                .FirstOrDefaultAsync();
+
+            if (ultimaPrenotazione != null)
+            {
+                ultimaPrenotazione.DataAnnullamento = DateTime.UtcNow;
+            }
+
             await db.SaveChangesAsync();
 
             return Results.Ok(new { message = "Prenotazione annullata con successo" });
+        });
+
+        profiloGroup.MapGet("/", async (HttpContext context, FilmDbContext db) =>
+        {
+            var userId = GetUserId(context);
+            if (userId == null) return Results.Unauthorized();
+
+            var utente = await db.Utenti
+                .Include(u => u.UtentiRuoli)
+                .ThenInclude(ur => ur.Ruolo)
+                .FirstOrDefaultAsync(u => u.Id == userId && u.Attivo);
+
+            if (utente == null) return Results.NotFound();
+
+            return Results.Ok(new UtenteDTO
+            {
+                Id = utente.Id,
+                Username = utente.Username,
+                Email = utente.Email,
+                Nome = utente.Nome,
+                Cognome = utente.Cognome,
+                Ruoli = utente.UtentiRuoli.Select(ur => ur.Ruolo.Nome).ToList()
+            });
+        });
+
+        prenotazioniGroup.MapGet("/", async (HttpContext context, FilmDbContext db) =>
+        {
+            var userId = GetUserId(context);
+            if (userId == null) return Results.Unauthorized();
+
+            var prenotazioni = await db.Prenotazioni
+                .Include(p => p.Proiezione)
+                .ThenInclude(pr => pr.Film)
+                .Include(p => p.Proiezione)
+                .ThenInclude(pr => pr.Cinema)
+                .Where(p => p.UtenteId == userId && p.DataAnnullamento == null)
+                .OrderByDescending(p => p.DataPrenotazione)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.ProiezioneId,
+                    Film = p.Proiezione.Film != null ? p.Proiezione.Film.Titolo : "N/A",
+                    Cinema = p.Proiezione.Cinema != null ? p.Proiezione.Cinema.Nome : "N/A",
+                    p.DataPrenotazione,
+                    p.NumeroPosti
+                })
+                .ToListAsync();
+
+            return Results.Ok(prenotazioni);
         });
 
         return app;

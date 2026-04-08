@@ -19,10 +19,37 @@ async function loadProfile() {
         showLoading(false);
         renderProfile();
         renderProiezioni();
+        handlePrenotaQueryParam();
     } catch (error) {
         showLoading(false);
         showError(error.message);
     }
+}
+
+function handlePrenotaQueryParam() {
+    const params = new URLSearchParams(window.location.search);
+    const prenotaParam = params.get('prenota');
+    if (!prenotaParam) return;
+
+    const proiezioneId = parseInt(prenotaParam);
+    if (Number.isNaN(proiezioneId)) return;
+
+    const target = (profiloData.proiezioniSalvate || []).find(p => p.proiezioneId === proiezioneId && !p.prenotato);
+    if (!target) return;
+
+    const dataProiezione = new Date(target.dataProiezione);
+    const dataFormattata = dataProiezione.toLocaleDateString('it-IT', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
+
+    apriPrenotazione(target.id, target.filmTitolo, target.cinemaNome, dataFormattata);
+    params.delete('prenota');
+    const query = params.toString();
+    const nextUrl = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+    window.history.replaceState({}, '', nextUrl);
 }
 
 function showLoading(show) {

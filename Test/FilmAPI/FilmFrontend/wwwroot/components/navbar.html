@@ -26,7 +26,8 @@
             const user = Auth.getUser();
             const initials = (user.nome?.[0] || '') + (user.cognome?.[0] || '') || user.username[0].toUpperCase();
             const fullName = user.nome && user.cognome ? `${user.nome} ${user.cognome}` : user.username;
-            const isManager = user.ruoli && user.ruoli.includes('Admin');
+            const isManager = user.ruoli && (user.ruoli.includes('Admin') || user.ruoli.includes('PowerUser'));
+            const isAdmin = user.ruoli && user.ruoli.includes('Admin');
             
             navAuthSection.innerHTML = `
                 <button class="p-2 text-on-surface-variant hover:bg-[#2A2A2A] rounded-full transition-all duration-300">
@@ -47,7 +48,11 @@
                         </a>
                         <a href="proiezioni-pubblico.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
                             <span class="material-symbols-outlined text-sm">movie</span>
-                            Proiezioni
+                            Programmazione
+                        </a>
+                        <a href="programmazione.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
+                            <span class="material-symbols-outlined text-sm">event</span>
+                            Programmazione Full
                         </a>
                         ${isManager ? `
                         <a href="films.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
@@ -65,6 +70,12 @@
                         <a href="registi.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
                             <span class="material-symbols-outlined text-sm">theater_comedy</span>
                             Gestione Registi
+                        </a>
+                        ` : ''}
+                        ${isAdmin ? `
+                        <a href="categorie.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
+                            <span class="material-symbols-outlined text-sm">category</span>
+                            Categorie
                         </a>
                         ` : ''}
                         <button onclick="Auth.logout()" class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-red-400/10 rounded-b-xl transition-colors text-left">

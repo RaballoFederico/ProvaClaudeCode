@@ -36,9 +36,10 @@ public class RegistiEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task R2_PostRegisti_ValidData_ReturnsCreated()
     {
         await _factory.ResetDatabaseAsync();
+        var adminClient = await _factory.CreateAdminClientAsync();
         
         var request = new RegistaCreateDTO { Nome = "Christopher", Cognome = "Nolan", Nazionalita = "Britannica" };
-        var response = await _client.PostAsJsonAsync("/registi/", request);
+        var response = await adminClient.PostAsJsonAsync("/registi/", request);
         
         response.StatusCode.Should().Be(HttpStatusCode.Created);
         var result = await response.Content.ReadFromJsonAsync<RegistaDTO>();
@@ -51,9 +52,10 @@ public class RegistiEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task R3_GetRegistiById_Existing_ReturnsOk()
     {
         await _factory.ResetDatabaseAsync();
+        var adminClient = await _factory.CreateAdminClientAsync();
         
         var createRequest = new RegistaCreateDTO { Nome = "Christopher", Cognome = "Nolan", Nazionalita = "Britannica" };
-        var createResponse = await _client.PostAsJsonAsync("/registi/", createRequest);
+        var createResponse = await adminClient.PostAsJsonAsync("/registi/", createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<RegistaDTO>();
         
         var response = await _client.GetAsync($"/registi/{created!.Id}");
@@ -77,13 +79,14 @@ public class RegistiEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task R5_PutRegisti_Existing_ReturnsOk()
     {
         await _factory.ResetDatabaseAsync();
+        var adminClient = await _factory.CreateAdminClientAsync();
         
         var createRequest = new RegistaCreateDTO { Nome = "Christopher", Cognome = "Nolan", Nazionalita = "Britannica" };
-        var createResponse = await _client.PostAsJsonAsync("/registi/", createRequest);
+        var createResponse = await adminClient.PostAsJsonAsync("/registi/", createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<RegistaDTO>();
         
         var updateRequest = new RegistaUpdateDTO { Nome = "Christopher", Cognome = "Nolan", Nazionalita = "Statunitense" };
-        var response = await _client.PutAsJsonAsync($"/registi/{created!.Id}", updateRequest);
+        var response = await adminClient.PutAsJsonAsync($"/registi/{created!.Id}", updateRequest);
         
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<RegistaDTO>();
@@ -94,9 +97,10 @@ public class RegistiEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task R6_PutRegisti_NonExisting_ReturnsNotFound()
     {
         await _factory.ResetDatabaseAsync();
+        var adminClient = await _factory.CreateAdminClientAsync();
         
         var updateRequest = new RegistaUpdateDTO { Nome = "Christopher", Cognome = "Nolan", Nazionalita = "Statunitense" };
-        var response = await _client.PutAsJsonAsync("/registi/99999", updateRequest);
+        var response = await adminClient.PutAsJsonAsync("/registi/99999", updateRequest);
         
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
@@ -105,12 +109,13 @@ public class RegistiEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task R7_DeleteRegisti_Existing_ReturnsNoContent()
     {
         await _factory.ResetDatabaseAsync();
+        var adminClient = await _factory.CreateAdminClientAsync();
         
         var createRequest = new RegistaCreateDTO { Nome = "Christopher", Cognome = "Nolan", Nazionalita = "Britannica" };
-        var createResponse = await _client.PostAsJsonAsync("/registi/", createRequest);
+        var createResponse = await adminClient.PostAsJsonAsync("/registi/", createRequest);
         var created = await createResponse.Content.ReadFromJsonAsync<RegistaDTO>();
         
-        var response = await _client.DeleteAsync($"/registi/{created!.Id}");
+        var response = await adminClient.DeleteAsync($"/registi/{created!.Id}");
         
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
         
@@ -122,8 +127,9 @@ public class RegistiEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task R8_DeleteRegisti_NonExisting_ReturnsNotFound()
     {
         await _factory.ResetDatabaseAsync();
+        var adminClient = await _factory.CreateAdminClientAsync();
         
-        var response = await _client.DeleteAsync("/registi/99999");
+        var response = await adminClient.DeleteAsync("/registi/99999");
         
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
@@ -132,9 +138,10 @@ public class RegistiEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     public async Task R9_PostRegisti_MissingData_ReturnsBadRequest()
     {
         await _factory.ResetDatabaseAsync();
+        var adminClient = await _factory.CreateAdminClientAsync();
         
         var request = new RegistaCreateDTO { Nome = "Christopher" };
-        var response = await _client.PostAsJsonAsync("/registi/", request);
+        var response = await adminClient.PostAsJsonAsync("/registi/", request);
         
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
