@@ -7,15 +7,16 @@ const RouteGuard = {
 
     pageRules: {
         'home.html': null,
-        'index.html': 'manager',
-        'films.html': null,
+        'index.html': 'auth',
+        'films.html': 'auth',
         'proiezioni.html': 'manager',
         'cinemas.html': 'auth',
         'registi.html': 'manager',
         'categorie.html': 'admin',
         'profilo.html': 'auth',
-        'programmazione.html': null,
-        'proiezioni-pubblico.html': null,
+        'programmazione.html': 'auth',
+        'proiezioni-pubblico.html': 'auth',
+        '404.html': null,
         'login.html': 'guest',
         'register.html': 'guest'
     },
@@ -39,7 +40,7 @@ const RouteGuard = {
 
     getDefaultRoute() {
         if (!Auth.isAuthenticated()) {
-            return '/programmazione.html';
+            return '/home.html';
         }
 
         if (Auth.hasRole('Admin') || Auth.hasRole('PowerUser')) {

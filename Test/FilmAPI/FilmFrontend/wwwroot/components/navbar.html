@@ -1,7 +1,10 @@
 <header id="navbar" class="flex justify-between items-center w-full px-4 md:px-8 py-4 bg-[#1C1B1B] sticky top-0 z-50">
-    <div class="flex items-center gap-4">
+    <div class="flex items-center gap-2 md:gap-4">
         <button id="mobile-menu-toggle" class="md:hidden p-2 text-on-surface-variant hover:bg-[#2A2A2A] rounded-lg">
             <span class="material-symbols-outlined">menu</span>
+        </button>
+        <button id="nav-back-btn" onclick="if (window.history.length > 1) { window.history.back(); } else { window.location.href = 'home.html'; }" class="p-2 text-on-surface-variant hover:bg-[#2A2A2A] rounded-lg" title="Torna indietro">
+            <span class="material-symbols-outlined">arrow_back</span>
         </button>
         <a href="home.html" class="text-xl md:text-2xl font-black text-[#E50914] tracking-tighter uppercase font-['Manrope']">FilmAPI</a>
     </div>
@@ -36,18 +39,26 @@
                 <button class="p-2 text-on-surface-variant hover:bg-[#2A2A2A] rounded-full transition-all duration-300">
                     <span class="material-symbols-outlined">notifications</span>
                 </button>
-                <div class="relative group">
-                    <button class="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-[#2A2A2A] transition-all duration-300">
+                <div class="relative">
+                    <button id="nav-user-toggle" class="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-[#2A2A2A] transition-all duration-300">
                         <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#e50914] to-[#c0000c] flex items-center justify-center text-white font-bold text-sm">
                             ${initials.toUpperCase()}
                         </div>
                         <span class="hidden md:block text-sm text-on-surface">${fullName}</span>
                         <span class="material-symbols-outlined text-on-surface-variant text-sm">expand_more</span>
                     </button>
-                    <div class="absolute right-0 top-full mt-2 w-56 bg-surface-container rounded-xl shadow-xl border border-outline-variant/20 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <div id="nav-user-menu" class="hidden absolute right-0 top-full mt-2 w-56 bg-surface-container rounded-xl shadow-xl border border-outline-variant/20 z-50">
                         <a href="profilo.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high rounded-t-xl transition-colors">
                             <span class="material-symbols-outlined text-sm">person</span>
-                            Area Personale
+                            Il mio account
+                        </a>
+                        <a href="profilo.html?edit=1" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
+                            <span class="material-symbols-outlined text-sm">edit</span>
+                            Modifica account
+                        </a>
+                        <a href="profilo.html#prenotazioni" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
+                            <span class="material-symbols-outlined text-sm">confirmation_number</span>
+                            Le mie prenotazioni
                         </a>
                         <a href="proiezioni-pubblico.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
                             <span class="material-symbols-outlined text-sm">movie</span>
@@ -90,14 +101,37 @@
             `;
         } else {
             navAuthSection.innerHTML = `
-                <a href="login.html" class="hidden md:block text-sm text-on-surface-variant hover:text-on-surface transition-colors">Accedi</a>
-                <a href="register.html" class="px-4 py-2 bg-[#e50914] hover:bg-[#c0000c] text-white rounded-lg text-sm font-medium transition-colors">
-                    Registrati
-                </a>
+                <a href="login.html" class="text-sm text-on-surface-variant hover:text-on-surface transition-colors">Accedi</a>
+                <a href="register.html" class="px-4 py-2 bg-[#e50914] hover:bg-[#c0000c] text-white rounded-lg text-sm font-medium transition-colors">Registrati</a>
             `;
         }
     }
     
-    // Inizializza
-    document.addEventListener('DOMContentLoaded', updateNavbar);
+    function initNavbar() {
+        updateNavbar();
+        const page = window.location.pathname.split('/').pop() || 'home.html';
+        const backBtn = document.getElementById('nav-back-btn');
+        if (backBtn && page === 'home.html') {
+            backBtn.classList.add('hidden');
+        }
+
+        const userToggle = document.getElementById('nav-user-toggle');
+        const userMenu = document.getElementById('nav-user-menu');
+        if (userToggle && userMenu) {
+            userToggle.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userMenu.classList.toggle('hidden');
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!userMenu.contains(e.target) && !userToggle.contains(e.target)) {
+                    userMenu.classList.add('hidden');
+                }
+            });
+        }
+    }
+
+    // Inizializza sia con DOMContentLoaded che subito dopo injection componente
+    document.addEventListener('DOMContentLoaded', initNavbar);
+    initNavbar();
 </script>

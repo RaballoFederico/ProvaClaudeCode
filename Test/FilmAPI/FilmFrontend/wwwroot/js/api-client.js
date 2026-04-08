@@ -1,6 +1,11 @@
 const ApiClient = {
     baseUrl: window.localStorage.getItem('apiBaseUrl') || 'http://localhost:5000',
 
+    getFallbackBaseUrls() {
+        const fallbacks = ['http://localhost:5000', 'https://localhost:7217'];
+        return [this.baseUrl, ...fallbacks.filter(url => url !== this.baseUrl)];
+    },
+
     async request(endpoint, options = {}) {
         const url = `${this.baseUrl}${endpoint}`;
         
@@ -24,7 +29,27 @@ const ApiClient = {
         }
 
         try {
-            let response = await fetch(url, config);
+            let response = null;
+            let activeBaseUrl = this.baseUrl;
+            let fetchError = null;
+
+            for (const candidate of this.getFallbackBaseUrls()) {
+                try {
+                    response = await fetch(`${candidate}${endpoint}`, config);
+                    activeBaseUrl = candidate;
+                    if (this.baseUrl !== candidate) {
+                        this.baseUrl = candidate;
+                        localStorage.setItem('apiBaseUrl', candidate);
+                    }
+                    break;
+                } catch (err) {
+                    fetchError = err;
+                }
+            }
+
+            if (!response) {
+                throw fetchError || new Error('Failed to fetch');
+            }
 
             // Se token scaduto, prova a fare refresh
             if (response.status === 401 && Auth.refreshToken) {
@@ -32,7 +57,7 @@ const ApiClient = {
                 if (refreshed) {
                     // Riprova la richiesta con il nuovo token
                     headers['Authorization'] = `Bearer ${Auth.accessToken}`;
-                    response = await fetch(url, config);
+                    response = await fetch(`${activeBaseUrl}${endpoint}`, config);
                 } else {
                     // Refresh fallito, redirect a login
                     window.location.href = '/login.html';

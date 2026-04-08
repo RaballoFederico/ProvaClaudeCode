@@ -32,66 +32,167 @@
             }
         }
     </script>
-    <style>
-        .hero-bg {
-            background:
-                radial-gradient(circle at 20% 20%, rgba(229, 9, 20, 0.25), transparent 38%),
-                radial-gradient(circle at 80% 0%, rgba(0, 118, 197, 0.2), transparent 34%),
-                linear-gradient(135deg, rgba(19, 19, 19, 1) 0%, rgba(32, 31, 31, 1) 100%);
-        }
-        html[data-theme="light"] .hero-bg {
-            background:
-                radial-gradient(circle at 20% 20%, rgba(229, 9, 20, 0.15), transparent 38%),
-                radial-gradient(circle at 80% 0%, rgba(0, 118, 197, 0.1), transparent 34%),
-                linear-gradient(135deg, #ffffff 0%, #f3f4f6 100%);
-        }
-    </style>
 </head>
 <body class="bg-background text-on-surface font-body min-h-screen flex flex-col">
     <div id="navbar-container"></div>
+    <div class="flex flex-1">
+        <main class="flex-1 p-4 md:p-8 lg:p-12 pb-20 md:pb-0 max-w-7xl mx-auto w-full">
+            <section class="mb-8">
+                <h1 class="font-headline text-3xl md:text-5xl font-bold text-on-surface">Film Disponibili</h1>
+                <p class="text-on-surface-variant mt-2">Sfoglia i film in sala e guarda le prossime proiezioni.</p>
+            </section>
 
-    <main class="flex-1">
-        <section class="hero-bg border-b border-outline-variant/20">
-            <div class="max-w-7xl mx-auto px-4 md:px-8 lg:px-12 py-16 md:py-24">
-                <p class="text-secondary uppercase tracking-[0.3em] text-xs font-bold">Esperienza cinematografica</p>
-                <h1 class="mt-3 font-headline text-4xl md:text-6xl lg:text-7xl font-black tracking-tight text-white">FilmAPI</h1>
-                <p class="mt-4 max-w-2xl text-on-surface-variant text-base md:text-lg">La piattaforma per esplorare programmazione, prenotare posti e gestire il catalogo del tuo cinema con un'interfaccia moderna in tema chiaro/scuro.</p>
-                <div class="mt-8 flex flex-wrap gap-3">
-                    <a href="programmazione.html" class="px-6 py-3 rounded-lg bg-primary-container text-white font-semibold">Vedi Programmazione</a>
-                    <a href="login.html" class="px-6 py-3 rounded-lg bg-surface-container-high text-on-surface border border-outline-variant/20 font-semibold">Accedi</a>
+            <section class="bg-surface-container-low rounded-xl p-4 md:p-6 border border-outline-variant/20 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <input id="search-film" type="text" placeholder="Cerca film..." class="bg-surface-container-high border-none rounded-lg text-sm" />
+                    <select id="filter-categoria" class="bg-surface-container-high border-none rounded-lg text-sm">
+                        <option value="">Tutte le categorie</option>
+                    </select>
+                    <input id="filter-data" type="date" class="bg-surface-container-high border-none rounded-lg text-sm" />
+                    <button id="clear-filters" class="bg-surface-container-high hover:bg-[#3a3a3a] rounded-lg text-sm font-semibold">Azzera filtri</button>
                 </div>
-            </div>
-        </section>
+            </section>
 
-        <section class="max-w-7xl mx-auto px-4 md:px-8 lg:px-12 py-12 md:py-16">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-                <article class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/15">
-                    <h2 class="font-headline text-xl font-bold">Programmazione smart</h2>
-                    <p class="mt-2 text-on-surface-variant">Filtri rapidi per citta, data e categoria con accesso immediato alla prenotazione.</p>
-                </article>
-                <article class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/15">
-                    <h2 class="font-headline text-xl font-bold">Catalogo completo</h2>
-                    <p class="mt-2 text-on-surface-variant">Film, registi, cinema, proiezioni e categorie in un ecosistema unico.</p>
-                </article>
-                <article class="bg-surface-container-low rounded-xl p-6 border border-outline-variant/15">
-                    <h2 class="font-headline text-xl font-bold">RBAC integrato</h2>
-                    <p class="mt-2 text-on-surface-variant">Esperienza diversa per Admin, PowerUser, User e visitatori anonimi.</p>
-                </article>
-            </div>
-        </section>
-    </main>
-
+            <section>
+                <div id="home-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+                <div id="home-empty" class="hidden bg-surface-container-low rounded-xl p-10 text-center border border-outline-variant/20">
+                    <span class="material-symbols-outlined text-5xl text-on-surface-variant/50">event_busy</span>
+                    <p class="mt-3 text-on-surface-variant">Nessun film/proiezione trovata con i filtri selezionati.</p>
+                </div>
+            </section>
+        </main>
+    </div>
     <div id="footer-container"></div>
 
     <script src="/js/theme.js"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/route-guard.js"></script>
     <script src="/js/template-loader.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/utils.js"></script>
     <script>
+        let films = [];
+        let proiezioni = [];
+        let cinemas = [];
+        let categorie = [];
+
         document.addEventListener('DOMContentLoaded', async () => {
             await loadComponent('navbar-container', '/components/navbar.html');
             await loadComponent('footer-container', '/components/footer.html');
+            await loadData();
+            bindFilters();
+            applyFilters();
         });
+
+        async function loadData() {
+            [films, proiezioni, cinemas, categorie] = await Promise.all([
+                ApiClient.get('/films'),
+                ApiClient.get('/proiezioni'),
+                ApiClient.get('/cinemas'),
+                ApiClient.get('/categorie')
+            ]);
+
+            const categoriaSelect = document.getElementById('filter-categoria');
+            categorie.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = String(cat.id);
+                option.textContent = cat.nome;
+                categoriaSelect.appendChild(option);
+            });
+        }
+
+        function bindFilters() {
+            document.getElementById('search-film').addEventListener('input', applyFilters);
+            document.getElementById('filter-categoria').addEventListener('change', applyFilters);
+            document.getElementById('filter-data').addEventListener('change', applyFilters);
+            document.getElementById('clear-filters').addEventListener('click', () => {
+                document.getElementById('search-film').value = '';
+                document.getElementById('filter-categoria').value = '';
+                document.getElementById('filter-data').value = '';
+                applyFilters();
+            });
+        }
+
+        function applyFilters() {
+            const search = document.getElementById('search-film').value.toLowerCase().trim();
+            const categoriaId = document.getElementById('filter-categoria').value;
+            const data = document.getElementById('filter-data').value;
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            const futureProiezioni = proiezioni.filter(p => {
+                const pDate = new Date(p.data);
+                return pDate >= today;
+            });
+
+            const grouped = films.map(f => {
+                const screenings = futureProiezioni
+                    .filter(p => p.filmId === f.id)
+                    .sort((a, b) => new Date(`${a.data.split('T')[0]}T${a.ora}`) - new Date(`${b.data.split('T')[0]}T${b.ora}`));
+                return { film: f, screenings };
+            }).filter(item => item.screenings.length > 0);
+
+            const filtered = grouped.filter(item => {
+                const f = item.film;
+                const matchSearch = !search || f.titolo.toLowerCase().includes(search);
+                const matchCategoria = !categoriaId || (Array.isArray(f.categorieIds) && f.categorieIds.includes(parseInt(categoriaId)));
+                const matchData = !data || item.screenings.some(s => s.data && s.data.startsWith(data));
+                return matchSearch && matchCategoria && matchData;
+            });
+
+            render(filtered);
+        }
+
+        function render(items) {
+            const grid = document.getElementById('home-grid');
+            const empty = document.getElementById('home-empty');
+
+            if (!items.length) {
+                grid.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            empty.classList.add('hidden');
+            grid.innerHTML = items.map(({ film, screenings }) => {
+                const cats = (film.categorie || []).map(c => `<span class="px-2 py-0.5 rounded-full text-[10px] bg-surface-container-high text-secondary">${escapeHtml(c.nome)}</span>`).join('');
+                const preview = screenings.slice(0, 3).map(s => {
+                    const cinema = cinemas.find(c => c.id === s.cinemaId);
+                    return `
+                        <div class="bg-surface-container-high rounded-lg p-2">
+                            <p class="text-sm text-on-surface font-semibold">${escapeHtml(cinema?.nome || 'Cinema')}</p>
+                            <p class="text-xs text-on-surface-variant">${Utils.formatDateShort(s.data)} - ${Utils.formatTime(s.ora)}</p>
+                            ${Auth.isAuthenticated() ? `<button onclick="prenota(${s.id})" class="mt-2 w-full py-1.5 bg-primary-container hover:bg-[#c0000c] text-white rounded text-xs">Prenota</button>` : ''}
+                        </div>
+                    `;
+                }).join('');
+
+                return `
+                    <article class="bg-surface-container-low rounded-xl p-4 border border-outline-variant/20">
+                        <h3 class="text-lg font-bold text-on-surface">${escapeHtml(film.titolo)}</h3>
+                        <div class="flex flex-wrap gap-1 mt-2">${cats}</div>
+                        <div class="mt-4 space-y-2">${preview}</div>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        async function prenota(proiezioneId) {
+            if (!Auth.isAuthenticated()) return;
+            try {
+                await ApiClient.post('/user/proiezioni-salvate', { proiezioneId });
+            } catch {
+                // gia salvata
+            }
+            window.location.href = `/profilo.html?prenota=${proiezioneId}`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
     </script>
 </body>
 </html>

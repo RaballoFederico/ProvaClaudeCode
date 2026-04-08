@@ -1,4 +1,13 @@
-const API_URL = window.localStorage.getItem('apiBaseUrl') || 'http://localhost:5000';
+function getApiCandidates() {
+    const stored = window.localStorage.getItem('apiBaseUrl');
+    const defaults = ['http://localhost:5000', 'https://localhost:7217'];
+    if (!stored || stored === 'undefined' || stored === 'null') {
+        return defaults;
+    }
+    return [stored, ...defaults.filter(url => url !== stored)];
+}
+
+let API_URL = getApiCandidates()[0];
 
 const Auth = {
     accessToken: localStorage.getItem('accessToken'),
@@ -8,11 +17,27 @@ const Auth = {
 
     async login(username, password) {
         try {
-            const response = await fetch(`${API_URL}/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
+            let response = null;
+            let lastError = null;
+
+            for (const candidate of getApiCandidates()) {
+                try {
+                    response = await fetch(`${candidate}/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    API_URL = candidate;
+                    localStorage.setItem('apiBaseUrl', candidate);
+                    break;
+                } catch (err) {
+                    lastError = err;
+                }
+            }
+
+            if (!response) {
+                throw lastError || new Error('Impossibile raggiungere il server API');
+            }
 
             if (!response.ok) {
                 let message = 'Credenziali non valide';

@@ -333,4 +333,21 @@ async function annullaPrenotazione(id) {
 }
 
 // Inizializza
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('edit') === '1') {
+        const openEdit = () => {
+            const modal = document.getElementById('edit-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                params.delete('edit');
+                const qs = params.toString();
+                const nextUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+                window.history.replaceState({}, '', nextUrl);
+            }
+        };
+        setTimeout(openEdit, 250);
+    }
+});
+
 loadProfile();
