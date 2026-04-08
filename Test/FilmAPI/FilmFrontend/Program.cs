@@ -17,6 +17,7 @@ app.UseCors("AllowBackendApi");
 app.UseDefaultFiles();
 app.UseStaticFiles();
 
-app.MapFallbackToFile("index.html");
+app.MapGet("/", () => Results.Redirect("/home.html"));
+app.MapFallbackToFile("home.html");
 
 app.Run();

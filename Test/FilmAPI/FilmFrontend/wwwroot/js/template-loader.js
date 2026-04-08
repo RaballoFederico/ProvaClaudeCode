@@ -44,7 +44,7 @@ function isAuthenticatedUser() {
 }
 
 function applyPageAccessControl() {
-    const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+    const currentPath = window.location.pathname.split('/').pop() || 'home.html';
 
     const managerOnlyPages = ['index.html', 'registi.html', 'proiezioni.html'];
     if (managerOnlyPages.includes(currentPath) && !isManagerUser()) {
@@ -53,11 +53,11 @@ function applyPageAccessControl() {
 }
 
 function initNavigation() {
-    const currentPath = window.location.pathname.split('/').pop() || 'index.html';
+    const currentPath = window.location.pathname.split('/').pop() || 'home.html';
     
     document.querySelectorAll('nav a').forEach(link => {
         const href = link.getAttribute('href');
-        if (href === currentPath || (currentPath === '' && href === 'index.html')) {
+        if (href === currentPath || (currentPath === '' && href === 'home.html')) {
             link.classList.add('bg-[#2A2A2A]', 'text-[#E50914]');
             link.classList.remove('text-on-surface-variant');
         }

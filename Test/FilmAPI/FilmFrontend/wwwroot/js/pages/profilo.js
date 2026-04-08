@@ -124,7 +124,7 @@ function renderProiezioni() {
             <div class="bg-surface-container rounded-xl p-4 border border-outline-variant/20 hover:border-outline-variant/40 transition-colors">
                 <div class="flex flex-col md:flex-row md:items-center gap-4">
                     <div class="flex-1">
-                        <h4 class="font-bold text-white">${p.filmTitolo}</h4>
+                        <h4 class="font-bold text-on-surface">${p.filmTitolo}</h4>
                         <p class="text-sm text-on-surface-variant mt-1">
                             <span class="material-symbols-outlined text-xs align-middle">theaters</span>
                             ${p.cinemaNome}

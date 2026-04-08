@@ -6,6 +6,7 @@ const RouteGuard = {
     },
 
     pageRules: {
+        'home.html': null,
         'index.html': 'manager',
         'films.html': null,
         'proiezioni.html': 'manager',

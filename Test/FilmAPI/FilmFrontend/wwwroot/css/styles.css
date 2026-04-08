@@ -2,14 +2,34 @@
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 
+:root {
+    --bg: #131313;
+    --text: #e5e2e1;
+    --surface: #201f1f;
+    --surface-high: #2a2a2a;
+    --outline: #5e3f3b;
+    --primary: #e50914;
+    --overlay: rgba(19, 19, 19, 0.8);
+}
+
+html[data-theme="light"] {
+    --bg: #ffffff;
+    --text: #1c1917;
+    --surface: #f3f4f6;
+    --surface-high: #eceef2;
+    --outline: #d1d5db;
+    --primary: #e50914;
+    --overlay: rgba(255, 255, 255, 0.8);
+}
+
 body {
-    background-color: #131313;
-    color: #e5e2e1;
+    background-color: var(--bg);
+    color: var(--text);
     font-family: 'Inter', sans-serif;
 }
 
 .glass-panel {
-    background: rgba(53, 53, 52, 0.6);
+    background: color-mix(in srgb, var(--surface-high) 70%, transparent);
     backdrop-filter: blur(20px);
 }
 
@@ -21,10 +41,10 @@ body {
     width: 8px;
 }
 ::-webkit-scrollbar-track {
-    background: #201f1f;
+    background: var(--surface);
 }
 ::-webkit-scrollbar-thumb {
-    background: #5e3f3b;
+    background: var(--outline);
     border-radius: 4px;
 }
 
@@ -74,7 +94,7 @@ body {
 .loading-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(19, 19, 19, 0.8);
+    background: var(--overlay);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -84,8 +104,8 @@ body {
 .spinner {
     width: 40px;
     height: 40px;
-    border: 3px solid #5e3f3b;
-    border-top-color: #e50914;
+    border: 3px solid var(--outline);
+    border-top-color: var(--primary);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -105,11 +125,120 @@ body {
 }
 
 .modal-content {
-    background: #201f1f;
+    background: var(--surface);
     border-radius: 1rem;
     padding: 2rem;
     max-width: 500px;
     width: 90%;
     max-height: 90vh;
     overflow-y: auto;
+}
+
+html[data-theme="light"] .text-on-surface,
+html[data-theme="light"] .text-on-background,
+html[data-theme="light"] .text-white {
+    color: #1c1917 !important;
+}
+
+html[data-theme="light"] .text-on-primary-container {
+    color: #ffffff !important;
+}
+
+html[data-theme="light"] .text-on-surface-variant,
+html[data-theme="light"] .text-white\/70,
+html[data-theme="light"] .text-white\/60,
+html[data-theme="light"] .text-white\/80,
+html[data-theme="light"] .text-gray-500 {
+    color: #4b5563 !important;
+}
+
+html[data-theme="light"] .bg-background,
+html[data-theme="light"] .bg-surface,
+html[data-theme="light"] .bg-\[\#131313\] {
+    background-color: #ffffff !important;
+}
+
+html[data-theme="light"] .bg-surface-container,
+html[data-theme="light"] .bg-surface-container-low,
+html[data-theme="light"] .bg-\[\#201F1F\],
+html[data-theme="light"] .bg-\[\#1C1B1B\] {
+    background-color: #f3f4f6 !important;
+}
+
+html[data-theme="light"] .bg-surface-container-high,
+html[data-theme="light"] .bg-surface-container-highest,
+html[data-theme="light"] .bg-\[\#2A2A2A\] {
+    background-color: #eceef2 !important;
+}
+
+html[data-theme="light"] .bg-surface-container-lowest,
+html[data-theme="light"] .bg-\[\#0E0E0E\] {
+    background-color: #ffffff !important;
+}
+
+html[data-theme="light"] .border-outline-variant,
+html[data-theme="light"] .border-outline-variant\/10,
+html[data-theme="light"] .border-outline-variant\/15,
+html[data-theme="light"] .border-outline-variant\/20,
+html[data-theme="light"] .border-\[\#5E3F3B\]\/15 {
+    border-color: #d1d5db !important;
+}
+
+html[data-theme="light"] .hover\:bg-\[\#3a3a3a\]:hover,
+html[data-theme="light"] .hover\:bg-\[\#2A2A2A\]\/50:hover,
+html[data-theme="light"] .hover\:bg-surface-container-high:hover {
+    background-color: #e5e7eb !important;
+}
+
+html[data-theme="light"] .bg-black\/60,
+html[data-theme="light"] .bg-black\/50,
+html[data-theme="light"] .bg-black\/20 {
+    background-color: rgba(255, 255, 255, 0.72) !important;
+}
+
+html[data-theme="light"] .text-\[\#E50914\],
+html[data-theme="light"] .text-\[\#e50914\] {
+    color: #e50914 !important;
+}
+
+html[data-theme="light"] .bg-\[\#e50914\],
+html[data-theme="light"] .bg-primary-container,
+html[data-theme="light"] .noir-gradient {
+    background-color: #e50914 !important;
+    background-image: none !important;
+}
+
+html[data-theme="light"] .hover\:bg-\[\#c0000c\]:hover,
+html[data-theme="light"] .hover\:bg-\[\#b0000b\]:hover {
+    background-color: #c0000c !important;
+}
+
+html[data-theme="light"] .hover\:text-white:hover {
+    color: #1c1917 !important;
+}
+
+html[data-theme="light"] button.text-white,
+html[data-theme="light"] a.text-white,
+html[data-theme="light"] .bg-primary-container.text-white,
+html[data-theme="light"] .bg-\[\#e50914\].text-white,
+html[data-theme="light"] .noir-gradient.text-white,
+html[data-theme="light"] .from-primary-container.to-red-700 .text-white,
+html[data-theme="light"] .from-primary-container.to-red-700 .text-white\/80,
+html[data-theme="light"] .from-primary-container.to-red-700 .text-white\/70,
+html[data-theme="light"] .from-primary-container.to-red-700 .text-white\/60 {
+    color: #ffffff !important;
+}
+
+html[data-theme="light"] .shadow-primary-container\/10,
+html[data-theme="light"] .shadow-primary-container\/20,
+html[data-theme="light"] .shadow-primary-container\/30 {
+    box-shadow: 0 10px 30px -18px rgba(229, 9, 20, 0.5) !important;
+}
+
+html[data-theme="light"] .hero-gradient {
+    background: linear-gradient(135deg, rgba(229, 9, 20, 0.1) 0%, rgba(255, 255, 255, 0) 55%) !important;
+}
+
+html[data-theme="light"] .card-glow:hover {
+    box-shadow: 0 0 0 1px rgba(229, 9, 20, 0.2), 0 14px 36px -20px rgba(0, 0, 0, 0.28) !important;
 }
