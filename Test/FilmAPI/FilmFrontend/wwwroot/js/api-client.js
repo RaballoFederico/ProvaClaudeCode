@@ -1,5 +1,5 @@
 const ApiClient = {
-    baseUrl: 'http://localhost:5000',
+    baseUrl: window.localStorage.getItem('apiBaseUrl') || 'http://localhost:5000',
 
     async request(endpoint, options = {}) {
         const url = `${this.baseUrl}${endpoint}`;
@@ -56,15 +56,22 @@ const ApiClient = {
                 return null;
             }
 
-            const data = await response.json();
+            let data = null;
+            const contentType = response.headers.get('content-type') || '';
+            if (contentType.includes('application/json')) {
+                data = await response.json();
+            }
 
             if (!response.ok) {
-                throw new Error(data.message || `HTTP ${response.status}`);
+                throw new Error(data?.message || `HTTP ${response.status}`);
             }
 
             return data;
         } catch (error) {
             console.error('API Error:', error);
+            if (error instanceof TypeError && error.message && error.message.includes('Failed to fetch')) {
+                throw new Error(`Impossibile raggiungere API (${this.baseUrl}). Verifica che il backend sia avviato e CORS configurato.`);
+            }
             throw error;
         }
     },

@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000';
+const API_URL = window.localStorage.getItem('apiBaseUrl') || 'http://localhost:5000';
 
 const Auth = {
     accessToken: localStorage.getItem('accessToken'),
@@ -15,8 +15,14 @@ const Auth = {
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Credenziali non valide');
+                let message = 'Credenziali non valide';
+                try {
+                    const error = await response.json();
+                    message = error.message || message;
+                } catch {
+                    // fallback su messaggio di default
+                }
+                throw new Error(message);
             }
 
             const data = await response.json();
@@ -47,8 +53,14 @@ const Auth = {
             });
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Errore durante la registrazione');
+                let message = 'Errore durante la registrazione';
+                try {
+                    const error = await response.json();
+                    message = error.message || message;
+                } catch {
+                    // fallback su messaggio di default
+                }
+                throw new Error(message);
             }
 
             return { success: true };
