@@ -8,7 +8,7 @@ public static class DbInitializer
 {
     public static async Task InitializeAsync(FilmDbContext context)
     {
-        await context.Database.EnsureCreatedAsync();
+        await context.Database.MigrateAsync();
 
         // Seed Ruoli
         if (!context.Ruoli.Any())

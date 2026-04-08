@@ -166,7 +166,7 @@ const Auth = {
     },
 
     canManageCatalog() {
-        return this.hasRole('Admin');
+        return this.hasRole('Admin') || this.hasRole('PowerUser');
     },
 
     getUser() {
