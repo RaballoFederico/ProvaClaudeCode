@@ -89,7 +89,7 @@
             </section>
 
             <div class="bg-surface-container-low rounded-xl p-4 md:p-6">
-                <div id="films-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
+                <div id="films-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
                 </div>
                 <div id="empty-state" class="hidden p-12 text-center">
                     <span class="material-symbols-outlined text-5xl text-on-surface-variant opacity-50">movie_filter</span>
@@ -250,7 +250,7 @@
                                  loading="lazy">
                             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
                             <div class="absolute bottom-0 left-0 right-0 p-2">
-                                <h4 class="font-headline text-xs font-bold text-white truncate">${escapeHtml(film.titolo)}</h4>
+                                <h4 class="font-headline text-sm font-bold text-white truncate">${escapeHtml(film.titolo)}</h4>
                                 <p class="text-[10px] text-white/70 truncate">${regista ? escapeHtml(`${regista.nome} ${regista.cognome}`) : ''}</p>
                                 <div class="flex flex-wrap gap-1 mt-1">
                                     ${(film.categorie || []).slice(0, 2).map(c => `<span class="px-1.5 py-0.5 rounded bg-black/60 text-[9px] text-secondary">${escapeHtml(c.nome)}</span>`).join('')}
@@ -282,66 +282,66 @@
             const canManage = isManager();
 
             showModal(`
-                <div class="flex flex-col md:flex-row gap-6">
-                    <div class="w-full md:w-2/5 flex-shrink-0">
+                <div class="flex flex-col md:flex-row gap-4 md:gap-5">
+                    <div class="w-full md:w-1/3 flex-shrink-0">
                         <div class="aspect-[2/3] rounded-xl overflow-hidden bg-surface-container-high shadow-2xl">
                             <img src="${imageUrl}" alt="${escapeHtml(film.titolo)}" class="w-full h-full object-cover">
                         </div>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <h2 class="font-headline text-2xl md:text-3xl font-bold text-white mb-1">${escapeHtml(film.titolo)}</h2>
+                        <h2 class="font-headline text-xl md:text-2xl font-bold text-white mb-1">${escapeHtml(film.titolo)}</h2>
                         
-                        <div class="mt-6 space-y-4">
-                            <div class="bg-surface-container-high rounded-xl p-4">
-                                <div class="grid grid-cols-2 gap-4">
+                        <div class="mt-4 space-y-3">
+                            <div class="bg-surface-container-high rounded-xl p-3">
+                                <div class="grid grid-cols-2 gap-3">
                                     <div>
                                         <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">Anno</p>
-                                        <p class="font-semibold text-on-surface">${film.dataProduzione ? new Date(film.dataProduzione).getFullYear() : '-'}</p>
+                                        <p class="text-sm font-semibold text-on-surface">${film.dataProduzione ? new Date(film.dataProduzione).getFullYear() : '-'}</p>
                                     </div>
                                     <div>
                                         <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-1">Durata</p>
-                                        <p class="font-semibold text-on-surface">${film.durata ? film.durata + ' minuti' : '-'}</p>
+                                        <p class="text-sm font-semibold text-on-surface">${film.durata ? film.durata + ' minuti' : '-'}</p>
                                     </div>
                                 </div>
                             </div>
                             
-                            <div class="bg-surface-container-high rounded-xl p-4">
+                            <div class="bg-surface-container-high rounded-xl p-3">
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-2">Regista</p>
                                 <div class="flex items-center gap-3">
-                                    <div class="w-12 h-12 rounded-full bg-gradient-to-br from-secondary to-yellow-600 flex items-center justify-center">
-                                        <span class="text-white font-bold text-lg">${regista ? regista.nome.charAt(0) + regista.cognome.charAt(0) : '?'}</span>
+                                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-secondary to-yellow-600 flex items-center justify-center">
+                                        <span class="text-white font-bold text-sm">${regista ? regista.nome.charAt(0) + regista.cognome.charAt(0) : '?'}</span>
                                     </div>
                                     <div>
-                                        <p class="font-semibold text-on-surface">${regista ? escapeHtml(`${regista.nome} ${regista.cognome}`) : 'Non specificato'}</p>
-                                        <p class="text-sm text-on-surface-variant">${regista ? escapeHtml(regista.nazionalita) : ''}</p>
+                                        <p class="text-sm font-semibold text-on-surface">${regista ? escapeHtml(`${regista.nome} ${regista.cognome}`) : 'Non specificato'}</p>
+                                        <p class="text-xs text-on-surface-variant">${regista ? escapeHtml(regista.nazionalita) : ''}</p>
                                     </div>
                                 </div>
                             </div>
                             
-                            <div class="bg-surface-container-high rounded-xl p-4">
+                            <div class="bg-surface-container-high rounded-xl p-3">
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-2">Data Produzione</p>
-                                <p class="font-semibold text-on-surface">${film.dataProduzione ? Utils.formatDate(film.dataProduzione) : 'Non specificata'}</p>
+                                <p class="text-sm font-semibold text-on-surface">${film.dataProduzione ? Utils.formatDate(film.dataProduzione) : 'Non specificata'}</p>
                             </div>
-                            <div class="bg-surface-container-high rounded-xl p-4">
+                            <div class="bg-surface-container-high rounded-xl p-3">
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-2">Categorie</p>
                                 <div class="flex flex-wrap gap-1">
                                     ${(film.categorie || []).length
-                                        ? (film.categorie || []).map(c => `<span class=\"px-2 py-1 rounded-full text-[10px] bg-surface-container-highest text-secondary\">${escapeHtml(c.nome)}</span>`).join('')
-                                        : '<span class="text-sm text-on-surface-variant">Nessuna</span>'}
+                                        ? (film.categorie || []).map(c => `<span class=\"px-2 py-0.5 rounded-full text-[10px] bg-surface-container-highest text-secondary\">${escapeHtml(c.nome)}</span>`).join('')
+                                        : '<span class="text-xs text-on-surface-variant">Nessuna</span>'}
                                 </div>
                             </div>
                         </div>
                         
-                        <div class="flex gap-3 mt-6">
-                            <a href="proiezioni-pubblico.html?filmId=${film.id}" class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary-container hover:bg-[#c0000c] text-white rounded-xl font-bold transition-colors">
+                        <div class="flex gap-2 mt-4">
+                            <a href="proiezioni-pubblico.html?filmId=${film.id}" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary-container hover:bg-[#c0000c] text-white rounded-xl text-sm font-bold transition-colors">
                                 <span class="material-symbols-outlined">event</span>
                                 Vedi Proiezioni
                             </a>
                             ${canManage ? `
-                            <button onclick="closeModal(); openEditModal(${film.id})" class="flex items-center justify-center gap-2 px-4 py-3 bg-secondary hover:bg-secondary/80 text-on-secondary rounded-xl font-bold transition-colors">
+                            <button onclick="closeModal(); openEditModal(${film.id})" class="flex items-center justify-center gap-2 px-4 py-2.5 bg-secondary hover:bg-secondary/80 text-on-secondary rounded-xl font-bold transition-colors">
                                 <span class="material-symbols-outlined">edit</span>
                             </button>
-                            <button onclick="closeModal(); deleteFilm(${film.id})" class="flex items-center justify-center gap-2 px-4 py-3 bg-error-container/20 hover:bg-error-container/40 text-error rounded-xl font-bold transition-colors">
+                            <button onclick="closeModal(); deleteFilm(${film.id})" class="flex items-center justify-center gap-2 px-4 py-2.5 bg-error-container/20 hover:bg-error-container/40 text-error rounded-xl font-bold transition-colors">
                                 <span class="material-symbols-outlined">delete</span>
                             </button>
                             ` : ''}
@@ -520,7 +520,7 @@
             const titleHtml = title ? `<h3 class="font-headline text-xl font-bold mb-6">${title}</h3>` : '';
             container.innerHTML = `
                 <div class="modal-backdrop" onclick="if(event.target === this) closeModal()">
-                    <div class="modal-content ${title ? 'max-w-lg' : 'max-w-2xl'}">
+                    <div class="modal-content ${title ? 'max-w-lg' : 'max-w-4xl p-5 md:p-6'}">
                         ${titleHtml}
                         ${content}
                     </div>
