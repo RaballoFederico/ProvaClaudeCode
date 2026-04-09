@@ -6,8 +6,8 @@ const RouteGuard = {
     },
 
     pageRules: {
-        'home.html': null,
-        'index.html': 'auth',
+        'home.html': 'guest',
+        'index.html': 'manager',
         'films.html': 'auth',
         'proiezioni.html': 'manager',
         'cinemas.html': 'auth',

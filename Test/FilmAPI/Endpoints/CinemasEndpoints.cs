@@ -17,7 +17,8 @@ public static class CinemasEndpoints
             Id = c.Id,
             Nome = c.Nome,
             Indirizzo = c.Indirizzo,
-            Citta = c.Citta
+            Citta = c.Citta,
+            PostiMassimi = c.PostiMassimi
         }).ToListAsync());
 
         // GET /cinemas/{id} - Visibile a tutti
@@ -29,7 +30,8 @@ public static class CinemasEndpoints
                 Id = cinema.Id,
                 Nome = cinema.Nome,
                 Indirizzo = cinema.Indirizzo,
-                Citta = cinema.Citta
+                Citta = cinema.Citta,
+                PostiMassimi = cinema.PostiMassimi
             });
         });
 
@@ -40,7 +42,8 @@ public static class CinemasEndpoints
             {
                 Nome = dto.Nome,
                 Indirizzo = dto.Indirizzo,
-                Citta = dto.Citta
+                Citta = dto.Citta,
+                PostiMassimi = dto.PostiMassimi > 0 ? dto.PostiMassimi : 120
             };
             db.Cinemas.Add(cinema);
             await db.SaveChangesAsync();
@@ -49,7 +52,8 @@ public static class CinemasEndpoints
                 Id = cinema.Id,
                 Nome = cinema.Nome,
                 Indirizzo = cinema.Indirizzo,
-                Citta = cinema.Citta
+                Citta = cinema.Citta,
+                PostiMassimi = cinema.PostiMassimi
             });
         });
 
@@ -62,6 +66,7 @@ public static class CinemasEndpoints
             cinema.Nome = dto.Nome;
             cinema.Indirizzo = dto.Indirizzo;
             cinema.Citta = dto.Citta;
+            cinema.PostiMassimi = dto.PostiMassimi > 0 ? dto.PostiMassimi : cinema.PostiMassimi;
 
             await db.SaveChangesAsync();
             return Results.Ok(new CinemaDTO
@@ -69,7 +74,8 @@ public static class CinemasEndpoints
                 Id = cinema.Id,
                 Nome = cinema.Nome,
                 Indirizzo = cinema.Indirizzo,
-                Citta = cinema.Citta
+                Citta = cinema.Citta,
+                PostiMassimi = cinema.PostiMassimi
             });
         });
 

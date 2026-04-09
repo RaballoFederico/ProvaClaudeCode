@@ -183,6 +183,7 @@ public static class UserEndpoints
 
             var salvata = await db.ProiezioniSalvate
                 .Include(ps => ps.Proiezione)
+                .ThenInclude(p => p.Cinema)
                 .FirstOrDefaultAsync(ps => ps.Id == request.ProiezioneSalvataId && ps.UtenteId == userId);
 
             if (salvata == null)
@@ -198,6 +199,27 @@ public static class UserEndpoints
             if (request.NumeroPosti <= 0)
             {
                 return Results.BadRequest(new { message = "Numero posti deve essere maggiore di 0" });
+            }
+
+            var postiMassimi = salvata.Proiezione.Cinema?.PostiMassimi ?? 0;
+            if (postiMassimi <= 0)
+            {
+                return Results.BadRequest(new { message = "Il cinema non ha una capienza valida configurata" });
+            }
+
+            var postiGiaPrenotati = await db.Prenotazioni
+                .Where(p => p.ProiezioneId == salvata.ProiezioneId && p.DataAnnullamento == null)
+                .SumAsync(p => (int?)p.NumeroPosti) ?? 0;
+
+            var postiDisponibili = postiMassimi - postiGiaPrenotati;
+            if (postiDisponibili <= 0)
+            {
+                return Results.Conflict(new { message = "Posti al completo per questa proiezione" });
+            }
+
+            if (request.NumeroPosti > postiDisponibili)
+            {
+                return Results.Conflict(new { message = $"Posti insufficienti: disponibili {postiDisponibili}" });
             }
 
             // Verifica che la proiezione sia futura

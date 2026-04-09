@@ -55,6 +55,7 @@ public class FilmDbContext : DbContext
             entity.Property(e => e.Nome).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Indirizzo).IsRequired().HasMaxLength(300);
             entity.Property(e => e.Citta).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.PostiMassimi).IsRequired();
         });
 
         modelBuilder.Entity<Proiezione>(entity =>

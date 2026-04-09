@@ -289,7 +289,7 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (typeof Auth !== 'undefined' && !Auth.canManageCatalog()) {
-                window.location.href = '/programmazione.html';
+                window.location.href = '/profilo.html';
                 return;
             }
             await loadAllComponents();

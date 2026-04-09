@@ -4,11 +4,7 @@
         <p class="text-[10px] uppercase tracking-widest text-on-surface-variant opacity-60">Gestione Cinema</p>
     </div>
     <nav class="flex-1 flex flex-col gap-y-2">
-        <a href="home.html" data-access="public" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-            <span class="material-symbols-outlined">dashboard</span>
-            <span>Home</span>
-        </a>
-        <a href="index.html" data-access="auth" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
+        <a href="index.html" data-access="manager" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
             <span class="material-symbols-outlined">tune</span>
             <span>Dashboard</span>
         </a>
@@ -67,11 +63,7 @@
 </aside>
 
 <nav class="md:hidden fixed bottom-0 left-0 right-0 glass-panel border-t border-outline-variant/10 z-50 flex items-center gap-2 h-16 px-3 overflow-x-auto">
-    <a href="home.html" data-access="public" class="flex flex-col items-center justify-center min-w-14 gap-1 text-on-surface-variant">
-        <span class="material-symbols-outlined text-2xl">dashboard</span>
-        <span class="text-[8px] uppercase font-bold">Home</span>
-    </a>
-    <a href="index.html" data-access="auth" class="flex flex-col items-center justify-center min-w-14 gap-1 text-on-surface-variant">
+    <a href="index.html" data-access="manager" class="flex flex-col items-center justify-center min-w-14 gap-1 text-on-surface-variant">
         <span class="material-symbols-outlined text-2xl">tune</span>
         <span class="text-[8px] uppercase">Dash</span>
     </a>
@@ -120,8 +112,7 @@
         });
     }
 
-    // Mostra/nascondi link in base ai ruoli
-    document.addEventListener('DOMContentLoaded', () => {
+    function initSidebar() {
         applySidebarAccessControl();
 
         if (typeof Auth !== 'undefined' && Auth.isAuthenticated()) {
@@ -139,12 +130,45 @@
             }
         }
 
-        // Highlight link attivo
         const currentPath = window.location.pathname;
         document.querySelectorAll('.nav-link').forEach(link => {
             if (link.getAttribute('href') === currentPath.split('/').pop()) {
                 link.classList.add('text-[#E50914]', 'bg-[#2A2A2A]/50');
             }
         });
-    });
+
+        const sidebar = document.getElementById('sidebar');
+        if (sidebar) {
+            sidebar.querySelectorAll('a.nav-link[href]').forEach(link => {
+                link.addEventListener('click', (event) => {
+                    if (
+                        event.defaultPrevented ||
+                        event.button !== 0 ||
+                        event.metaKey ||
+                        event.ctrlKey ||
+                        event.shiftKey ||
+                        event.altKey
+                    ) {
+                        return;
+                    }
+
+                    const targetUrl = link.getAttribute('href');
+                    if (!targetUrl || targetUrl === '#') {
+                        return;
+                    }
+
+                    event.preventDefault();
+                    sidebar.style.transition = 'transform 180ms ease, opacity 180ms ease';
+                    sidebar.style.transform = 'translateX(-100%)';
+                    sidebar.style.opacity = '0';
+
+                    window.setTimeout(() => {
+                        window.location.href = targetUrl;
+                    }, 180);
+                });
+            });
+        }
+    }
+
+    initSidebar();
 </script>

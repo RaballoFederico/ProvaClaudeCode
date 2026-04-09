@@ -333,7 +333,13 @@ async function annullaPrenotazione(id) {
 }
 
 // Inizializza
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    if (typeof loadAllComponents === 'function') {
+        await loadAllComponents();
+    }
+
+    await loadProfile();
+
     const params = new URLSearchParams(window.location.search);
     if (params.get('edit') === '1') {
         const openEdit = () => {
@@ -349,5 +355,3 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(openEdit, 250);
     }
 });
-
-loadProfile();

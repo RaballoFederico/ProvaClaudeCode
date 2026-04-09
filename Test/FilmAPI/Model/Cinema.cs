@@ -22,5 +22,8 @@ public class Cinema
     [MaxLength(100)]
     public string Citta { get; set; } = string.Empty;
 
+    [Required]
+    public int PostiMassimi { get; set; } = 120;
+
     public ICollection<Proiezione> Proiezioni { get; set; } = new List<Proiezione>();
 }
