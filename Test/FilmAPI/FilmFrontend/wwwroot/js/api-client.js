@@ -68,7 +68,7 @@ const ApiClient = {
             if (response.status === 401) {
                 // Non autenticato, redirect a login se necessario
                 if (!endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
-                    window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+                    window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname + window.location.search);
                 }
                 throw new Error('Non autenticato');
             }

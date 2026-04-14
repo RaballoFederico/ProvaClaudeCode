@@ -22,6 +22,121 @@ namespace FilmAPI.Data.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("FilmAPI.Model.Acquisto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CodiceConferma")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("varchar(36)");
+
+                    b.Property<decimal>("CreditoUsato")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<DateTime>("DataAcquisto")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<decimal>("ImportoTotale")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("ShowId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Stato")
+                        .HasColumnType("int");
+
+                    b.Property<string>("StripeChargeId")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("UtenteId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShowId");
+
+                    b.HasIndex("UtenteId");
+
+                    b.ToTable("acquisti");
+                });
+
+            modelBuilder.Entity("FilmAPI.Model.Biglietto", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AcquistoId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CinemaId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("CodiceHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("CodiceUnivoco")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<DateTime?>("DataValidazione")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Posto")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<decimal>("Prezzo")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<string>("QRCodeUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int>("SalaNumero")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ShowId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TipologiaSala")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<bool>("Validato")
+                        .HasColumnType("tinyint(1)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AcquistoId");
+
+                    b.HasIndex("CinemaId");
+
+                    b.HasIndex("CodiceHash")
+                        .IsUnique();
+
+                    b.HasIndex("CodiceUnivoco")
+                        .IsUnique();
+
+                    b.HasIndex("ShowId");
+
+                    b.ToTable("biglietti");
+                });
+
             modelBuilder.Entity("FilmAPI.Model.Categoria", b =>
                 {
                     b.Property<int>("Id")
@@ -60,10 +175,20 @@ namespace FilmAPI.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("varchar(100)");
 
+                    b.Property<string>("CodiceLocale")
+                        .HasMaxLength(20)
+                        .HasColumnType("varchar(20)");
+
                     b.Property<string>("Indirizzo")
                         .IsRequired()
                         .HasMaxLength(300)
                         .HasColumnType("varchar(300)");
+
+                    b.Property<decimal?>("Latitudine")
+                        .HasColumnType("decimal(10,8)");
+
+                    b.Property<decimal?>("Longitudine")
+                        .HasColumnType("decimal(11,8)");
 
                     b.Property<string>("Nome")
                         .IsRequired()
@@ -78,6 +203,31 @@ namespace FilmAPI.Data.Migrations
                     b.ToTable("cinemas");
                 });
 
+            modelBuilder.Entity("FilmAPI.Model.CreditoUtente", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DataUltimoAggiornamento")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<decimal>("Saldo")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("UtenteId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UtenteId")
+                        .IsUnique();
+
+                    b.ToTable("crediti_utente");
+                });
+
             modelBuilder.Entity("FilmAPI.Model.Film", b =>
                 {
                     b.Property<int>("Id")
@@ -86,6 +236,10 @@ namespace FilmAPI.Data.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("Cast")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
+
                     b.Property<string>("CopertinaPath")
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
@@ -93,15 +247,35 @@ namespace FilmAPI.Data.Migrations
                     b.Property<DateTime>("DataProduzione")
                         .HasColumnType("datetime(6)");
 
+                    b.Property<DateTime?>("DataRilascio")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Descrizione")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
                     b.Property<int>("Durata")
                         .HasColumnType("int");
+
+                    b.Property<bool>("Featured")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("FilmatoPath")
                         .HasMaxLength(500)
                         .HasColumnType("varchar(500)");
 
+                    b.Property<string>("Genere")
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
                     b.Property<int>("RegistaId")
                         .HasColumnType("int");
+
+                    b.Property<string>("RegistaNome")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
 
                     b.Property<string>("Titolo")
                         .IsRequired()
@@ -150,6 +324,9 @@ namespace FilmAPI.Data.Migrations
                     b.Property<int>("ProiezioneId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ShowId")
+                        .HasColumnType("int");
+
                     b.Property<int>("UtenteId")
                         .HasColumnType("int");
 
@@ -157,9 +334,62 @@ namespace FilmAPI.Data.Migrations
 
                     b.HasIndex("ProiezioneId");
 
+                    b.HasIndex("ShowId");
+
                     b.HasIndex("UtenteId");
 
                     b.ToTable("prenotazioni");
+                });
+
+            modelBuilder.Entity("FilmAPI.Model.PrenotazioneTemporanea", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("CodiceTemporaneo")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("varchar(36)");
+
+                    b.Property<DateTime>("DataCreazione")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("DataScadenza")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Posto")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<string>("SessionId")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("varchar(50)");
+
+                    b.Property<int>("ShowId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Stato")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UtenteId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DataScadenza");
+
+                    b.HasIndex("SessionId");
+
+                    b.HasIndex("UtenteId");
+
+                    b.HasIndex("ShowId", "Posto");
+
+                    b.ToTable("prenotazioni_temporanee");
                 });
 
             modelBuilder.Entity("FilmAPI.Model.Proiezione", b =>
@@ -182,9 +412,15 @@ namespace FilmAPI.Data.Migrations
                     b.Property<TimeSpan>("Ora")
                         .HasColumnType("time(6)");
 
+                    b.Property<int?>("ShowId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
                     b.HasIndex("FilmId");
+
+                    b.HasIndex("ShowId")
+                        .IsUnique();
 
                     b.HasIndex("CinemaId", "FilmId", "Data", "Ora")
                         .IsUnique();
@@ -215,12 +451,17 @@ namespace FilmAPI.Data.Migrations
                     b.Property<int>("ProiezioneId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("ShowId")
+                        .HasColumnType("int");
+
                     b.Property<int>("UtenteId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ProiezioneId");
+
+                    b.HasIndex("ShowId");
 
                     b.HasIndex("UtenteId");
 
@@ -312,6 +553,147 @@ namespace FilmAPI.Data.Migrations
                     b.ToTable("ruoli");
                 });
 
+            modelBuilder.Entity("FilmAPI.Model.Sala", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("Attiva")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("CinemaId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ConfigurazionePosti")
+                        .HasMaxLength(2000)
+                        .HasColumnType("varchar(2000)");
+
+                    b.Property<string>("Nome")
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("NumeroFile")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NumeroSala")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("PostiPerFila")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PostiTotali")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Tipologia")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CinemaId", "NumeroSala")
+                        .IsUnique();
+
+                    b.ToTable("sale");
+                });
+
+            modelBuilder.Entity("FilmAPI.Model.Show", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("Data")
+                        .HasColumnType("date");
+
+                    b.Property<int>("FilmId")
+                        .HasColumnType("int");
+
+                    b.Property<TimeOnly>("OraFine")
+                        .HasColumnType("time(6)");
+
+                    b.Property<TimeOnly>("OraInizio")
+                        .HasColumnType("time(6)");
+
+                    b.Property<decimal>("PrezzoBase")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("SalaId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Stato")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FilmId");
+
+                    b.HasIndex("SalaId", "Data", "OraInizio")
+                        .IsUnique();
+
+                    b.ToTable("shows");
+                });
+
+            modelBuilder.Entity("FilmAPI.Model.TransazioneCredito", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("AcquistoId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CinemaId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CreditoUtenteId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DataTransazione")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Descrizione")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<decimal>("Importo")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int?>("OperatoreId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("SaldoPrecedente")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal>("SaldoSuccessivo")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("Tipo")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UtenteId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AcquistoId");
+
+                    b.HasIndex("CinemaId");
+
+                    b.HasIndex("CreditoUtenteId");
+
+                    b.HasIndex("OperatoreId");
+
+                    b.HasIndex("UtenteId");
+
+                    b.ToTable("transazioni_credito");
+                });
+
             modelBuilder.Entity("FilmAPI.Model.Utente", b =>
                 {
                     b.Property<int>("Id")
@@ -346,6 +728,9 @@ namespace FilmAPI.Data.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<int?>("PreferredCinemaId")
+                        .HasColumnType("int");
+
                     b.Property<string>("RefreshToken")
                         .HasColumnType("longtext");
 
@@ -366,6 +751,8 @@ namespace FilmAPI.Data.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
+                    b.HasIndex("PreferredCinemaId");
+
                     b.HasIndex("Username")
                         .IsUnique();
 
@@ -385,6 +772,63 @@ namespace FilmAPI.Data.Migrations
                     b.HasIndex("RuoloId");
 
                     b.ToTable("utenti_ruoli");
+                });
+
+            modelBuilder.Entity("FilmAPI.Model.Acquisto", b =>
+                {
+                    b.HasOne("FilmAPI.Model.Show", "Show")
+                        .WithMany()
+                        .HasForeignKey("ShowId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FilmAPI.Model.Utente", "Utente")
+                        .WithMany("Acquisti")
+                        .HasForeignKey("UtenteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Show");
+
+                    b.Navigation("Utente");
+                });
+
+            modelBuilder.Entity("FilmAPI.Model.Biglietto", b =>
+                {
+                    b.HasOne("FilmAPI.Model.Acquisto", "Acquisto")
+                        .WithMany("Biglietti")
+                        .HasForeignKey("AcquistoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FilmAPI.Model.Cinema", "Cinema")
+                        .WithMany()
+                        .HasForeignKey("CinemaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FilmAPI.Model.Show", "Show")
+                        .WithMany("Biglietti")
+                        .HasForeignKey("ShowId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Acquisto");
+
+                    b.Navigation("Cinema");
+
+                    b.Navigation("Show");
+                });
+
+            modelBuilder.Entity("FilmAPI.Model.CreditoUtente", b =>
+                {
+                    b.HasOne("FilmAPI.Model.Utente", "Utente")
+                        .WithOne("Credito")
+                        .HasForeignKey("FilmAPI.Model.CreditoUtente", "UtenteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Utente");
                 });
 
             modelBuilder.Entity("FilmAPI.Model.Film", b =>
@@ -425,6 +869,10 @@ namespace FilmAPI.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("FilmAPI.Model.Show", null)
+                        .WithMany("PrenotazioniLegacy")
+                        .HasForeignKey("ShowId");
+
                     b.HasOne("FilmAPI.Model.Utente", "Utente")
                         .WithMany("Prenotazioni")
                         .HasForeignKey("UtenteId")
@@ -432,6 +880,25 @@ namespace FilmAPI.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Proiezione");
+
+                    b.Navigation("Utente");
+                });
+
+            modelBuilder.Entity("FilmAPI.Model.PrenotazioneTemporanea", b =>
+                {
+                    b.HasOne("FilmAPI.Model.Show", "Show")
+                        .WithMany("PrenotazioniTemporanee")
+                        .HasForeignKey("ShowId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FilmAPI.Model.Utente", "Utente")
+                        .WithMany()
+                        .HasForeignKey("UtenteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Show");
 
                     b.Navigation("Utente");
                 });
@@ -450,9 +917,16 @@ namespace FilmAPI.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("FilmAPI.Model.Show", "Show")
+                        .WithMany()
+                        .HasForeignKey("ShowId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.Navigation("Cinema");
 
                     b.Navigation("Film");
+
+                    b.Navigation("Show");
                 });
 
             modelBuilder.Entity("FilmAPI.Model.ProiezioneSalvata", b =>
@@ -462,6 +936,10 @@ namespace FilmAPI.Data.Migrations
                         .HasForeignKey("ProiezioneId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("FilmAPI.Model.Show", null)
+                        .WithMany("ProiezioniSalvateLegacy")
+                        .HasForeignKey("ShowId");
 
                     b.HasOne("FilmAPI.Model.Utente", "Utente")
                         .WithMany("ProiezioniSalvate")
@@ -485,6 +963,80 @@ namespace FilmAPI.Data.Migrations
                     b.Navigation("Utente");
                 });
 
+            modelBuilder.Entity("FilmAPI.Model.Sala", b =>
+                {
+                    b.HasOne("FilmAPI.Model.Cinema", "Cinema")
+                        .WithMany("Sale")
+                        .HasForeignKey("CinemaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Cinema");
+                });
+
+            modelBuilder.Entity("FilmAPI.Model.Show", b =>
+                {
+                    b.HasOne("FilmAPI.Model.Film", "Film")
+                        .WithMany("Shows")
+                        .HasForeignKey("FilmId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FilmAPI.Model.Sala", "Sala")
+                        .WithMany("Shows")
+                        .HasForeignKey("SalaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Film");
+
+                    b.Navigation("Sala");
+                });
+
+            modelBuilder.Entity("FilmAPI.Model.TransazioneCredito", b =>
+                {
+                    b.HasOne("FilmAPI.Model.Acquisto", "Acquisto")
+                        .WithMany()
+                        .HasForeignKey("AcquistoId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("FilmAPI.Model.Cinema", "Cinema")
+                        .WithMany()
+                        .HasForeignKey("CinemaId");
+
+                    b.HasOne("FilmAPI.Model.CreditoUtente", null)
+                        .WithMany("Transazioni")
+                        .HasForeignKey("CreditoUtenteId");
+
+                    b.HasOne("FilmAPI.Model.Utente", "Operatore")
+                        .WithMany()
+                        .HasForeignKey("OperatoreId");
+
+                    b.HasOne("FilmAPI.Model.Utente", "Utente")
+                        .WithMany()
+                        .HasForeignKey("UtenteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Acquisto");
+
+                    b.Navigation("Cinema");
+
+                    b.Navigation("Operatore");
+
+                    b.Navigation("Utente");
+                });
+
+            modelBuilder.Entity("FilmAPI.Model.Utente", b =>
+                {
+                    b.HasOne("FilmAPI.Model.Cinema", "PreferredCinema")
+                        .WithMany()
+                        .HasForeignKey("PreferredCinemaId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("PreferredCinema");
+                });
+
             modelBuilder.Entity("FilmAPI.Model.UtenteRuolo", b =>
                 {
                     b.HasOne("FilmAPI.Model.Ruolo", "Ruolo")
@@ -504,6 +1056,11 @@ namespace FilmAPI.Data.Migrations
                     b.Navigation("Utente");
                 });
 
+            modelBuilder.Entity("FilmAPI.Model.Acquisto", b =>
+                {
+                    b.Navigation("Biglietti");
+                });
+
             modelBuilder.Entity("FilmAPI.Model.Categoria", b =>
                 {
                     b.Navigation("FilmsCategorie");
@@ -512,6 +1069,13 @@ namespace FilmAPI.Data.Migrations
             modelBuilder.Entity("FilmAPI.Model.Cinema", b =>
                 {
                     b.Navigation("Proiezioni");
+
+                    b.Navigation("Sale");
+                });
+
+            modelBuilder.Entity("FilmAPI.Model.CreditoUtente", b =>
+                {
+                    b.Navigation("Transazioni");
                 });
 
             modelBuilder.Entity("FilmAPI.Model.Film", b =>
@@ -519,6 +1083,8 @@ namespace FilmAPI.Data.Migrations
                     b.Navigation("FilmsCategorie");
 
                     b.Navigation("Proiezioni");
+
+                    b.Navigation("Shows");
                 });
 
             modelBuilder.Entity("FilmAPI.Model.Regista", b =>
@@ -531,8 +1097,28 @@ namespace FilmAPI.Data.Migrations
                     b.Navigation("UtentiRuoli");
                 });
 
+            modelBuilder.Entity("FilmAPI.Model.Sala", b =>
+                {
+                    b.Navigation("Shows");
+                });
+
+            modelBuilder.Entity("FilmAPI.Model.Show", b =>
+                {
+                    b.Navigation("Biglietti");
+
+                    b.Navigation("PrenotazioniLegacy");
+
+                    b.Navigation("PrenotazioniTemporanee");
+
+                    b.Navigation("ProiezioniSalvateLegacy");
+                });
+
             modelBuilder.Entity("FilmAPI.Model.Utente", b =>
                 {
+                    b.Navigation("Acquisti");
+
+                    b.Navigation("Credito");
+
                     b.Navigation("Prenotazioni");
 
                     b.Navigation("ProiezioniSalvate");

@@ -9,6 +9,12 @@ public class FilmDTO
     public int Durata { get; set; }
     public string? CopertinaPath { get; set; }
     public string? FilmatoPath { get; set; }
+    public string? Descrizione { get; set; }
+    public string? RegistaNome { get; set; }
+    public string? Cast { get; set; }
+    public bool Featured { get; set; }
+    public DateTime? DataRilascio { get; set; }
+    public string? Genere { get; set; }
     public List<int> CategorieIds { get; set; } = new();
     public List<CategoriaDTO> Categorie { get; set; } = new();
 }
@@ -21,6 +27,12 @@ public class FilmCreateDTO
     public int Durata { get; set; }
     public string? CopertinaPath { get; set; }
     public string? FilmatoPath { get; set; }
+    public string? Descrizione { get; set; }
+    public string? RegistaNome { get; set; }
+    public string? Cast { get; set; }
+    public bool Featured { get; set; }
+    public DateTime? DataRilascio { get; set; }
+    public string? Genere { get; set; }
     public List<int> CategoriaIds { get; set; } = new();
 }
 
@@ -32,5 +44,11 @@ public class FilmUpdateDTO
     public int Durata { get; set; }
     public string? CopertinaPath { get; set; }
     public string? FilmatoPath { get; set; }
+    public string? Descrizione { get; set; }
+    public string? RegistaNome { get; set; }
+    public string? Cast { get; set; }
+    public bool Featured { get; set; }
+    public DateTime? DataRilascio { get; set; }
+    public string? Genere { get; set; }
     public List<int> CategoriaIds { get; set; } = new();
 }

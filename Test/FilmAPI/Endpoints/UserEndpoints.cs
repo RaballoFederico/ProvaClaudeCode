@@ -60,6 +60,89 @@ public static class UserEndpoints
             return Results.Ok(profilo);
         });
 
+        group.MapGet("/credito", async (HttpContext context, Services.Interfaces.ICreditoService creditoService) =>
+        {
+            var userId = GetUserId(context);
+            if (userId == null) return Results.Unauthorized();
+            var saldo = await creditoService.GetSaldoAsync(userId.Value);
+            return Results.Ok(new { saldo });
+        });
+
+        group.MapGet("/credito/storico", async (HttpContext context, Services.Interfaces.ICreditoService creditoService) =>
+        {
+            var userId = GetUserId(context);
+            if (userId == null) return Results.Unauthorized();
+            var storico = await creditoService.GetStoricoAsync(userId.Value);
+            return Results.Ok(storico);
+        });
+
+        group.MapGet("/acquisti", async (HttpContext context, FilmDbContext db) =>
+        {
+            var userId = GetUserId(context);
+            if (userId == null) return Results.Unauthorized();
+            var acquisti = await db.Acquisti
+                .Where(a => a.UtenteId == userId.Value)
+                .OrderByDescending(a => a.DataAcquisto)
+                .Select(a => new
+                {
+                    a.Id,
+                    a.DataAcquisto,
+                    a.ImportoTotale,
+                    a.CreditoUsato,
+                    Stato = a.Stato.ToString(),
+                    a.CodiceConferma,
+                    a.ShowId
+                })
+                .ToListAsync();
+            return Results.Ok(acquisti);
+        });
+
+        group.MapGet("/biglietti", async (HttpContext context, Services.Interfaces.IBigliettoService bigliettoService) =>
+        {
+            var userId = GetUserId(context);
+            if (userId == null) return Results.Unauthorized();
+            var list = await bigliettoService.GetBigliettiUtenteAsync(userId.Value);
+            return Results.Ok(list);
+        });
+
+        group.MapPut("/cinema-preferito", async (HttpContext context, int cinemaId, FilmDbContext db) =>
+        {
+            var userId = GetUserId(context);
+            if (userId == null) return Results.Unauthorized();
+            var exists = await db.Cinemas.AnyAsync(c => c.Id == cinemaId);
+            if (!exists) return Results.BadRequest(new { message = "Cinema non trovato" });
+
+            var utente = await db.Utenti.FindAsync(userId.Value);
+            if (utente == null) return Results.NotFound();
+
+            utente.PreferredCinemaId = cinemaId;
+            await db.SaveChangesAsync();
+            return Results.Ok(new { cinemaId });
+        });
+
+        group.MapGet("/cinema-preferito", async (HttpContext context, FilmDbContext db) =>
+        {
+            var userId = GetUserId(context);
+            if (userId == null) return Results.Unauthorized();
+
+            var utente = await db.Utenti
+                .Include(u => u.PreferredCinema)
+                .FirstOrDefaultAsync(u => u.Id == userId.Value);
+            if (utente == null) return Results.NotFound();
+
+            return Results.Ok(new
+            {
+                cinemaId = utente.PreferredCinemaId,
+                cinema = utente.PreferredCinema == null ? null : new
+                {
+                    utente.PreferredCinema.Id,
+                    utente.PreferredCinema.Nome,
+                    utente.PreferredCinema.Citta,
+                    utente.PreferredCinema.Indirizzo
+                }
+            });
+        });
+
         // PUT /user/profile - Aggiorna profilo
         group.MapPut("/profile", async (HttpContext context, UpdateProfiloRequestDTO request, FilmDbContext db) =>
         {

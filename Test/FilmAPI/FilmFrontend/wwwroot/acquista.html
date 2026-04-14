@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acquista Biglietti | FilmAPI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#de3a1f",
+                        "background": "#121415",
+                        "surface-container": "#1b1f20",
+                        "surface-container-high": "#252b2d",
+                        "on-surface": "#f3f1eb",
+                        "on-surface-variant": "#b9b8ad",
+                        "outline-variant": "#384043"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Outfit"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col">
+    <div id="navbar-container"></div>
+    <div class="flex flex-1">
+        <div id="sidebar-container"></div>
+        <main class="flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
+            <section class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6">
+                <div class="xl:col-span-1 bg-surface-container rounded-2xl border border-outline-variant/20 p-5">
+                    <h1 class="font-headline text-xl font-bold mb-4">Riepilogo</h1>
+                    <div id="summary" class="space-y-2 text-sm"></div>
+                    <div class="mt-4 pt-4 border-t border-outline-variant/20">
+                        <div class="text-sm text-on-surface-variant">Biglietti: <span id="count-selected">0</span></div>
+                        <div class="text-lg font-bold">Totale: <span id="total-price">0.00</span> EUR</div>
+                    </div>
+                </div>
+                <div class="xl:col-span-2 bg-surface-container rounded-2xl border border-outline-variant/20 p-5">
+                    <div class="text-center text-on-surface-variant text-sm mb-3">SCHERMO</div>
+                    <div class="h-2 bg-gradient-to-r from-transparent via-primary-container to-transparent rounded-full mb-6"></div>
+                    <div id="seats-grid" class="space-y-2 overflow-auto"></div>
+                    <div class="mt-4 text-xs text-on-surface-variant">Legenda: verde disponibile, rosso occupato, giallo selezionato</div>
+                </div>
+            </section>
+
+            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                    <div>
+                        <div class="text-sm text-on-surface-variant">Posti selezionati</div>
+                        <div id="selected-list" class="text-sm"></div>
+                    </div>
+                    <div class="text-sm">Timer: <span id="timer" class="font-bold">--:--</span></div>
+                    <button id="continue-btn" class="px-5 py-3 rounded-lg bg-primary-container text-white font-semibold" disabled>Continua</button>
+                </div>
+            </section>
+        </main>
+    </div>
+    <div id="footer-container"></div>
+
+    <script src="/js/theme.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/route-guard.js"></script>
+    <script src="/js/template-loader.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        let showId = null;
+        let filmId = null;
+        let salaId = null;
+        let cinemaId = null;
+        let selectedSeats = [];
+        let seatMap = [];
+        let lockCode = null;
+        let lockExpireAt = null;
+        let timerInt = null;
+        const sessionId = `sess_${Math.random().toString(36).slice(2)}_${Date.now()}`;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllComponents();
+            const qp = new URLSearchParams(window.location.search);
+            showId = parseInt(qp.get('IdShow') || '0');
+            filmId = parseInt(qp.get('IdFilm') || '0');
+            salaId = parseInt(qp.get('IdSala') || '0');
+            cinemaId = parseInt(qp.get('IdCinema') || '0');
+
+            if (!showId) {
+                window.location.href = '/programmazione.html';
+                return;
+            }
+
+            bindActions();
+            await loadSummary();
+            await loadSeatMap();
+        });
+
+        function bindActions() {
+            document.getElementById('continue-btn').addEventListener('click', goToPagamento);
+            window.addEventListener('beforeunload', async () => {
+                if (lockCode) {
+                    try { await ApiClient.delete(`/acquisto/lock/${lockCode}`); } catch {}
+                }
+            });
+        }
+
+        async function loadSummary() {
+                const [film, show, cinemas] = await Promise.all([
+                    ApiClient.get(`/films/${filmId}`),
+                    ApiClient.get(`/shows/${showId}`),
+                    ApiClient.get('/cinemas')
+                ]);
+            const cinema = cinemas.find(c => c.id === cinemaId);
+
+            document.getElementById('summary').innerHTML = `
+                <div>Film: <strong>${escapeHtml(film.titolo)}</strong></div>
+                <div>Tipologia: <strong>${escapeHtml(show.tipologiaSala || '-')}</strong></div>
+                <div>Data: <strong>${formatDate(show.data)}</strong></div>
+                <div>Ora: <strong>${(show.oraInizio || '').substring(0, 5)}</strong></div>
+                <div>Cinema: <strong>${escapeHtml(cinema ? cinema.nome : 'N/D')}</strong></div>
+            `;
+        }
+
+        async function loadSeatMap() {
+            const seats = await ApiClient.get(`/acquisto/${showId}/piantina`);
+            seatMap = seats || [];
+            renderSeats();
+        }
+
+        function renderSeats() {
+            const grid = document.getElementById('seats-grid');
+            const grouped = {};
+            seatMap.forEach(s => {
+                const m = /Fila\s+(\d+),\s+Posto\s+(\d+)/.exec(s.posto || '');
+                if (!m) return;
+                const fila = parseInt(m[1]);
+                const posto = parseInt(m[2]);
+                if (!grouped[fila]) grouped[fila] = [];
+                grouped[fila].push({ posto, stato: s.stato, key: s.posto });
+            });
+
+            const rows = Object.keys(grouped).map(x => parseInt(x)).sort((a, b) => a - b);
+            grid.innerHTML = rows.map(fila => {
+                const seats = grouped[fila].sort((a, b) => a.posto - b.posto);
+                return `
+                    <div class="flex items-center gap-2">
+                        <div class="w-14 text-xs text-on-surface-variant">Fila ${fila}</div>
+                        <div class="flex flex-wrap gap-1">
+                            ${seats.map(s => {
+                                const selected = selectedSeats.includes(s.key);
+                                const unavailable = s.stato !== 'disponibile' && !selected;
+                                const color = selected ? 'bg-amber-400 text-black' : (unavailable ? 'bg-rose-500/80 text-white' : 'bg-emerald-500/80 text-white hover:bg-emerald-500');
+                                return `<button ${unavailable ? 'disabled' : ''} onclick="toggleSeat('${s.key.replace(/'/g, "\\'")}')" class="w-8 h-8 rounded text-xs ${color}">${s.posto}</button>`;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function toggleSeat(seatKey) {
+            const idx = selectedSeats.indexOf(seatKey);
+            if (idx >= 0) {
+                selectedSeats.splice(idx, 1);
+            } else {
+                if (selectedSeats.length >= 10) {
+                    Utils.showNotification('Massimo 10 posti', 'error');
+                    return;
+                }
+                selectedSeats.push(seatKey);
+            }
+
+            renderSeats();
+            await refreshLock();
+            updateSelectionUI();
+        }
+
+        async function refreshLock() {
+            if (lockCode) {
+                try { await ApiClient.delete(`/acquisto/lock/${lockCode}`); } catch {}
+                lockCode = null;
+            }
+
+            if (!selectedSeats.length) {
+                stopTimer();
+                return;
+            }
+
+            const posti = selectedSeats.map(k => {
+                const m = /Fila\s+(\d+),\s+Posto\s+(\d+)/.exec(k);
+                return { fila: parseInt(m[1]), numero: parseInt(m[2]) };
+            });
+
+            const lock = await ApiClient.post('/acquisto/lock-posti', {
+                showId,
+                posti,
+                sessionId
+            });
+
+            lockCode = lock.codiceTemporaneo;
+            lockExpireAt = new Date(lock.dataScadenza);
+            startTimer();
+        }
+
+        function startTimer() {
+            stopTimer();
+            timerInt = setInterval(() => {
+                if (!lockExpireAt) return;
+                const rem = lockExpireAt.getTime() - Date.now();
+                if (rem <= 0) {
+                    stopTimer();
+                    selectedSeats = [];
+                    lockCode = null;
+                    updateSelectionUI();
+                    loadSeatMap();
+                    Utils.showNotification('Lock scaduto, seleziona di nuovo i posti', 'info');
+                    return;
+                }
+                const mm = Math.floor(rem / 60000).toString().padStart(2, '0');
+                const ss = Math.floor((rem % 60000) / 1000).toString().padStart(2, '0');
+                document.getElementById('timer').textContent = `${mm}:${ss}`;
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (timerInt) clearInterval(timerInt);
+            timerInt = null;
+            document.getElementById('timer').textContent = '--:--';
+        }
+
+        function updateSelectionUI() {
+            document.getElementById('count-selected').textContent = selectedSeats.length;
+            document.getElementById('selected-list').textContent = selectedSeats.join(' | ');
+
+            const unit = 10;
+            const tot = selectedSeats.length * unit;
+            document.getElementById('total-price').textContent = tot.toFixed(2);
+            document.getElementById('continue-btn').disabled = !selectedSeats.length || !lockCode;
+        }
+
+        function goToPagamento() {
+            if (!lockCode) return;
+            const params = new URLSearchParams({
+                IdShow: String(showId),
+                IdFilm: String(filmId),
+                IdSala: String(salaId),
+                IdCinema: String(cinemaId),
+                lock: lockCode
+            });
+            window.location.href = `/pagamento.html?${params.toString()}`;
+        }
+
+        function formatDate(dateIso) {
+            if (!dateIso) return '-';
+            const d = new Date(dateIso);
+            return d.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

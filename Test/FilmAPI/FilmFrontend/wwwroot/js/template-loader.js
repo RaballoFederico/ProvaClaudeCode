@@ -58,7 +58,7 @@ function isAuthenticatedUser() {
 function applyPageAccessControl() {
     const currentPath = window.location.pathname.split('/').pop() || 'home.html';
 
-    const managerOnlyPages = ['index.html', 'registi.html', 'proiezioni.html'];
+    const managerOnlyPages = ['index.html', 'registi.html', 'proiezioni.html', 'shows.html', 'validazione.html', 'ricarica-credito.html'];
     if (managerOnlyPages.includes(currentPath) && !isManagerUser()) {
         window.location.href = '/programmazione.html';
     }

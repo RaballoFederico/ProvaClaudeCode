@@ -7,6 +7,9 @@ public class CinemaDTO
     public string Indirizzo { get; set; } = string.Empty;
     public string Citta { get; set; } = string.Empty;
     public int PostiMassimi { get; set; }
+    public decimal? Latitudine { get; set; }
+    public decimal? Longitudine { get; set; }
+    public string? CodiceLocale { get; set; }
 }
 
 public class CinemaCreateDTO
@@ -15,6 +18,9 @@ public class CinemaCreateDTO
     public string Indirizzo { get; set; } = string.Empty;
     public string Citta { get; set; } = string.Empty;
     public int PostiMassimi { get; set; } = 120;
+    public decimal? Latitudine { get; set; }
+    public decimal? Longitudine { get; set; }
+    public string? CodiceLocale { get; set; }
 }
 
 public class CinemaUpdateDTO
@@ -23,4 +29,7 @@ public class CinemaUpdateDTO
     public string Indirizzo { get; set; } = string.Empty;
     public string Citta { get; set; } = string.Empty;
     public int PostiMassimi { get; set; } = 120;
+    public decimal? Latitudine { get; set; }
+    public decimal? Longitudine { get; set; }
+    public string? CodiceLocale { get; set; }
 }

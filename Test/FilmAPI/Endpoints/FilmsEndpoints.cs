@@ -27,6 +27,12 @@ public static class FilmsEndpoints
                 Durata = f.Durata,
                 CopertinaPath = f.CopertinaPath,
                 FilmatoPath = f.FilmatoPath,
+                Descrizione = f.Descrizione,
+                RegistaNome = f.RegistaNome,
+                Cast = f.Cast,
+                Featured = f.Featured,
+                DataRilascio = f.DataRilascio,
+                Genere = f.Genere,
                 CategorieIds = f.FilmsCategorie.Select(fc => fc.CategoriaId).ToList(),
                 Categorie = f.FilmsCategorie.Select(fc => new CategoriaDTO
                 {
@@ -55,6 +61,12 @@ public static class FilmsEndpoints
                 Durata = film.Durata,
                 CopertinaPath = film.CopertinaPath,
                 FilmatoPath = film.FilmatoPath,
+                Descrizione = film.Descrizione,
+                RegistaNome = film.RegistaNome,
+                Cast = film.Cast,
+                Featured = film.Featured,
+                DataRilascio = film.DataRilascio,
+                Genere = film.Genere,
                 CategorieIds = film.FilmsCategorie.Select(fc => fc.CategoriaId).ToList(),
                 Categorie = film.FilmsCategorie.Select(fc => new CategoriaDTO
                 {
@@ -98,6 +110,12 @@ public static class FilmsEndpoints
                 Durata = dto.Durata,
                 CopertinaPath = copertinaPath,
                 FilmatoPath = dto.FilmatoPath,
+                Descrizione = dto.Descrizione,
+                RegistaNome = dto.RegistaNome,
+                Cast = dto.Cast,
+                Featured = dto.Featured,
+                DataRilascio = dto.DataRilascio,
+                Genere = dto.Genere,
                 FilmsCategorie = dto.CategoriaIds.Select(id => new FilmCategoria { CategoriaId = id }).ToList()
             };
 
@@ -115,6 +133,12 @@ public static class FilmsEndpoints
                 Durata = film.Durata,
                 CopertinaPath = film.CopertinaPath,
                 FilmatoPath = film.FilmatoPath,
+                Descrizione = film.Descrizione,
+                RegistaNome = film.RegistaNome,
+                Cast = film.Cast,
+                Featured = film.Featured,
+                DataRilascio = film.DataRilascio,
+                Genere = film.Genere,
                 CategorieIds = film.FilmsCategorie.Select(fc => fc.CategoriaId).ToList(),
                 Categorie = film.FilmsCategorie.Select(fc => new CategoriaDTO
                 {
@@ -160,6 +184,12 @@ public static class FilmsEndpoints
                 ? DefaultCoverImagePath
                 : dto.CopertinaPath;
             film.FilmatoPath = dto.FilmatoPath;
+            film.Descrizione = dto.Descrizione;
+            film.RegistaNome = dto.RegistaNome;
+            film.Cast = dto.Cast;
+            film.Featured = dto.Featured;
+            film.DataRilascio = dto.DataRilascio;
+            film.Genere = dto.Genere;
 
             // Aggiorna categorie
             film.FilmsCategorie.Clear();
@@ -182,6 +212,12 @@ public static class FilmsEndpoints
                 Durata = film.Durata,
                 CopertinaPath = film.CopertinaPath,
                 FilmatoPath = film.FilmatoPath,
+                Descrizione = film.Descrizione,
+                RegistaNome = film.RegistaNome,
+                Cast = film.Cast,
+                Featured = film.Featured,
+                DataRilascio = film.DataRilascio,
+                Genere = film.Genere,
                 CategorieIds = film.FilmsCategorie.Select(fc => fc.CategoriaId).ToList(),
                 Categorie = film.FilmsCategorie.Select(fc => new CategoriaDTO
                 {

@@ -7,6 +7,7 @@ using FilmAPI.Data;
 using FilmAPI.Endpoints;
 using FilmAPI.Services;
 using FilmAPI.Services.Interfaces;
+using Stripe;
 
 Env.Load();
 
@@ -36,6 +37,23 @@ var jwtSecretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ??
 builder.Services.AddSingleton(new JwtService(builder.Configuration));
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ISalaService, SalaService>();
+builder.Services.AddScoped<IShowService, ShowService>();
+builder.Services.AddScoped<IBigliettoService, BigliettoService>();
+builder.Services.AddScoped<ICreditoService, CreditoService>();
+builder.Services.AddScoped<IPagamentoService, PagamentoService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IPdfService, PdfService>();
+builder.Services.AddHostedService<PrenotazioneTempCleanupService>();
+
+StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY")
+    ?? builder.Configuration["Stripe:SecretKey"]
+    ?? string.Empty;
+
+if (StripeConfiguration.ApiKey.StartsWith("sk_test_", StringComparison.OrdinalIgnoreCase) && StripeConfiguration.ApiKey.Contains("..."))
+{
+    StripeConfiguration.ApiKey = string.Empty;
+}
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -110,6 +128,12 @@ app.MapAuthEndpoints();
 app.MapUserEndpoints();
 app.MapAdminEndpoints();
 app.MapCategorieEndpoints();
+app.MapSaleEndpoints();
+app.MapShowsEndpoints();
+app.MapProgrammazioneEndpoints();
+app.MapAcquistoEndpoints();
+app.MapCreditoEndpoints();
+app.MapValidazioneEndpoints();
 
 app.MapGroup("/registi").MapRegistiEndpoints();
 app.MapGroup("/films").MapFilmsEndpoints();

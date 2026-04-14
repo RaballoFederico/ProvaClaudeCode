@@ -18,7 +18,10 @@ public static class CinemasEndpoints
             Nome = c.Nome,
             Indirizzo = c.Indirizzo,
             Citta = c.Citta,
-            PostiMassimi = c.PostiMassimi
+            PostiMassimi = c.PostiMassimi,
+            Latitudine = c.Latitudine,
+            Longitudine = c.Longitudine,
+            CodiceLocale = c.CodiceLocale
         }).ToListAsync());
 
         // GET /cinemas/{id} - Visibile a tutti
@@ -31,7 +34,10 @@ public static class CinemasEndpoints
                 Nome = cinema.Nome,
                 Indirizzo = cinema.Indirizzo,
                 Citta = cinema.Citta,
-                PostiMassimi = cinema.PostiMassimi
+                PostiMassimi = cinema.PostiMassimi,
+                Latitudine = cinema.Latitudine,
+                Longitudine = cinema.Longitudine,
+                CodiceLocale = cinema.CodiceLocale
             });
         });
 
@@ -43,7 +49,10 @@ public static class CinemasEndpoints
                 Nome = dto.Nome,
                 Indirizzo = dto.Indirizzo,
                 Citta = dto.Citta,
-                PostiMassimi = dto.PostiMassimi > 0 ? dto.PostiMassimi : 120
+                PostiMassimi = dto.PostiMassimi > 0 ? dto.PostiMassimi : 120,
+                Latitudine = dto.Latitudine,
+                Longitudine = dto.Longitudine,
+                CodiceLocale = dto.CodiceLocale
             };
             db.Cinemas.Add(cinema);
             await db.SaveChangesAsync();
@@ -53,7 +62,10 @@ public static class CinemasEndpoints
                 Nome = cinema.Nome,
                 Indirizzo = cinema.Indirizzo,
                 Citta = cinema.Citta,
-                PostiMassimi = cinema.PostiMassimi
+                PostiMassimi = cinema.PostiMassimi,
+                Latitudine = cinema.Latitudine,
+                Longitudine = cinema.Longitudine,
+                CodiceLocale = cinema.CodiceLocale
             });
         });
 
@@ -67,6 +79,9 @@ public static class CinemasEndpoints
             cinema.Indirizzo = dto.Indirizzo;
             cinema.Citta = dto.Citta;
             cinema.PostiMassimi = dto.PostiMassimi > 0 ? dto.PostiMassimi : cinema.PostiMassimi;
+            cinema.Latitudine = dto.Latitudine;
+            cinema.Longitudine = dto.Longitudine;
+            cinema.CodiceLocale = dto.CodiceLocale;
 
             await db.SaveChangesAsync();
             return Results.Ok(new CinemaDTO
@@ -75,7 +90,10 @@ public static class CinemasEndpoints
                 Nome = cinema.Nome,
                 Indirizzo = cinema.Indirizzo,
                 Citta = cinema.Citta,
-                PostiMassimi = cinema.PostiMassimi
+                PostiMassimi = cinema.PostiMassimi,
+                Latitudine = cinema.Latitudine,
+                Longitudine = cinema.Longitudine,
+                CodiceLocale = cinema.CodiceLocale
             });
         });
 

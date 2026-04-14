@@ -13,11 +13,18 @@ public class FilmDbContext : DbContext
     public DbSet<Film> Films { get; set; } = null!;
     public DbSet<Cinema> Cinemas { get; set; } = null!;
     public DbSet<Proiezione> Proiezioni { get; set; } = null!;
+    public DbSet<Sala> Sale { get; set; } = null!;
+    public DbSet<Show> Shows { get; set; } = null!;
     public DbSet<Utente> Utenti { get; set; } = null!;
     public DbSet<Ruolo> Ruoli { get; set; } = null!;
     public DbSet<UtenteRuolo> UtentiRuoli { get; set; } = null!;
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
     public DbSet<Prenotazione> Prenotazioni { get; set; } = null!;
+    public DbSet<Acquisto> Acquisti { get; set; } = null!;
+    public DbSet<Biglietto> Biglietti { get; set; } = null!;
+    public DbSet<CreditoUtente> CreditiUtente { get; set; } = null!;
+    public DbSet<TransazioneCredito> TransazioniCredito { get; set; } = null!;
+    public DbSet<PrenotazioneTemporanea> PrenotazioniTemporanee { get; set; } = null!;
     public DbSet<Categoria> Categorie { get; set; } = null!;
     public DbSet<FilmCategoria> FilmsCategorie { get; set; } = null!;
     public DbSet<ProiezioneSalvata> ProiezioniSalvate { get; set; } = null!;
@@ -42,6 +49,11 @@ public class FilmDbContext : DbContext
             entity.Property(e => e.Durata).IsRequired();
             entity.Property(e => e.CopertinaPath).HasMaxLength(500);
             entity.Property(e => e.FilmatoPath).HasMaxLength(500);
+            entity.Property(e => e.Descrizione).HasMaxLength(2000);
+            entity.Property(e => e.RegistaNome).HasMaxLength(100);
+            entity.Property(e => e.Cast).HasMaxLength(1000);
+            entity.Property(e => e.Featured).HasDefaultValue(false);
+            entity.Property(e => e.Genere).HasMaxLength(50);
 
             entity.HasOne(e => e.Regista)
                 .WithMany(r => r.Films)
@@ -56,6 +68,36 @@ public class FilmDbContext : DbContext
             entity.Property(e => e.Indirizzo).IsRequired().HasMaxLength(300);
             entity.Property(e => e.Citta).IsRequired().HasMaxLength(100);
             entity.Property(e => e.PostiMassimi).IsRequired();
+            entity.Property(e => e.Latitudine).HasColumnType("decimal(10,8)");
+            entity.Property(e => e.Longitudine).HasColumnType("decimal(11,8)");
+            entity.Property(e => e.CodiceLocale).HasMaxLength(20);
+        });
+
+        modelBuilder.Entity<Sala>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.CinemaId, e.NumeroSala }).IsUnique();
+
+            entity.HasOne(e => e.Cinema)
+                .WithMany(c => c.Sale)
+                .HasForeignKey(e => e.CinemaId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Show>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.SalaId, e.Data, e.OraInizio }).IsUnique();
+
+            entity.HasOne(e => e.Sala)
+                .WithMany(s => s.Shows)
+                .HasForeignKey(e => e.SalaId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Film)
+                .WithMany(f => f.Shows)
+                .HasForeignKey(e => e.FilmId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<Proiezione>(entity =>
@@ -63,6 +105,11 @@ public class FilmDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Data).IsRequired();
             entity.Property(e => e.Ora).IsRequired();
+
+            entity.HasOne(e => e.Show)
+                .WithMany()
+                .HasForeignKey(e => e.ShowId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             entity.HasOne(e => e.Cinema)
                 .WithMany(c => c.Proiezioni)
@@ -75,6 +122,7 @@ public class FilmDbContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade);
 
             entity.HasIndex(e => new { e.CinemaId, e.FilmId, e.Data, e.Ora }).IsUnique();
+            entity.HasIndex(e => e.ShowId).IsUnique();
         });
 
         modelBuilder.Entity<Utente>(entity =>
@@ -91,6 +139,11 @@ public class FilmDbContext : DbContext
 
             entity.HasIndex(e => e.Username).IsUnique();
             entity.HasIndex(e => e.Email).IsUnique();
+
+            entity.HasOne(e => e.PreferredCinema)
+                .WithMany()
+                .HasForeignKey(e => e.PreferredCinemaId)
+                .OnDelete(DeleteBehavior.SetNull);
         });
 
         modelBuilder.Entity<Ruolo>(entity =>
@@ -144,6 +197,77 @@ public class FilmDbContext : DbContext
             entity.HasOne(e => e.Proiezione)
                 .WithMany()
                 .HasForeignKey(e => e.ProiezioneId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Acquisto>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.Utente)
+                .WithMany(u => u.Acquisti)
+                .HasForeignKey(e => e.UtenteId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Show)
+                .WithMany()
+                .HasForeignKey(e => e.ShowId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<Biglietto>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.CodiceUnivoco).IsUnique();
+            entity.HasIndex(e => e.CodiceHash).IsUnique();
+
+            entity.HasOne(e => e.Acquisto)
+                .WithMany(a => a.Biglietti)
+                .HasForeignKey(e => e.AcquistoId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Show)
+                .WithMany(s => s.Biglietti)
+                .HasForeignKey(e => e.ShowId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<CreditoUtente>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.UtenteId).IsUnique();
+
+            entity.HasOne(e => e.Utente)
+                .WithOne(u => u.Credito)
+                .HasForeignKey<CreditoUtente>(e => e.UtenteId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<TransazioneCredito>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+
+            entity.HasOne(e => e.Utente)
+                .WithMany()
+                .HasForeignKey(e => e.UtenteId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Acquisto)
+                .WithMany()
+                .HasForeignKey(e => e.AcquistoId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<PrenotazioneTemporanea>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.ShowId, e.Posto });
+            entity.HasIndex(e => e.DataScadenza);
+            entity.HasIndex(e => e.SessionId);
+
+            entity.HasOne(e => e.Show)
+                .WithMany(s => s.PrenotazioniTemporanee)
+                .HasForeignKey(e => e.ShowId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
 

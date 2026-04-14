@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validazione Biglietti | FilmAPI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://unpkg.com/html5-qrcode" defer></script>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col">
+    <div id="navbar-container"></div>
+    <div class="flex flex-1">
+        <div id="sidebar-container"></div>
+        <main class="flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
+            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 mb-5">
+                <h1 class="font-headline text-2xl font-bold mb-3">Validazione Biglietti</h1>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <select id="cinema-select" class="bg-surface-container-high rounded-lg border-none"></select>
+                    <input id="code-input" type="text" placeholder="Inserisci codice hash" class="bg-surface-container-high rounded-lg border-none" />
+                    <button id="verify-btn" class="px-4 py-2 bg-primary-container text-white rounded-lg">Verifica</button>
+                </div>
+            </section>
+
+            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 mb-5">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="font-headline text-lg font-bold">Scanner QR</h2>
+                    <button id="scan-toggle" class="px-3 py-2 bg-surface-container-high rounded-lg text-sm">Avvia scanner</button>
+                </div>
+                <div id="qr-reader" class="hidden max-w-md"></div>
+            </section>
+
+            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5">
+                <h2 class="font-headline text-lg font-bold mb-3">Risultato</h2>
+                <div id="result-box" class="text-on-surface-variant">Nessuna verifica eseguita.</div>
+            </section>
+        </main>
+    </div>
+    <div id="footer-container"></div>
+
+    <script src="/js/theme.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/route-guard.js"></script>
+    <script src="/js/template-loader.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        let cinemas = [];
+        let scanner = null;
+        let scannerRunning = false;
+        let currentInfo = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllComponents();
+            bindEvents();
+            await initData();
+        });
+
+        function bindEvents() {
+            document.getElementById('verify-btn').addEventListener('click', verifyManual);
+            document.getElementById('scan-toggle').addEventListener('click', toggleScan);
+        }
+
+        async function initData() {
+            cinemas = await ApiClient.get('/cinemas');
+            const sel = document.getElementById('cinema-select');
+            sel.innerHTML = cinemas.map(c => `<option value="${c.id}">${escapeHtml(c.nome)} - ${escapeHtml(c.citta)}</option>`).join('');
+        }
+
+        async function verifyManual() {
+            const code = document.getElementById('code-input').value.trim();
+            if (!code) {
+                Utils.showNotification('Inserisci un codice', 'error');
+                return;
+            }
+            await verifyCode(code);
+        }
+
+        async function verifyCode(code) {
+            try {
+                const info = await ApiClient.post('/validazione/verifica?codiceHash=' + encodeURIComponent(code));
+                currentInfo = info;
+                renderResult(info);
+            } catch (e) {
+                currentInfo = null;
+                document.getElementById('result-box').innerHTML = `<div class="text-rose-400">Biglietto non trovato o non valido.</div>`;
+            }
+        }
+
+        function renderResult(info) {
+            const already = info.giaValidato;
+            const box = document.getElementById('result-box');
+            box.innerHTML = `
+                <div class="p-4 rounded-xl ${already ? 'bg-amber-500/10 border border-amber-500/30' : 'bg-emerald-500/10 border border-emerald-500/30'}">
+                    <div class="font-semibold mb-2">${already ? 'Biglietto gia validato' : 'Biglietto valido'}</div>
+                    <div class="text-sm">Film: <strong>${escapeHtml(info.filmTitolo)}</strong></div>
+                    <div class="text-sm">Cinema: <strong>${escapeHtml(info.cinemaNome)}</strong></div>
+                    <div class="text-sm">Sala: <strong>${info.salaNumero} (${escapeHtml(info.tipologiaSala)})</strong></div>
+                    <div class="text-sm">Data: <strong>${formatDate(info.data)} ${(info.oraInizio || '').substring(0,5)}</strong></div>
+                    <div class="text-sm">Posto: <strong>${escapeHtml(info.posto)}</strong></div>
+                    <div class="text-sm">Codice: <span class="font-mono">${escapeHtml(info.codiceHash)}</span></div>
+                    ${already ? '' : '<button id="confirm-validation" class="mt-3 px-4 py-2 bg-primary-container text-white rounded-lg text-sm">Valida biglietto</button>'}
+                </div>
+            `;
+
+            const btn = document.getElementById('confirm-validation');
+            if (btn) btn.addEventListener('click', confirmValidation);
+        }
+
+        async function confirmValidation() {
+            if (!currentInfo) return;
+            const cinemaId = parseInt(document.getElementById('cinema-select').value);
+            const res = await ApiClient.post(`/validazione/conferma?codiceHash=${encodeURIComponent(currentInfo.codiceHash)}&cinemaId=${cinemaId}`);
+            if (res && res.validato) {
+                Utils.showNotification('Biglietto validato', 'success');
+                await verifyCode(currentInfo.codiceHash);
+            } else {
+                Utils.showNotification('Validazione non riuscita', 'error');
+            }
+        }
+
+        async function toggleScan() {
+            const reader = document.getElementById('qr-reader');
+            const btn = document.getElementById('scan-toggle');
+            if (!scannerRunning) {
+                reader.classList.remove('hidden');
+                btn.textContent = 'Ferma scanner';
+                scanner = new Html5Qrcode('qr-reader');
+                await scanner.start(
+                    { facingMode: 'environment' },
+                    { fps: 10, qrbox: 240 },
+                    async (decodedText) => {
+                        const hash = parseHashFromQr(decodedText);
+                        if (hash) {
+                            document.getElementById('code-input').value = hash;
+                            await verifyCode(hash);
+                        }
+                    },
+                    () => {}
+                );
+                scannerRunning = true;
+            } else {
+                if (scanner) {
+                    await scanner.stop();
+                    await scanner.clear();
+                }
+                scanner = null;
+                scannerRunning = false;
+                reader.classList.add('hidden');
+                btn.textContent = 'Avvia scanner';
+            }
+        }
+
+        function parseHashFromQr(value) {
+            try {
+                if (value.includes('/validazione/qr/')) {
+                    return value.split('/validazione/qr/')[1].split('?')[0];
+                }
+                return value;
+            } catch {
+                return null;
+            }
+        }
+
+        function formatDate(iso) {
+            if (!iso) return '-';
+            return new Date(iso).toLocaleDateString('it-IT');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

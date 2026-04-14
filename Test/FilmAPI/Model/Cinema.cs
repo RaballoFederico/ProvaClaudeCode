@@ -25,5 +25,16 @@ public class Cinema
     [Required]
     public int PostiMassimi { get; set; } = 120;
 
+    [Column(TypeName = "decimal(10,8)")]
+    public decimal? Latitudine { get; set; }
+
+    [Column(TypeName = "decimal(11,8)")]
+    public decimal? Longitudine { get; set; }
+
+    [MaxLength(20)]
+    public string? CodiceLocale { get; set; }
+
     public ICollection<Proiezione> Proiezioni { get; set; } = new List<Proiezione>();
+
+    public ICollection<Sala> Sale { get; set; } = new List<Sala>();
 }

@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html class="dark" lang="it">
+<html lang="it" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Programmazione | FilmAPI</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="/css/styles.css">
     <script>
@@ -14,20 +14,18 @@
             theme: {
                 extend: {
                     colors: {
-                        "primary-container": "#e50914",
-                        "secondary": "#e9c176",
-                        "background": "#131313",
-                        "surface": "#131313",
-                        "surface-container": "#201f1f",
-                        "surface-container-low": "#1c1b1b",
-                        "surface-container-high": "#2a2a2a",
-                        "on-surface": "#e5e2e1",
-                        "on-surface-variant": "#e9bcb6",
-                        "outline-variant": "#5e3f3b"
+                        "primary-container": "#de3a1f",
+                        "secondary": "#efc96c",
+                        "background": "#121415",
+                        "surface-container": "#1b1f20",
+                        "surface-container-high": "#252b2d",
+                        "on-surface": "#f3f1eb",
+                        "on-surface-variant": "#b9b8ad",
+                        "outline-variant": "#384043"
                     },
                     fontFamily: {
                         "headline": ["Manrope"],
-                        "body": ["Inter"]
+                        "body": ["Outfit"]
                     }
                 }
             }
@@ -38,35 +36,66 @@
     <div id="navbar-container"></div>
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
-        <main class="flex-1 p-4 md:p-8 lg:p-12 pb-20 md:pb-0">
-            <section class="mb-8">
-                <h1 class="font-headline text-3xl md:text-5xl font-bold text-white">Programmazione</h1>
-                <p class="text-on-surface-variant mt-2">Filtra per citta, data e categoria e prenota in un click.</p>
+
+        <main class="flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
+            <section class="relative rounded-2xl overflow-hidden border border-outline-variant/30 mb-6">
+                <div class="absolute inset-0 bg-gradient-to-r from-[#de3a1f]/20 via-transparent to-[#efc96c]/10"></div>
+                <div class="relative p-6 md:p-8">
+                    <p class="text-xs uppercase tracking-[0.2em] text-on-surface-variant">Programmazione Settimanale</p>
+                    <h1 class="font-headline text-3xl md:text-5xl font-extrabold mt-2">Scegli il tuo cinema, trova il film</h1>
+                    <p class="text-on-surface-variant mt-3 max-w-2xl">Filtra per categoria, cerca un titolo e verifica subito se il film e presente nel tuo cinema.</p>
+                </div>
             </section>
 
-            <section class="bg-surface-container-low rounded-xl p-4 md:p-6 border border-outline-variant/20 mb-6">
+            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-4 md:p-5 mb-6">
+                <div class="flex flex-col md:flex-row md:items-center gap-3 mb-4">
+                    <button id="open-cinema-modal" class="px-4 py-2 rounded-lg bg-primary-container text-white text-sm font-semibold hover:opacity-90 transition">Seleziona Cinema</button>
+                    <div class="text-sm text-on-surface-variant">Cinema attuale: <span id="selected-cinema-label" class="text-on-surface font-semibold">Nessuno</span></div>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-                    <select id="filter-citta" class="bg-surface-container-high border-none rounded-lg text-sm">
-                        <option value="">Tutte le citta</option>
-                    </select>
-                    <input id="filter-data" type="date" class="bg-surface-container-high border-none rounded-lg text-sm" />
-                    <select id="filter-categoria" class="bg-surface-container-high border-none rounded-lg text-sm">
-                        <option value="">Tutte le categorie</option>
-                    </select>
-                    <button id="clear-filters" class="bg-surface-container-high hover:bg-[#3a3a3a] rounded-lg text-sm font-semibold">Azzera filtri</button>
+                    <div class="md:col-span-1">
+                        <label class="text-xs uppercase tracking-widest text-on-surface-variant">Tag</label>
+                        <select id="tag-filter" class="w-full mt-1 bg-surface-container-high border-none rounded-lg text-sm">
+                            <option value="all">Tutti i film</option>
+                            <option value="featured">In evidenza</option>
+                            <option value="coming">In uscita</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-1">
+                        <label class="text-xs uppercase tracking-widest text-on-surface-variant">Genere</label>
+                        <select id="genre-filter" class="w-full mt-1 bg-surface-container-high border-none rounded-lg text-sm">
+                            <option value="">Tutti</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="text-xs uppercase tracking-widest text-on-surface-variant">Ricerca</label>
+                        <input id="search-input" type="text" placeholder="Titolo film..." class="w-full mt-1 bg-surface-container-high border-none rounded-lg text-sm" />
+                    </div>
                 </div>
             </section>
 
             <section>
-                <div id="programmazione-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
-                <div id="programmazione-empty" class="hidden bg-surface-container-low rounded-xl p-10 text-center border border-outline-variant/20">
-                    <span class="material-symbols-outlined text-5xl text-on-surface-variant/50">event_busy</span>
-                    <p class="mt-3 text-on-surface-variant">Nessuna proiezione trovata con i filtri selezionati.</p>
-                </div>
+                <div id="films-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"></div>
+                <div id="empty-state" class="hidden text-center py-12 text-on-surface-variant">Nessun film trovato con i filtri selezionati.</div>
             </section>
         </main>
     </div>
+
     <div id="footer-container"></div>
+
+    <div id="cinema-modal" class="hidden fixed inset-0 bg-black/60 z-50 p-4 md:p-8">
+        <div class="max-w-3xl mx-auto bg-surface-container rounded-2xl border border-outline-variant/20 p-5 md:p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="font-headline text-2xl font-bold">Seleziona il tuo cinema</h2>
+                <button id="close-cinema-modal" class="p-2 rounded-lg hover:bg-surface-container-high"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <div class="flex gap-2 mb-4">
+                <button id="geo-btn" class="px-3 py-2 bg-surface-container-high rounded-lg text-sm">Ordina per distanza</button>
+                <input id="cinema-search" type="text" placeholder="Cerca citta o nome cinema" class="flex-1 bg-surface-container-high border-none rounded-lg text-sm" />
+            </div>
+            <div id="cinema-list" class="space-y-2 max-h-[60vh] overflow-auto"></div>
+        </div>
+    </div>
 
     <script src="/js/theme.js"></script>
     <script src="/js/auth.js"></script>
@@ -76,75 +105,106 @@
     <script src="/js/utils.js"></script>
     <script>
         let films = [];
-        let proiezioni = [];
         let cinemas = [];
-        let categorie = [];
+        let selectedCinema = null;
+        let currentPosition = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();
-            await loadData();
-            bindFilters();
-            applyFilters();
+            bindEvents();
+            await bootstrap();
         });
 
-        async function loadData() {
-            [films, proiezioni, cinemas, categorie] = await Promise.all([
-                ApiClient.get('/films'),
-                ApiClient.get('/proiezioni'),
-                ApiClient.get('/cinemas'),
-                ApiClient.get('/categorie')
-            ]);
+        async function bootstrap() {
+            try {
+                Utils.showLoading();
+                [films, cinemas] = await Promise.all([
+                    ApiClient.get('/programmazione'),
+                    ApiClient.get('/cinemas')
+                ]);
 
-            const cittaSet = [...new Set(cinemas.map(c => c.citta))].sort();
-            const cittaSelect = document.getElementById('filter-citta');
-            cittaSet.forEach(citta => {
-                const option = document.createElement('option');
-                option.value = citta;
-                option.textContent = citta;
-                cittaSelect.appendChild(option);
-            });
-
-            const categoriaSelect = document.getElementById('filter-categoria');
-            categorie.forEach(cat => {
-                const option = document.createElement('option');
-                option.value = String(cat.id);
-                option.textContent = cat.nome;
-                categoriaSelect.appendChild(option);
-            });
+                await loadSelectedCinema();
+                populateGenres();
+                renderCinemaList(cinemas);
+                applyFilters();
+            } catch (e) {
+                Utils.showNotification(e.message || 'Errore caricamento', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
         }
 
-        function bindFilters() {
-            document.getElementById('filter-citta').addEventListener('change', applyFilters);
-            document.getElementById('filter-data').addEventListener('change', applyFilters);
-            document.getElementById('filter-categoria').addEventListener('change', applyFilters);
-            document.getElementById('clear-filters').addEventListener('click', () => {
-                document.getElementById('filter-citta').value = '';
-                document.getElementById('filter-data').value = '';
-                document.getElementById('filter-categoria').value = '';
-                applyFilters();
+        function bindEvents() {
+            document.getElementById('open-cinema-modal').addEventListener('click', () => toggleCinemaModal(true));
+            document.getElementById('close-cinema-modal').addEventListener('click', () => toggleCinemaModal(false));
+            document.getElementById('cinema-search').addEventListener('input', filterCinemaList);
+            document.getElementById('geo-btn').addEventListener('click', locateAndSort);
+
+            document.getElementById('tag-filter').addEventListener('change', applyFilters);
+            document.getElementById('genre-filter').addEventListener('change', applyFilters);
+            document.getElementById('search-input').addEventListener('input', Utils.debounce(applyFilters, 200));
+        }
+
+        async function loadSelectedCinema() {
+            if (Auth.isAuthenticated()) {
+                try {
+                    const pref = await ApiClient.get('/user/cinema-preferito');
+                    if (pref && pref.cinemaId) {
+                        selectedCinema = cinemas.find(c => c.id === pref.cinemaId) || null;
+                    }
+                } catch {
+                }
+            }
+
+            if (!selectedCinema) {
+                const local = localStorage.getItem('selectedCinema');
+                if (local) {
+                    const id = parseInt(local);
+                    selectedCinema = cinemas.find(c => c.id === id) || null;
+                }
+            }
+
+            updateSelectedCinemaLabel();
+        }
+
+        function populateGenres() {
+            const select = document.getElementById('genre-filter');
+            const genres = [...new Set(films.map(f => f.genere).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+            genres.forEach(g => {
+                const o = document.createElement('option');
+                o.value = g;
+                o.textContent = g;
+                select.appendChild(o);
             });
         }
 
         function applyFilters() {
-            const citta = document.getElementById('filter-citta').value;
-            const data = document.getElementById('filter-data').value;
-            const categoriaId = document.getElementById('filter-categoria').value;
+            const tag = document.getElementById('tag-filter').value;
+            const genre = document.getElementById('genre-filter').value;
+            const search = document.getElementById('search-input').value.trim().toLowerCase();
 
-            const filtered = proiezioni.filter(p => {
-                const cinema = cinemas.find(c => c.id === p.cinemaId);
-                const film = films.find(f => f.id === p.filmId);
-                const matchCitta = !citta || (cinema && cinema.citta === citta);
-                const matchData = !data || (p.data && p.data.startsWith(data));
-                const matchCategoria = !categoriaId || (film && Array.isArray(film.categorieIds) && film.categorieIds.includes(parseInt(categoriaId)));
-                return matchCitta && matchData && matchCategoria;
+            const now = new Date();
+            const twoWeeks = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+
+            const filtered = films.filter(f => {
+                if (tag === 'featured' && !f.featured) return false;
+                if (tag === 'coming') {
+                    if (!f.dataRilascio) return false;
+                    const dr = new Date(f.dataRilascio);
+                    if (dr < now || dr > twoWeeks) return false;
+                }
+
+                if (genre && f.genere !== genre) return false;
+                if (search && !((f.titolo || '').toLowerCase().includes(search))) return false;
+                return true;
             });
 
-            render(filtered);
+            renderFilms(filtered);
         }
 
-        function render(items) {
-            const grid = document.getElementById('programmazione-grid');
-            const empty = document.getElementById('programmazione-empty');
+        function renderFilms(items) {
+            const grid = document.getElementById('films-grid');
+            const empty = document.getElementById('empty-state');
 
             if (!items.length) {
                 grid.innerHTML = '';
@@ -153,38 +213,119 @@
             }
 
             empty.classList.add('hidden');
-            grid.innerHTML = items.map(p => {
-                const cinema = cinemas.find(c => c.id === p.cinemaId);
-                const film = films.find(f => f.id === p.filmId);
-                const cats = (film?.categorie || []).map(c => `<span class="px-2 py-0.5 rounded-full text-[10px] bg-surface-container-high text-secondary">${escapeHtml(c.nome)}</span>`).join('');
+            grid.innerHTML = items.map(f => {
+                const inCinema = selectedCinema ? !!f.inSelectedCinema : false;
                 return `
-                    <article class="bg-surface-container-low rounded-xl p-4 border border-outline-variant/20">
-                        <h3 class="text-lg font-bold text-white">${escapeHtml(film?.titolo || 'Film')}</h3>
-                        <p class="text-sm text-on-surface-variant mt-1">${escapeHtml(cinema?.nome || 'Cinema')} - ${escapeHtml(cinema?.citta || '')}</p>
-                        <p class="text-sm text-on-surface-variant">${Utils.formatDateShort(p.data)} alle ${Utils.formatTime(p.ora)}</p>
-                        <div class="flex flex-wrap gap-1 mt-2">${cats}</div>
-                        <div class="mt-4">
-                            <button onclick="prenota(${p.id})" class="w-full py-2 bg-primary-container hover:bg-[#c0000c] rounded-lg text-sm font-semibold text-white">Prenota</button>
+                    <article class="bg-surface-container rounded-xl border border-outline-variant/20 overflow-hidden hover:border-outline-variant/40 transition cursor-pointer" onclick="openFilm(${f.id})">
+                        <div class="h-56 bg-surface-container-high">
+                            <img src="${escapeHtml(f.copertinaPath || '')}" alt="${escapeHtml(f.titolo)}" class="w-full h-full object-cover" loading="lazy" onerror="this.style.display='none'" />
+                        </div>
+                        <div class="p-4">
+                            <h3 class="font-headline font-bold text-lg line-clamp-2">${escapeHtml(f.titolo)}</h3>
+                            <div class="text-xs text-on-surface-variant mt-1">${f.durata || '-'} min${f.genere ? ' - ' + escapeHtml(f.genere) : ''}</div>
+                            ${selectedCinema ? `
+                                <div class="mt-3 text-sm ${inCinema ? 'text-emerald-400' : 'text-rose-400'} flex items-center gap-1">
+                                    <span class="material-symbols-outlined text-base">${inCinema ? 'check_circle' : 'cancel'}</span>
+                                    ${inCinema ? 'Nel tuo cinema' : 'Non nel tuo cinema'}
+                                </div>
+                            ` : ''}
                         </div>
                     </article>
                 `;
             }).join('');
         }
 
-        async function prenota(proiezioneId) {
-            if (!Auth.isAuthenticated()) {
-                window.location.href = `/login.html?redirect=${encodeURIComponent('/profilo.html?prenota=' + proiezioneId)}`;
+        function openFilm(id) {
+            window.location.href = `/scheda-film.html?id=${id}`;
+        }
+
+        function toggleCinemaModal(show) {
+            document.getElementById('cinema-modal').classList.toggle('hidden', !show);
+        }
+
+        function renderCinemaList(items) {
+            const list = document.getElementById('cinema-list');
+            list.innerHTML = items.map(c => {
+                const distance = currentPosition && c.latitudine && c.longitudine
+                    ? calcKm(currentPosition.lat, currentPosition.lng, c.latitudine, c.longitudine).toFixed(1)
+                    : null;
+                return `
+                    <div class="bg-surface-container-high rounded-lg p-3 flex items-center justify-between gap-3">
+                        <div>
+                            <div class="font-semibold">${escapeHtml(c.nome)}</div>
+                            <div class="text-xs text-on-surface-variant">${escapeHtml(c.citta)} - ${escapeHtml(c.indirizzo)}</div>
+                            ${distance ? `<div class="text-xs text-secondary mt-1">${distance} km</div>` : ''}
+                        </div>
+                        <button onclick="selectCinema(${c.id})" class="px-3 py-2 rounded-lg bg-primary-container text-white text-sm">Seleziona</button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function filterCinemaList() {
+            const q = document.getElementById('cinema-search').value.trim().toLowerCase();
+            const filtered = cinemas.filter(c =>
+                (c.nome || '').toLowerCase().includes(q) ||
+                (c.citta || '').toLowerCase().includes(q)
+            );
+            renderCinemaList(filtered);
+        }
+
+        async function selectCinema(id) {
+            selectedCinema = cinemas.find(c => c.id === id) || null;
+            if (!selectedCinema) return;
+
+            localStorage.setItem('selectedCinema', String(id));
+            if (Auth.isAuthenticated()) {
+                try {
+                    await ApiClient.put(`/user/cinema-preferito?cinemaId=${id}`);
+                } catch {
+                }
+            }
+
+            updateSelectedCinemaLabel();
+            toggleCinemaModal(false);
+
+            try {
+                films = await ApiClient.get(`/programmazione?cinemaId=${id}`);
+            } catch {
+            }
+
+            applyFilters();
+        }
+
+        function updateSelectedCinemaLabel() {
+            document.getElementById('selected-cinema-label').textContent = selectedCinema ? `${selectedCinema.nome} (${selectedCinema.citta})` : 'Nessuno';
+        }
+
+        async function locateAndSort() {
+            if (!navigator.geolocation) {
+                Utils.showNotification('Geolocalizzazione non supportata', 'error');
                 return;
             }
 
-            try {
-                await ApiClient.post('/user/proiezioni-salvate', { proiezioneId });
-            } catch {
-                // gia salvata: si procede comunque verso profilo
-            }
-
-            window.location.href = `/profilo.html?prenota=${proiezioneId}`;
+            navigator.geolocation.getCurrentPosition(pos => {
+                currentPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                const sorted = [...cinemas].sort((a, b) => {
+                    const da = a.latitudine && a.longitudine ? calcKm(currentPosition.lat, currentPosition.lng, a.latitudine, a.longitudine) : Number.MAX_SAFE_INTEGER;
+                    const db = b.latitudine && b.longitudine ? calcKm(currentPosition.lat, currentPosition.lng, b.latitudine, b.longitudine) : Number.MAX_SAFE_INTEGER;
+                    return da - db;
+                });
+                renderCinemaList(sorted);
+            }, () => {
+                Utils.showNotification('Impossibile leggere posizione', 'error');
+            });
         }
+
+        function calcKm(lat1, lng1, lat2, lng2) {
+            const R = 6371;
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lng2 - lng1);
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        function toRad(value) { return value * Math.PI / 180; }
 
         function escapeHtml(text) {
             const div = document.createElement('div');

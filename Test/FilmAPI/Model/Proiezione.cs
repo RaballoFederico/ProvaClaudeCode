@@ -10,6 +10,11 @@ public class Proiezione
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
 
+    public int? ShowId { get; set; }
+
+    [ForeignKey(nameof(ShowId))]
+    public Show? Show { get; set; }
+
     [Required]
     public int CinemaId { get; set; }
 

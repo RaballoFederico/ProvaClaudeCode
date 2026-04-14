@@ -32,7 +32,25 @@ public class Film
     [MaxLength(500)]
     public string? FilmatoPath { get; set; }
 
+    [MaxLength(2000)]
+    public string? Descrizione { get; set; }
+
+    [MaxLength(100)]
+    public string? RegistaNome { get; set; }
+
+    [MaxLength(1000)]
+    public string? Cast { get; set; }
+
+    public bool Featured { get; set; }
+
+    public DateTime? DataRilascio { get; set; }
+
+    [MaxLength(50)]
+    public string? Genere { get; set; }
+
     public ICollection<Proiezione> Proiezioni { get; set; } = new List<Proiezione>();
+
+    public ICollection<Show> Shows { get; set; } = new List<Show>();
 
     public ICollection<FilmCategoria> FilmsCategorie { get; set; } = new List<FilmCategoria>();
 }

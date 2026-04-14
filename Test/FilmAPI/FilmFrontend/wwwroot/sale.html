@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Sale | FilmAPI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col">
+    <div id="navbar-container"></div>
+    <div class="flex flex-1">
+        <div id="sidebar-container"></div>
+        <main class="flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
+            <section class="mb-6">
+                <h1 class="font-headline text-3xl md:text-4xl font-bold">Gestione Sale</h1>
+                <div class="mt-3 flex flex-col md:flex-row gap-3">
+                    <select id="cinema-select" class="bg-surface-container-high rounded-lg border-none"></select>
+                    <button id="add-sala-btn" class="px-4 py-2 bg-primary-container text-white rounded-lg">Aggiungi Sala</button>
+                </div>
+            </section>
+
+            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 overflow-auto">
+                <table class="w-full min-w-[760px]">
+                    <thead class="bg-surface-container-high text-left text-xs uppercase text-on-surface-variant">
+                        <tr>
+                            <th class="p-3">Sala #</th>
+                            <th class="p-3">Nome</th>
+                            <th class="p-3">Tipologia</th>
+                            <th class="p-3">File</th>
+                            <th class="p-3">Posti</th>
+                            <th class="p-3">Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sale-tbody"></tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+    <div id="footer-container"></div>
+
+    <div id="sale-modal" class="hidden fixed inset-0 bg-black/60 z-50 p-4">
+        <div class="max-w-2xl mx-auto bg-surface-container rounded-2xl p-5 border border-outline-variant/20">
+            <div class="flex items-center justify-between mb-4">
+                <h2 id="modal-title" class="font-headline text-xl font-bold">Nuova Sala</h2>
+                <button onclick="toggleModal(false)" class="p-2 rounded-lg hover:bg-surface-container-high"><span class="material-symbols-outlined">close</span></button>
+            </div>
+            <form id="sala-form" class="space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <input name="numeroSala" type="number" min="1" placeholder="Numero sala" class="bg-surface-container-high rounded-lg border-none" required />
+                    <input name="nome" type="text" placeholder="Nome" class="bg-surface-container-high rounded-lg border-none" />
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <select name="tipologia" class="bg-surface-container-high rounded-lg border-none" required>
+                        <option value="0">ISENSE</option>
+                        <option value="1">XL</option>
+                        <option value="2">3D</option>
+                        <option value="3">2D</option>
+                    </select>
+                    <input name="numeroFile" type="number" min="1" placeholder="Numero file" class="bg-surface-container-high rounded-lg border-none" required />
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <input name="postiPerFila" type="number" min="1" placeholder="Posti per fila" class="bg-surface-container-high rounded-lg border-none" />
+                    <select name="manualMode" id="manual-mode" class="bg-surface-container-high rounded-lg border-none">
+                        <option value="auto">Configurazione automatica</option>
+                        <option value="manual">Configurazione manuale JSON</option>
+                    </select>
+                </div>
+                <textarea name="configurazionePosti" id="configurazione-posti" rows="6" placeholder='{"file":[{"fila":1,"posti":12}]}' class="hidden w-full bg-surface-container-high rounded-lg border-none"></textarea>
+                <div class="flex justify-end gap-2 pt-2">
+                    <button type="button" onclick="toggleModal(false)" class="px-4 py-2 rounded-lg bg-surface-container-high">Annulla</button>
+                    <button type="submit" class="px-4 py-2 rounded-lg bg-primary-container text-white">Salva</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="/js/theme.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/route-guard.js"></script>
+    <script src="/js/template-loader.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        let cinemas = [];
+        let currentCinemaId = null;
+        let editingSalaId = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllComponents();
+            bindEvents();
+            await initPage();
+        });
+
+        function bindEvents() {
+            document.getElementById('cinema-select').addEventListener('change', async e => {
+                currentCinemaId = parseInt(e.target.value);
+                await loadSale();
+            });
+
+            document.getElementById('add-sala-btn').addEventListener('click', () => {
+                editingSalaId = null;
+                document.getElementById('modal-title').textContent = 'Nuova Sala';
+                document.getElementById('sala-form').reset();
+                toggleJson(false);
+                toggleModal(true);
+            });
+
+            document.getElementById('manual-mode').addEventListener('change', e => {
+                toggleJson(e.target.value === 'manual');
+            });
+
+            document.getElementById('sala-form').addEventListener('submit', submitSala);
+        }
+
+        async function initPage() {
+            cinemas = await ApiClient.get('/cinemas');
+            const sel = document.getElementById('cinema-select');
+            sel.innerHTML = cinemas.map(c => `<option value="${c.id}">${escapeHtml(c.nome)} - ${escapeHtml(c.citta)}</option>`).join('');
+            currentCinemaId = cinemas[0]?.id || null;
+            if (currentCinemaId) await loadSale();
+        }
+
+        async function loadSale() {
+            const rows = await ApiClient.get(`/admin/cinemas/${currentCinemaId}/sale`);
+            const tb = document.getElementById('sale-tbody');
+
+            if (!rows.length) {
+                tb.innerHTML = `<tr><td colspan="6" class="p-4 text-on-surface-variant">Nessuna sala per questo cinema.</td></tr>`;
+                return;
+            }
+
+            tb.innerHTML = rows.map(r => `
+                <tr class="border-t border-outline-variant/20">
+                    <td class="p-3">${r.numeroSala}</td>
+                    <td class="p-3">${escapeHtml(r.nome || '-')}</td>
+                    <td class="p-3">${escapeHtml(r.tipologia)}</td>
+                    <td class="p-3">${r.numeroFile}</td>
+                    <td class="p-3">${r.postiTotali}</td>
+                    <td class="p-3">
+                        <button onclick="editSala(${r.id})" class="px-2 py-1 bg-surface-container-high rounded text-xs">Modifica</button>
+                        <button onclick="deleteSala(${r.id})" class="px-2 py-1 bg-rose-600/80 rounded text-xs text-white">Elimina</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function toggleModal(show) {
+            document.getElementById('sale-modal').classList.toggle('hidden', !show);
+        }
+
+        function toggleJson(show) {
+            document.getElementById('configurazione-posti').classList.toggle('hidden', !show);
+        }
+
+        async function submitSala(e) {
+            e.preventDefault();
+            const f = e.target;
+            const payload = {
+                numeroSala: parseInt(f.numeroSala.value),
+                nome: f.nome.value || null,
+                tipologia: parseInt(f.tipologia.value),
+                numeroFile: parseInt(f.numeroFile.value),
+                postiPerFila: f.postiPerFila.value ? parseInt(f.postiPerFila.value) : null,
+                configurazionePosti: f.configurazionePosti.value || null
+            };
+
+            if (editingSalaId) {
+                await ApiClient.put(`/admin/sale/${editingSalaId}`, {
+                    ...payload,
+                    attiva: true
+                });
+            } else {
+                await ApiClient.post(`/admin/cinemas/${currentCinemaId}/sale`, payload);
+            }
+
+            toggleModal(false);
+            await loadSale();
+            Utils.showNotification('Sala salvata', 'success');
+        }
+
+        async function editSala(id) {
+            const sala = await ApiClient.get(`/admin/sale/${id}`);
+            editingSalaId = id;
+            document.getElementById('modal-title').textContent = `Modifica Sala #${sala.numeroSala}`;
+            toggleModal(true);
+
+            const f = document.getElementById('sala-form');
+            f.numeroSala.value = sala.numeroSala;
+            f.nome.value = sala.nome || '';
+            f.tipologia.value = tipologiaToValue(sala.tipologia);
+            f.numeroFile.value = sala.numeroFile;
+            f.postiPerFila.value = sala.postiPerFila || '';
+            f.configurazionePosti.value = sala.configurazionePosti || '';
+            const manual = !!sala.configurazionePosti;
+            document.getElementById('manual-mode').value = manual ? 'manual' : 'auto';
+            toggleJson(manual);
+        }
+
+        async function deleteSala(id) {
+            if (!Utils.confirmDialog('Eliminare questa sala?')) return;
+            try {
+                await ApiClient.delete(`/admin/sale/${id}`);
+                Utils.showNotification('Sala eliminata', 'success');
+                await loadSale();
+            } catch (e) {
+                Utils.showNotification(e.message || 'Impossibile eliminare sala', 'error');
+            }
+        }
+
+        function tipologiaToValue(t) {
+            if (t === 'ISENSE') return 0;
+            if (t === 'XL') return 1;
+            if (t === 'TRE_D') return 2;
+            return 3;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

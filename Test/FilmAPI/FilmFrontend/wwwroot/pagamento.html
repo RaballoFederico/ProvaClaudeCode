@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagamento | FilmAPI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#de3a1f",
+                        "background": "#121415",
+                        "surface-container": "#1b1f20",
+                        "surface-container-high": "#252b2d",
+                        "on-surface": "#f3f1eb",
+                        "on-surface-variant": "#b9b8ad",
+                        "outline-variant": "#384043"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Outfit"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col">
+    <div id="navbar-container"></div>
+    <div class="flex flex-1">
+        <div id="sidebar-container"></div>
+        <main class="flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
+            <section class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+                <div class="xl:col-span-2 bg-surface-container rounded-2xl border border-outline-variant/20 p-5">
+                    <h1 class="font-headline text-2xl font-bold mb-4">Riepilogo Acquisto</h1>
+                    <div id="summary" class="space-y-2 text-sm"></div>
+                    <div class="mt-4 pt-4 border-t border-outline-variant/20 text-sm">
+                        <div>Subtotale: <strong><span id="subtotal">0.00</span> EUR</strong></div>
+                    </div>
+                </div>
+
+                <div class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5">
+                    <h2 class="font-headline text-lg font-bold mb-3">Pagamento</h2>
+                    <div class="text-sm">Credito disponibile: <strong><span id="credito">0.00</span> EUR</strong></div>
+                    <label class="mt-3 flex items-center gap-2 text-sm">
+                        <input id="use-credit" type="checkbox" class="rounded" checked />
+                        Usa il mio credito
+                    </label>
+                    <div class="mt-2 text-sm">Rimanente da pagare: <strong><span id="remaining">0.00</span> EUR</strong></div>
+
+                    <div class="mt-4" id="stripe-container">
+                        <div id="card-element" class="bg-surface-container-high rounded-lg p-3"></div>
+                    </div>
+
+                    <button id="pay-btn" class="mt-4 w-full px-4 py-3 rounded-lg bg-primary-container text-white font-semibold">Conferma pagamento</button>
+                </div>
+            </section>
+        </main>
+    </div>
+    <div id="footer-container"></div>
+
+    <script src="/js/theme.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/route-guard.js"></script>
+    <script src="/js/template-loader.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        let showId = 0;
+        let filmId = 0;
+        let salaId = 0;
+        let cinemaId = 0;
+        let lockCode = '';
+
+        let stripe = null;
+        let card = null;
+        let subtotal = 0;
+        let credito = 0;
+        let remaining = 0;
+        let useCredit = true;
+        let lockInfo = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllComponents();
+
+            const qp = new URLSearchParams(window.location.search);
+            showId = parseInt(qp.get('IdShow') || '0');
+            filmId = parseInt(qp.get('IdFilm') || '0');
+            salaId = parseInt(qp.get('IdSala') || '0');
+            cinemaId = parseInt(qp.get('IdCinema') || '0');
+            lockCode = qp.get('lock') || '';
+
+            if (!showId || !lockCode) {
+                window.location.href = '/programmazione.html';
+                return;
+            }
+
+            bindEvents();
+            await bootstrap();
+        });
+
+        function bindEvents() {
+            document.getElementById('use-credit').addEventListener('change', e => {
+                useCredit = e.target.checked;
+                recalc();
+            });
+
+            document.getElementById('pay-btn').addEventListener('click', handlePay);
+        }
+
+        async function bootstrap() {
+            try {
+                Utils.showLoading();
+                const [film, show, saldoRes, lock] = await Promise.all([
+                    ApiClient.get(`/films/${filmId}`),
+                    ApiClient.get(`/shows/${showId}`),
+                    ApiClient.get('/user/credito'),
+                    ApiClient.get(`/acquisto/lock/${encodeURIComponent(lockCode)}`)
+                ]);
+                lockInfo = lock;
+                const selected = Array.isArray(lock?.posti) ? lock.posti.length : 0;
+                if (!selected) {
+                    throw new Error('Lock posti non valido o scaduto');
+                }
+                subtotal = (show.prezzoBase || 0) * selected;
+
+                credito = saldoRes?.saldo || 0;
+
+                document.getElementById('summary').innerHTML = `
+                    <div>Film: <strong>${escapeHtml(film.titolo)}</strong></div>
+                    <div>Cinema: <strong>${cinemaId}</strong> - Sala <strong>${salaId}</strong></div>
+                    <div>Data: <strong>${formatDate(show.data)}</strong>, ${(show.oraInizio || '').substring(0,5)}</div>
+                    <div>Posti: <strong>${(lock.posti || []).map(p => `Fila ${p.fila}, Posto ${p.numero}`).join(' | ')}</strong></div>
+                `;
+
+                document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+                document.getElementById('credito').textContent = credito.toFixed(2);
+
+                recalc();
+                await initStripe();
+            } catch (e) {
+                Utils.showNotification(e.message || 'Errore caricamento pagamento', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        function recalc() {
+            const used = useCredit ? Math.min(credito, subtotal) : 0;
+            remaining = Math.max(0, subtotal - used);
+            document.getElementById('remaining').textContent = remaining.toFixed(2);
+            document.getElementById('stripe-container').classList.toggle('hidden', remaining <= 0);
+        }
+
+        async function initStripe() {
+            let publishable = localStorage.getItem('stripePublishableKey') || '';
+            if (!publishable) {
+                try {
+                    const cfg = await ApiClient.get('/acquisto/stripe-publishable');
+                    publishable = cfg?.publishableKey || '';
+                    if (publishable) localStorage.setItem('stripePublishableKey', publishable);
+                } catch {
+                }
+            }
+
+            if (!publishable || publishable.startsWith('pk_test_mock')) {
+                document.getElementById('stripe-container').classList.add('hidden');
+                return;
+            }
+
+            try {
+                stripe = Stripe(publishable);
+                const elements = stripe.elements();
+                card = elements.create('card');
+                card.mount('#card-element');
+            } catch {
+            }
+        }
+
+        async function handlePay() {
+            try {
+                Utils.showLoading();
+
+                let paymentIntentId = null;
+                if (remaining > 0) {
+                    if (!stripe || !card) {
+                        throw new Error('Stripe non configurato correttamente');
+                    }
+
+                    const intent = await ApiClient.post('/acquisto/payment-intent', {
+                        importo: remaining
+                    });
+
+                    const confirmation = await stripe.confirmCardPayment(intent.clientSecret, {
+                        payment_method: { card }
+                    });
+
+                    if (confirmation.error) {
+                        throw new Error(confirmation.error.message || 'Pagamento carta fallito');
+                    }
+
+                    if (!confirmation.paymentIntent || confirmation.paymentIntent.status !== 'succeeded') {
+                        throw new Error('Pagamento non completato');
+                    }
+
+                    paymentIntentId = confirmation.paymentIntent.id;
+                }
+
+                const conferma = await ApiClient.post('/acquisto/conferma', {
+                    codiceTemporaneo: lockCode,
+                    usaCredito: useCredit,
+                    paymentIntentId
+                });
+
+                Utils.showNotification('Acquisto confermato con successo', 'success');
+                window.location.href = `/user-biglietti.html?acquistoId=${conferma.acquistoId}`;
+            } catch (e) {
+                Utils.showNotification(e.message || 'Pagamento fallito', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        function formatDate(dateIso) {
+            if (!dateIso) return '-';
+            return new Date(dateIso).toLocaleDateString('it-IT');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

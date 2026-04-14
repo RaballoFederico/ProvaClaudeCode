@@ -48,4 +48,13 @@ public class Utente
     public ICollection<UtenteRuolo> UtentiRuoli { get; set; } = new List<UtenteRuolo>();
 
     public ICollection<ProiezioneSalvata> ProiezioniSalvate { get; set; } = new List<ProiezioneSalvata>();
+
+    public int? PreferredCinemaId { get; set; }
+
+    [ForeignKey(nameof(PreferredCinemaId))]
+    public Cinema? PreferredCinema { get; set; }
+
+    public CreditoUtente? Credito { get; set; }
+
+    public ICollection<Acquisto> Acquisti { get; set; } = new List<Acquisto>();
 }

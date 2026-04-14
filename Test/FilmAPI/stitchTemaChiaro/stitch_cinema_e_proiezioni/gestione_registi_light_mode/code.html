@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Directors Management | The Cinematic Director’s Suite</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@200;400;500;700;800;900&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#E50914",
+                        "on-primary": "#FFFFFF",
+                        "secondary": "#1C1B1B",
+                        "background": "#FFFFFF",
+                        "surface": "#FFFFFF",
+                        "surface-container": "#f9f9f9",
+                        "surface-container-high": "#f3f3f3",
+                        "surface-container-low": "#FFFFFF",
+                        "on-surface": "#1C1B1B",
+                        "on-surface-variant": "#71717a",
+                        "outline": "#e4e4e7",
+                        "outline-variant": "#f4f4f5",
+                    },
+                    fontFamily: {
+                        "headline": ["Epilogue", "sans-serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem", 
+                        "lg": "0.5rem", 
+                        "xl": "1rem", 
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #FFFFFF;
+            color: #1C1B1B;
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="flex min-h-screen overflow-x-hidden bg-background">
+<!-- SideNavBar Component -->
+<aside class="hidden md:flex flex-col h-screen w-64 left-0 top-0 sticky bg-[#f9f9f9] p-6 gap-8 border-r border-outline-variant">
+<div class="px-2">
+<h1 class="text-xl font-black text-[#E50914] font-headline tracking-tighter">Director's Suite</h1>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-bold">Backstage Access</p>
+</div>
+<nav class="flex-1 flex flex-col gap-y-1">
+<a class="flex items-center gap-4 px-4 py-3 text-stone-500 hover:bg-stone-100 rounded-lg transition-all font-body text-sm font-medium" href="#">
+<span class="material-symbols-outlined text-[20px]">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-stone-500 hover:bg-stone-100 rounded-lg transition-all font-body text-sm font-medium" href="#">
+<span class="material-symbols-outlined text-[20px]">movie</span>
+<span>Películas</span>
+</a>
+<!-- Active State: Directores -->
+<a class="flex items-center gap-4 px-4 py-3 text-stone-900 bg-white rounded-lg shadow-sm font-bold font-body text-sm" href="#">
+<span class="material-symbols-outlined text-[20px] text-[#E50914]">theater_comedy</span>
+<span>Directores</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-stone-500 hover:bg-stone-100 rounded-lg transition-all font-body text-sm font-medium" href="#">
+<span class="material-symbols-outlined text-[20px]">theaters</span>
+<span>Cines</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-stone-500 hover:bg-stone-100 rounded-lg transition-all font-body text-sm font-medium" href="#">
+<span class="material-symbols-outlined text-[20px]">schedule</span>
+<span>Proyecciones</span>
+</a>
+</nav>
+<div class="mt-auto flex flex-col gap-y-1 pt-6 border-t border-outline-variant">
+<a class="flex items-center gap-4 px-4 py-3 text-stone-500 hover:bg-stone-100 rounded-lg transition-all font-body text-sm font-medium" href="#">
+<span class="material-symbols-outlined text-[20px]">help_outline</span>
+<span>Support</span>
+</a>
+<a class="flex items-center gap-4 px-4 py-3 text-stone-500 hover:bg-stone-100 rounded-lg transition-all font-body text-sm font-medium" href="#">
+<span class="material-symbols-outlined text-[20px]">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</aside>
+<div class="flex-1 flex flex-col min-w-0">
+<!-- TopNavBar Component -->
+<header class="flex justify-between items-center w-full px-8 h-20 bg-white/80 backdrop-blur-xl sticky top-0 z-50 shadow-[0_40px_40px_-15px_rgba(0,0,0,0.04)]">
+<div class="flex items-center gap-8">
+<span class="md:hidden text-2xl font-black text-[#E50914] tracking-tighter font-headline uppercase">CDS</span>
+<span class="hidden md:block text-2xl font-black text-stone-900 tracking-tighter font-headline uppercase">The Cinematic Director’s Suite</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden lg:flex items-center bg-[#f3f3f3] rounded-full px-4 py-2 gap-3">
+<span class="material-symbols-outlined text-stone-500 text-sm">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm text-stone-900 w-48 placeholder:text-stone-400 font-body" placeholder="Search directors..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-stone-500 hover:text-[#E50914] transition-colors duration-300">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-stone-500 hover:text-[#E50914] transition-colors duration-300">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-outline-variant">
+<img alt="User profile avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCW9GPQXxHuMLOvj-mVnRW5cE6VGMESPVQ88JO3yeYxBHR_CZV1eIAzLdX0b2GjVpF8GkCn92BgSLUANHgQS1YF1jUEmkP6M745bRKxk5ZKyffJFBT3dW1wDqrZwoMgoyZA5zsAl8ZEs5Y-Uz3ojmsqCAw0P862l3qjiNykfNvENIwbXVGC7t7QxxuBhVfkifjsOL3dNrpDNtvPPBhaP75szhmjsbYt6K6CXUssyZw27caoopCE8aSCft1U5wMIz9LjMEidKFprdE"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 p-8 md:p-12 max-w-7xl w-full mx-auto">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+<div class="max-w-2xl">
+<span class="text-[#E50914] uppercase tracking-[0.3em] text-[10px] font-bold mb-2 block font-headline">Management Portal</span>
+<h2 class="font-headline text-5xl md:text-6xl font-light tracking-tight text-stone-900">Director <span class="text-[#E50914] font-black italic">Registry</span></h2>
+<p class="mt-4 text-stone-500 font-body leading-relaxed max-w-xl">Manage the elite roster of cinematic visionaries. From industry veterans to rising auteurs, oversee their portfolio and collaborative history within the database.</p>
+</div>
+<div>
+<button class="flex items-center gap-3 bg-[#E50914] text-white px-8 py-4 rounded-xl font-headline font-bold uppercase tracking-wider text-sm hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-xl shadow-[#E50914]/20">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+                    Add New Director
+                </button>
+</div>
+</div>
+<!-- Bento Grid -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Quick Stats -->
+<div class="col-span-12 lg:col-span-3 space-y-6">
+<div class="bg-[#f3f3f3] p-6 rounded-xl">
+<p class="text-stone-500 text-[10px] uppercase tracking-widest font-bold mb-1">Total Auteurs</p>
+<h3 class="text-4xl font-headline font-light text-stone-900">142</h3>
+<div class="mt-4 h-1 w-full bg-stone-200 rounded-full overflow-hidden">
+<div class="h-full bg-[#E50914] w-3/4"></div>
+</div>
+</div>
+<div class="bg-[#f3f3f3] p-6 rounded-xl">
+<p class="text-stone-500 text-[10px] uppercase tracking-widest font-bold mb-1">Global Diversity</p>
+<h3 class="text-4xl font-headline font-light text-stone-900">28 <span class="text-lg text-stone-400 font-body tracking-normal">Nations</span></h3>
+<div class="mt-4 flex -space-x-2">
+<div class="w-8 h-8 rounded-full bg-white border border-stone-200 flex items-center justify-center text-[10px] font-bold">US</div>
+<div class="w-8 h-8 rounded-full bg-white border border-stone-200 flex items-center justify-center text-[10px] font-bold">FR</div>
+<div class="w-8 h-8 rounded-full bg-white border border-stone-200 flex items-center justify-center text-[10px] font-bold">JP</div>
+<div class="w-8 h-8 rounded-full bg-white border border-stone-200 flex items-center justify-center text-[10px] font-bold">IT</div>
+<div class="w-8 h-8 rounded-full bg-white border border-stone-200 flex items-center justify-center text-[10px] font-bold text-[#E50914]">+24</div>
+</div>
+</div>
+</div>
+<!-- Table Container -->
+<div class="col-span-12 lg:col-span-9 bg-white border border-outline rounded-xl overflow-hidden shadow-sm">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-[#f3f3f3]">
+<th class="px-6 py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-stone-500 font-bold">ID Ref</th>
+<th class="px-6 py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-stone-500 font-bold">Nome</th>
+<th class="px-6 py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-stone-500 font-bold">Cognome</th>
+<th class="px-6 py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-stone-500 font-bold">Nazionalità</th>
+<th class="px-6 py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-stone-500 font-bold text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-stone-100">
+<!-- Row 1 -->
+<tr class="hover:bg-[#f9f9f9] transition-colors duration-200 group">
+<td class="px-6 py-6 text-sm font-mono text-[#E50914]">DIR-001</td>
+<td class="px-6 py-6 text-sm font-semibold text-stone-900">Quentin</td>
+<td class="px-6 py-6 text-sm font-semibold text-stone-900">Tarantino</td>
+<td class="px-6 py-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-stone-100 text-stone-600 tracking-widest">United States</span>
+</td>
+<td class="px-6 py-6 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-stone-400 hover:text-stone-900 transition-colors"><span class="material-symbols-outlined text-lg">edit</span></button>
+<button class="p-2 text-stone-400 hover:text-[#E50914] transition-colors"><span class="material-symbols-outlined text-lg">delete</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-[#f9f9f9] transition-colors duration-200 group">
+<td class="px-6 py-6 text-sm font-mono text-[#E50914]">DIR-042</td>
+<td class="px-6 py-6 text-sm font-semibold text-stone-900">Christopher</td>
+<td class="px-6 py-6 text-sm font-semibold text-stone-900">Nolan</td>
+<td class="px-6 py-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-stone-100 text-stone-600 tracking-widest">United Kingdom</span>
+</td>
+<td class="px-6 py-6 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-stone-400 hover:text-stone-900 transition-colors"><span class="material-symbols-outlined text-lg">edit</span></button>
+<button class="p-2 text-stone-400 hover:text-[#E50914] transition-colors"><span class="material-symbols-outlined text-lg">delete</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-[#f9f9f9] transition-colors duration-200 group">
+<td class="px-6 py-6 text-sm font-mono text-[#E50914]">DIR-115</td>
+<td class="px-6 py-6 text-sm font-semibold text-stone-900">Greta</td>
+<td class="px-6 py-6 text-sm font-semibold text-stone-900">Gerwig</td>
+<td class="px-6 py-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-stone-100 text-stone-600 tracking-widest">United States</span>
+</td>
+<td class="px-6 py-6 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-stone-400 hover:text-stone-900 transition-colors"><span class="material-symbols-outlined text-lg">edit</span></button>
+<button class="p-2 text-stone-400 hover:text-[#E50914] transition-colors"><span class="material-symbols-outlined text-lg">delete</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-[#f9f9f9] transition-colors duration-200 group">
+<td class="px-6 py-6 text-sm font-mono text-[#E50914]">DIR-208</td>
+<td class="px-6 py-6 text-sm font-semibold text-stone-900">Bong</td>
+<td class="px-6 py-6 text-sm font-semibold text-stone-900">Joon-ho</td>
+<td class="px-6 py-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-stone-100 text-stone-600 tracking-widest">South Korea</span>
+</td>
+<td class="px-6 py-6 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-stone-400 hover:text-stone-900 transition-colors"><span class="material-symbols-outlined text-lg">edit</span></button>
+<button class="p-2 text-stone-400 hover:text-[#E50914] transition-colors"><span class="material-symbols-outlined text-lg">delete</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-[#f9f9f9] transition-colors duration-200 group">
+<td class="px-6 py-6 text-sm font-mono text-[#E50914]">DIR-332</td>
+<td class="px-6 py-6 text-sm font-semibold text-stone-900">Denis</td>
+<td class="px-6 py-6 text-sm font-semibold text-stone-900">Villeneuve</td>
+<td class="px-6 py-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-stone-100 text-stone-600 tracking-widest">Canada</span>
+</td>
+<td class="px-6 py-6 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-stone-400 hover:text-stone-900 transition-colors"><span class="material-symbols-outlined text-lg">edit</span></button>
+<button class="p-2 text-stone-400 hover:text-[#E50914] transition-colors"><span class="material-symbols-outlined text-lg">delete</span></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination -->
+<div class="flex items-center justify-between px-8 py-4 bg-[#f3f3f3]/50 border-t border-stone-100">
+<span class="text-[10px] font-headline text-stone-400 uppercase tracking-widest font-bold">Showing 1-5 of 142 Auteurs</span>
+<div class="flex gap-2">
+<button class="p-2 hover:bg-stone-200 rounded-lg text-stone-400 disabled:opacity-30 transition-colors" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="p-2 hover:bg-stone-200 rounded-lg text-stone-600 transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Spotlight Card -->
+<section class="mt-16">
+<h3 class="font-headline text-2xl font-light mb-8 text-stone-900">Director <span class="text-[#E50914] italic font-bold">Spotlight</span></h3>
+<div class="relative group h-[400px] w-full rounded-2xl overflow-hidden border border-stone-100 shadow-xl">
+<img alt="Cinematic set" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDP43rGymy95mSiZ8CoQvlVjopu9T2lmVJ-HI49mFWa43uJSfBYCh2ZEq0-PzqOnGYrnvnRWZXYcgH3pQWX1kw0kqAokjkaX4E0jhbS_4guHBFSt9V_a1TOfWXTFYwGwp2pJ1EZ950H1YQaxOz_yvFK2s5YvDP6utZx-bBX02FIp7nsefyLU9pXMRrqOLk8XIw0Q2kdoBH4W3aprGzxevrnGsMimgrw6Q-DVk1NXgazkPmJ8s0nyKdTR1hTp_47LnyrwelOym91WDQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-white via-white/20 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-12 w-full flex justify-between items-end">
+<div>
+<span class="bg-[#E50914] text-white text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-widest">Masterclass</span>
+<h4 class="text-4xl font-headline font-black mt-4 text-stone-900">Wes Anderson</h4>
+<p class="text-stone-600 max-w-md mt-2 font-body">Symmetry, pastel palettes, and meticulous framing. Explore the architectural mind of the modern auteur.</p>
+</div>
+<button class="bg-white/90 backdrop-blur-md text-stone-900 border border-stone-200 px-6 py-3 rounded-full font-headline font-bold text-sm flex items-center gap-2 hover:bg-stone-50 transition-all shadow-lg">
+                        View Portfolio <span class="material-symbols-outlined text-sm">arrow_outward</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer Component -->
+<footer class="bg-[#f3f3f3] w-full py-12">
+<div class="flex flex-col md:flex-row justify-between items-center px-12 max-w-7xl mx-auto gap-6">
+<p class="font-body text-xs uppercase tracking-widest text-stone-400">© 2024 Cinematic Director’s Suite. All rights reserved.</p>
+<div class="flex gap-8">
+<a class="font-body text-xs uppercase tracking-widest text-stone-400 hover:text-stone-900 transition-colors" href="#">Privacy Policy</a>
+<a class="font-body text-xs uppercase tracking-widest text-stone-400 hover:text-stone-900 transition-colors" href="#">Terms of Service</a>
+<a class="font-body text-xs uppercase tracking-widest text-stone-400 hover:text-stone-900 transition-colors" href="#">Studio API</a>
+</div>
+</div>
+</footer>
+</div>
+<!-- Mobile Navigation Shell -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-stone-100 flex justify-around items-center z-[100] px-4 shadow-[0_-10px_20px_rgba(0,0,0,0.05)]">
+<a class="flex flex-col items-center gap-1 text-stone-400" href="#">
+<span class="material-symbols-outlined text-xl">dashboard</span>
+<span class="text-[8px] uppercase font-bold">Dash</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-[#E50914]" href="#">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">theater_comedy</span>
+<span class="text-[8px] uppercase font-bold">Directors</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-stone-400" href="#">
+<span class="material-symbols-outlined text-xl">movie</span>
+<span class="text-[8px] uppercase font-bold">Films</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-stone-400" href="#">
+<span class="material-symbols-outlined text-xl">account_circle</span>
+<span class="text-[8px] uppercase font-bold">Profile</span>
+</a>
+</nav>
+</body></html>

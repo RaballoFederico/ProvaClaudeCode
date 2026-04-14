@@ -183,11 +183,18 @@
                 const result = await Auth.login(username, password);
                 
                 if (result.success) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const redirect = urlParams.get('redirect');
+                    if (redirect) {
+                        window.location.href = redirect;
+                        return;
+                    }
+
                     // Redirect based on role
                     if (result.user.ruoli.includes('Admin') || result.user.ruoli.includes('PowerUser')) {
                         window.location.href = 'index.html';
                     } else {
-                        window.location.href = 'proiezioni-pubblico.html';
+                        window.location.href = 'programmazione.html';
                     }
                 } else {
                     throw new Error(result.error || 'Errore durante il login');

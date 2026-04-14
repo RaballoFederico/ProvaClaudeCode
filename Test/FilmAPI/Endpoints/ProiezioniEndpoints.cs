@@ -15,6 +15,7 @@ public static class ProiezioniEndpoints
         await db.Proiezioni.Select(p => new ProiezioneDTO
         {
             Id = p.Id,
+            ShowId = p.ShowId,
             CinemaId = p.CinemaId,
             FilmId = p.FilmId,
             Data = p.Data,
@@ -28,6 +29,7 @@ public static class ProiezioniEndpoints
             return proiezione is null ? Results.NotFound() : Results.Ok(new ProiezioneDTO
             {
                 Id = proiezione.Id,
+                ShowId = proiezione.ShowId,
                 CinemaId = proiezione.CinemaId,
                 FilmId = proiezione.FilmId,
                 Data = proiezione.Data,
@@ -57,6 +59,7 @@ public static class ProiezioniEndpoints
 
             var proiezione = new Proiezione
             {
+                ShowId = dto.ShowId,
                 CinemaId = dto.CinemaId,
                 FilmId = dto.FilmId,
                 Data = dto.Data,
@@ -77,6 +80,7 @@ public static class ProiezioniEndpoints
             return Results.Created($"/proiezioni/{proiezione.Id}", new ProiezioneDTO
             {
                 Id = proiezione.Id,
+                ShowId = proiezione.ShowId,
                 CinemaId = proiezione.CinemaId,
                 FilmId = proiezione.FilmId,
                 Data = proiezione.Data,
@@ -110,6 +114,7 @@ public static class ProiezioniEndpoints
 
             proiezione.CinemaId = dto.CinemaId;
             proiezione.FilmId = dto.FilmId;
+            proiezione.ShowId = dto.ShowId;
             proiezione.Data = dto.Data;
             proiezione.Ora = dto.Ora;
 
@@ -127,6 +132,7 @@ public static class ProiezioniEndpoints
             return Results.Ok(new ProiezioneDTO
             {
                 Id = proiezione.Id,
+                ShowId = proiezione.ShowId,
                 CinemaId = proiezione.CinemaId,
                 FilmId = proiezione.FilmId,
                 Data = proiezione.Data,

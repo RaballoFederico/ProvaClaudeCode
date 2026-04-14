@@ -3,6 +3,7 @@ namespace FilmAPI.DTO;
 public class ProiezioneDTO
 {
     public int Id { get; set; }
+    public int? ShowId { get; set; }
     public int CinemaId { get; set; }
     public int FilmId { get; set; }
     public DateTime Data { get; set; }
@@ -11,6 +12,7 @@ public class ProiezioneDTO
 
 public class ProiezioneCreateDTO
 {
+    public int? ShowId { get; set; }
     public int CinemaId { get; set; }
     public int FilmId { get; set; }
     public DateTime Data { get; set; }
@@ -19,6 +21,7 @@ public class ProiezioneCreateDTO
 
 public class ProiezioneUpdateDTO
 {
+    public int? ShowId { get; set; }
     public int CinemaId { get; set; }
     public int FilmId { get; set; }
     public DateTime Data { get; set; }
