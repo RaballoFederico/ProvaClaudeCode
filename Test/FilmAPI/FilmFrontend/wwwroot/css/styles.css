@@ -378,6 +378,18 @@ a.bg-primary-container {
     gap: 1rem;
 }
 
+.auth-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem 0;
+}
+
+.auth-page .auth-shell {
+    align-items: stretch;
+}
+
 .auth-spotlight {
     border: 1px solid var(--outline);
     border-radius: 1.4rem;
@@ -390,6 +402,18 @@ a.bg-primary-container {
     border-radius: 1.4rem;
     background: color-mix(in srgb, var(--surface) 92%, transparent);
     box-shadow: var(--ring);
+}
+
+.auth-card-compact {
+    width: min(560px, 100%);
+    margin-inline: auto;
+}
+
+@media (max-width: 1023px) {
+    .auth-page {
+        align-items: flex-start;
+        padding: 5.5rem 0 1.25rem;
+    }
 }
 
 @media (min-width: 1024px) {

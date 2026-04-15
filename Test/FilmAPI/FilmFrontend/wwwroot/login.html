@@ -35,13 +35,13 @@
         }
     </script>
 </head>
-<body class="min-h-screen bg-background py-6 md:py-10">
+<body class="auth-page bg-background">
     <button onclick="Theme.toggle()" class="fixed top-4 right-4 p-2.5 rounded-full bg-surface-container-high text-on-surface-variant border border-outline-variant/20 z-30">
         <span id="theme-toggle-icon" data-theme-toggle-icon class="material-symbols-outlined">light_mode</span>
     </button>
 
     <div class="auth-shell mx-auto reveal-up">
-        <section class="auth-spotlight reveal-up delay-1">
+        <section class="auth-spotlight reveal-up delay-1 hidden lg:block">
             <span class="badge-soft mb-5">
                 <span class="material-symbols-outlined text-sm">theaters</span>
                 Area riservata
@@ -64,7 +64,7 @@
             </div>
         </section>
 
-        <section class="auth-card p-6 md:p-8 reveal-up delay-2">
+        <section class="auth-card auth-card-compact p-6 md:p-8 reveal-up delay-2">
             <div class="text-center mb-7">
                 <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-container mb-4 shadow-xl shadow-primary-container/20">
                     <span class="material-symbols-outlined text-3xl text-white">movie</span>
@@ -148,7 +148,7 @@
         </section>
     </div>
 
-    <div class="mt-6 text-center">
+    <div class="mt-5 text-center">
         <a href="home.html" class="text-sm text-on-surface-variant hover:text-on-surface inline-flex items-center justify-center gap-1 transition-colors">
             <span class="material-symbols-outlined text-sm">arrow_back</span>
             Torna alla home

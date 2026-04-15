@@ -53,7 +53,7 @@
                         <option value="">Tutte le categorie</option>
                     </select>
                     <input id="filter-data" type="date" class="bg-surface-container-high border-none rounded-lg text-sm" />
-                    <button id="clear-filters" class="bg-surface-container-high hover:bg-[#3a3a3a] rounded-lg text-sm font-semibold hover-lift">Azzera filtri</button>
+                    <button id="clear-filters" class="bg-surface-container-high hover:bg-surface-container-highest rounded-lg text-sm font-semibold hover-lift">Azzera filtri</button>
                 </div>
             </section>
 
@@ -167,7 +167,7 @@
                         <div class="bg-surface-container-high rounded-lg p-2 hover-lift">
                             <p class="text-sm text-on-surface font-semibold">${escapeHtml(cinema?.nome || 'Cinema')}</p>
                             <p class="text-xs text-on-surface-variant">${Utils.formatDateShort(s.data)} - ${Utils.formatTime(s.ora)}</p>
-                            ${Auth.isAuthenticated() ? `<button onclick="prenota(${s.id})" class="mt-2 w-full py-1.5 bg-primary-container hover:bg-[#c0000c] text-white rounded text-xs hover-lift">Prenota</button>` : ''}
+                            ${Auth.isAuthenticated() ? `<button onclick="prenota(${s.id})" class="mt-2 w-full py-1.5 bg-primary-container hover:bg-primary text-white rounded text-xs hover-lift">Prenota</button>` : ''}
                         </div>
                     `;
                 }).join('');

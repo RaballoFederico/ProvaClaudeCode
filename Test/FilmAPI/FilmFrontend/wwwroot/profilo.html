@@ -48,7 +48,7 @@
             <div class="max-w-6xl mx-auto">
                 <button
                     onclick="if (window.history.length > 1) { window.history.back(); } else { window.location.href = (typeof RouteGuard !== 'undefined' ? RouteGuard.getDefaultRoute() : '/home.html'); }"
-                    class="mb-4 inline-flex md:hidden items-center gap-2 px-3 py-2 text-on-surface-variant hover:text-white hover:bg-surface-container-high rounded-lg transition-colors"
+                    class="mb-4 inline-flex md:hidden items-center gap-2 px-3 py-2 text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high rounded-lg transition-colors"
                     title="Torna indietro"
                 >
                     <span class="material-symbols-outlined">arrow_back</span>
@@ -67,7 +67,7 @@
 
                 <!-- Loading State -->
                 <div id="loading" class="flex items-center justify-center py-20">
-                    <span class="material-symbols-outlined text-4xl animate-spin text-[#e50914]">refresh</span>
+                    <span class="material-symbols-outlined text-4xl animate-spin text-primary-container">refresh</span>
                 </div>
 
                 <!-- Content -->
@@ -129,7 +129,7 @@
 
                 <!-- Error State -->
                 <div id="error" class="hidden text-center py-20">
-                    <span class="material-symbols-outlined text-4xl text-red-400 mb-4">error</span>
+                    <span class="material-symbols-outlined text-4xl text-error mb-4">error</span>
                     <p id="error-text" class="text-on-surface-variant"></p>
                     <button onclick="loadProfile()" class="mt-4 px-4 py-2 bg-primary-container text-white rounded-lg text-sm transition-colors hover-lift">
                         Riprova
@@ -146,8 +146,8 @@
     <div id="edit-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div class="bg-surface-container rounded-2xl p-6 w-full max-w-md border border-outline-variant/20">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-bold text-white">Modifica Profilo</h3>
-                <button id="close-modal" class="text-on-surface-variant hover:text-white">
+                <h3 class="text-xl font-bold text-on-surface">Modifica Profilo</h3>
+                <button id="close-modal" class="text-on-surface-variant hover:text-on-surface">
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
@@ -155,27 +155,27 @@
             <form id="edit-form" class="space-y-4">
                 <div>
                     <label class="block text-sm text-on-surface-variant mb-1">Email *</label>
-                    <input type="email" id="edit-email" required class="w-full px-4 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-white">
+                    <input type="email" id="edit-email" required class="w-full px-4 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-on-surface">
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm text-on-surface-variant mb-1">Nome</label>
-                        <input type="text" id="edit-nome" class="w-full px-4 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-white">
+                        <input type="text" id="edit-nome" class="w-full px-4 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-on-surface">
                     </div>
                     <div>
                         <label class="block text-sm text-on-surface-variant mb-1">Cognome</label>
-                        <input type="text" id="edit-cognome" class="w-full px-4 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-white">
+                        <input type="text" id="edit-cognome" class="w-full px-4 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-on-surface">
                     </div>
                 </div>
                 <div>
                     <label class="block text-sm text-on-surface-variant mb-1">Telefono</label>
-                    <input type="tel" id="edit-telefono" class="w-full px-4 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-white">
+                    <input type="tel" id="edit-telefono" class="w-full px-4 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-on-surface">
                 </div>
 
-                <div id="edit-error" class="hidden text-sm text-red-400 bg-red-400/10 p-3 rounded-lg"></div>
+                <div id="edit-error" class="hidden text-sm text-error bg-error-container/20 p-3 rounded-lg"></div>
 
                 <div class="flex gap-3 mt-6">
-                    <button type="button" id="cancel-edit" class="flex-1 py-2 px-4 border border-outline-variant/30 rounded-lg text-white hover:bg-surface-container-high transition-colors">
+                    <button type="button" id="cancel-edit" class="flex-1 py-2 px-4 border border-outline-variant/30 rounded-lg text-on-surface hover:bg-surface-container-high transition-colors">
                         Annulla
                     </button>
                     <button type="submit" id="save-btn" class="flex-1 py-2 px-4 bg-primary-container text-white rounded-lg transition-colors flex items-center justify-center gap-2 hover-lift">
@@ -191,14 +191,14 @@
     <div id="prenota-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
         <div class="bg-surface-container rounded-2xl p-6 w-full max-w-md border border-outline-variant/20">
             <div class="flex items-center justify-between mb-6">
-                <h3 class="text-xl font-bold text-white">Prenota Posti</h3>
-                <button id="close-prenota-modal" class="text-on-surface-variant hover:text-white">
+                <h3 class="text-xl font-bold text-on-surface">Prenota Posti</h3>
+                <button id="close-prenota-modal" class="text-on-surface-variant hover:text-on-surface">
                     <span class="material-symbols-outlined">close</span>
                 </button>
             </div>
 
             <div id="prenota-info" class="mb-4 p-4 bg-surface-container-high rounded-lg">
-                <p id="prenota-film" class="font-semibold text-white"></p>
+                <p id="prenota-film" class="font-semibold text-on-surface"></p>
                 <p id="prenota-cinema" class="text-sm text-on-surface-variant"></p>
                 <p id="prenota-data" class="text-sm text-on-surface-variant"></p>
             </div>
@@ -206,13 +206,13 @@
             <form id="prenota-form" class="space-y-4">
                 <div>
                     <label class="block text-sm text-on-surface-variant mb-1">Numero di posti *</label>
-                    <input type="number" id="prenota-posti" min="1" max="10" value="1" required class="w-full px-4 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-white">
+                    <input type="number" id="prenota-posti" min="1" max="10" value="1" required class="w-full px-4 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-on-surface">
                 </div>
 
-                <div id="prenota-error" class="hidden text-sm text-red-400 bg-red-400/10 p-3 rounded-lg"></div>
+                <div id="prenota-error" class="hidden text-sm text-error bg-error-container/20 p-3 rounded-lg"></div>
 
                 <div class="flex gap-3 mt-6">
-                    <button type="button" id="cancel-prenota" class="flex-1 py-2 px-4 border border-outline-variant/30 rounded-lg text-white hover:bg-surface-container-high transition-colors">
+                    <button type="button" id="cancel-prenota" class="flex-1 py-2 px-4 border border-outline-variant/30 rounded-lg text-on-surface hover:bg-surface-container-high transition-colors">
                         Annulla
                     </button>
                     <button type="submit" id="prenota-btn" class="flex-1 py-2 px-4 bg-primary-container text-white rounded-lg transition-colors flex items-center justify-center gap-2 hover-lift">
