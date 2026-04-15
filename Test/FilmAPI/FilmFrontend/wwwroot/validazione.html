@@ -15,24 +15,28 @@
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
         <main class="flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
-            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 mb-5">
-                <h1 class="font-headline text-2xl font-bold mb-3">Validazione Biglietti</h1>
+            <section class="hero-banner p-6 md:p-8 mb-5 reveal-up">
+                <span class="badge-soft mb-3">
+                    <span class="material-symbols-outlined text-sm">qr_code_scanner</span>
+                    Checkpoint accessi
+                </span>
+                <h1 class="font-headline text-3xl md:text-5xl font-semibold mb-3">Validazione Biglietti</h1>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <select id="cinema-select" class="bg-surface-container-high rounded-lg border-none"></select>
                     <input id="code-input" type="text" placeholder="Inserisci codice hash" class="bg-surface-container-high rounded-lg border-none" />
-                    <button id="verify-btn" class="px-4 py-2 bg-primary-container text-white rounded-lg">Verifica</button>
+                    <button id="verify-btn" class="px-4 py-2 bg-primary-container text-white rounded-lg hover-lift">Verifica</button>
                 </div>
             </section>
 
-            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 mb-5">
+            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 mb-5 reveal-up delay-1">
                 <div class="flex items-center justify-between mb-3">
                     <h2 class="font-headline text-lg font-bold">Scanner QR</h2>
-                    <button id="scan-toggle" class="px-3 py-2 bg-surface-container-high rounded-lg text-sm">Avvia scanner</button>
+                    <button id="scan-toggle" class="px-3 py-2 bg-surface-container-high rounded-lg text-sm hover-lift">Avvia scanner</button>
                 </div>
                 <div id="qr-reader" class="hidden max-w-md"></div>
             </section>
 
-            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5">
+            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 reveal-up delay-2">
                 <h2 class="font-headline text-lg font-bold mb-3">Risultato</h2>
                 <div id="result-box" class="text-on-surface-variant">Nessuna verifica eseguita.</div>
             </section>

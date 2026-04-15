@@ -42,8 +42,12 @@
     <!-- Main Content -->
     <main class="flex-1 py-8 px-4 md:px-8 lg:px-12 pb-20 md:pb-8">
         <div class="max-w-7xl mx-auto">
-            <div class="text-center mb-8">
-                <h1 class="text-3xl font-black text-on-surface font-['Manrope']">Proiezioni in Programma</h1>
+            <div class="hero-banner p-6 md:p-8 mb-8 text-center reveal-up">
+                <span class="badge-soft mb-3">
+                    <span class="material-symbols-outlined text-sm">movie</span>
+                    Programmazione pubblica
+                </span>
+                <h1 class="text-3xl md:text-5xl font-semibold text-on-surface font-headline">Proiezioni in Programma</h1>
                 <p class="text-on-surface-variant mt-2">Scopri i film in programmazione nelle nostre sale</p>
             </div>
 
@@ -53,7 +57,7 @@
             </div>
 
             <!-- Proiezioni Grid -->
-            <div id="proiezioni-grid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div id="proiezioni-grid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 reveal-up delay-1">
                 <!-- Proiezioni verranno caricate qui -->
             </div>
 
@@ -61,7 +65,7 @@
             <div id="error" class="hidden text-center py-20">
                 <span class="material-symbols-outlined text-4xl text-red-400 mb-4">error</span>
                 <p id="error-text" class="text-on-surface-variant"></p>
-                <button onclick="loadProiezioni()" class="mt-4 px-4 py-2 bg-primary-container hover:bg-[#c0000c] text-white rounded-lg text-sm transition-colors">
+                <button onclick="loadProiezioni()" class="mt-4 px-4 py-2 bg-primary-container hover:bg-[#c0000c] text-white rounded-lg text-sm transition-colors hover-lift">
                     Riprova
                 </button>
             </div>
@@ -152,7 +156,7 @@
                 return;
             }
             
-            grid.innerHTML = filmsToRender.map(film => {
+            grid.innerHTML = filmsToRender.map((film, index) => {
                 const imageUrl = film.copertinaPath || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=600&h=900&fit=crop';
                 const filmProiezioni = proiezioni
                     .filter(p => p.filmId === film.id)
@@ -164,7 +168,7 @@
                 const visibleProiezioni = selectedFilmId ? filmProiezioni : filmProiezioni.slice(0, 3);
                 
                 return `
-                    <div class="bg-surface-container rounded-2xl overflow-hidden border border-outline-variant/20 hover:border-outline-variant/40 transition-all duration-300 hover:transform hover:scale-[1.02]">
+                    <div class="bg-surface-container rounded-2xl overflow-hidden border border-outline-variant/20 hover:border-outline-variant/40 transition-all duration-300 hover:transform hover:scale-[1.02] hover-lift reveal-up" style="animation-delay:${(index % 8) * 0.04}s">
                         <div class="h-52 bg-surface-container-high">
                             <img src="${imageUrl}" alt="${film.titolo}" class="w-full h-full object-cover" loading="lazy" />
                         </div>

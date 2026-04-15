@@ -50,18 +50,24 @@
         <div id="sidebar-container"></div>
         
         <main class="flex-1 p-4 md:p-8 lg:p-12 overflow-x-hidden pb-20 md:pb-0">
-            <header class="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 mb-8 md:mb-12">
-                <div>
-                    <h1 id="films-page-title" class="font-headline text-3xl md:text-5xl font-extrabold tracking-tighter text-on-surface mb-2">Film in Programmazione</h1>
-                    <p id="films-page-subtitle" class="font-body text-on-surface-variant max-w-xl text-sm md:text-base">Esplora il catalogo e scopri dove vedere ogni film.</p>
+            <header class="hero-banner p-6 md:p-8 mb-8 md:mb-10 reveal-up">
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-5 md:gap-6">
+                    <div>
+                        <span class="badge-soft mb-3">
+                            <span class="material-symbols-outlined text-sm">movie_edit</span>
+                            Catalogo film
+                        </span>
+                        <h1 id="films-page-title" class="font-headline text-3xl md:text-5xl font-semibold tracking-tight text-on-surface mb-2">Film in Programmazione</h1>
+                        <p id="films-page-subtitle" class="font-body text-on-surface-variant max-w-2xl text-sm md:text-base">Esplora il catalogo e scopri dove vedere ogni film.</p>
+                    </div>
+                    <button id="new-film-btn" onclick="openCreateModal()" class="noir-gradient text-on-primary-container px-6 md:px-8 py-3 md:py-4 rounded-xl font-headline font-bold flex items-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary-container/10 hover-lift">
+                        <span class="material-symbols-outlined">add</span>
+                        Nuovo Film
+                    </button>
                 </div>
-                <button id="new-film-btn" onclick="openCreateModal()" class="noir-gradient text-on-primary-container px-6 md:px-8 py-3 md:py-4 rounded-xl font-headline font-bold flex items-center gap-2 hover:scale-[1.02] active:scale-95 transition-all shadow-xl shadow-primary-container/10">
-                    <span class="material-symbols-outlined">add</span>
-                    Nuovo Film
-                </button>
             </header>
 
-            <section class="bg-surface-container-low p-4 md:p-6 rounded-xl mb-6 md:mb-8 flex flex-col lg:flex-row items-start lg:items-center gap-4">
+            <section class="bg-surface-container-low p-4 md:p-6 rounded-xl mb-6 md:mb-8 flex flex-col lg:flex-row items-start lg:items-center gap-4 reveal-up delay-1">
                 <div class="flex-1 w-full lg:min-w-[300px] relative">
                     <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant opacity-50">search</span>
                     <input id="search-input" class="w-full bg-surface-container-highest border-none rounded-lg pl-12 pr-4 py-3 text-on-surface focus:ring-1 focus:ring-primary ring-inset placeholder:text-on-surface-variant/40 text-sm" placeholder="Cerca per titolo o ID..." type="text" oninput="filterFilms()">
@@ -88,13 +94,13 @@
                 </div>
             </section>
 
-            <div class="bg-surface-container-low rounded-xl p-4 md:p-6">
+            <div class="bg-surface-container-low rounded-xl p-4 md:p-6 reveal-up delay-2">
                 <div id="films-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-5">
                 </div>
                 <div id="empty-state" class="hidden p-12 text-center">
                     <span class="material-symbols-outlined text-5xl text-on-surface-variant opacity-50">movie_filter</span>
                     <p class="mt-4 text-on-surface-variant text-lg">Nessun film trovato.</p>
-                    <button id="empty-add-film-btn" onclick="openCreateModal()" class="mt-4 px-6 py-3 bg-primary-container text-white rounded-xl font-bold">Aggiungi Film</button>
+                    <button id="empty-add-film-btn" onclick="openCreateModal()" class="mt-4 px-6 py-3 bg-primary-container text-white rounded-xl font-bold hover-lift">Aggiungi Film</button>
                 </div>
                 <div id="pagination-info" class="mt-4 text-center text-xs text-on-surface-variant uppercase tracking-widest"></div>
             </div>
@@ -237,12 +243,12 @@
             grid.classList.remove('hidden');
             paginationInfo.textContent = `${filteredFilms.length} film trovati`;
 
-            grid.innerHTML = filteredFilms.map(film => {
+            grid.innerHTML = filteredFilms.map((film, index) => {
                 const regista = allRegisti.find(r => r.id === film.registaId);
                 const imageUrl = film.copertinaPath || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300&h=450&fit=crop';
                 return `
-                    <div class="group relative">
-                        <div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-surface-container-high cursor-pointer"
+                    <div class="group relative reveal-up" style="animation-delay:${(index % 8) * 0.04}s">
+                        <div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-surface-container-high cursor-pointer hover-lift"
                              onclick="openDetailModal(${film.id})">
                             <img src="${imageUrl}" 
                                  alt="${escapeHtml(film.titolo)}" 

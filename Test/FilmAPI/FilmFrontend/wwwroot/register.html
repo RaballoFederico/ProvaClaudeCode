@@ -33,24 +33,45 @@
         }
     </script>
 </head>
-<body class="min-h-screen flex items-center justify-center bg-background py-8">
-    <button onclick="Theme.toggle()" class="fixed top-4 right-4 p-2 rounded-full bg-surface-container-high text-on-surface-variant border border-outline-variant/20">
+<body class="min-h-screen bg-background py-6 md:py-10">
+    <button onclick="Theme.toggle()" class="fixed top-4 right-4 p-2.5 rounded-full bg-surface-container-high text-on-surface-variant border border-outline-variant/20 z-30">
         <span id="theme-toggle-icon" data-theme-toggle-icon class="material-symbols-outlined">light_mode</span>
     </button>
-    <div class="w-full max-w-md mx-4">
-        <!-- Logo e Titolo -->
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#e50914] mb-4">
-                <span class="material-symbols-outlined text-3xl text-white">movie</span>
-            </div>
-            <h1 class="text-2xl font-black text-on-surface font-['Manrope'] tracking-tight">FilmAPI</h1>
-            <p class="text-sm text-on-surface-variant mt-1">Crea il tuo account</p>
-        </div>
 
-        <!-- Form Registrazione -->
-        <div class="bg-surface-container rounded-2xl p-8 shadow-2xl border border-outline-variant/20">
+    <div class="auth-shell mx-auto reveal-up">
+        <section class="auth-spotlight reveal-up delay-1">
+            <span class="badge-soft mb-5">
+                <span class="material-symbols-outlined text-sm">person_add</span>
+                Nuovo account
+            </span>
+            <h2 class="font-headline text-3xl md:text-4xl text-on-surface">Crea il tuo spazio FilmHub</h2>
+            <p class="mt-3 text-sm md:text-base text-on-surface-variant">Registrati per acquistare biglietti, salvare proiezioni e gestire il catalogo se sei nel team.</p>
+            <div class="mt-6 space-y-3 text-sm text-on-surface-variant">
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary-container text-base">task_alt</span>
+                    Registrazione veloce in pochi passaggi.
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary-container text-base">auto_stories</span>
+                    Storico prenotazioni sempre a portata di mano.
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="material-symbols-outlined text-primary-container text-base">security</span>
+                    Password con validazione forte.
+                </div>
+            </div>
+        </section>
+
+        <section class="auth-card p-6 md:p-8 reveal-up delay-2">
+            <div class="text-center mb-7">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-container mb-4 shadow-xl shadow-primary-container/20">
+                    <span class="material-symbols-outlined text-3xl text-white">movie</span>
+                </div>
+                <h1 class="font-headline text-3xl text-on-surface tracking-tight">Registrazione</h1>
+                <p class="text-sm text-on-surface-variant mt-1">Crea il tuo account personale</p>
+            </div>
+
             <form id="register-form" class="space-y-5">
-                <!-- Username -->
                 <div>
                     <label for="username" class="block text-sm font-medium text-on-surface-variant mb-2">
                         Username *
@@ -65,14 +86,13 @@
                             name="username" 
                             required
                             minlength="3"
-                            class="w-full pl-10 pr-4 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-[#e50914] focus:ring-1 focus:ring-[#e50914] transition-all duration-200"
+                            class="w-full pl-10 pr-4 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all duration-200"
                             placeholder="Scegli un username"
                         >
                     </div>
                     <p class="text-xs text-on-surface-variant/60 mt-1">Almeno 3 caratteri</p>
                 </div>
 
-                <!-- Email -->
                 <div>
                     <label for="email" class="block text-sm font-medium text-on-surface-variant mb-2">
                         Email *
@@ -86,13 +106,12 @@
                             id="email" 
                             name="email" 
                             required
-                            class="w-full pl-10 pr-4 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-[#e50914] focus:ring-1 focus:ring-[#e50914] transition-all duration-200"
+                            class="w-full pl-10 pr-4 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all duration-200"
                             placeholder="Inserisci la tua email"
                         >
                     </div>
                 </div>
 
-                <!-- Password -->
                 <div>
                     <label for="password" class="block text-sm font-medium text-on-surface-variant mb-2">
                         Password *
@@ -107,7 +126,7 @@
                             name="password" 
                             required
                             minlength="8"
-                            class="w-full pl-10 pr-12 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-[#e50914] focus:ring-1 focus:ring-[#e50914] transition-all duration-200"
+                            class="w-full pl-10 pr-12 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all duration-200"
                             placeholder="Crea una password"
                         >
                         <button type="button" class="toggle-password absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface" data-target="password">
@@ -122,7 +141,6 @@
                     </ul>
                 </div>
 
-                <!-- Confirm Password -->
                 <div>
                     <label for="confirm-password" class="block text-sm font-medium text-on-surface-variant mb-2">
                         Conferma Password *
@@ -136,7 +154,7 @@
                             id="confirm-password" 
                             name="confirm-password" 
                             required
-                            class="w-full pl-10 pr-12 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-[#e50914] focus:ring-1 focus:ring-[#e50914] transition-all duration-200"
+                            class="w-full pl-10 pr-12 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all duration-200"
                             placeholder="Conferma la password"
                         >
                         <button type="button" class="toggle-password absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface" data-target="confirm-password">
@@ -145,7 +163,6 @@
                     </div>
                 </div>
 
-                <!-- Nome e Cognome -->
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label for="nome" class="block text-sm font-medium text-on-surface-variant mb-2">
@@ -155,7 +172,7 @@
                             type="text" 
                             id="nome" 
                             name="nome"
-                            class="w-full px-4 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-[#e50914] focus:ring-1 focus:ring-[#e50914] transition-all duration-200"
+                            class="w-full px-4 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all duration-200"
                             placeholder="Nome"
                         >
                     </div>
@@ -167,13 +184,12 @@
                             type="text" 
                             id="cognome" 
                             name="cognome"
-                            class="w-full px-4 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-[#e50914] focus:ring-1 focus:ring-[#e50914] transition-all duration-200"
+                            class="w-full px-4 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all duration-200"
                             placeholder="Cognome"
                         >
                     </div>
                 </div>
 
-                <!-- Telefono -->
                 <div>
                     <label for="telefono" class="block text-sm font-medium text-on-surface-variant mb-2">
                         Telefono
@@ -186,36 +202,32 @@
                             type="tel" 
                             id="telefono" 
                             name="telefono"
-                            class="w-full pl-10 pr-4 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-[#e50914] focus:ring-1 focus:ring-[#e50914] transition-all duration-200"
+                            class="w-full pl-10 pr-4 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all duration-200"
                             placeholder="Inserisci il tuo numero di telefono"
                         >
                     </div>
                 </div>
 
-                <!-- Error Message -->
                 <div id="error-message" class="hidden text-sm text-red-400 bg-red-400/10 p-3 rounded-lg">
                     <span class="material-symbols-outlined text-sm align-middle mr-1">error</span>
                     <span id="error-text"></span>
                 </div>
 
-                <!-- Success Message -->
                 <div id="success-message" class="hidden text-sm text-green-400 bg-green-400/10 p-3 rounded-lg">
                     <span class="material-symbols-outlined text-sm align-middle mr-1">check_circle</span>
                     <span id="success-text"></span>
                 </div>
 
-                <!-- Submit Button -->
                 <button 
                     type="submit" 
                     id="register-btn"
-                    class="w-full py-3 px-4 bg-[#e50914] hover:bg-[#c0000c] text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="w-full py-3 px-4 bg-primary-container text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 hover-lift disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <span id="btn-text">Registrati</span>
                     <span id="btn-loading" class="material-symbols-outlined animate-spin hidden">refresh</span>
                 </button>
             </form>
 
-            <!-- Divider -->
             <div class="relative my-6">
                 <div class="absolute inset-0 flex items-center">
                     <div class="w-full border-t border-outline-variant/30"></div>
@@ -225,22 +237,20 @@
                 </div>
             </div>
 
-            <!-- Login Link -->
             <p class="text-center text-sm text-on-surface-variant">
                 Hai già un account? 
-                <a href="login.html" class="text-[#e50914] hover:text-[#c0000c] font-medium transition-colors">
+                <a href="login.html" class="text-primary-container hover:opacity-80 font-medium transition-opacity">
                     Accedi
                 </a>
             </p>
-        </div>
+        </section>
+    </div>
 
-        <!-- Back Link -->
-        <div class="mt-6 text-center">
-            <a href="home.html" class="text-sm text-on-surface-variant hover:text-on-surface flex items-center justify-center gap-1 transition-colors">
-                <span class="material-symbols-outlined text-sm">arrow_back</span>
-                Torna alla home
-            </a>
-        </div>
+    <div class="mt-6 text-center">
+        <a href="home.html" class="text-sm text-on-surface-variant hover:text-on-surface inline-flex items-center justify-center gap-1 transition-colors">
+            <span class="material-symbols-outlined text-sm">arrow_back</span>
+            Torna alla home
+        </a>
     </div>
 
     <script src="js/theme.js"></script>

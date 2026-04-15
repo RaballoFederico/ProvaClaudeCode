@@ -14,15 +14,24 @@
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
         <main class="flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
-            <section class="mb-6">
-                <h1 class="font-headline text-3xl md:text-4xl font-bold">Gestione Sale</h1>
-                <div class="mt-3 flex flex-col md:flex-row gap-3">
-                    <select id="cinema-select" class="bg-surface-container-high rounded-lg border-none"></select>
-                    <button id="add-sala-btn" class="px-4 py-2 bg-primary-container text-white rounded-lg">Aggiungi Sala</button>
+            <section class="hero-banner p-6 md:p-8 mb-6 reveal-up">
+                <div class="flex flex-col gap-4">
+                    <div>
+                        <span class="badge-soft mb-3">
+                            <span class="material-symbols-outlined text-sm">meeting_room</span>
+                            Gestione sale
+                        </span>
+                        <h1 class="font-headline text-3xl md:text-5xl font-semibold">Gestione Sale</h1>
+                        <p class="text-on-surface-variant mt-2">Configura sale, capienza e tipologia per ogni cinema della rete.</p>
+                    </div>
+                    <div class="mt-1 flex flex-col md:flex-row gap-3">
+                        <select id="cinema-select" class="bg-surface-container-high rounded-lg border-none"></select>
+                        <button id="add-sala-btn" class="px-4 py-2 bg-primary-container text-white rounded-lg hover-lift">Aggiungi Sala</button>
+                    </div>
                 </div>
             </section>
 
-            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 overflow-auto">
+            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 overflow-auto reveal-up delay-1">
                 <table class="w-full min-w-[760px]">
                     <thead class="bg-surface-container-high text-left text-xs uppercase text-on-surface-variant">
                         <tr>
@@ -42,7 +51,7 @@
     <div id="footer-container"></div>
 
     <div id="sale-modal" class="hidden fixed inset-0 bg-black/60 z-50 p-4">
-        <div class="max-w-2xl mx-auto bg-surface-container rounded-2xl p-5 border border-outline-variant/20">
+        <div class="max-w-2xl mx-auto bg-surface-container rounded-2xl p-5 border border-outline-variant/20 reveal-up">
             <div class="flex items-center justify-between mb-4">
                 <h2 id="modal-title" class="font-headline text-xl font-bold">Nuova Sala</h2>
                 <button onclick="toggleModal(false)" class="p-2 rounded-lg hover:bg-surface-container-high"><span class="material-symbols-outlined">close</span></button>
@@ -133,15 +142,15 @@
             }
 
             tb.innerHTML = rows.map(r => `
-                <tr class="border-t border-outline-variant/20">
+                <tr class="border-t border-outline-variant/20 hover:bg-surface-container-high/40 transition-colors">
                     <td class="p-3">${r.numeroSala}</td>
                     <td class="p-3">${escapeHtml(r.nome || '-')}</td>
                     <td class="p-3">${escapeHtml(r.tipologia)}</td>
                     <td class="p-3">${r.numeroFile}</td>
                     <td class="p-3">${r.postiTotali}</td>
                     <td class="p-3">
-                        <button onclick="editSala(${r.id})" class="px-2 py-1 bg-surface-container-high rounded text-xs">Modifica</button>
-                        <button onclick="deleteSala(${r.id})" class="px-2 py-1 bg-rose-600/80 rounded text-xs text-white">Elimina</button>
+                        <button onclick="editSala(${r.id})" class="px-2 py-1 bg-surface-container-high rounded text-xs hover-lift">Modifica</button>
+                        <button onclick="deleteSala(${r.id})" class="px-2 py-1 bg-rose-600/80 rounded text-xs text-white hover-lift">Elimina</button>
                     </td>
                 </tr>
             `).join('');

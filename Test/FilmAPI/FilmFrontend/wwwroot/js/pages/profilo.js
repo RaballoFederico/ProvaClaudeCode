@@ -121,7 +121,7 @@ function renderProiezioni() {
         });
         
         return `
-            <div class="bg-surface-container rounded-xl p-4 border border-outline-variant/20 hover:border-outline-variant/40 transition-colors">
+            <div class="bg-surface-container rounded-xl p-4 border border-outline-variant/20 hover:border-outline-variant/40 transition-colors hover-lift reveal-up" style="animation-delay:${(p.id % 8) * 0.03}s">
                 <div class="flex flex-col md:flex-row md:items-center gap-4">
                     <div class="flex-1">
                         <h4 class="font-bold text-on-surface">${p.filmTitolo}</h4>
@@ -149,7 +149,7 @@ function renderProiezioni() {
                             </button>
                         ` : `
                             <button onclick="apriPrenotazione(${p.id}, '${p.filmTitolo}', '${p.cinemaNome}', '${dataFormattata}')" 
-                                class="px-4 py-2 bg-[#e50914] hover:bg-[#c0000c] text-white rounded-lg text-sm transition-colors flex items-center gap-2">
+                                class="px-4 py-2 bg-primary-container text-white rounded-lg text-sm transition-colors flex items-center gap-2 hover-lift">
                                 <span class="material-symbols-outlined text-sm">confirmation_number</span>
                                 Prenota
                             </button>

@@ -38,18 +38,20 @@
         <div id="sidebar-container"></div>
 
         <main class="flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
-            <section class="relative rounded-2xl overflow-hidden border border-outline-variant/30 mb-6">
-                <div class="absolute inset-0 bg-gradient-to-r from-[#de3a1f]/20 via-transparent to-[#efc96c]/10"></div>
+            <section class="hero-banner mb-6 reveal-up">
                 <div class="relative p-6 md:p-8">
-                    <p class="text-xs uppercase tracking-[0.2em] text-on-surface-variant">Programmazione Settimanale</p>
-                    <h1 class="font-headline text-3xl md:text-5xl font-extrabold mt-2">Scegli il tuo cinema, trova il film</h1>
+                    <span class="badge-soft mb-3">
+                        <span class="material-symbols-outlined text-sm">event</span>
+                        Programmazione settimanale
+                    </span>
+                    <h1 class="font-headline text-3xl md:text-5xl font-semibold mt-2">Scegli il tuo cinema, trova il film</h1>
                     <p class="text-on-surface-variant mt-3 max-w-2xl">Filtra per categoria, cerca un titolo e verifica subito se il film e presente nel tuo cinema.</p>
                 </div>
             </section>
 
-            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-4 md:p-5 mb-6">
+            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-4 md:p-5 mb-6 reveal-up delay-1">
                 <div class="flex flex-col md:flex-row md:items-center gap-3 mb-4">
-                    <button id="open-cinema-modal" class="px-4 py-2 rounded-lg bg-primary-container text-white text-sm font-semibold hover:opacity-90 transition">Seleziona Cinema</button>
+                    <button id="open-cinema-modal" class="px-4 py-2 rounded-lg bg-primary-container text-white text-sm font-semibold hover:opacity-90 transition hover-lift">Seleziona Cinema</button>
                     <div class="text-sm text-on-surface-variant">Cinema attuale: <span id="selected-cinema-label" class="text-on-surface font-semibold">Nessuno</span></div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -74,7 +76,7 @@
                 </div>
             </section>
 
-            <section>
+            <section class="reveal-up delay-2">
                 <div id="films-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"></div>
                 <div id="empty-state" class="hidden text-center py-12 text-on-surface-variant">Nessun film trovato con i filtri selezionati.</div>
             </section>
@@ -84,13 +86,13 @@
     <div id="footer-container"></div>
 
     <div id="cinema-modal" class="hidden fixed inset-0 bg-black/60 z-50 p-4 md:p-8">
-        <div class="max-w-3xl mx-auto bg-surface-container rounded-2xl border border-outline-variant/20 p-5 md:p-6">
+        <div class="max-w-3xl mx-auto bg-surface-container rounded-2xl border border-outline-variant/20 p-5 md:p-6 reveal-up">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="font-headline text-2xl font-bold">Seleziona il tuo cinema</h2>
                 <button id="close-cinema-modal" class="p-2 rounded-lg hover:bg-surface-container-high"><span class="material-symbols-outlined">close</span></button>
             </div>
             <div class="flex gap-2 mb-4">
-                <button id="geo-btn" class="px-3 py-2 bg-surface-container-high rounded-lg text-sm">Ordina per distanza</button>
+                <button id="geo-btn" class="px-3 py-2 bg-surface-container-high rounded-lg text-sm hover-lift">Ordina per distanza</button>
                 <input id="cinema-search" type="text" placeholder="Cerca citta o nome cinema" class="flex-1 bg-surface-container-high border-none rounded-lg text-sm" />
             </div>
             <div id="cinema-list" class="space-y-2 max-h-[60vh] overflow-auto"></div>
@@ -213,10 +215,10 @@
             }
 
             empty.classList.add('hidden');
-            grid.innerHTML = items.map(f => {
+            grid.innerHTML = items.map((f, index) => {
                 const inCinema = selectedCinema ? !!f.inSelectedCinema : false;
                 return `
-                    <article class="bg-surface-container rounded-xl border border-outline-variant/20 overflow-hidden hover:border-outline-variant/40 transition cursor-pointer" onclick="openFilm(${f.id})">
+                    <article class="bg-surface-container rounded-xl border border-outline-variant/20 overflow-hidden hover:border-outline-variant/40 transition cursor-pointer hover-lift reveal-up" style="animation-delay:${(index % 8) * 0.04}s" onclick="openFilm(${f.id})">
                         <div class="h-56 bg-surface-container-high">
                             <img src="${escapeHtml(f.copertinaPath || '')}" alt="${escapeHtml(f.titolo)}" class="w-full h-full object-cover" loading="lazy" onerror="this.style.display='none'" />
                         </div>
@@ -250,13 +252,13 @@
                     ? calcKm(currentPosition.lat, currentPosition.lng, c.latitudine, c.longitudine).toFixed(1)
                     : null;
                 return `
-                    <div class="bg-surface-container-high rounded-lg p-3 flex items-center justify-between gap-3">
+                    <div class="bg-surface-container-high rounded-lg p-3 flex items-center justify-between gap-3 hover-lift">
                         <div>
                             <div class="font-semibold">${escapeHtml(c.nome)}</div>
                             <div class="text-xs text-on-surface-variant">${escapeHtml(c.citta)} - ${escapeHtml(c.indirizzo)}</div>
                             ${distance ? `<div class="text-xs text-secondary mt-1">${distance} km</div>` : ''}
                         </div>
-                        <button onclick="selectCinema(${c.id})" class="px-3 py-2 rounded-lg bg-primary-container text-white text-sm">Seleziona</button>
+                        <button onclick="selectCinema(${c.id})" class="px-3 py-2 rounded-lg bg-primary-container text-white text-sm hover-lift">Seleziona</button>
                     </div>
                 `;
             }).join('');

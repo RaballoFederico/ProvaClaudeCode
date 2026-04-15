@@ -50,29 +50,33 @@
         <div id="sidebar-container"></div>
         
         <main class="flex-1 p-4 md:p-8 lg:p-12 overflow-x-hidden pb-20 md:pb-0">
-            <section class="space-y-2 mb-8 md:mb-12">
-                <h2 class="text-3xl md:text-5xl font-extralight font-headline tracking-tight text-white">Controllo Operazioni</h2>
-                <p class="text-secondary tracking-widest uppercase text-xs font-label opacity-80">Gestione Infrastruttura e Programmazione</p>
+            <section class="hero-banner p-6 md:p-8 mb-8 md:mb-10 reveal-up">
+                <span class="badge-soft mb-3">
+                    <span class="material-symbols-outlined text-sm">theaters</span>
+                    Network cinema
+                </span>
+                <h2 class="text-3xl md:text-5xl font-semibold font-headline tracking-tight text-on-surface">Controllo Operazioni</h2>
+                <p class="text-on-surface-variant tracking-wide text-sm mt-2">Gestione infrastruttura, sedi e capienza dell'intera rete.</p>
             </section>
 
-            <section class="space-y-6">
+            <section class="space-y-6 reveal-up delay-1">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                     <div class="space-y-1">
-                        <h3 class="text-xl md:text-2xl font-headline text-white">Inventario Cinema</h3>
+                        <h3 class="text-xl md:text-2xl font-headline text-on-surface">Inventario Cinema</h3>
                         <p class="text-on-surface-variant text-sm font-body">Gestione della rete cinematografica e localizzazione.</p>
                     </div>
-                    <button id="new-cinema-btn" onclick="openCreateModal()" class="bg-primary-container text-on-primary-container px-4 md:px-6 py-2 md:py-3 rounded-xl font-headline font-bold text-sm flex items-center gap-2 hover:scale-95 transition-all duration-150 shadow-lg shadow-primary-container/20">
+                    <button id="new-cinema-btn" onclick="openCreateModal()" class="bg-primary-container text-on-primary-container px-4 md:px-6 py-2 md:py-3 rounded-xl font-headline font-bold text-sm flex items-center gap-2 hover:scale-95 transition-all duration-150 shadow-lg shadow-primary-container/20 hover-lift">
                         <span class="material-symbols-outlined">add_location</span>
                         Nuovo Cinema
                     </button>
                 </div>
 
-                <div id="cinemas-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div id="cinemas-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 reveal-up delay-2">
                 </div>
                 <div id="empty-state" class="hidden bg-surface-container-low rounded-xl p-12 text-center">
                     <span class="material-symbols-outlined text-5xl text-on-surface-variant opacity-50">theaters</span>
                     <p class="mt-4 text-on-surface-variant text-lg">Nessun cinema trovato.</p>
-                    <button id="empty-add-cinema-btn" onclick="openCreateModal()" class="mt-4 px-6 py-3 bg-primary-container text-white rounded-xl font-bold">Aggiungi Cinema</button>
+                    <button id="empty-add-cinema-btn" onclick="openCreateModal()" class="mt-4 px-6 py-3 bg-primary-container text-white rounded-xl font-bold hover-lift">Aggiungi Cinema</button>
                 </div>
                 <div id="pagination-info" class="mt-4 text-center text-xs text-on-surface-variant uppercase tracking-widest"></div>
             </section>
@@ -142,7 +146,8 @@
             grid.innerHTML = currentCinemas.map((cinema, index) => {
                 const icon = icons[index % icons.length];
                 return `
-                    <article class="group relative bg-surface-container-low rounded-xl overflow-hidden border border-outline-variant/10 hover:border-primary-container/30 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer"
+                    <article class="group relative bg-surface-container-low rounded-xl overflow-hidden border border-outline-variant/10 hover:border-primary-container/30 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer hover-lift reveal-up"
+                             style="animation-delay:${(index % 8) * 0.04}s"
                              onclick="openDetailModal(${cinema.id})">
                         <div class="relative h-24 bg-gradient-to-br from-surface-container-high to-surface-container flex items-center justify-center">
                             <span class="material-symbols-outlined text-6xl md:text-7xl text-primary-container/40">${icon}</span>

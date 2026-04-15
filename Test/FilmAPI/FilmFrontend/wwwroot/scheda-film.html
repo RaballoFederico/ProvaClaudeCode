@@ -37,9 +37,9 @@
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
         <main class="flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
-            <section id="film-header" class="rounded-2xl overflow-hidden border border-outline-variant/30 mb-6"></section>
+            <section id="film-header" class="rounded-2xl overflow-hidden border border-outline-variant/30 mb-6 reveal-up"></section>
 
-            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 mb-6">
+            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 mb-6 reveal-up delay-1">
                 <div class="text-sm text-on-surface-variant mb-3">Seleziona data</div>
                 <div class="flex items-center gap-2">
                     <button id="prev-days" class="p-2 rounded-lg bg-surface-container-high"><span class="material-symbols-outlined">chevron_left</span></button>
@@ -48,7 +48,7 @@
                 </div>
             </section>
 
-            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5">
+            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 reveal-up delay-2">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="font-headline text-xl font-bold">Show nel tuo cinema</h2>
                     <a href="programmazione.html" class="text-sm text-primary-container hover:underline">Cambia cinema</a>
@@ -117,6 +117,7 @@
                     <div class="absolute inset-0 bg-cover bg-center" style="background-image:url('${escapeHtml(cover)}')"></div>
                     <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-black/30"></div>
                     <div class="relative p-6 md:p-8 flex flex-col justify-end min-h-[300px] md:min-h-[360px]">
+                        <span class="badge-soft w-fit mb-3">Scheda film</span>
                         <h1 class="font-headline text-3xl md:text-5xl font-extrabold">${escapeHtml(currentFilm.titolo)}</h1>
                         <div class="mt-3 text-sm text-white/80">Durata: ${currentFilm.durata || '-'} min${currentFilm.genere ? ' | Genere: ' + escapeHtml(currentFilm.genere) : ''}${currentFilm.dataRilascio ? ' | Data rilascio: ' + new Date(currentFilm.dataRilascio).toLocaleDateString('it-IT') : ''}</div>
                         <p class="mt-4 max-w-3xl text-sm md:text-base text-white/90">${escapeHtml(currentFilm.descrizione || 'Descrizione non disponibile')}</p>

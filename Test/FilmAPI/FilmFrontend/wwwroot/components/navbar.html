@@ -1,118 +1,130 @@
-<header id="navbar" class="flex justify-between items-center w-full px-4 md:px-8 py-4 bg-[#1C1B1B] sticky top-0 z-50">
-    <div class="flex items-center gap-2 md:gap-4">
-        <button id="mobile-menu-toggle" class="md:hidden p-2 text-on-surface-variant hover:bg-[#2A2A2A] rounded-lg">
-            <span class="material-symbols-outlined">menu</span>
-        </button>
-        <button id="nav-back-btn" onclick="if (window.history.length > 1) { window.history.back(); } else { window.location.href = 'home.html'; }" class="p-2 text-on-surface-variant hover:bg-[#2A2A2A] rounded-lg" title="Torna indietro">
-            <span class="material-symbols-outlined">arrow_back</span>
-        </button>
-        <a href="home.html" class="text-xl md:text-2xl font-black text-[#E50914] tracking-tighter uppercase font-['Manrope']">FilmAPI</a>
-    </div>
-    <div class="flex items-center gap-4 md:gap-6">
-        <div class="hidden lg:flex items-center bg-[#2A2A2A] rounded-full px-4 py-1.5 gap-3">
-            <span class="material-symbols-outlined text-on-surface-variant text-sm">search</span>
-            <input class="bg-transparent border-none focus:ring-0 text-sm text-on-surface w-48 placeholder:text-on-surface-variant/50" placeholder="Cerca..." type="text"/>
+<header id="navbar" class="sticky top-0 z-50 px-3 md:px-6 py-3 bg-surface-container border-b border-outline-variant/20 backdrop-blur-lg">
+    <div class="max-w-[1500px] mx-auto flex items-center justify-between gap-3 md:gap-6">
+        <div class="flex items-center gap-2 md:gap-3 min-w-0">
+            <button id="mobile-menu-toggle" class="md:hidden p-2 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-colors" aria-label="Apri menu">
+                <span class="material-symbols-outlined">menu</span>
+            </button>
+            <button id="nav-back-btn" onclick="if (window.history.length > 1) { window.history.back(); } else { window.location.href = 'home.html'; }" class="p-2 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-colors" title="Torna indietro">
+                <span class="material-symbols-outlined">arrow_back</span>
+            </button>
+            <a href="home.html" class="font-headline text-2xl md:text-3xl font-semibold tracking-tight text-on-surface truncate">
+                Film<span class="text-primary-container">Hub</span>
+            </a>
         </div>
-        <div id="nav-auth-section" class="flex items-center gap-2 md:gap-4">
-            <!-- Contenuto dinamico: login/registrazione o dati utente -->
+
+        <div class="hidden lg:flex items-center gap-3 bg-surface-container-high rounded-full px-4 py-2 border border-outline-variant/20 min-w-[320px] max-w-[440px] w-full">
+            <span class="material-symbols-outlined text-on-surface-variant text-base">search</span>
+            <input class="bg-transparent border-none focus:ring-0 w-full text-sm text-on-surface placeholder:text-on-surface-variant/60" placeholder="Cerca pagina, film, cinema..." type="text" />
+            <span class="text-[10px] uppercase tracking-widest text-on-surface-variant">Ctrl K</span>
         </div>
-        <button onclick="window.Theme && Theme.toggle()" class="p-2 text-on-surface-variant hover:bg-[#2A2A2A] rounded-full transition-all duration-300" title="Cambia tema">
-            <span id="theme-toggle-icon" data-theme-toggle-icon class="material-symbols-outlined">light_mode</span>
-        </button>
+
+        <div class="flex items-center gap-2 md:gap-3 shrink-0">
+            <button onclick="window.Theme && Theme.toggle()" class="p-2.5 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors" title="Cambia tema">
+                <span id="theme-toggle-icon" data-theme-toggle-icon class="material-symbols-outlined">light_mode</span>
+            </button>
+            <div id="nav-auth-section" class="flex items-center gap-2 md:gap-3"></div>
+        </div>
     </div>
 </header>
 
 <script>
-    // Aggiorna navbar in base allo stato di autenticazione
     function updateNavbar() {
         const navAuthSection = document.getElementById('nav-auth-section');
         if (!navAuthSection) return;
-        
+
         if (typeof Auth !== 'undefined' && Auth.isAuthenticated()) {
             const user = Auth.getUser();
-            const initials = (user.nome?.[0] || '') + (user.cognome?.[0] || '') || user.username[0].toUpperCase();
+            const initials = ((user.nome?.[0] || '') + (user.cognome?.[0] || '') || user.username[0]).toUpperCase();
             const fullName = user.nome && user.cognome ? `${user.nome} ${user.cognome}` : user.username;
             const isManager = user.ruoli && (user.ruoli.includes('Admin') || user.ruoli.includes('PowerUser'));
             const isAdmin = user.ruoli && user.ruoli.includes('Admin');
-            
+
             navAuthSection.innerHTML = `
-                <button class="p-2 text-on-surface-variant hover:bg-[#2A2A2A] rounded-full transition-all duration-300">
+                <button class="hidden md:inline-flex p-2.5 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors" title="Notifiche">
                     <span class="material-symbols-outlined">notifications</span>
                 </button>
                 <div class="relative">
-                    <button id="nav-user-toggle" class="flex items-center gap-2 p-1 pr-3 rounded-full hover:bg-[#2A2A2A] transition-all duration-300">
-                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-[#e50914] to-[#c0000c] flex items-center justify-center text-white font-bold text-sm">
-                            ${initials.toUpperCase()}
-                        </div>
-                        <span class="hidden md:block text-sm text-on-surface">${fullName}</span>
-                        <span class="material-symbols-outlined text-on-surface-variant text-sm">expand_more</span>
+                    <button id="nav-user-toggle" class="flex items-center gap-2 bg-surface-container-high border border-outline-variant/20 rounded-full pl-1.5 pr-3 py-1.5 hover:border-primary-container/40 transition-colors">
+                        <span class="w-9 h-9 rounded-full bg-primary-container text-white text-sm font-bold flex items-center justify-center">${initials}</span>
+                        <span class="hidden md:block max-w-36 truncate text-sm text-on-surface">${fullName}</span>
+                        <span class="material-symbols-outlined text-sm text-on-surface-variant">expand_more</span>
                     </button>
-                    <div id="nav-user-menu" class="hidden absolute right-0 top-full mt-2 w-56 bg-surface-container rounded-xl shadow-xl border border-outline-variant/20 z-50">
-                        <a href="profilo.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high rounded-t-xl transition-colors">
+
+                    <div id="nav-user-menu" class="hidden absolute right-0 top-full mt-2 w-64 bg-surface-container rounded-2xl border border-outline-variant/20 shadow-xl p-1.5 z-50">
+                        <a href="profilo.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
                             <span class="material-symbols-outlined text-sm">person</span>
                             Il mio account
                         </a>
-                        <a href="profilo.html?edit=1" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
+                        <a href="profilo.html?edit=1" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
                             <span class="material-symbols-outlined text-sm">edit</span>
                             Modifica account
                         </a>
-                        <a href="profilo.html#prenotazioni" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
+                        <a href="profilo.html#prenotazioni" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
                             <span class="material-symbols-outlined text-sm">confirmation_number</span>
                             Le mie prenotazioni
                         </a>
-                        <a href="proiezioni-pubblico.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
+                        <a href="user-biglietti.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                            <span class="material-symbols-outlined text-sm">local_activity</span>
+                            I miei biglietti
+                        </a>
+                        <a href="proiezioni-pubblico.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
                             <span class="material-symbols-outlined text-sm">movie</span>
                             Programmazione
                         </a>
-                        <a href="programmazione.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
-                            <span class="material-symbols-outlined text-sm">event</span>
-                            Programmazione
-                        </a>
-                        <a href="my-cinemas.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
+                        <a href="my-cinemas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
                             <span class="material-symbols-outlined text-sm">location_city</span>
-                            I Nostri Cinema
+                            I nostri cinema
                         </a>
-                        <a href="user-biglietti.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
-                            <span class="material-symbols-outlined text-sm">confirmation_number</span>
-                            I miei biglietti
-                        </a>
+
                         ${isManager ? `
-                        <a href="films.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
-                            <span class="material-symbols-outlined text-sm">movie_edit</span>
-                            Gestione Film
-                        </a>
-                        <a href="proiezioni.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
-                            <span class="material-symbols-outlined text-sm">schedule</span>
-                            Gestione Proiezioni
-                        </a>
-                        <a href="shows.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
-                            <span class="material-symbols-outlined text-sm">movie_info</span>
-                            Gestione Show
-                        </a>
-                        <a href="validazione.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
-                            <span class="material-symbols-outlined text-sm">qr_code_scanner</span>
-                            Validazione Biglietti
-                        </a>
-                        <a href="ricarica-credito.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
-                            <span class="material-symbols-outlined text-sm">account_balance_wallet</span>
-                            Ricarica Credito
-                        </a>
-                        <a href="cinemas.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
-                            <span class="material-symbols-outlined text-sm">theaters</span>
-                            Gestione Cinema
-                        </a>
-                        <a href="registi.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
-                            <span class="material-symbols-outlined text-sm">theater_comedy</span>
-                            Gestione Registi
-                        </a>
+                            <div class="h-px bg-outline-variant/20 my-1"></div>
+                            <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">dashboard</span>
+                                Dashboard
+                            </a>
+                            <a href="films.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">movie_edit</span>
+                                Gestione film
+                            </a>
+                            <a href="proiezioni.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">schedule</span>
+                                Gestione proiezioni
+                            </a>
+                            <a href="shows.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">movie_info</span>
+                                Gestione show
+                            </a>
+                            <a href="cinemas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">theaters</span>
+                                Gestione cinema
+                            </a>
+                            <a href="registi.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">theater_comedy</span>
+                                Gestione registi
+                            </a>
+                            <a href="validazione.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">qr_code_scanner</span>
+                                Validazione biglietti
+                            </a>
+                            <a href="ricarica-credito.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">account_balance_wallet</span>
+                                Ricarica credito
+                            </a>
                         ` : ''}
+
                         ${isAdmin ? `
-                        <a href="categorie.html" class="flex items-center gap-3 px-4 py-3 text-sm text-on-surface hover:bg-surface-container-high transition-colors">
-                            <span class="material-symbols-outlined text-sm">category</span>
-                            Categorie
-                        </a>
+                            <a href="sale.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">meeting_room</span>
+                                Gestione sale
+                            </a>
+                            <a href="categorie.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">category</span>
+                                Categorie
+                            </a>
                         ` : ''}
-                        <button onclick="Auth.logout()" class="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-red-400/10 rounded-b-xl transition-colors text-left">
+
+                        <div class="h-px bg-outline-variant/20 my-1"></div>
+                        <button onclick="Auth.logout()" class="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 hover:bg-red-400/10 rounded-xl transition-colors text-left">
                             <span class="material-symbols-outlined text-sm">logout</span>
                             Esci
                         </button>
@@ -122,13 +134,14 @@
         } else {
             navAuthSection.innerHTML = `
                 <a href="login.html" class="text-sm text-on-surface-variant hover:text-on-surface transition-colors">Accedi</a>
-                <a href="register.html" class="px-4 py-2 bg-[#e50914] hover:bg-[#c0000c] text-white rounded-lg text-sm font-medium transition-colors">Registrati</a>
+                <a href="register.html" class="px-4 py-2 rounded-full bg-primary-container text-white text-sm font-medium hover:opacity-90 transition-opacity">Registrati</a>
             `;
         }
     }
-    
+
     function initNavbar() {
         updateNavbar();
+
         const page = window.location.pathname.split('/').pop() || 'home.html';
         const backBtn = document.getElementById('nav-back-btn');
         if (backBtn && page === 'home.html') {
@@ -138,20 +151,19 @@
         const userToggle = document.getElementById('nav-user-toggle');
         const userMenu = document.getElementById('nav-user-menu');
         if (userToggle && userMenu) {
-            userToggle.addEventListener('click', (e) => {
-                e.stopPropagation();
+            userToggle.addEventListener('click', (event) => {
+                event.stopPropagation();
                 userMenu.classList.toggle('hidden');
             });
 
-            document.addEventListener('click', (e) => {
-                if (!userMenu.contains(e.target) && !userToggle.contains(e.target)) {
+            document.addEventListener('click', (event) => {
+                if (!userMenu.contains(event.target) && !userToggle.contains(event.target)) {
                     userMenu.classList.add('hidden');
                 }
             });
         }
     }
 
-    // Inizializza sia con DOMContentLoaded che subito dopo injection componente
     document.addEventListener('DOMContentLoaded', initNavbar);
     initNavbar();
 </script>

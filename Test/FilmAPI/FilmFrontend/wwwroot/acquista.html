@@ -36,7 +36,16 @@
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
         <main class="flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
-            <section class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6">
+            <section class="hero-banner p-6 md:p-8 mb-6 reveal-up">
+                <span class="badge-soft mb-3">
+                    <span class="material-symbols-outlined text-sm">local_activity</span>
+                    Checkout biglietti
+                </span>
+                <h1 class="font-headline text-3xl md:text-5xl font-semibold">Acquista Biglietti</h1>
+                <p class="text-on-surface-variant mt-2">Seleziona i posti e conferma il lock temporaneo prima del pagamento.</p>
+            </section>
+
+            <section class="grid grid-cols-1 xl:grid-cols-3 gap-4 mb-6 reveal-up delay-1">
                 <div class="xl:col-span-1 bg-surface-container rounded-2xl border border-outline-variant/20 p-5">
                     <h1 class="font-headline text-xl font-bold mb-4">Riepilogo</h1>
                     <div id="summary" class="space-y-2 text-sm"></div>
@@ -53,14 +62,14 @@
                 </div>
             </section>
 
-            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5">
+            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 reveal-up delay-2">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
                     <div>
                         <div class="text-sm text-on-surface-variant">Posti selezionati</div>
                         <div id="selected-list" class="text-sm"></div>
                     </div>
                     <div class="text-sm">Timer: <span id="timer" class="font-bold">--:--</span></div>
-                    <button id="continue-btn" class="px-5 py-3 rounded-lg bg-primary-container text-white font-semibold" disabled>Continua</button>
+                    <button id="continue-btn" class="px-5 py-3 rounded-lg bg-primary-container text-white font-semibold hover-lift" disabled>Continua</button>
                 </div>
             </section>
         </main>

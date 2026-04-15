@@ -37,23 +37,27 @@
     <div id="navbar-container"></div>
     <div class="flex flex-1">
         <main class="flex-1 p-4 md:p-8 lg:p-12 pb-20 md:pb-0 max-w-7xl mx-auto w-full">
-            <section class="mb-8">
-                <h1 class="font-headline text-3xl md:text-5xl font-bold text-on-surface">Film Disponibili</h1>
-                <p class="text-on-surface-variant mt-2">Sfoglia i film in sala e guarda le prossime proiezioni.</p>
+            <section class="hero-banner p-6 md:p-9 mb-8 reveal-up">
+                <span class="badge-soft">
+                    <span class="material-symbols-outlined text-sm">local_fire_department</span>
+                    In sala questa settimana
+                </span>
+                <h1 class="font-headline text-4xl md:text-6xl font-semibold text-on-surface mt-4">Film Disponibili</h1>
+                <p class="text-on-surface-variant mt-3 max-w-2xl">Scopri cosa vedere oggi: filtra per genere, data o titolo e prenota in pochi click.</p>
             </section>
 
-            <section class="bg-surface-container-low rounded-xl p-4 md:p-6 border border-outline-variant/20 mb-6">
+            <section class="bg-surface-container-low rounded-xl p-4 md:p-6 border border-outline-variant/20 mb-6 reveal-up delay-1">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                     <input id="search-film" type="text" placeholder="Cerca film..." class="bg-surface-container-high border-none rounded-lg text-sm" />
                     <select id="filter-categoria" class="bg-surface-container-high border-none rounded-lg text-sm">
                         <option value="">Tutte le categorie</option>
                     </select>
                     <input id="filter-data" type="date" class="bg-surface-container-high border-none rounded-lg text-sm" />
-                    <button id="clear-filters" class="bg-surface-container-high hover:bg-[#3a3a3a] rounded-lg text-sm font-semibold">Azzera filtri</button>
+                    <button id="clear-filters" class="bg-surface-container-high hover:bg-[#3a3a3a] rounded-lg text-sm font-semibold hover-lift">Azzera filtri</button>
                 </div>
             </section>
 
-            <section>
+            <section class="reveal-up delay-2">
                 <div id="home-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
                 <div id="home-empty" class="hidden bg-surface-container-low rounded-xl p-10 text-center border border-outline-variant/20">
                     <span class="material-symbols-outlined text-5xl text-on-surface-variant/50">event_busy</span>
@@ -155,21 +159,21 @@
             }
 
             empty.classList.add('hidden');
-            grid.innerHTML = items.map(({ film, screenings }) => {
+            grid.innerHTML = items.map(({ film, screenings }, index) => {
                 const cats = (film.categorie || []).map(c => `<span class="px-2 py-0.5 rounded-full text-[10px] bg-surface-container-high text-secondary">${escapeHtml(c.nome)}</span>`).join('');
                 const preview = screenings.slice(0, 3).map(s => {
                     const cinema = cinemas.find(c => c.id === s.cinemaId);
                     return `
-                        <div class="bg-surface-container-high rounded-lg p-2">
+                        <div class="bg-surface-container-high rounded-lg p-2 hover-lift">
                             <p class="text-sm text-on-surface font-semibold">${escapeHtml(cinema?.nome || 'Cinema')}</p>
                             <p class="text-xs text-on-surface-variant">${Utils.formatDateShort(s.data)} - ${Utils.formatTime(s.ora)}</p>
-                            ${Auth.isAuthenticated() ? `<button onclick="prenota(${s.id})" class="mt-2 w-full py-1.5 bg-primary-container hover:bg-[#c0000c] text-white rounded text-xs">Prenota</button>` : ''}
+                            ${Auth.isAuthenticated() ? `<button onclick="prenota(${s.id})" class="mt-2 w-full py-1.5 bg-primary-container hover:bg-[#c0000c] text-white rounded text-xs hover-lift">Prenota</button>` : ''}
                         </div>
                     `;
                 }).join('');
 
                 return `
-                    <article class="bg-surface-container-low rounded-xl p-4 border border-outline-variant/20">
+                    <article class="bg-surface-container-low rounded-xl p-4 border border-outline-variant/20 hover-lift reveal-up" style="animation-delay:${(index % 6) * 0.05}s">
                         <h3 class="text-lg font-bold text-on-surface">${escapeHtml(film.titolo)}</h3>
                         <div class="flex flex-wrap gap-1 mt-2">${cats}</div>
                         <div class="mt-4 space-y-2">${preview}</div>

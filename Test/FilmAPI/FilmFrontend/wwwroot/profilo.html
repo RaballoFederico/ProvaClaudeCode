@@ -56,9 +56,13 @@
                 </button>
 
                 <!-- Header -->
-                <div class="mb-8">
-                    <h1 class="text-3xl font-black text-white font-['Manrope']">Area Personale</h1>
-                    <p class="text-on-surface-variant mt-2">Gestisci il tuo profilo e le tue proiezioni salvate</p>
+                <div class="hero-banner p-6 md:p-8 mb-8 reveal-up">
+                    <span class="badge-soft mb-3">
+                        <span class="material-symbols-outlined text-sm">person</span>
+                        Account personale
+                    </span>
+                    <h1 class="text-3xl md:text-5xl font-semibold text-on-surface font-headline">Area Personale</h1>
+                    <p class="text-on-surface-variant mt-2">Gestisci profilo, proiezioni salvate e prenotazioni in un'unica dashboard.</p>
                 </div>
 
                 <!-- Loading State -->
@@ -69,9 +73,9 @@
                 <!-- Content -->
                 <div id="content" class="hidden space-y-8">
                     <!-- Profilo Utente -->
-                    <div class="bg-surface-container rounded-2xl p-6 border border-outline-variant/20">
+                    <div class="bg-surface-container rounded-2xl p-6 border border-outline-variant/20 reveal-up delay-1">
                         <div class="flex items-center gap-4 mb-6">
-                            <div class="w-16 h-16 rounded-full bg-gradient-to-br from-[#e50914] to-[#c0000c] flex items-center justify-center">
+                            <div class="w-16 h-16 rounded-full bg-primary-container flex items-center justify-center shadow-lg shadow-primary-container/20">
                                 <span id="user-initials" class="text-2xl font-bold text-white"></span>
                             </div>
                             <div>
@@ -79,7 +83,7 @@
                                 <p id="user-username" class="text-on-surface-variant text-sm"></p>
                                 <div id="user-roles" class="flex gap-2 mt-2"></div>
                             </div>
-                            <button id="edit-profile-btn" class="ml-auto px-4 py-2 bg-[#e50914] hover:bg-[#c0000c] text-white rounded-lg text-sm transition-colors flex items-center gap-2">
+                            <button id="edit-profile-btn" class="ml-auto px-4 py-2 bg-primary-container text-white rounded-lg text-sm transition-colors flex items-center gap-2 hover-lift">
                                 <span class="material-symbols-outlined text-sm">edit</span>
                                 Modifica
                             </button>
@@ -102,10 +106,10 @@
                     </div>
 
                     <!-- Proiezioni Salvate -->
-                    <div>
+                    <div class="reveal-up delay-2">
                         <div class="flex items-center justify-between mb-4">
-                            <h3 class="text-xl font-bold text-white font-['Manrope']">Proiezioni Salvate</h3>
-                            <a href="proiezioni-pubblico.html" class="text-[#e50914] hover:text-[#c0000c] text-sm flex items-center gap-1">
+                            <h3 class="text-xl font-bold text-on-surface font-headline">Proiezioni Salvate</h3>
+                            <a href="proiezioni-pubblico.html" class="text-primary-container hover:opacity-80 text-sm flex items-center gap-1">
                                 <span class="material-symbols-outlined text-sm">add</span>
                                 Scopri proiezioni
                             </a>
@@ -118,7 +122,7 @@
                         <div id="no-proiezioni" class="hidden text-center py-12 bg-surface-container rounded-2xl border border-outline-variant/20">
                             <span class="material-symbols-outlined text-4xl text-on-surface-variant/50 mb-4">movie</span>
                             <p class="text-on-surface-variant">Nessuna proiezione salvata</p>
-                            <a href="proiezioni-pubblico.html" class="text-[#e50914] hover:text-[#c0000c] text-sm mt-2 inline-block">Scopri le proiezioni disponibili</a>
+                            <a href="proiezioni-pubblico.html" class="text-primary-container hover:opacity-80 text-sm mt-2 inline-block">Scopri le proiezioni disponibili</a>
                         </div>
                     </div>
                 </div>
@@ -127,7 +131,7 @@
                 <div id="error" class="hidden text-center py-20">
                     <span class="material-symbols-outlined text-4xl text-red-400 mb-4">error</span>
                     <p id="error-text" class="text-on-surface-variant"></p>
-                    <button onclick="loadProfile()" class="mt-4 px-4 py-2 bg-[#e50914] hover:bg-[#c0000c] text-white rounded-lg text-sm transition-colors">
+                    <button onclick="loadProfile()" class="mt-4 px-4 py-2 bg-primary-container text-white rounded-lg text-sm transition-colors hover-lift">
                         Riprova
                     </button>
                 </div>
@@ -174,7 +178,7 @@
                     <button type="button" id="cancel-edit" class="flex-1 py-2 px-4 border border-outline-variant/30 rounded-lg text-white hover:bg-surface-container-high transition-colors">
                         Annulla
                     </button>
-                    <button type="submit" id="save-btn" class="flex-1 py-2 px-4 bg-[#e50914] hover:bg-[#c0000c] text-white rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <button type="submit" id="save-btn" class="flex-1 py-2 px-4 bg-primary-container text-white rounded-lg transition-colors flex items-center justify-center gap-2 hover-lift">
                         <span id="save-text">Salva</span>
                         <span id="save-loading" class="material-symbols-outlined animate-spin hidden">refresh</span>
                     </button>
@@ -211,7 +215,7 @@
                     <button type="button" id="cancel-prenota" class="flex-1 py-2 px-4 border border-outline-variant/30 rounded-lg text-white hover:bg-surface-container-high transition-colors">
                         Annulla
                     </button>
-                    <button type="submit" id="prenota-btn" class="flex-1 py-2 px-4 bg-[#e50914] hover:bg-[#c0000c] text-white rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <button type="submit" id="prenota-btn" class="flex-1 py-2 px-4 bg-primary-container text-white rounded-lg transition-colors flex items-center justify-center gap-2 hover-lift">
                         <span id="prenota-text">Prenota</span>
                         <span id="prenota-loading" class="material-symbols-outlined animate-spin hidden">refresh</span>
                     </button>

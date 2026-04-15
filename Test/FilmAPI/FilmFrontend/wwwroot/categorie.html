@@ -14,15 +14,21 @@
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
         <main class="flex-1 p-4 md:p-8 lg:p-12 pb-20 md:pb-0">
-            <div class="flex items-end justify-between gap-4 mb-6">
-                <div>
-                    <h1 class="font-headline text-3xl md:text-5xl font-bold text-white">Categorie</h1>
-                    <p class="text-on-surface-variant mt-2">CRUD categorie film (solo admin).</p>
+            <div class="hero-banner p-6 md:p-8 mb-6 reveal-up">
+                <div class="flex items-end justify-between gap-4 flex-col md:flex-row">
+                    <div>
+                        <span class="badge-soft mb-3">
+                            <span class="material-symbols-outlined text-sm">category</span>
+                            Solo admin
+                        </span>
+                        <h1 class="font-headline text-3xl md:text-5xl font-semibold text-on-surface">Categorie</h1>
+                        <p class="text-on-surface-variant mt-2">Gestisci tassonomia film e metadati di classificazione.</p>
+                    </div>
+                    <button onclick="openCreate()" class="px-5 py-3 rounded-xl bg-primary-container text-white font-bold hover-lift">Nuova Categoria</button>
                 </div>
-                <button onclick="openCreate()" class="px-5 py-3 rounded-xl bg-primary-container text-white font-bold">Nuova Categoria</button>
             </div>
 
-            <div id="categorie-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+            <div id="categorie-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 reveal-up delay-1"></div>
         </main>
     </div>
     <div id="footer-container"></div>
@@ -53,13 +59,13 @@
 
         function render() {
             const grid = document.getElementById('categorie-grid');
-            grid.innerHTML = categorie.map(c => `
-                <article class="bg-surface-container-low border border-outline-variant/20 rounded-xl p-4">
+            grid.innerHTML = categorie.map((c, index) => `
+                <article class="bg-surface-container-low border border-outline-variant/20 rounded-xl p-4 hover-lift reveal-up" style="animation-delay:${(index % 8) * 0.04}s">
                     <h3 class="text-lg font-bold text-white">${escapeHtml(c.nome)}</h3>
                     <p class="text-sm text-on-surface-variant mt-1 min-h-10">${escapeHtml(c.descrizione || 'Nessuna descrizione')}</p>
                     <div class="mt-4 flex gap-2 justify-end">
-                        <button onclick="openEdit(${c.id})" class="px-3 py-2 rounded-lg bg-surface-container-high text-sm">Modifica</button>
-                        <button onclick="removeCategoria(${c.id})" class="px-3 py-2 rounded-lg bg-error-container/30 text-error text-sm">Elimina</button>
+                        <button onclick="openEdit(${c.id})" class="px-3 py-2 rounded-lg bg-surface-container-high text-sm hover-lift">Modifica</button>
+                        <button onclick="removeCategoria(${c.id})" class="px-3 py-2 rounded-lg bg-error-container/30 text-error text-sm hover-lift">Elimina</button>
                     </div>
                 </article>
             `).join('');

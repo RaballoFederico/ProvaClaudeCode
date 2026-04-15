@@ -1,119 +1,111 @@
-<aside id="sidebar" class="hidden md:flex flex-col h-screen w-64 left-0 top-0 sticky bg-[#201F1F] py-12 gap-y-4 font-['Manrope'] font-medium text-sm">
-    <div class="px-8 mb-8">
-        <h1 class="text-lg font-bold text-[#E9C176]">FilmAPI</h1>
-        <p class="text-[10px] uppercase tracking-widest text-on-surface-variant opacity-60">Gestione Cinema</p>
-    </div>
-    <nav class="flex-1 flex flex-col gap-y-2">
-        <a href="index.html" data-access="manager" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-            <span class="material-symbols-outlined">tune</span>
-            <span>Dashboard</span>
-        </a>
-        <a href="profilo.html" data-access="auth" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-            <span class="material-symbols-outlined">person</span>
-            <span>Area Personale</span>
-        </a>
-        <a href="proiezioni-pubblico.html" data-access="auth" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-            <span class="material-symbols-outlined">movie</span>
-            <span>Programmazione</span>
-        </a>
-        <a href="programmazione.html" data-access="auth" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-            <span class="material-symbols-outlined">event</span>
-            <span>Programmazione</span>
-        </a>
-        <a href="my-cinemas.html" data-access="public" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-            <span class="material-symbols-outlined">location_city</span>
-            <span>I Nostri Cinema</span>
-        </a>
-        <div class="px-8 py-4" data-access="auth">
-            <p class="text-[10px] uppercase tracking-widest text-on-surface-variant opacity-40">Catalogo</p>
+<div id="sidebar-backdrop" class="fixed inset-0 bg-black/40 z-40 md:hidden"></div>
+
+<aside id="sidebar" class="fixed md:sticky left-0 top-0 h-screen w-[86vw] max-w-[300px] md:w-72 z-50 md:z-30 bg-surface-container border-r border-outline-variant/20 p-4 md:p-5 flex flex-col -translate-x-full md:translate-x-0">
+    <div class="mb-4">
+        <div class="rounded-2xl bg-surface-container-high p-4 border border-outline-variant/20">
+            <p class="text-[10px] uppercase tracking-[0.2em] text-on-surface-variant">Navigazione</p>
+            <h2 class="mt-1 font-headline text-2xl text-on-surface">Film Hub</h2>
+            <p class="text-xs text-on-surface-variant mt-1">Gestione completa del tuo cinema</p>
         </div>
-        <a href="films.html" data-access="auth" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-            <span class="material-symbols-outlined">movie_edit</span>
-            <span>Film</span>
+    </div>
+
+    <nav class="flex-1 overflow-y-auto pr-1 space-y-1.5">
+        <a href="home.html" data-access="public" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-[20px]">home</span>
+            <span>Home</span>
         </a>
-        <a href="cinemas.html" data-access="auth" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-            <span class="material-symbols-outlined">theaters</span>
-            <span>Cinema</span>
+        <a href="my-cinemas.html" data-access="public" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-[20px]">location_city</span>
+            <span>I nostri cinema</span>
         </a>
-        <a href="proiezioni.html" data-access="manager" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-            <span class="material-symbols-outlined">schedule</span>
-            <span>Proiezioni</span>
+        <a href="proiezioni-pubblico.html" data-access="auth" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-[20px]">movie</span>
+            <span>Programmazione</span>
         </a>
-        <a href="shows.html" data-access="manager" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-            <span class="material-symbols-outlined">movie_info</span>
-            <span>Show</span>
+        <a href="programmazione.html" data-access="auth" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-[20px]">event</span>
+            <span>Prenotazioni</span>
         </a>
-        <a href="sale.html" data-access="admin" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-            <span class="material-symbols-outlined">meeting_room</span>
-            <span>Sale</span>
-        </a>
-        <a href="validazione.html" data-access="manager" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-            <span class="material-symbols-outlined">qr_code_scanner</span>
-            <span>Validazione</span>
-        </a>
-        <a href="ricarica-credito.html" data-access="manager" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-            <span class="material-symbols-outlined">account_balance_wallet</span>
-            <span>Ricarica Credito</span>
+        <a href="user-biglietti.html" data-access="auth" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-[20px]">local_activity</span>
+            <span>I miei biglietti</span>
         </a>
 
-        <div id="admin-links" data-access="manager" class="hidden">
-            <div class="px-8 py-4">
-                <p class="text-[10px] uppercase tracking-widest text-on-surface-variant opacity-40">Admin</p>
-            </div>
-            <a href="registi.html" data-access="manager" class="nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-                <span class="material-symbols-outlined">theater_comedy</span>
-                <span>Registi</span>
-            </a>
-            <a href="categorie.html" id="categorie-admin-link" data-access="admin" class="hidden nav-link flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-                <span class="material-symbols-outlined">category</span>
-                <span>Categorie</span>
-            </a>
-        </div>
-    </nav>
-    <div class="mt-auto flex flex-col gap-y-2 px-2 border-t border-outline-variant/15 pt-4">
-        <a href="#" data-access="public" class="flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-            <span class="material-symbols-outlined">help</span>
-            <span>Aiuto</span>
+        <div data-access="auth" class="pt-4 pb-1 px-3 text-[10px] uppercase tracking-[0.2em] text-on-surface-variant">Backoffice</div>
+        <a href="index.html" data-access="manager" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-[20px]">dashboard</span>
+            <span>Dashboard</span>
         </a>
-        <a href="#" id="logout-btn" data-access="auth" class="flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1">
-            <span class="material-symbols-outlined">logout</span>
+        <a href="films.html" data-access="manager" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-[20px]">movie_edit</span>
+            <span>Film</span>
+        </a>
+        <a href="cinemas.html" data-access="manager" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-[20px]">theaters</span>
+            <span>Cinema</span>
+        </a>
+        <a href="proiezioni.html" data-access="manager" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-[20px]">schedule</span>
+            <span>Proiezioni</span>
+        </a>
+        <a href="shows.html" data-access="manager" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-[20px]">movie_info</span>
+            <span>Show</span>
+        </a>
+        <a href="sale.html" data-access="admin" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-[20px]">meeting_room</span>
+            <span>Sale</span>
+        </a>
+        <a href="validazione.html" data-access="manager" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-[20px]">qr_code_scanner</span>
+            <span>Validazione</span>
+        </a>
+        <a href="ricarica-credito.html" data-access="manager" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+            <span>Ricarica credito</span>
+        </a>
+        <a href="registi.html" data-access="manager" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-[20px]">theater_comedy</span>
+            <span>Registi</span>
+        </a>
+        <a href="categorie.html" data-access="admin" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-[20px]">category</span>
+            <span>Categorie</span>
+        </a>
+    </nav>
+
+    <div class="mt-4 pt-4 border-t border-outline-variant/20 space-y-1.5">
+        <a href="profilo.html" data-access="auth" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
+            <span class="material-symbols-outlined text-[20px]">person</span>
+            <span>Profilo</span>
+        </a>
+        <a href="#" id="logout-btn" data-access="auth" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-400/10 transition-colors">
+            <span class="material-symbols-outlined text-[20px]">logout</span>
             <span>Esci</span>
         </a>
     </div>
 </aside>
 
-<nav class="md:hidden fixed bottom-0 left-0 right-0 glass-panel border-t border-outline-variant/10 z-50 flex items-center gap-2 h-16 px-3 overflow-x-auto">
-    <a href="index.html" data-access="manager" class="flex flex-col items-center justify-center min-w-14 gap-1 text-on-surface-variant">
-        <span class="material-symbols-outlined text-2xl">tune</span>
-        <span class="text-[8px] uppercase">Dash</span>
+<nav id="mobile-bottom-nav" class="md:hidden fixed bottom-0 left-0 right-0 z-40 glass-panel border-t border-outline-variant/20 px-2 py-2 grid grid-cols-5 gap-1">
+    <a href="home.html" data-access="public" class="nav-link flex flex-col items-center justify-center gap-1 py-1.5 text-on-surface-variant rounded-lg">
+        <span class="material-symbols-outlined text-[20px]">home</span>
+        <span class="text-[10px]">Home</span>
     </a>
-    <a href="films.html" data-access="auth" class="flex flex-col items-center justify-center min-w-14 gap-1 text-on-surface-variant">
-        <span class="material-symbols-outlined text-2xl">movie_edit</span>
-        <span class="text-[8px] uppercase">Film</span>
+    <a href="programmazione.html" data-access="auth" class="nav-link flex flex-col items-center justify-center gap-1 py-1.5 text-on-surface-variant rounded-lg">
+        <span class="material-symbols-outlined text-[20px]">event</span>
+        <span class="text-[10px]">Prenota</span>
     </a>
-    <a href="cinemas.html" data-access="auth" class="flex flex-col items-center justify-center min-w-14 gap-1 text-on-surface-variant">
-        <span class="material-symbols-outlined text-2xl">theaters</span>
-        <span class="text-[8px] uppercase">Cinema</span>
+    <a href="proiezioni-pubblico.html" data-access="auth" class="nav-link flex flex-col items-center justify-center gap-1 py-1.5 text-on-surface-variant rounded-lg">
+        <span class="material-symbols-outlined text-[20px]">movie</span>
+        <span class="text-[10px]">Film</span>
     </a>
-    <a href="proiezioni.html" data-access="manager" class="flex flex-col items-center justify-center min-w-14 gap-1 text-on-surface-variant">
-        <span class="material-symbols-outlined text-2xl">schedule</span>
-        <span class="text-[8px] uppercase">Proiez.</span>
+    <a href="my-cinemas.html" data-access="public" class="nav-link flex flex-col items-center justify-center gap-1 py-1.5 text-on-surface-variant rounded-lg">
+        <span class="material-symbols-outlined text-[20px]">location_city</span>
+        <span class="text-[10px]">Cinema</span>
     </a>
-    <a href="profilo.html" data-access="auth" class="flex flex-col items-center justify-center min-w-14 gap-1 text-on-surface-variant">
-        <span class="material-symbols-outlined text-2xl">person</span>
-        <span class="text-[8px] uppercase">Profilo</span>
-    </a>
-    <a href="proiezioni-pubblico.html" data-access="auth" class="flex flex-col items-center justify-center min-w-14 gap-1 text-on-surface-variant">
-        <span class="material-symbols-outlined text-2xl">movie</span>
-        <span class="text-[8px] uppercase">Prog.</span>
-    </a>
-    <a href="programmazione.html" data-access="auth" class="flex flex-col items-center justify-center min-w-14 gap-1 text-on-surface-variant">
-        <span class="material-symbols-outlined text-2xl">event</span>
-        <span class="text-[8px] uppercase">Prog</span>
-    </a>
-    <a href="my-cinemas.html" data-access="public" class="flex flex-col items-center justify-center min-w-14 gap-1 text-on-surface-variant">
-        <span class="material-symbols-outlined text-2xl">location_city</span>
-        <span class="text-[8px] uppercase">Cinema</span>
+    <a href="profilo.html" data-access="auth" class="nav-link flex flex-col items-center justify-center gap-1 py-1.5 text-on-surface-variant rounded-lg">
+        <span class="material-symbols-outlined text-[20px]">person</span>
+        <span class="text-[10px]">Profilo</span>
     </a>
 </nav>
 
@@ -127,69 +119,84 @@
         return false;
     }
 
+    function closeSidebarMobile() {
+        const sidebar = document.getElementById('sidebar');
+        const backdrop = document.getElementById('sidebar-backdrop');
+        if (!sidebar || !backdrop) return;
+
+        sidebar.classList.remove('is-open');
+        backdrop.classList.remove('is-open');
+        document.body.classList.remove('sidebar-open');
+    }
+
+    function openSidebarMobile() {
+        const sidebar = document.getElementById('sidebar');
+        const backdrop = document.getElementById('sidebar-backdrop');
+        if (!sidebar || !backdrop) return;
+
+        sidebar.classList.add('is-open');
+        backdrop.classList.add('is-open');
+        document.body.classList.add('sidebar-open');
+    }
+
     function applySidebarAccessControl() {
         const user = (typeof Auth !== 'undefined' && Auth.isAuthenticated()) ? Auth.getUser() : null;
-        document.querySelectorAll('[data-access]').forEach(el => {
-            const rule = el.getAttribute('data-access');
+        document.querySelectorAll('[data-access]').forEach((element) => {
+            const rule = element.getAttribute('data-access');
             const allowed = canAccessSidebar(rule, user);
-            el.classList.toggle('hidden', !allowed);
+            element.classList.toggle('hidden', !allowed);
+        });
+    }
+
+    function applyActiveState() {
+        const currentPath = window.location.pathname.split('/').pop() || 'home.html';
+        document.querySelectorAll('.nav-link').forEach((link) => {
+            if (link.getAttribute('href') === currentPath) {
+                link.classList.add('bg-surface-container-high', 'text-primary-container');
+                link.classList.remove('text-on-surface-variant');
+            }
         });
     }
 
     function initSidebar() {
         applySidebarAccessControl();
+        applyActiveState();
 
-        if (typeof Auth !== 'undefined' && Auth.isAuthenticated()) {
-            const user = Auth.getUser();
-            if (user && user.ruoli) {
-                const isManager = user.ruoli.includes('Admin') || user.ruoli.includes('PowerUser');
-                const adminLinks = document.getElementById('admin-links');
-                if (adminLinks && isManager) {
-                    adminLinks.classList.remove('hidden');
+        const menuToggle = document.getElementById('mobile-menu-toggle');
+        const backdrop = document.getElementById('sidebar-backdrop');
+
+        if (menuToggle) {
+            menuToggle.addEventListener('click', () => {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar && sidebar.classList.contains('is-open')) {
+                    closeSidebarMobile();
+                } else {
+                    openSidebarMobile();
                 }
-                const categorieLink = document.getElementById('categorie-admin-link');
-                if (categorieLink && user.ruoli.includes('Admin')) {
-                    categorieLink.classList.remove('hidden');
-                }
-            }
+            });
         }
 
-        const currentPath = window.location.pathname;
-        document.querySelectorAll('.nav-link').forEach(link => {
-            if (link.getAttribute('href') === currentPath.split('/').pop()) {
-                link.classList.add('text-[#E50914]', 'bg-[#2A2A2A]/50');
-            }
+        if (backdrop) {
+            backdrop.addEventListener('click', closeSidebarMobile);
+        }
+
+        document.querySelectorAll('#sidebar a[href], #mobile-bottom-nav a[href]').forEach((link) => {
+            link.addEventListener('click', () => {
+                if (window.innerWidth < 768) {
+                    closeSidebarMobile();
+                }
+            });
         });
 
-        const sidebar = document.getElementById('sidebar');
-        if (sidebar) {
-            sidebar.querySelectorAll('a.nav-link[href]').forEach(link => {
-                link.addEventListener('click', (event) => {
-                    if (
-                        event.defaultPrevented ||
-                        event.button !== 0 ||
-                        event.metaKey ||
-                        event.ctrlKey ||
-                        event.shiftKey ||
-                        event.altKey
-                    ) {
-                        return;
-                    }
-
-                    const targetUrl = link.getAttribute('href');
-                    if (!targetUrl || targetUrl === '#') {
-                        return;
-                    }
-
-                    event.preventDefault();
-                    sidebar.style.transition = 'transform 180ms ease, opacity 180ms ease';
-                    sidebar.style.transform = 'translateX(-100%)';
-                    sidebar.style.opacity = '0';
-
-                    window.setTimeout(() => {
-                        window.location.href = targetUrl;
-                    }, 180);
-                });
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (event) => {
+                event.preventDefault();
+                if (typeof Auth !== 'undefined' && Auth.isAuthenticated()) {
+                    Auth.logout();
+                } else {
+                    window.location.href = '/login.html';
+                }
             });
         }
     }

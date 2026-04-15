@@ -14,23 +14,27 @@
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
         <main class="flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
-            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 mb-5">
-                <h1 class="font-headline text-2xl font-bold mb-4">Ricarica Credito Utente</h1>
+            <section class="hero-banner p-6 md:p-8 mb-5 reveal-up">
+                <span class="badge-soft mb-3">
+                    <span class="material-symbols-outlined text-sm">account_balance_wallet</span>
+                    Operazioni credito
+                </span>
+                <h1 class="font-headline text-3xl md:text-5xl font-semibold mb-4">Ricarica Credito Utente</h1>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <input id="search-user" type="text" placeholder="Email o username" class="bg-surface-container-high rounded-lg border-none" />
-                    <button id="search-btn" class="px-4 py-2 bg-surface-container-high rounded-lg">Cerca</button>
+                    <button id="search-btn" class="px-4 py-2 bg-surface-container-high rounded-lg hover-lift">Cerca</button>
                     <select id="cinema-select" class="bg-surface-container-high rounded-lg border-none"></select>
                 </div>
             </section>
 
-            <section id="user-box" class="hidden bg-surface-container rounded-2xl border border-outline-variant/20 p-5 mb-5"></section>
+            <section id="user-box" class="hidden bg-surface-container rounded-2xl border border-outline-variant/20 p-5 mb-5 reveal-up delay-1"></section>
 
-            <section id="recharge-box" class="hidden bg-surface-container rounded-2xl border border-outline-variant/20 p-5">
+            <section id="recharge-box" class="hidden bg-surface-container rounded-2xl border border-outline-variant/20 p-5 reveal-up delay-2">
                 <h2 class="font-headline text-lg font-bold mb-3">Nuova ricarica</h2>
                 <form id="recharge-form" class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <input name="importo" type="number" step="0.01" min="0.01" placeholder="Importo EUR" class="bg-surface-container-high rounded-lg border-none" required />
                     <input name="descrizione" type="text" placeholder="Note" class="bg-surface-container-high rounded-lg border-none" />
-                    <button type="submit" class="px-4 py-2 bg-primary-container text-white rounded-lg">Conferma Ricarica</button>
+                    <button type="submit" class="px-4 py-2 bg-primary-container text-white rounded-lg hover-lift">Conferma Ricarica</button>
                 </form>
                 <div id="tx-result" class="mt-4"></div>
             </section>

@@ -44,10 +44,10 @@
     <link rel="stylesheet" href="/css/styles.css">
     <style>
         .hero-gradient {
-            background: linear-gradient(135deg, rgba(229, 9, 20, 0.15) 0%, rgba(19, 19, 19, 0) 50%);
+            background: linear-gradient(135deg, rgba(255, 92, 58, 0.2) 0%, rgba(12, 21, 34, 0) 55%);
         }
         .card-glow:hover {
-            box-shadow: 0 0 30px rgba(229, 9, 20, 0.2);
+            box-shadow: 0 22px 40px -28px rgba(8, 12, 22, 0.8);
         }
         .stat-pulse {
             animation: pulse 2s infinite;
@@ -68,6 +68,17 @@
         .film-overlay {
             transition: opacity 0.3s ease;
         }
+
+        .hero-streak {
+            position: absolute;
+            right: -100px;
+            top: -80px;
+            width: 280px;
+            height: 280px;
+            border-radius: 999px;
+            background: radial-gradient(circle, rgba(255, 92, 58, 0.36), transparent 68%);
+            pointer-events: none;
+        }
     </style>
 </head>
 <body class="bg-background text-on-background font-body min-h-screen flex flex-col">
@@ -78,22 +89,23 @@
         
         <main class="flex-1 overflow-y-auto pb-24 md:pb-12">
             <!-- Hero Section -->
-            <div class="hero-gradient px-4 md:px-8 lg:px-12 pt-8 pb-12">
+            <div class="hero-gradient px-4 md:px-8 lg:px-12 pt-8 pb-12 reveal-up">
                 <div class="max-w-7xl mx-auto">
-                    <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-                        <div>
-                            <p class="text-secondary uppercase tracking-[0.3em] text-xs font-bold mb-2">Benvenuto in</p>
+                    <div class="hero-banner p-6 md:p-8 relative overflow-hidden flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                        <span class="hero-streak"></span>
+                        <div class="relative z-10">
+                            <p class="badge-soft mb-3">Dashboard manager</p>
                             <h1 class="font-headline text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-on-surface mb-4">
-                                Film<span class="text-primary-container">API</span>
+                                Film<span class="text-primary-container">Hub</span>
                             </h1>
-                            <p class="text-on-surface-variant text-lg max-w-xl">Il tuo cinema, la tua visione. Gestisci film, registi e proiezioni in un'unica piattaforma elegante.</p>
+                            <p class="text-on-surface-variant text-lg max-w-xl">Visuale completa sul tuo ecosistema cinema: dati, catalogo e operazioni rapide in un unico flusso.</p>
                         </div>
-                        <div class="flex gap-4">
-                            <a href="films.html?action=create" class="px-6 py-3 bg-primary-container text-white rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-lg shadow-primary-container/30">
+                        <div class="relative z-10 flex gap-4">
+                            <a href="films.html?action=create" class="px-6 py-3 bg-primary-container text-white rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-lg shadow-primary-container/30 hover-lift">
                                 <span class="material-symbols-outlined">add</span>
                                 Nuovo Film
                             </a>
-                            <a href="proiezioni.html?action=create" class="px-6 py-3 bg-surface-container-high text-on-surface rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-transform border border-outline-variant/20">
+                            <a href="proiezioni.html?action=create" class="px-6 py-3 bg-surface-container-high text-on-surface rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-transform border border-outline-variant/20 hover-lift">
                                 <span class="material-symbols-outlined">schedule</span>
                                 Proiezione
                             </a>
@@ -103,10 +115,10 @@
             </div>
 
             <!-- Stats Cards -->
-            <div class="px-4 md:px-8 lg:px-12 -mt-6">
+            <div class="px-4 md:px-8 lg:px-12 -mt-6 reveal-up delay-1">
                 <div class="max-w-7xl mx-auto">
                     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                        <div class="bg-surface-container-low p-5 rounded-2xl border border-outline-variant/10 hover:border-primary-container/30 transition-all card-glow cursor-pointer" onclick="location.href='films.html'">
+                        <div class="bg-surface-container-low p-5 rounded-2xl border border-outline-variant/10 hover:border-primary-container/30 transition-all card-glow cursor-pointer hover-lift" onclick="location.href='films.html'">
                             <div class="flex items-center justify-between mb-3">
                                 <div class="w-12 h-12 rounded-xl bg-primary-container/20 flex items-center justify-center">
                                     <span class="material-symbols-outlined text-primary-container text-2xl">movie</span>
@@ -120,7 +132,7 @@
                             </div>
                         </div>
                         
-                        <div class="bg-surface-container-low p-5 rounded-2xl border border-outline-variant/10 hover:border-secondary/30 transition-all card-glow cursor-pointer" onclick="location.href='registi.html'">
+                        <div class="bg-surface-container-low p-5 rounded-2xl border border-outline-variant/10 hover:border-secondary/30 transition-all card-glow cursor-pointer hover-lift" onclick="location.href='registi.html'">
                             <div class="flex items-center justify-between mb-3">
                                 <div class="w-12 h-12 rounded-xl bg-secondary/20 flex items-center justify-center">
                                     <span class="material-symbols-outlined text-secondary text-2xl">theater_comedy</span>
@@ -134,7 +146,7 @@
                             </div>
                         </div>
                         
-                        <div class="bg-surface-container-low p-5 rounded-2xl border border-outline-variant/10 hover:border-tertiary/30 transition-all card-glow cursor-pointer" onclick="location.href='cinemas.html'">
+                        <div class="bg-surface-container-low p-5 rounded-2xl border border-outline-variant/10 hover:border-tertiary/30 transition-all card-glow cursor-pointer hover-lift" onclick="location.href='cinemas.html'">
                             <div class="flex items-center justify-between mb-3">
                                 <div class="w-12 h-12 rounded-xl bg-tertiary/20 flex items-center justify-center">
                                     <span class="material-symbols-outlined text-tertiary text-2xl">theaters</span>
@@ -148,7 +160,7 @@
                             </div>
                         </div>
                         
-                        <div class="bg-gradient-to-br from-primary-container to-red-700 p-5 rounded-2xl shadow-2xl shadow-primary-container/30">
+                        <div class="bg-gradient-to-br from-primary-container to-red-700 p-5 rounded-2xl shadow-2xl shadow-primary-container/30 hover-lift">
                             <div class="flex items-center justify-between mb-3">
                                 <div class="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center">
                                     <span class="material-symbols-outlined text-white text-2xl">confirmation_number</span>

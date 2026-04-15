@@ -52,24 +52,28 @@
         <div id="sidebar-container"></div>
         
         <main class="flex-1 p-4 md:p-8 lg:p-12 overflow-x-hidden pb-20 md:pb-0">
-            <section class="space-y-2 mb-8 md:mb-12">
-                <h2 class="text-3xl md:text-5xl font-extralight font-headline tracking-tight text-white">Controllo Operazioni</h2>
-                <p class="text-secondary tracking-widest uppercase text-xs font-label opacity-80">Gestione Infrastruttura e Programmazione</p>
+            <section class="hero-banner p-6 md:p-8 mb-8 md:mb-10 reveal-up">
+                <span class="badge-soft mb-3">
+                    <span class="material-symbols-outlined text-sm">schedule_send</span>
+                    Planner proiezioni
+                </span>
+                <h2 class="text-3xl md:text-5xl font-semibold font-headline tracking-tight text-on-surface">Controllo Operazioni</h2>
+                <p class="text-on-surface-variant tracking-wide text-sm mt-2">Calendario operativo per monitorare show in corso, futuri e conclusi.</p>
             </section>
 
-            <section class="space-y-6">
+            <section class="space-y-6 reveal-up delay-1">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                     <div class="space-y-1">
-                        <h3 class="text-xl md:text-2xl font-headline text-white">Proiezioni Attive</h3>
+                        <h3 class="text-xl md:text-2xl font-headline text-on-surface">Proiezioni Attive</h3>
                         <p class="text-on-surface-variant text-sm font-body">Timeline delle proiezioni cinematografiche programmate.</p>
                     </div>
-                    <button id="new-proiezione-btn" onclick="openCreateModal()" class="bg-primary-container text-on-primary-container px-4 md:px-6 py-2 md:py-3 rounded-xl font-headline font-bold text-sm flex items-center gap-2 hover:scale-95 transition-all duration-150 shadow-lg shadow-primary-container/20">
+                    <button id="new-proiezione-btn" onclick="openCreateModal()" class="bg-primary-container text-on-primary-container px-4 md:px-6 py-2 md:py-3 rounded-xl font-headline font-bold text-sm flex items-center gap-2 hover:scale-95 transition-all duration-150 shadow-lg shadow-primary-container/20 hover-lift">
                         <span class="material-symbols-outlined">schedule_send</span>
                         Nuova Proiezione
                     </button>
                 </div>
 
-                <div id="projections-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+                <div id="projections-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 reveal-up delay-2">
                 </div>
                 <div id="empty-state" class="hidden bg-surface-container-low rounded-xl p-12 text-center">
                     <span class="material-symbols-outlined text-5xl text-on-surface-variant opacity-50">event_busy</span>
@@ -157,13 +161,14 @@
 
             emptyState.classList.add('hidden');
             
-            grid.innerHTML = currentProiezioni.map(proiezione => {
+            grid.innerHTML = currentProiezioni.map((proiezione, index) => {
                 const film = allFilms.find(f => f.id === proiezione.filmId);
                 const cinema = allCinemas.find(c => c.id === proiezione.cinemaId);
                 const status = getStatusBadge(proiezione);
 
                 return `
-                    <div class="group relative bg-surface-container-low rounded-xl overflow-hidden p-4 md:p-6 border border-outline-variant/10 hover:border-primary-container/40 transition-all duration-500">
+                    <div class="group relative bg-surface-container-low rounded-xl overflow-hidden p-4 md:p-6 border border-outline-variant/10 hover:border-primary-container/40 transition-all duration-500 hover-lift reveal-up"
+                         style="animation-delay:${(index % 8) * 0.04}s">
                         <div class="flex justify-between items-start mb-4 md:mb-6">
                             <span class="text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded ${status.class}">${status.text}</span>
                             <span class="text-xs font-mono text-on-surface-variant opacity-50">PRJ-${String(proiezione.id).padStart(4, '0')}</span>
