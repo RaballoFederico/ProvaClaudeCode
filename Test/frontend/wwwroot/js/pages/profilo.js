@@ -144,11 +144,15 @@ function renderProiezioni() {
                                 <span class="material-symbols-outlined text-green-400 text-sm">check_circle</span>
                                 <span class="text-sm text-green-400">${p.numeroPosti} posti prenotati</span>
                             </div>
+                            <button onclick="vaiABiglietti(${p.showId || 0})" class="px-4 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-sm text-on-surface transition-colors flex items-center gap-2 hover-lift" title="Apri biglietti">
+                                <span class="material-symbols-outlined text-sm">confirmation_number</span>
+                                Biglietti
+                            </button>
                             <button onclick="annullaPrenotazione(${p.id})" class="p-2 text-on-surface-variant hover:text-red-400 transition-colors" title="Annulla prenotazione">
                                 <span class="material-symbols-outlined">cancel</span>
                             </button>
                         ` : `
-                            <button onclick="apriPrenotazione(${p.id}, '${p.filmTitolo}', '${p.cinemaNome}', '${dataFormattata}')" 
+                            <button onclick="vaiAPrenotazione(${p.id}, ${p.showId || 0}, ${p.proiezioneId || 0})" 
                                 class="px-4 py-2 bg-primary-container text-white rounded-lg text-sm transition-colors flex items-center gap-2 hover-lift">
                                 <span class="material-symbols-outlined text-sm">confirmation_number</span>
                                 Prenota
@@ -295,6 +299,41 @@ document.getElementById('prenota-form').addEventListener('submit', async (e) => 
         prenotaLoading.classList.add('hidden');
     }
 });
+
+function vaiABiglietti(showId) {
+    const url = showId ? `/user-biglietti.html?showId=${showId}` : '/user-biglietti.html';
+    window.location.href = url;
+}
+
+async function vaiAPrenotazione(proiezioneSalvataId, showId, proiezioneId) {
+    if (showId) {
+        try {
+            const show = await ApiClient.get(`/shows/${showId}`);
+            const params = new URLSearchParams({
+                IdShow: String(showId),
+                IdFilm: String(show.filmId || 0),
+                IdSala: String(show.salaId || 0),
+                IdCinema: String(show.cinemaId || 0)
+            });
+            window.location.href = `/acquista.html?${params.toString()}`;
+            return;
+        } catch {
+        }
+    }
+
+    const target = (profiloData?.proiezioniSalvate || []).find(p => p.id === proiezioneSalvataId || p.proiezioneId === proiezioneId);
+    if (!target) return;
+
+    const dataProiezione = new Date(target.dataProiezione);
+    const dataFormattata = dataProiezione.toLocaleDateString('it-IT', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+    });
+
+    apriPrenotazione(target.id, target.filmTitolo, target.cinemaNome, dataFormattata);
+}
 
 async function rimuoviProiezione(id) {
     if (!confirm('Sei sicuro di voler rimuovere questa proiezione dai salvati?')) return;

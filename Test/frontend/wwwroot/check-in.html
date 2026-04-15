@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controllo Ticket | FilmAPI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script src="https://unpkg.com/html5-qrcode" defer></script>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col">
+    <div id="navbar-container"></div>
+    <div class="flex flex-1">
+        <div id="sidebar-container"></div>
+        <main class="flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
+            <section class="hero-banner p-6 md:p-8 mb-5 reveal-up">
+                <span class="badge-soft mb-3">
+                    <span class="material-symbols-outlined text-sm">confirmation_number</span>
+                    Stato ticket
+                </span>
+                <h1 class="font-headline text-3xl md:text-5xl font-semibold mb-3">Controllo Biglietto</h1>
+                <p class="text-on-surface-variant">Controlla se il tuo ticket e ancora da validare o gia usato.</p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4">
+                    <input id="code-input" type="text" placeholder="Inserisci codice hash" class="bg-surface-container-high rounded-lg border-none" />
+                    <button id="verify-btn" class="px-4 py-2 bg-primary-container text-white rounded-lg hover-lift">Controlla</button>
+                    <button id="scan-toggle" class="px-4 py-2 bg-surface-container-high rounded-lg hover-lift">Avvia scanner</button>
+                </div>
+            </section>
+
+            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 mb-5 reveal-up delay-1">
+                <h2 class="font-headline text-lg font-bold mb-3">Scanner QR</h2>
+                <div id="qr-reader" class="hidden max-w-md"></div>
+            </section>
+
+            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 reveal-up delay-2">
+                <h2 class="font-headline text-lg font-bold mb-3">Risultato</h2>
+                <div id="result-box" class="text-on-surface-variant">Nessun controllo eseguito.</div>
+            </section>
+        </main>
+    </div>
+    <div id="footer-container"></div>
+
+    <script src="/js/theme.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/route-guard.js"></script>
+    <script src="/js/template-loader.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        let scanner = null;
+        let scannerRunning = false;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllComponents();
+            bindEvents();
+            applyQueryParams();
+        });
+
+        function bindEvents() {
+            document.getElementById('verify-btn').addEventListener('click', verifyManual);
+            document.getElementById('scan-toggle').addEventListener('click', toggleScan);
+        }
+
+        function applyQueryParams() {
+            const params = new URLSearchParams(window.location.search);
+            const codice = params.get('codice');
+            if (codice) {
+                document.getElementById('code-input').value = codice;
+                verifyCode(codice);
+            }
+        }
+
+        async function verifyManual() {
+            const code = document.getElementById('code-input').value.trim();
+            if (!code) {
+                Utils.showNotification('Inserisci un codice', 'error');
+                return;
+            }
+            await verifyCode(code);
+        }
+
+        async function verifyCode(code) {
+            try {
+                const info = await ApiClient.get('/validazione/qr/' + encodeURIComponent(code));
+                renderResult(info);
+            } catch {
+                document.getElementById('result-box').innerHTML = '<div class="text-rose-400">Ticket non trovato.</div>';
+            }
+        }
+
+        function renderResult(info) {
+            const already = info.giaValidato;
+            const box = document.getElementById('result-box');
+            box.innerHTML = `
+                <div class="p-4 rounded-xl ${already ? 'bg-amber-500/10 border border-amber-500/30' : 'bg-emerald-500/10 border border-emerald-500/30'}">
+                    <div class="font-semibold mb-2">${already ? 'Ticket gia validato' : 'Ticket valido e non ancora validato'}</div>
+                    <div class="text-sm">Film: <strong>${escapeHtml(info.filmTitolo)}</strong></div>
+                    <div class="text-sm">Cinema: <strong>${escapeHtml(info.cinemaNome)}</strong></div>
+                    <div class="text-sm">Sala: <strong>${info.salaNumero} (${escapeHtml(info.tipologiaSala)})</strong></div>
+                    <div class="text-sm">Data: <strong>${formatDate(info.data)} ${(info.oraInizio || '').substring(0,5)}</strong></div>
+                    <div class="text-sm">Posto: <strong>${escapeHtml(info.posto)}</strong></div>
+                    <div class="text-sm">Codice: <span class="font-mono">${escapeHtml(info.codiceHash)}</span></div>
+                    <div class="text-xs text-on-surface-variant mt-2">La validazione reale viene effettuata dal personale cinema al checkpoint.</div>
+                </div>
+            `;
+        }
+
+        async function toggleScan() {
+            const reader = document.getElementById('qr-reader');
+            const btn = document.getElementById('scan-toggle');
+
+            if (!scannerRunning) {
+                reader.classList.remove('hidden');
+                btn.textContent = 'Ferma scanner';
+                scanner = new Html5Qrcode('qr-reader');
+                await scanner.start(
+                    { facingMode: 'environment' },
+                    { fps: 10, qrbox: 240 },
+                    async (decodedText) => {
+                        const hash = parseHashFromQr(decodedText);
+                        if (hash) {
+                            document.getElementById('code-input').value = hash;
+                            await verifyCode(hash);
+                        }
+                    },
+                    () => {}
+                );
+                scannerRunning = true;
+            } else {
+                if (scanner) {
+                    await scanner.stop();
+                    await scanner.clear();
+                }
+                scanner = null;
+                scannerRunning = false;
+                reader.classList.add('hidden');
+                btn.textContent = 'Avvia scanner';
+            }
+        }
+
+        function parseHashFromQr(value) {
+            try {
+                if (value.includes('/validazione/qr/')) {
+                    return value.split('/validazione/qr/')[1].split('?')[0];
+                }
+
+                const parsed = new URL(value, window.location.origin);
+                if (parsed.pathname.endsWith('/check-in.html') && parsed.searchParams.get('codice')) {
+                    return parsed.searchParams.get('codice');
+                }
+                if (parsed.pathname.endsWith('/validazione.html') && parsed.searchParams.get('codice')) {
+                    return parsed.searchParams.get('codice');
+                }
+                return value;
+            } catch {
+                return value;
+            }
+        }
+
+        function formatDate(iso) {
+            if (!iso) return '-';
+            return new Date(iso).toLocaleDateString('it-IT');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

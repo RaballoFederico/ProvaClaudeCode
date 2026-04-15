@@ -92,6 +92,7 @@
         let lockCode = null;
         let lockExpireAt = null;
         let timerInt = null;
+        let movingToPayment = false;
         const sessionId = `sess_${Math.random().toString(36).slice(2)}_${Date.now()}`;
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -115,7 +116,7 @@
         function bindActions() {
             document.getElementById('continue-btn').addEventListener('click', goToPagamento);
             window.addEventListener('beforeunload', async () => {
-                if (lockCode) {
+                if (lockCode && !movingToPayment) {
                     try { await ApiClient.delete(`/acquisto/lock/${lockCode}`); } catch {}
                 }
             });
@@ -257,6 +258,7 @@
 
         function goToPagamento() {
             if (!lockCode) return;
+            movingToPayment = true;
             const params = new URLSearchParams({
                 IdShow: String(showId),
                 IdFilm: String(filmId),

@@ -155,6 +155,10 @@
                 recalc();
                 await initStripe();
             } catch (e) {
+                if (isLockExpiredError(e)) {
+                    redirectToSeatSelection('Sessione posti scaduta. Seleziona di nuovo i posti.');
+                    return;
+                }
                 Utils.showNotification(e.message || 'Errore caricamento pagamento', 'error');
             } finally {
                 Utils.hideLoading();
@@ -231,10 +235,32 @@
                 Utils.showNotification('Acquisto confermato con successo', 'success');
                 window.location.href = `/user-biglietti.html?acquistoId=${conferma.acquistoId}`;
             } catch (e) {
+                if (isLockExpiredError(e)) {
+                    redirectToSeatSelection('Sessione posti scaduta. Torniamo alla selezione posti.');
+                    return;
+                }
                 Utils.showNotification(e.message || 'Pagamento fallito', 'error');
             } finally {
                 Utils.hideLoading();
             }
+        }
+
+        function isLockExpiredError(error) {
+            const msg = (error && error.message ? String(error.message) : '').toLowerCase();
+            return msg.includes('lock non valido o scaduto') || msg.includes('http 404');
+        }
+
+        function redirectToSeatSelection(message) {
+            Utils.showNotification(message, 'info');
+            const params = new URLSearchParams({
+                IdShow: String(showId),
+                IdFilm: String(filmId),
+                IdSala: String(salaId),
+                IdCinema: String(cinemaId)
+            });
+            setTimeout(() => {
+                window.location.href = `/acquista.html?${params.toString()}`;
+            }, 1200);
         }
 
         function formatDate(dateIso) {

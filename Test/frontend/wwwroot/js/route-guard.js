@@ -24,6 +24,7 @@ const RouteGuard = {
         'acquista.html': 'auth',
         'pagamento.html': 'auth',
         'user-biglietti.html': 'auth',
+        'check-in.html': 'auth',
         'proiezioni-pubblico.html': 'auth',
         '404.html': null,
         'login.html': 'guest',
