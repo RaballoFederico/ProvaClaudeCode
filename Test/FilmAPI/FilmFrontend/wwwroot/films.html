@@ -396,9 +396,16 @@
                         </div>
                         <div>
                             <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Categorie</label>
-                            <select name="categorieIds" multiple class="w-full min-h-24 bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
-                                ${allCategorie.map(c => `<option value="${c.id}">${escapeHtml(c.nome)}</option>`).join('')}
-                            </select>
+                            <div class="w-full min-h-24 bg-surface-container-highest rounded-lg px-3 py-3 border border-outline-variant/30">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    ${allCategorie.map(c => `
+                                        <label class="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-surface-container-high transition-colors cursor-pointer">
+                                            <input type="checkbox" name="categorieIds" value="${c.id}" class="rounded border-outline-variant/40 bg-surface-container-highest text-primary-container focus:ring-primary" />
+                                            <span class="text-sm text-on-surface">${escapeHtml(c.nome)}</span>
+                                        </label>
+                                    `).join('')}
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="flex justify-end gap-3 mt-6">
@@ -452,9 +459,16 @@
                         </div>
                         <div>
                             <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Categorie</label>
-                            <select name="categorieIds" multiple class="w-full min-h-24 bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
-                                ${allCategorie.map(c => `<option value="${c.id}" ${(film.categorieIds || []).includes(c.id) ? 'selected' : ''}>${escapeHtml(c.nome)}</option>`).join('')}
-                            </select>
+                            <div class="w-full min-h-24 bg-surface-container-highest rounded-lg px-3 py-3 border border-outline-variant/30">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    ${allCategorie.map(c => `
+                                        <label class="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-surface-container-high transition-colors cursor-pointer">
+                                            <input type="checkbox" name="categorieIds" value="${c.id}" ${(film.categorieIds || []).includes(c.id) ? 'checked' : ''} class="rounded border-outline-variant/40 bg-surface-container-highest text-primary-container focus:ring-primary" />
+                                            <span class="text-sm text-on-surface">${escapeHtml(c.nome)}</span>
+                                        </label>
+                                    `).join('')}
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <input type="hidden" name="id" value="${id}">
@@ -481,7 +495,7 @@
                 durata: parseInt(form.durata.value) || null,
                 copertinaPath: form.copertinaPath.value || null,
                 filmatoPath: form.filmatoPath.value || null,
-                categoriaIds: Array.from(form.categorieIds.selectedOptions).map(o => parseInt(o.value))
+                categoriaIds: Array.from(form.querySelectorAll('input[name="categorieIds"]:checked')).map(i => parseInt(i.value))
             };
 
             try {
