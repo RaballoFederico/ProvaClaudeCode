@@ -60,6 +60,7 @@
             await loadAllComponents();
             bindEvents();
             await initData();
+            applyQueryParams();
         });
 
         function bindEvents() {
@@ -71,6 +72,24 @@
             cinemas = await ApiClient.get('/cinemas');
             const sel = document.getElementById('cinema-select');
             sel.innerHTML = cinemas.map(c => `<option value="${c.id}">${escapeHtml(c.nome)} - ${escapeHtml(c.citta)}</option>`).join('');
+        }
+
+        function applyQueryParams() {
+            const params = new URLSearchParams(window.location.search);
+            const codice = params.get('codice');
+            const cinemaId = parseInt(params.get('cinemaId') || '0');
+
+            if (cinemaId) {
+                const sel = document.getElementById('cinema-select');
+                if ([...sel.options].some(o => parseInt(o.value) === cinemaId)) {
+                    sel.value = String(cinemaId);
+                }
+            }
+
+            if (codice) {
+                document.getElementById('code-input').value = codice;
+                verifyCode(codice);
+            }
         }
 
         async function verifyManual() {

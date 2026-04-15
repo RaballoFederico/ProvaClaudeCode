@@ -77,8 +77,16 @@ public static class AcquistoEndpoints
         {
             var userId = GetUserId(ctx);
             if (userId is null) return Results.Unauthorized();
-            var res = await bigliettoService.ConfermaAcquistoAsync(userId.Value, dto);
-            return Results.Ok(res);
+
+            try
+            {
+                var res = await bigliettoService.ConfermaAcquistoAsync(userId.Value, dto);
+                return Results.Ok(res);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Results.BadRequest(new { message = ex.Message });
+            }
         });
 
         group.MapPost("/pagamento", async (HttpContext ctx, PagamentoRequestDTO dto, IPagamentoService pagamentoService) =>

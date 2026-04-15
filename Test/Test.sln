@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FilmAPI", "FilmAPI\FilmAPI.csproj", "{2888C35A-2690-7595-7E65-7513C4472FB2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FilmAPI", "backend\FilmAPI.csproj", "{2888C35A-2690-7595-7E65-7513C4472FB2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "frontend", "frontend", "{CE609670-85B9-0D16-FB54-ED063D5D8A6D}"
 EndProject

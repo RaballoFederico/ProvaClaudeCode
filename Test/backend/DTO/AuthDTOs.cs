@@ -64,6 +64,7 @@ public class ProiezioneSalvataDTO
 {
     public int Id { get; set; }
     public int ProiezioneId { get; set; }
+    public int? ShowId { get; set; }
     public string FilmTitolo { get; set; } = string.Empty;
     public string CinemaNome { get; set; } = string.Empty;
     public DateTime DataProiezione { get; set; }

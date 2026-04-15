@@ -47,6 +47,7 @@ public static class UserEndpoints
                 {
                     Id = ps.Id,
                     ProiezioneId = ps.ProiezioneId,
+                    ShowId = ps.Proiezione.ShowId,
                     FilmTitolo = ps.Proiezione.Film?.Titolo ?? "N/A",
                     CinemaNome = ps.Proiezione.Cinema?.Nome ?? "N/A",
                     DataProiezione = ps.Proiezione.Data,
@@ -188,6 +189,7 @@ public static class UserEndpoints
                 {
                     Id = ps.Id,
                     ProiezioneId = ps.ProiezioneId,
+                    ShowId = ps.Proiezione.ShowId,
                     FilmTitolo = ps.Proiezione.Film != null ? ps.Proiezione.Film.Titolo : "N/A",
                     CinemaNome = ps.Proiezione.Cinema != null ? ps.Proiezione.Cinema.Nome : "N/A",
                     DataProiezione = ps.Proiezione.Data,

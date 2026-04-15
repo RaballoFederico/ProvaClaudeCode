@@ -148,10 +148,16 @@
         }
 
         async function loadSelectedCinema() {
+            const qp = new URLSearchParams(window.location.search);
+            const cinemaFromQuery = parseInt(qp.get('cinemaId') || '0');
+            if (cinemaFromQuery) {
+                selectedCinema = cinemas.find(c => c.id === cinemaFromQuery) || null;
+            }
+
             if (Auth.isAuthenticated()) {
                 try {
                     const pref = await ApiClient.get('/user/cinema-preferito');
-                    if (pref && pref.cinemaId) {
+                    if (!selectedCinema && pref && pref.cinemaId) {
                         selectedCinema = cinemas.find(c => c.id === pref.cinemaId) || null;
                     }
                 } catch {
