@@ -20,6 +20,7 @@ public static class DbInitializer
         var saleMap = await EnsureSaleAsync(context, cinemaMap);
         var filmMap = await EnsureFilmsAsync(context, directorMap, categoryMap);
         var showMap = await EnsureShowsAsync(context, saleMap, filmMap);
+        await EnsureProiezioniFromShowsAsync(context);
 
         await EnsureCreditiAsync(context, userMap);
         await EnsureAcquistiBigliettiAsync(context, userMap, showMap, cinemaMap);
@@ -51,7 +52,8 @@ public static class DbInitializer
         var names = new[]
         {
             "Fantasy", "Horror", "Drammatico", "Commedia", "Azione", "Thriller",
-            "Romantico", "Sci-Fi", "Animazione", "Documentario", "Avventura", "Storico"
+            "Romantico", "Sci-Fi", "Animazione", "Documentario", "Avventura", "Storico",
+            "Crime", "Biografico", "Musicale", "Mistero", "Guerra", "Famiglia"
         };
 
         foreach (var name in names)
@@ -73,7 +75,13 @@ public static class DbInitializer
             new { Username = "admin", Email = "admin@filmapi.com", Nome = "Admin", Cognome = "System", Password = "Admin123!", Ruoli = new[] { "Admin" } },
             new { Username = "luca.power", Email = "luca.verdi@filmapi.com", Nome = "Luca", Cognome = "Verdi", Password = "Power123!", Ruoli = new[] { "PowerUser" } },
             new { Username = "mario.rossi", Email = "mario.rossi@email.com", Nome = "Mario", Cognome = "Rossi", Password = "User123!", Ruoli = new[] { "User" } },
-            new { Username = "giulia.neri", Email = "giulia.neri@email.com", Nome = "Giulia", Cognome = "Neri", Password = "User123!", Ruoli = new[] { "User" } }
+            new { Username = "giulia.neri", Email = "giulia.neri@email.com", Nome = "Giulia", Cognome = "Neri", Password = "User123!", Ruoli = new[] { "User" } },
+            new { Username = "elena.bianchi", Email = "elena.bianchi@email.com", Nome = "Elena", Cognome = "Bianchi", Password = "User123!", Ruoli = new[] { "User" } },
+            new { Username = "paolo.riva", Email = "paolo.riva@email.com", Nome = "Paolo", Cognome = "Riva", Password = "User123!", Ruoli = new[] { "User" } },
+            new { Username = "sara.gallo", Email = "sara.gallo@email.com", Nome = "Sara", Cognome = "Gallo", Password = "User123!", Ruoli = new[] { "User" } },
+            new { Username = "marco.conti", Email = "marco.conti@email.com", Nome = "Marco", Cognome = "Conti", Password = "User123!", Ruoli = new[] { "User" } },
+            new { Username = "anna.greco", Email = "anna.greco@email.com", Nome = "Anna", Cognome = "Greco", Password = "User123!", Ruoli = new[] { "User" } },
+            new { Username = "davide.mancini", Email = "davide.mancini@email.com", Nome = "Davide", Cognome = "Mancini", Password = "User123!", Ruoli = new[] { "User" } }
         };
 
         foreach (var u in users)
@@ -112,7 +120,20 @@ public static class DbInitializer
             new Regista { Nome = "Denis", Cognome = "Villeneuve", Nazionalita = "Canada" },
             new Regista { Nome = "Greta", Cognome = "Gerwig", Nazionalita = "USA" },
             new Regista { Nome = "Ridley", Cognome = "Scott", Nazionalita = "UK" },
-            new Regista { Nome = "Hayao", Cognome = "Miyazaki", Nazionalita = "Japan" }
+            new Regista { Nome = "Hayao", Cognome = "Miyazaki", Nazionalita = "Japan" },
+            new Regista { Nome = "Martin", Cognome = "Scorsese", Nazionalita = "USA" },
+            new Regista { Nome = "Quentin", Cognome = "Tarantino", Nazionalita = "USA" },
+            new Regista { Nome = "Patty", Cognome = "Jenkins", Nazionalita = "USA" },
+            new Regista { Nome = "Alfonso", Cognome = "Cuaron", Nazionalita = "Mexico" },
+            new Regista { Nome = "Sofia", Cognome = "Coppola", Nazionalita = "USA" },
+            new Regista { Nome = "Damien", Cognome = "Chazelle", Nazionalita = "USA" },
+            new Regista { Nome = "Bong", Cognome = "Joon-ho", Nazionalita = "Korea" },
+            new Regista { Nome = "Alejandro", Cognome = "Inarritu", Nazionalita = "Mexico" },
+            new Regista { Nome = "James", Cognome = "Cameron", Nazionalita = "Canada" },
+            new Regista { Nome = "Jordan", Cognome = "Peele", Nazionalita = "USA" },
+            new Regista { Nome = "Sam", Cognome = "Mendes", Nazionalita = "UK" },
+            new Regista { Nome = "Kathryn", Cognome = "Bigelow", Nazionalita = "USA" },
+            new Regista { Nome = "Pete", Cognome = "Docter", Nazionalita = "USA" }
         };
 
         foreach (var d in directors)
@@ -131,7 +152,13 @@ public static class DbInitializer
         {
             new Cinema { Nome = "UCI Lissone", Citta = "Lissone", Indirizzo = "Via Lombardia 12", PostiMassimi = 320, Latitudine = 45.61420000m, Longitudine = 9.23710000m, CodiceLocale = "UCI-LIS" },
             new Cinema { Nome = "UCI Milano", Citta = "Milano", Indirizzo = "Viale Sarca 336", PostiMassimi = 300, Latitudine = 45.51600000m, Longitudine = 9.21360000m, CodiceLocale = "UCI-MIL" },
-            new Cinema { Nome = "Cinema Centrale", Citta = "Monza", Indirizzo = "Via Italia 45", PostiMassimi = 260, Latitudine = 45.58450000m, Longitudine = 9.27440000m, CodiceLocale = "CTR-MON" }
+            new Cinema { Nome = "Cinema Centrale", Citta = "Monza", Indirizzo = "Via Italia 45", PostiMassimi = 260, Latitudine = 45.58450000m, Longitudine = 9.27440000m, CodiceLocale = "CTR-MON" },
+            new Cinema { Nome = "Arcadia Bellinzago", Citta = "Bellinzago", Indirizzo = "Via XXV Aprile 33", PostiMassimi = 420, Latitudine = 45.57370000m, Longitudine = 8.64320000m, CodiceLocale = "ARC-BEL" },
+            new Cinema { Nome = "The Space Vimercate", Citta = "Vimercate", Indirizzo = "Via Torri Bianche 16", PostiMassimi = 360, Latitudine = 45.61770000m, Longitudine = 9.35650000m, CodiceLocale = "TSP-VIM" },
+            new Cinema { Nome = "Cinema Ducale", Citta = "Parma", Indirizzo = "Piazzale della Pilotta 1", PostiMassimi = 280, Latitudine = 44.80150000m, Longitudine = 10.32550000m, CodiceLocale = "DUC-PAR" },
+            new Cinema { Nome = "UCI Torino Lingotto", Citta = "Torino", Indirizzo = "Via Nizza 280", PostiMassimi = 340, Latitudine = 45.02850000m, Longitudine = 7.66540000m, CodiceLocale = "UCI-TOR" },
+            new Cinema { Nome = "Cinema Adriano", Citta = "Roma", Indirizzo = "Piazza Cavour 22", PostiMassimi = 300, Latitudine = 41.90350000m, Longitudine = 12.46800000m, CodiceLocale = "ADR-ROM" },
+            new Cinema { Nome = "Cinema Moderno", Citta = "Bologna", Indirizzo = "Via Rizzoli 1", PostiMassimi = 250, Latitudine = 44.49490000m, Longitudine = 11.34640000m, CodiceLocale = "MOD-BOL" }
         };
 
         foreach (var c in cinemas)
@@ -145,39 +172,42 @@ public static class DbInitializer
 
     private static async Task<Dictionary<string, Sala>> EnsureSaleAsync(FilmDbContext context, Dictionary<string, Cinema> cinemaMap)
     {
-        var defs = new[]
+        foreach (var cinema in cinemaMap.Values)
         {
-            new { Cinema = "UCI Lissone", Num = 1, Nome = "SALA ISENSE", Tipo = TipologiaSala.ISENSE, File = 12, PerFila = 15 },
-            new { Cinema = "UCI Lissone", Num = 2, Nome = "SALA XL", Tipo = TipologiaSala.XL, File = 10, PerFila = 14 },
-            new { Cinema = "UCI Lissone", Num = 3, Nome = "SALA 3D", Tipo = TipologiaSala.TRE_D, File = 9, PerFila = 12 },
-            new { Cinema = "UCI Lissone", Num = 4, Nome = "SALA 2D", Tipo = TipologiaSala.DUE_D, File = 11, PerFila = 13 },
-
-            new { Cinema = "UCI Milano", Num = 1, Nome = "SALA IMAX", Tipo = TipologiaSala.ISENSE, File = 13, PerFila = 16 },
-            new { Cinema = "UCI Milano", Num = 2, Nome = "SALA XL", Tipo = TipologiaSala.XL, File = 10, PerFila = 15 },
-            new { Cinema = "UCI Milano", Num = 3, Nome = "SALA 3D", Tipo = TipologiaSala.TRE_D, File = 9, PerFila = 13 },
-            new { Cinema = "UCI Milano", Num = 4, Nome = "SALA 2D", Tipo = TipologiaSala.DUE_D, File = 10, PerFila = 12 },
-
-            new { Cinema = "Cinema Centrale", Num = 1, Nome = "SALA PREMIUM", Tipo = TipologiaSala.ISENSE, File = 10, PerFila = 14 },
-            new { Cinema = "Cinema Centrale", Num = 2, Nome = "SALA CLASSIC", Tipo = TipologiaSala.DUE_D, File = 9, PerFila = 12 }
-        };
-
-        foreach (var d in defs)
-        {
-            var cinemaId = cinemaMap[d.Cinema].Id;
-            if (await context.Sale.AnyAsync(s => s.CinemaId == cinemaId && s.NumeroSala == d.Num)) continue;
-
-            context.Sale.Add(new Sala
+            var standardLayout = new[]
             {
-                CinemaId = cinemaId,
-                NumeroSala = d.Num,
-                Nome = d.Nome,
-                Tipologia = d.Tipo,
-                NumeroFile = d.File,
-                PostiPerFila = d.PerFila,
-                PostiTotali = d.File * d.PerFila,
-                ConfigurazionePosti = null,
-                Attiva = true
-            });
+                new { Num = 1, Nome = "SALA ISENSE", Tipo = TipologiaSala.ISENSE, File = 12, PerFila = 15 },
+                new { Num = 2, Nome = "SALA XL", Tipo = TipologiaSala.XL, File = 11, PerFila = 14 },
+                new { Num = 3, Nome = "SALA 3D", Tipo = TipologiaSala.TRE_D, File = 10, PerFila = 13 },
+                new { Num = 4, Nome = "SALA 2D", Tipo = TipologiaSala.DUE_D, File = 11, PerFila = 12 }
+            };
+
+            var compactLayout = new[]
+            {
+                new { Num = 1, Nome = "SALA PREMIUM", Tipo = TipologiaSala.ISENSE, File = 10, PerFila = 14 },
+                new { Num = 2, Nome = "SALA CLASSIC", Tipo = TipologiaSala.DUE_D, File = 9, PerFila = 12 },
+                new { Num = 3, Nome = "SALA 3D", Tipo = TipologiaSala.TRE_D, File = 9, PerFila = 11 }
+            };
+
+            var layout = cinema.PostiMassimi >= 300 ? standardLayout : compactLayout;
+
+            foreach (var d in layout)
+            {
+                if (await context.Sale.AnyAsync(s => s.CinemaId == cinema.Id && s.NumeroSala == d.Num)) continue;
+
+                context.Sale.Add(new Sala
+                {
+                    CinemaId = cinema.Id,
+                    NumeroSala = d.Num,
+                    Nome = d.Nome,
+                    Tipologia = d.Tipo,
+                    NumeroFile = d.File,
+                    PostiPerFila = d.PerFila,
+                    PostiTotali = d.File * d.PerFila,
+                    ConfigurazionePosti = null,
+                    Attiva = true
+                });
+            }
         }
 
         await context.SaveChangesAsync();
@@ -267,6 +297,201 @@ public static class DbInitializer
                 Descrizione = "Una fiaba onirica su crescita, perdita e immaginazione.",
                 Cast = "Soma Santoki, Masaki Suda",
                 Categorie = new[] { "Animazione", "Fantasy", "Avventura" }
+            },
+            new
+            {
+                Titolo = "Killers of the Flower Moon",
+                RegistaKey = "Martin Scorsese",
+                Durata = 206,
+                Produzione = new DateTime(2023, 10, 18),
+                Rilascio = DateTime.UtcNow.Date.AddDays(16),
+                Genere = "Crime",
+                Featured = true,
+                Copertina = "/media/flower-moon.jpg",
+                Filmato = "/media/flower-moon.mp4",
+                Descrizione = "Indagine oscura tra avidita e corruzione nell'Oklahoma degli anni '20.",
+                Cast = "Leonardo DiCaprio, Lily Gladstone, Robert De Niro",
+                Categorie = new[] { "Crime", "Drammatico", "Storico" }
+            },
+            new
+            {
+                Titolo = "Once Upon a Time in Hollywood",
+                RegistaKey = "Quentin Tarantino",
+                Durata = 161,
+                Produzione = new DateTime(2019, 8, 1),
+                Rilascio = DateTime.UtcNow.Date.AddDays(18),
+                Genere = "Commedia",
+                Featured = false,
+                Copertina = "/media/ouatih.jpg",
+                Filmato = "/media/ouatih.mp4",
+                Descrizione = "Una lettera d'amore alla Hollywood di fine anni '60.",
+                Cast = "Leonardo DiCaprio, Brad Pitt, Margot Robbie",
+                Categorie = new[] { "Commedia", "Drammatico" }
+            },
+            new
+            {
+                Titolo = "Wonder Woman",
+                RegistaKey = "Patty Jenkins",
+                Durata = 141,
+                Produzione = new DateTime(2017, 6, 2),
+                Rilascio = DateTime.UtcNow.Date.AddDays(20),
+                Genere = "Azione",
+                Featured = false,
+                Copertina = "/media/wonder-woman.jpg",
+                Filmato = "/media/wonder-woman.mp4",
+                Descrizione = "Origini e crescita dell'eroina amazzone nella Grande Guerra.",
+                Cast = "Gal Gadot, Chris Pine",
+                Categorie = new[] { "Azione", "Avventura", "Fantasy" }
+            },
+            new
+            {
+                Titolo = "Roma",
+                RegistaKey = "Alfonso Cuaron",
+                Durata = 135,
+                Produzione = new DateTime(2018, 9, 30),
+                Rilascio = DateTime.UtcNow.Date.AddDays(22),
+                Genere = "Drammatico",
+                Featured = false,
+                Copertina = "/media/roma.jpg",
+                Filmato = "/media/roma.mp4",
+                Descrizione = "Ritratto intimo di una famiglia e della vita domestica nel Messico degli anni '70.",
+                Cast = "Yalitza Aparicio, Marina de Tavira",
+                Categorie = new[] { "Drammatico", "Storico" }
+            },
+            new
+            {
+                Titolo = "Lost in Translation",
+                RegistaKey = "Sofia Coppola",
+                Durata = 102,
+                Produzione = new DateTime(2003, 9, 12),
+                Rilascio = DateTime.UtcNow.Date.AddDays(24),
+                Genere = "Romantico",
+                Featured = false,
+                Copertina = "/media/lost-translation.jpg",
+                Filmato = "/media/lost-translation.mp4",
+                Descrizione = "Due anime sole si incontrano a Tokyo tra silenzi e confidenze.",
+                Cast = "Bill Murray, Scarlett Johansson",
+                Categorie = new[] { "Romantico", "Commedia", "Drammatico" }
+            },
+            new
+            {
+                Titolo = "La La Land",
+                RegistaKey = "Damien Chazelle",
+                Durata = 128,
+                Produzione = new DateTime(2016, 12, 1),
+                Rilascio = DateTime.UtcNow.Date.AddDays(26),
+                Genere = "Musicale",
+                Featured = false,
+                Copertina = "/media/lalaland.jpg",
+                Filmato = "/media/lalaland.mp4",
+                Descrizione = "Sogni, jazz e amore nella Los Angeles delle opportunita.",
+                Cast = "Ryan Gosling, Emma Stone",
+                Categorie = new[] { "Musicale", "Romantico", "Commedia" }
+            },
+            new
+            {
+                Titolo = "Parasite",
+                RegistaKey = "Bong Joon-ho",
+                Durata = 132,
+                Produzione = new DateTime(2019, 5, 30),
+                Rilascio = DateTime.UtcNow.Date.AddDays(28),
+                Genere = "Thriller",
+                Featured = true,
+                Copertina = "/media/parasite.jpg",
+                Filmato = "/media/parasite.mp4",
+                Descrizione = "Satira sociale tagliente che sfocia nel thriller.",
+                Cast = "Song Kang-ho, Choi Woo-shik, Park So-dam",
+                Categorie = new[] { "Thriller", "Drammatico", "Commedia" }
+            },
+            new
+            {
+                Titolo = "Birdman",
+                RegistaKey = "Alejandro Inarritu",
+                Durata = 119,
+                Produzione = new DateTime(2014, 10, 17),
+                Rilascio = DateTime.UtcNow.Date.AddDays(30),
+                Genere = "Drammatico",
+                Featured = false,
+                Copertina = "/media/birdman.jpg",
+                Filmato = "/media/birdman.mp4",
+                Descrizione = "Un attore in crisi cerca redenzione su un palcoscenico di Broadway.",
+                Cast = "Michael Keaton, Edward Norton, Emma Stone",
+                Categorie = new[] { "Drammatico", "Commedia" }
+            },
+            new
+            {
+                Titolo = "Avatar: The Way of Water",
+                RegistaKey = "James Cameron",
+                Durata = 192,
+                Produzione = new DateTime(2022, 12, 16),
+                Rilascio = DateTime.UtcNow.Date.AddDays(32),
+                Genere = "Sci-Fi",
+                Featured = true,
+                Copertina = "/media/avatar-way-water.jpg",
+                Filmato = "/media/avatar-way-water.mp4",
+                Descrizione = "Il ritorno su Pandora tra famiglia, oceani e nuove minacce.",
+                Cast = "Sam Worthington, Zoe Saldana, Sigourney Weaver",
+                Categorie = new[] { "Sci-Fi", "Avventura", "Azione" }
+            },
+            new
+            {
+                Titolo = "Get Out",
+                RegistaKey = "Jordan Peele",
+                Durata = 104,
+                Produzione = new DateTime(2017, 2, 24),
+                Rilascio = DateTime.UtcNow.Date.AddDays(34),
+                Genere = "Horror",
+                Featured = false,
+                Copertina = "/media/get-out.jpg",
+                Filmato = "/media/get-out.mp4",
+                Descrizione = "Un weekend apparentemente tranquillo diventa un incubo psicologico.",
+                Cast = "Daniel Kaluuya, Allison Williams",
+                Categorie = new[] { "Horror", "Thriller", "Mistero" }
+            },
+            new
+            {
+                Titolo = "1917",
+                RegistaKey = "Sam Mendes",
+                Durata = 119,
+                Produzione = new DateTime(2019, 12, 25),
+                Rilascio = DateTime.UtcNow.Date.AddDays(36),
+                Genere = "Storico",
+                Featured = false,
+                Copertina = "/media/1917.jpg",
+                Filmato = "/media/1917.mp4",
+                Descrizione = "Missione impossibile nelle trincee della Prima Guerra Mondiale.",
+                Cast = "George MacKay, Dean-Charles Chapman",
+                Categorie = new[] { "Storico", "Guerra", "Drammatico" }
+            },
+            new
+            {
+                Titolo = "The Hurt Locker",
+                RegistaKey = "Kathryn Bigelow",
+                Durata = 131,
+                Produzione = new DateTime(2008, 10, 10),
+                Rilascio = DateTime.UtcNow.Date.AddDays(38),
+                Genere = "Thriller",
+                Featured = false,
+                Copertina = "/media/hurt-locker.jpg",
+                Filmato = "/media/hurt-locker.mp4",
+                Descrizione = "Tensione e adrenalina nella squadra artificieri in Iraq.",
+                Cast = "Jeremy Renner, Anthony Mackie",
+                Categorie = new[] { "Thriller", "Guerra", "Drammatico" }
+            },
+            new
+            {
+                Titolo = "Inside Out",
+                RegistaKey = "Pete Docter",
+                Durata = 95,
+                Produzione = new DateTime(2015, 6, 19),
+                Rilascio = DateTime.UtcNow.Date.AddDays(40),
+                Genere = "Animazione",
+                Featured = false,
+                Copertina = "/media/inside-out.jpg",
+                Filmato = "/media/inside-out.mp4",
+                Descrizione = "Le emozioni prendono vita nel viaggio di crescita di Riley.",
+                Cast = "Amy Poehler, Phyllis Smith",
+                Categorie = new[] { "Animazione", "Famiglia", "Commedia" }
             }
         };
 
@@ -308,65 +533,54 @@ public static class DbInitializer
         Dictionary<string, Film> filmMap)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow.Date);
-        var showDefs = new List<(string SalaKey, string Film, int DayOffset, TimeOnly Start, decimal Price)>();
+        var filmTitles = filmMap.Keys.OrderBy(t => t).ToArray();
+        var sale = saleMap.Values.OrderBy(s => s.CinemaId).ThenBy(s => s.NumeroSala).ToList();
 
-        foreach (var cinema in new[] { "UCI Lissone", "UCI Milano", "Cinema Centrale" })
+        foreach (var sala in sale)
         {
-            var salaNumbers = cinema == "Cinema Centrale" ? new[] { 1, 2 } : new[] { 1, 2, 3, 4 };
-            foreach (var d in Enumerable.Range(0, 6))
+            var standardSlots = new[] { new TimeOnly(15, 30), new TimeOnly(20, 15) };
+            var weekendSlots = new[] { new TimeOnly(11, 30), new TimeOnly(15, 30), new TimeOnly(20, 15) };
+
+            for (var dayOffset = -4; dayOffset <= 20; dayOffset++)
             {
-                foreach (var n in salaNumbers)
+                var data = today.AddDays(dayOffset);
+                var isWeekend = data.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;
+                var slots = isWeekend ? weekendSlots : standardSlots;
+
+                for (var slotIndex = 0; slotIndex < slots.Length; slotIndex++)
                 {
-                    var salaKey = $"{cinema}#{n}";
-                    var film = n switch
+                    var start = slots[slotIndex];
+                    var filmIndex = Math.Abs((sala.Id * 17) + (dayOffset * 7) + slotIndex) % filmTitles.Length;
+                    var film = filmMap[filmTitles[filmIndex]];
+                    var oraFine = start.AddMinutes(film.Durata);
+
+                    var exists = await context.Shows.AnyAsync(s => s.SalaId == sala.Id && s.Data == data && s.OraInizio == start);
+                    if (exists) continue;
+
+                    var stato = dayOffset < 0
+                        ? StatoShow.TERMINATO
+                        : ((slotIndex == 2 && dayOffset % 9 == 0) ? StatoShow.CANCELLATO : StatoShow.PROGRAMMATO);
+
+                    var price = sala.Tipologia switch
                     {
-                        1 => "Oppenheimer",
-                        2 => "Dune - Parte Due",
-                        3 => "Barbie",
-                        _ => d % 2 == 0 ? "Alien: Romulus" : "Il ragazzo e l'airone"
+                        TipologiaSala.ISENSE => 12.00m,
+                        TipologiaSala.XL => 10.00m,
+                        TipologiaSala.TRE_D => 9.50m,
+                        _ => 8.00m
                     };
 
-                    var times = n switch
+                    context.Shows.Add(new Show
                     {
-                        1 => new[] { new TimeOnly(16, 0), new TimeOnly(19, 30), new TimeOnly(22, 45) },
-                        2 => new[] { new TimeOnly(15, 45), new TimeOnly(18, 40), new TimeOnly(21, 35) },
-                        3 => new[] { new TimeOnly(17, 0), new TimeOnly(20, 0) },
-                        _ => new[] { new TimeOnly(16, 20), new TimeOnly(18, 50), new TimeOnly(21, 10) }
-                    };
-
-                    var basePrice = n switch
-                    {
-                        1 => 12m,
-                        2 => 10m,
-                        3 => 9.5m,
-                        _ => 8m
-                    };
-
-                    showDefs.AddRange(times.Select(t => (salaKey, film, d, t, basePrice)));
+                        SalaId = sala.Id,
+                        FilmId = film.Id,
+                        Data = data,
+                        OraInizio = start,
+                        OraFine = oraFine,
+                        PrezzoBase = price,
+                        Stato = stato
+                    });
                 }
             }
-        }
-
-        foreach (var def in showDefs)
-        {
-            var sala = saleMap[def.SalaKey];
-            var film = filmMap[def.Film];
-            var data = today.AddDays(def.DayOffset);
-            var oraFine = def.Start.AddMinutes(film.Durata);
-
-            var exists = await context.Shows.AnyAsync(s => s.SalaId == sala.Id && s.Data == data && s.OraInizio == def.Start);
-            if (exists) continue;
-
-            context.Shows.Add(new Show
-            {
-                SalaId = sala.Id,
-                FilmId = film.Id,
-                Data = data,
-                OraInizio = def.Start,
-                OraFine = oraFine,
-                PrezzoBase = def.Price,
-                Stato = StatoShow.PROGRAMMATO
-            });
         }
 
         await context.SaveChangesAsync();
@@ -380,6 +594,39 @@ public static class DbInitializer
                 s => s);
     }
 
+    private static async Task EnsureProiezioniFromShowsAsync(FilmDbContext context)
+    {
+        var showRows = await context.Shows
+            .Include(s => s.Sala)
+            .Select(s => new
+            {
+                s.Id,
+                s.FilmId,
+                s.Data,
+                s.OraInizio,
+                CinemaId = s.Sala != null ? s.Sala.CinemaId : 0
+            })
+            .Where(s => s.CinemaId > 0)
+            .ToListAsync();
+
+        foreach (var s in showRows)
+        {
+            var exists = await context.Proiezioni.AnyAsync(p => p.ShowId == s.Id);
+            if (exists) continue;
+
+            context.Proiezioni.Add(new Proiezione
+            {
+                ShowId = s.Id,
+                CinemaId = s.CinemaId,
+                FilmId = s.FilmId,
+                Data = s.Data.ToDateTime(TimeOnly.MinValue),
+                Ora = s.OraInizio.ToTimeSpan()
+            });
+        }
+
+        await context.SaveChangesAsync();
+    }
+
     private static async Task EnsureCreditiAsync(FilmDbContext context, Dictionary<string, Utente> userMap)
     {
         var credits = new[]
@@ -387,7 +634,13 @@ public static class DbInitializer
             new { Username = "admin", Saldo = 150m },
             new { Username = "luca.power", Saldo = 90m },
             new { Username = "mario.rossi", Saldo = 25m },
-            new { Username = "giulia.neri", Saldo = 40m }
+            new { Username = "giulia.neri", Saldo = 40m },
+            new { Username = "elena.bianchi", Saldo = 55m },
+            new { Username = "paolo.riva", Saldo = 32m },
+            new { Username = "sara.gallo", Saldo = 28m },
+            new { Username = "marco.conti", Saldo = 18m },
+            new { Username = "anna.greco", Saldo = 47m },
+            new { Username = "davide.mancini", Saldo = 21m }
         };
 
         foreach (var c in credits)
@@ -423,7 +676,7 @@ public static class DbInitializer
         var mario = userMap["mario.rossi"];
         var giulia = userMap["giulia.neri"];
 
-        var keys = showMap.Keys.OrderBy(k => k).Take(4).ToList();
+        var keys = showMap.Keys.OrderBy(k => k).Take(8).ToList();
         var chosen = keys.Select(k => showMap[k]).ToList();
 
         var acquistoMario = await context.Acquisti.FirstOrDefaultAsync(a => a.StripeChargeId == "pi_seed_mario_1");
@@ -532,6 +785,70 @@ public static class DbInitializer
                 AcquistoId = acquistoMario.Id,
                 Descrizione = "Uso credito acquisto"
             });
+        }
+
+        var extraPurchaseDefs = new[]
+        {
+            new { User = "elena.bianchi", Show = chosen[2], Qty = 2, Credit = 5m, Stripe = "pi_seed_elena_1", DaysAgo = 2 },
+            new { User = "paolo.riva", Show = chosen[3], Qty = 3, Credit = 0m, Stripe = "pi_seed_paolo_1", DaysAgo = 1 },
+            new { User = "sara.gallo", Show = chosen[4], Qty = 2, Credit = 4m, Stripe = "pi_seed_sara_1", DaysAgo = 3 },
+            new { User = "anna.greco", Show = chosen[5], Qty = 4, Credit = 8m, Stripe = "pi_seed_anna_1", DaysAgo = 4 },
+            new { User = "davide.mancini", Show = chosen[6], Qty = 1, Credit = 0m, Stripe = "pi_seed_davide_1", DaysAgo = 1 }
+        };
+
+        foreach (var def in extraPurchaseDefs)
+        {
+            var user = userMap[def.User];
+            var acquisto = await context.Acquisti.FirstOrDefaultAsync(a => a.StripeChargeId == def.Stripe);
+            if (acquisto is null)
+            {
+                acquisto = new Acquisto
+                {
+                    UtenteId = user.Id,
+                    ShowId = def.Show.Id,
+                    DataAcquisto = DateTime.UtcNow.AddDays(-def.DaysAgo),
+                    ImportoTotale = (def.Show.PrezzoBase * def.Qty) - def.Credit,
+                    CreditoUsato = def.Credit,
+                    StripeChargeId = def.Stripe,
+                    Stato = StatoAcquisto.PAGATO,
+                    CodiceConferma = Guid.NewGuid().ToString()
+                };
+                context.Acquisti.Add(acquisto);
+                await context.SaveChangesAsync();
+            }
+
+            var salaData = await context.Sale
+                .Where(s => s.Id == def.Show.SalaId)
+                .Select(s => new { s.CinemaId, s.NumeroSala, Tipo = s.Tipologia.ToString() })
+                .FirstAsync();
+
+            for (var i = 0; i < def.Qty; i++)
+            {
+                var posto = $"Fila {5 + (i % 3)}, Posto {9 + i}";
+                var exists = await context.Biglietti.AnyAsync(b => b.AcquistoId == acquisto.Id && b.Posto == posto);
+                if (exists) continue;
+
+                var t = CreateTicket(acquisto.Id, def.Show.Id, posto, salaData.NumeroSala, salaData.Tipo, def.Show.PrezzoBase, salaData.CinemaId, false);
+                context.Biglietti.Add(t);
+                await context.SaveChangesAsync();
+                t.CodiceHash = GenerateHash(t.Id, t.AcquistoId, t.Posto);
+                t.QRCodeUrl = $"https://filmapi.com/validazione/qr/{t.CodiceHash}";
+            }
+
+            if (def.Credit > 0m && !await context.TransazioniCredito.AnyAsync(t => t.AcquistoId == acquisto.Id && t.Tipo == TipoTransazione.ACQUISTO))
+            {
+                context.TransazioniCredito.Add(new TransazioneCredito
+                {
+                    UtenteId = user.Id,
+                    Tipo = TipoTransazione.ACQUISTO,
+                    Importo = -def.Credit,
+                    SaldoPrecedente = def.Credit + 20m,
+                    SaldoSuccessivo = 20m,
+                    DataTransazione = DateTime.UtcNow.AddDays(-def.DaysAgo),
+                    AcquistoId = acquisto.Id,
+                    Descrizione = "Uso credito acquisto"
+                });
+            }
         }
 
         await context.SaveChangesAsync();
