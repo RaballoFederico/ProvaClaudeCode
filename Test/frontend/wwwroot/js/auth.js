@@ -1,6 +1,6 @@
 function getApiCandidates() {
     const stored = window.localStorage.getItem('apiBaseUrl');
-    const defaults = ['http://localhost:5000', 'https://localhost:7217'];
+    const defaults = ['http://localhost:5001', 'http://localhost:5000', 'https://localhost:7217'];
     if (!stored || stored === 'undefined' || stored === 'null') {
         return defaults;
     }
@@ -9,35 +9,53 @@ function getApiCandidates() {
 
 let API_URL = getApiCandidates()[0];
 
+async function fetchWithApiFallback(path, options = {}) {
+    let response = null;
+    let lastError = null;
+
+    for (const candidate of getApiCandidates()) {
+        try {
+            response = await fetch(`${candidate}${path}`, options);
+            API_URL = candidate;
+            localStorage.setItem('apiBaseUrl', candidate);
+            break;
+        } catch (err) {
+            lastError = err;
+        }
+    }
+
+    if (!response) {
+        throw lastError || new Error('Impossibile raggiungere il server API');
+    }
+
+    return response;
+}
+
 const Auth = {
     accessToken: localStorage.getItem('accessToken'),
     refreshToken: localStorage.getItem('refreshToken'),
     tokenExpiry: localStorage.getItem('tokenExpiry') ? new Date(localStorage.getItem('tokenExpiry')) : null,
     user: JSON.parse(localStorage.getItem('user') || 'null'),
 
+    saveSession(data) {
+        this.accessToken = data.accessToken;
+        this.refreshToken = data.refreshToken;
+        this.tokenExpiry = new Date(data.expiresAt);
+        this.user = data.utente;
+
+        localStorage.setItem('accessToken', data.accessToken);
+        localStorage.setItem('refreshToken', data.refreshToken);
+        localStorage.setItem('tokenExpiry', data.expiresAt);
+        localStorage.setItem('user', JSON.stringify(data.utente));
+    },
+
     async login(username, password) {
         try {
-            let response = null;
-            let lastError = null;
-
-            for (const candidate of getApiCandidates()) {
-                try {
-                    response = await fetch(`${candidate}/auth/login`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username, password })
-                    });
-                    API_URL = candidate;
-                    localStorage.setItem('apiBaseUrl', candidate);
-                    break;
-                } catch (err) {
-                    lastError = err;
-                }
-            }
-
-            if (!response) {
-                throw lastError || new Error('Impossibile raggiungere il server API');
-            }
+            const response = await fetchWithApiFallback('/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
 
             if (!response.ok) {
                 let message = 'Credenziali non valide';
@@ -51,17 +69,7 @@ const Auth = {
             }
 
             const data = await response.json();
-
-            // Salva token
-            this.accessToken = data.accessToken;
-            this.refreshToken = data.refreshToken;
-            this.tokenExpiry = new Date(data.expiresAt);
-            this.user = data.utente;
-
-            localStorage.setItem('accessToken', data.accessToken);
-            localStorage.setItem('refreshToken', data.refreshToken);
-            localStorage.setItem('tokenExpiry', data.expiresAt);
-            localStorage.setItem('user', JSON.stringify(data.utente));
+            this.saveSession(data);
 
             return { success: true, user: data.utente };
         } catch (error) {
@@ -71,7 +79,7 @@ const Auth = {
 
     async register(userData) {
         try {
-            const response = await fetch(`${API_URL}/auth/register`, {
+            const response = await fetchWithApiFallback('/auth/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(userData)
@@ -94,13 +102,77 @@ const Auth = {
         }
     },
 
+    async getExternalProviders() {
+        const response = await fetchWithApiFallback('/auth/external/providers', {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        if (!response.ok) {
+            throw new Error('Impossibile caricare i provider di accesso');
+        }
+
+        return await response.json();
+    },
+
+    async startExternalLogin(provider, returnUrl) {
+        const response = await fetchWithApiFallback(
+            `/auth/external/${encodeURIComponent(provider)}/start?returnUrl=${encodeURIComponent(returnUrl)}`,
+            {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            }
+        );
+
+        if (!response.ok) {
+            let message = 'Provider esterno non disponibile';
+            try {
+                const error = await response.json();
+                message = error.message || message;
+            } catch {
+                // fallback su messaggio di default
+            }
+            throw new Error(message);
+        }
+
+        const payload = await response.json();
+        if (!payload.redirectUrl) {
+            throw new Error('Redirect OAuth non valido');
+        }
+
+        window.location.href = payload.redirectUrl;
+    },
+
+    async completeExternalLogin(provider, authCode) {
+        const response = await fetchWithApiFallback('/auth/external/complete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ provider, authCode })
+        });
+
+        if (!response.ok) {
+            let message = 'Completamento login esterno fallito';
+            try {
+                const error = await response.json();
+                message = error.message || message;
+            } catch {
+                // fallback su messaggio di default
+            }
+            throw new Error(message);
+        }
+
+        const data = await response.json();
+        this.saveSession(data);
+        return { success: true, user: data.utente };
+    },
+
     async refresh() {
         try {
             if (!this.refreshToken) {
                 throw new Error('Nessun refresh token');
             }
 
-            const response = await fetch(`${API_URL}/auth/refresh`, {
+            const response = await fetchWithApiFallback('/auth/refresh', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ refreshToken: this.refreshToken })
@@ -133,7 +205,7 @@ const Auth = {
     async logout() {
         try {
             if (this.accessToken) {
-                await fetch(`${API_URL}/auth/logout`, {
+                await fetchWithApiFallback('/auth/logout', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${this.accessToken}` }
                 });

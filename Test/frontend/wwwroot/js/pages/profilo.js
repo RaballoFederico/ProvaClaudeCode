@@ -90,6 +90,7 @@ function renderProfile() {
     document.getElementById('profile-email').textContent = user.email;
     document.getElementById('profile-telefono').textContent = user.telefono || '-';
     document.getElementById('profile-data-reg').textContent = new Date(user.dataRegistrazione).toLocaleDateString('it-IT');
+    document.getElementById('profile-payment-method').textContent = user.metodoPagamentoPreferitoEtichetta || user.metodoPagamentoPreferito || '-';
     
     // Popola form modifica
     document.getElementById('edit-email').value = user.email;

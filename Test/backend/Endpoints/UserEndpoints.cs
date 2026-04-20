@@ -42,6 +42,8 @@ public static class UserEndpoints
                 Cognome = utente.Cognome,
                 Telefono = utente.Telefono,
                 DataRegistrazione = utente.DataRegistrazione,
+                MetodoPagamentoPreferito = utente.PreferredPaymentMethod,
+                MetodoPagamentoPreferitoEtichetta = utente.PreferredPaymentMethodLabel,
                 Ruoli = utente.UtentiRuoli.Select(ur => ur.Ruolo.Nome).ToList(),
                 ProiezioniSalvate = utente.ProiezioniSalvate.Select(ps => new ProiezioneSalvataDTO
                 {
@@ -90,12 +92,49 @@ public static class UserEndpoints
                     a.DataAcquisto,
                     a.ImportoTotale,
                     a.CreditoUsato,
+                    a.MetodoPagamento,
+                    a.MetodoPagamentoEtichetta,
+                    a.MetodoPagamentoSalvato,
                     Stato = a.Stato.ToString(),
                     a.CodiceConferma,
                     a.ShowId
                 })
                 .ToListAsync();
             return Results.Ok(acquisti);
+        });
+
+        group.MapGet("/payment-preference", async (HttpContext context, FilmDbContext db) =>
+        {
+            var userId = GetUserId(context);
+            if (userId == null) return Results.Unauthorized();
+
+            var utente = await db.Utenti.FindAsync(userId.Value);
+            if (utente == null) return Results.NotFound();
+
+            return Results.Ok(new
+            {
+                metodo = utente.PreferredPaymentMethod,
+                etichetta = utente.PreferredPaymentMethodLabel
+            });
+        });
+
+        group.MapPut("/payment-preference", async (HttpContext context, UpdatePreferredPaymentMethodDTO request, FilmDbContext db) =>
+        {
+            var userId = GetUserId(context);
+            if (userId == null) return Results.Unauthorized();
+
+            var utente = await db.Utenti.FindAsync(userId.Value);
+            if (utente == null) return Results.NotFound();
+
+            utente.PreferredPaymentMethod = NormalizeValue(request.Metodo, 50);
+            utente.PreferredPaymentMethodLabel = NormalizeValue(request.Etichetta, 120);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new
+            {
+                metodo = utente.PreferredPaymentMethod,
+                etichetta = utente.PreferredPaymentMethodLabel
+            });
         });
 
         group.MapGet("/biglietti", async (HttpContext context, Services.Interfaces.IBigliettoService bigliettoService) =>
@@ -432,5 +471,13 @@ public static class UserEndpoints
             return userId;
         }
         return null;
+    }
+
+    private static string? NormalizeValue(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var trimmed = value.Trim();
+        if (trimmed.Length <= maxLength) return trimmed;
+        return trimmed[..maxLength];
     }
 }

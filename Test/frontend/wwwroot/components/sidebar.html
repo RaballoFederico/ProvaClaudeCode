@@ -1,5 +1,15 @@
 <div id="sidebar-backdrop" class="fixed inset-0 bg-black/40 z-40 md:hidden"></div>
 
+<div id="mobile-cinema-badge" class="md:hidden fixed top-[72px] left-2 right-2 z-40 hidden">
+    <button id="mobile-cinema-badge-btn" class="w-full rounded-xl bg-surface-container border border-outline-variant/30 px-3 py-2 text-xs text-on-surface-variant flex items-center justify-between">
+        <span class="inline-flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">location_city</span>
+            <span id="mobile-cinema-badge-label">Cinema: non selezionato</span>
+        </span>
+        <span class="material-symbols-outlined text-sm">arrow_forward</span>
+    </button>
+</div>
+
 <aside id="sidebar" class="fixed md:sticky left-0 top-0 h-screen w-[86vw] max-w-[300px] md:w-72 z-50 md:z-30 bg-surface-container border-r border-outline-variant/20 p-4 md:p-5 flex flex-col -translate-x-full md:translate-x-0">
     <div class="mb-4">
         <div class="rounded-2xl bg-surface-container-high p-4 border border-outline-variant/20">
@@ -161,6 +171,7 @@
     function initSidebar() {
         applySidebarAccessControl();
         applyActiveState();
+        initMobileCinemaBadge();
 
         const menuToggle = document.getElementById('mobile-menu-toggle');
         const backdrop = document.getElementById('sidebar-backdrop');
@@ -199,6 +210,81 @@
                 }
             });
         }
+    }
+
+    async function initMobileCinemaBadge() {
+        const wrap = document.getElementById('mobile-cinema-badge');
+        const label = document.getElementById('mobile-cinema-badge-label');
+        const btn = document.getElementById('mobile-cinema-badge-btn');
+        if (!wrap || !label || !btn || typeof ApiClient === 'undefined') return;
+
+        let selectedId = parseInt(localStorage.getItem('selectedCinema') || '0');
+        const qp = new URLSearchParams(window.location.search);
+        const queryId = parseInt(qp.get('cinemaId') || '0');
+        if (queryId) selectedId = queryId;
+
+        try {
+            const cinemas = await ApiClient.get('/cinemas');
+            const selected = Array.isArray(cinemas) ? cinemas.find((c) => c.id === selectedId) : null;
+            await updateMobileBadgeLabel(label, selected);
+            wrap.classList.remove('hidden');
+        } catch {
+            return;
+        }
+
+        btn.addEventListener('click', () => {
+            window.location.href = '/programmazione.html';
+        });
+
+        window.addEventListener('cinema:changed', async (event) => {
+            const cinemaId = parseInt(event?.detail?.cinemaId || '0');
+            if (!cinemaId) return;
+            try {
+                const cinemas = await ApiClient.get('/cinemas');
+                const selected = Array.isArray(cinemas) ? cinemas.find((c) => c.id === cinemaId) : null;
+                await updateMobileBadgeLabel(label, selected);
+            } catch {
+            }
+        });
+    }
+
+    async function updateMobileBadgeLabel(label, selected) {
+        if (!label) return;
+        if (!selected) {
+            label.textContent = 'Cinema: non selezionato';
+            return;
+        }
+
+        if (!navigator.geolocation || !selected.latitudine || !selected.longitudine) {
+            label.textContent = `Cinema: ${selected.nome} (${selected.citta})`;
+            return;
+        }
+
+        await new Promise((resolve) => {
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const km = calcKm(
+                    pos.coords.latitude,
+                    pos.coords.longitude,
+                    Number(selected.latitudine),
+                    Number(selected.longitudine)
+                );
+                label.textContent = `Cinema: ${selected.nome} (${selected.citta}) - ${km.toFixed(1)} km`;
+                resolve();
+            }, () => {
+                label.textContent = `Cinema: ${selected.nome} (${selected.citta})`;
+                resolve();
+            }, { enableHighAccuracy: false, timeout: 4000, maximumAge: 60000 });
+        });
+    }
+
+    function calcKm(lat1, lng1, lat2, lng2) {
+        const R = 6371;
+        const dLat = ((lat2 - lat1) * Math.PI) / 180;
+        const dLon = ((lng2 - lng1) * Math.PI) / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+            + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180)
+            * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     }
 
     initSidebar();

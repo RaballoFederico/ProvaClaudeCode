@@ -170,6 +170,9 @@ public class BigliettoService(
             ImportoTotale = importoTotale,
             CreditoUsato = creditoUsato,
             StripeChargeId = dto.PaymentIntentId,
+            MetodoPagamento = NormalizeValue(dto.PaymentMethodType, 50),
+            MetodoPagamentoEtichetta = NormalizeValue(dto.PaymentMethodLabel, 120),
+            MetodoPagamentoSalvato = dto.SavePaymentMethodForFuture,
             Stato = StatoAcquisto.PAGATO,
             CodiceConferma = Guid.NewGuid().ToString()
         };
@@ -409,5 +412,13 @@ public class BigliettoService(
         if (!int.TryParse(parts[0][5..], out var fila)) return null;
         if (!int.TryParse(parts[1][6..], out var numero)) return null;
         return new PostoDTO { Fila = fila, Numero = numero };
+    }
+
+    private static string? NormalizeValue(string? value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value)) return null;
+        var trimmed = value.Trim();
+        if (trimmed.Length <= maxLength) return trimmed;
+        return trimmed[..maxLength];
     }
 }

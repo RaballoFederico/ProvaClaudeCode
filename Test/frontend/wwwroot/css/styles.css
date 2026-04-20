@@ -371,6 +371,59 @@ a.bg-primary-container {
     border: 1px solid color-mix(in srgb, var(--outline) 82%, transparent);
 }
 
+.app-card {
+    border: 1px solid var(--outline);
+    border-radius: 1rem;
+    background: color-mix(in srgb, var(--surface) 92%, transparent);
+    box-shadow: var(--ring);
+}
+
+.app-card-soft {
+    border: 1px solid color-mix(in srgb, var(--outline) 80%, transparent);
+    border-radius: 0.9rem;
+    background: color-mix(in srgb, var(--surface-high) 88%, transparent);
+}
+
+.app-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--outline) 82%, transparent);
+    background: color-mix(in srgb, var(--surface-high) 90%, transparent);
+    color: var(--text-soft);
+    font-size: 0.72rem;
+    line-height: 1;
+}
+
+.app-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.56rem 0.95rem;
+    border-radius: 0.65rem;
+    font-size: 0.86rem;
+    font-weight: 600;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.app-btn:hover {
+    transform: translateY(-1px);
+}
+
+.app-btn-primary {
+    background-image: linear-gradient(132deg, color-mix(in srgb, var(--primary) 92%, #ffffff 8%), color-mix(in srgb, var(--primary) 75%, #4f1a10 25%));
+    color: #fff6f1;
+}
+
+.app-btn-secondary {
+    border: 1px solid color-mix(in srgb, var(--outline) 88%, transparent);
+    background: color-mix(in srgb, var(--surface-high) 92%, transparent);
+    color: var(--text);
+}
+
 .auth-shell {
     width: min(1040px, calc(100% - 1.5rem));
     display: grid;

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pagamento | FilmAPI</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="/css/styles.css">
     <script src="https://js.stripe.com/v3/"></script>
@@ -15,17 +15,22 @@
             theme: {
                 extend: {
                     colors: {
-                        "primary-container": "#de3a1f",
-                        "background": "#121415",
-                        "surface-container": "#1b1f20",
-                        "surface-container-high": "#252b2d",
-                        "on-surface": "#f3f1eb",
-                        "on-surface-variant": "#b9b8ad",
-                        "outline-variant": "#384043"
+                        "primary-container": "#e50914",
+                        "secondary": "#e9c176",
+                        "background": "#131313",
+                        "surface-container": "#201f1f",
+                        "surface-container-high": "#2a2a2a",
+                        "on-surface": "#f4f5f6",
+                        "on-surface-variant": "#a9b0b7",
+                        "outline-variant": "#363d43"
                     },
                     fontFamily: {
                         "headline": ["Manrope"],
-                        "body": ["Outfit"]
+                        "body": ["Inter"]
+                    },
+                    boxShadow: {
+                        "method": "0 10px 30px rgba(0,0,0,0.25)",
+                        "panel": "0 14px 36px rgba(0,0,0,0.28)"
                     }
                 }
             }
@@ -37,42 +42,102 @@
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
         <main class="flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
-            <section class="hero-banner p-6 md:p-8 mb-6 reveal-up">
-                <span class="badge-soft mb-3">
-                    <span class="material-symbols-outlined text-sm">payments</span>
-                    Finalizzazione ordine
-                </span>
-                <h1 class="font-headline text-3xl md:text-5xl font-semibold">Pagamento</h1>
-                <p class="text-on-surface-variant mt-2">Conferma il checkout usando credito e, se necessario, carta.</p>
-            </section>
-
-            <section class="grid grid-cols-1 xl:grid-cols-3 gap-4 reveal-up delay-1">
-                <div class="xl:col-span-2 bg-surface-container rounded-2xl border border-outline-variant/20 p-5">
-                    <h1 class="font-headline text-2xl font-bold mb-4">Riepilogo Acquisto</h1>
-                    <div id="summary" class="space-y-2 text-sm"></div>
-                    <div class="mt-4 pt-4 border-t border-outline-variant/20 text-sm">
-                        <div>Subtotale: <strong><span id="subtotal">0.00</span> EUR</strong></div>
+            <div class="max-w-7xl mx-auto">
+            <section class="hero-banner p-5 md:p-8 mb-5 md:mb-6 reveal-up shadow-panel">
+                <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                    <div>
+                        <span class="inline-flex items-center gap-2 text-xs uppercase tracking-[0.22em] text-on-surface-variant">
+                            <span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                            Checkout Secure Zone
+                        </span>
+                        <h1 class="font-headline text-2xl sm:text-3xl md:text-5xl font-semibold mt-2">Seleziona il metodo di pagamento</h1>
+                        <p class="text-on-surface-variant mt-2">Layout rapido in stile store gaming: metodi a sinistra, dettagli a destra, conferma in un click con tema allineato al resto della suite.</p>
+                    </div>
+                    <div class="bg-surface-container-high/80 border border-outline-variant/30 rounded-2xl px-4 py-3 min-w-40 md:min-w-56">
+                        <div class="text-xs text-on-surface-variant uppercase tracking-[0.16em]">Sessione posti</div>
+                        <div class="text-lg font-semibold" id="timer">--:--</div>
                     </div>
                 </div>
+            </section>
 
-                <div class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5">
-                    <h2 class="font-headline text-lg font-bold mb-3">Pagamento</h2>
-                    <div class="text-sm">Credito disponibile: <strong><span id="credito">0.00</span> EUR</strong></div>
-                    <label class="mt-3 flex items-center gap-2 text-sm">
-                        <input id="use-credit" type="checkbox" class="rounded" checked />
-                        Usa il mio credito
-                    </label>
-                    <div class="mt-2 text-sm">Rimanente da pagare: <strong><span id="remaining">0.00</span> EUR</strong></div>
-
-                    <div class="mt-4" id="stripe-container">
-                        <div id="card-element" class="bg-surface-container-high rounded-lg p-3"></div>
+            <section class="grid grid-cols-1 xl:grid-cols-12 gap-4 md:gap-5">
+                <aside class="xl:col-span-4 2xl:col-span-3 space-y-3 md:space-y-4 reveal-up delay-1">
+                    <div class="app-card p-4 shadow-method">
+                        <h2 class="font-headline text-lg mb-3">Metodi disponibili</h2>
+                        <p class="text-xs text-on-surface-variant mb-4">I wallet rapidi aprono il popup provider, carta e Postepay usano Stripe in sicurezza.</p>
+                        <div id="method-list" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-2"></div>
                     </div>
 
-                    <button id="pay-btn" class="mt-4 w-full px-4 py-3 rounded-lg bg-primary-container text-white font-semibold hover-lift">Conferma pagamento</button>
-                </div>
+                    <div class="app-card p-4">
+                        <h3 class="font-headline text-base mb-3">Riepilogo ordine</h3>
+                        <div id="summary" class="space-y-2 text-sm text-on-surface-variant"></div>
+                        <div class="mt-4 pt-4 border-t border-outline-variant/20 space-y-2">
+                            <div class="flex items-center justify-between text-sm">
+                                <span>Subtotale</span>
+                                <strong><span id="subtotal">0.00</span> EUR</strong>
+                            </div>
+                            <div class="flex items-center justify-between text-sm">
+                                <span>Credito disponibile</span>
+                                <strong><span id="credito">0.00</span> EUR</strong>
+                            </div>
+                            <div class="flex items-center justify-between text-base font-semibold">
+                                <span>Da pagare</span>
+                                <span class="text-secondary"><span id="remaining">0.00</span> EUR</span>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <section class="xl:col-span-8 2xl:col-span-9 reveal-up delay-2">
+                    <div class="app-card p-5 md:p-6 shadow-panel">
+                        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-4">
+                            <div>
+                                <div class="text-xs uppercase tracking-[0.14em] text-on-surface-variant" id="selected-method-caption">Metodo selezionato</div>
+                                <h2 class="font-headline text-2xl" id="selected-method-title">Carta di pagamento</h2>
+                            </div>
+                            <div class="inline-flex items-center gap-2 text-xs rounded-full bg-surface-container-high border border-outline-variant/30 px-3 py-1.5 text-on-surface-variant">
+                                <span class="material-symbols-outlined text-sm">verified_user</span>
+                                Dati protetti con Stripe
+                            </div>
+                        </div>
+
+                        <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high p-4 mb-4">
+                            <label class="flex items-start gap-3 text-sm cursor-pointer select-none">
+                                <input id="use-credit" type="checkbox" class="rounded mt-0.5" checked>
+                                <span>
+                                    <span class="font-medium text-on-surface">Usa il mio credito prima dei metodi esterni</span>
+                                    <span class="block text-on-surface-variant text-xs mt-1">Se il credito copre tutto, non verra addebitato nessun metodo esterno.</span>
+                                </span>
+                            </label>
+                        </div>
+
+                        <div id="payment-panel-container" class="space-y-4"></div>
+
+                        <div class="mt-5 rounded-xl border border-outline-variant/20 bg-surface-container-high p-4">
+                            <label class="flex items-start gap-3 text-sm cursor-pointer select-none">
+                                <input id="save-payment-method" type="checkbox" class="rounded mt-0.5">
+                                <span>
+                                    <span class="font-medium text-on-surface">Salva preferenza pagamento per i prossimi ordini</span>
+                                    <span class="block text-on-surface-variant text-xs mt-1">Salviamo solo metadati non sensibili (tipo metodo e preferenza), mai CVV o numero completo carta.</span>
+                                </span>
+                            </label>
+                        </div>
+
+                        <div class="mt-6 flex flex-col-reverse md:flex-row gap-3 md:items-center md:justify-between">
+                            <button id="back-btn" class="w-full md:w-auto app-btn app-btn-secondary transition-all">
+                                Torna alla selezione posti
+                            </button>
+                            <button id="pay-btn" class="w-full md:w-auto app-btn app-btn-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                                Conferma pagamento
+                            </button>
+                        </div>
+                    </div>
+                </section>
             </section>
+            </div>
         </main>
     </div>
+
     <div id="footer-container"></div>
 
     <script src="/js/theme.js"></script>
@@ -82,6 +147,49 @@
     <script src="/js/api-client.js"></script>
     <script src="/js/utils.js"></script>
     <script>
+        const PAYMENT_METHODS = [
+            {
+                id: 'card',
+                label: 'Carta / Postepay',
+                icon: 'credit_card',
+                subtitle: 'Visa, Mastercard, Postepay',
+                needsStripe: true,
+                cta: 'Paga con carta'
+            },
+            {
+                id: 'apple_pay',
+                label: 'Apple Pay',
+                icon: 'phone_iphone',
+                subtitle: 'Wallet rapido Apple',
+                needsStripe: true,
+                cta: 'Paga con Apple Pay'
+            },
+            {
+                id: 'google_pay',
+                label: 'Google Pay',
+                icon: 'android',
+                subtitle: 'Wallet rapido Google',
+                needsStripe: true,
+                cta: 'Paga con Google Pay'
+            },
+            {
+                id: 'revolut',
+                label: 'Revolut Pay',
+                icon: 'bolt',
+                subtitle: 'Pagamento istantaneo',
+                needsStripe: true,
+                cta: 'Paga con Revolut'
+            },
+            {
+                id: 'paypal',
+                label: 'PayPal',
+                icon: 'account_balance_wallet',
+                subtitle: 'Reindirizzamento protetto',
+                needsStripe: true,
+                cta: 'Paga con PayPal'
+            }
+        ];
+
         let showId = 0;
         let filmId = 0;
         let salaId = 0;
@@ -89,12 +197,27 @@
         let lockCode = '';
 
         let stripe = null;
-        let card = null;
+        let paymentElement = null;
+        let cardNumberElement = null;
+        let cardExpiryElement = null;
+        let cardCvcElement = null;
+        let elements = null;
+        let clientSecret = null;
+        let stripeReady = false;
+
         let subtotal = 0;
         let credito = 0;
         let remaining = 0;
         let useCredit = true;
+        let selectedMethodId = 'card';
+        let preferredPaymentMethodId = null;
         let lockInfo = null;
+        let showData = null;
+        let billingFormState = {
+            name: '',
+            email: '',
+            phone: ''
+        };
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();
@@ -105,6 +228,7 @@
             salaId = parseInt(qp.get('IdSala') || '0');
             cinemaId = parseInt(qp.get('IdCinema') || '0');
             lockCode = qp.get('lock') || '';
+            billingFormState = buildBillingDefaults();
 
             if (!showId || !lockCode) {
                 window.location.href = '/programmazione.html';
@@ -112,16 +236,34 @@
             }
 
             bindEvents();
+            renderMethodList();
             await bootstrap();
         });
 
         function bindEvents() {
-            document.getElementById('use-credit').addEventListener('change', e => {
+            document.getElementById('use-credit').addEventListener('change', (e) => {
+                captureBillingFormState();
                 useCredit = e.target.checked;
                 recalc();
+                renderPaymentPanel();
             });
 
             document.getElementById('pay-btn').addEventListener('click', handlePay);
+            window.addEventListener('theme:changed', async () => {
+                if (remaining > 0 && stripeReady) {
+                    await preparePaymentElement();
+                    renderPaymentPanel();
+                }
+            });
+            document.getElementById('back-btn').addEventListener('click', () => {
+                const params = new URLSearchParams({
+                    IdShow: String(showId),
+                    IdFilm: String(filmId),
+                    IdSala: String(salaId),
+                    IdCinema: String(cinemaId)
+                });
+                window.location.href = `/acquista.html?${params.toString()}`;
+            });
         }
 
         async function bootstrap() {
@@ -133,43 +275,106 @@
                     ApiClient.get('/user/credito'),
                     ApiClient.get(`/acquisto/lock/${encodeURIComponent(lockCode)}`)
                 ]);
-                lockInfo = lock;
-                const selected = Array.isArray(lock?.posti) ? lock.posti.length : 0;
-                if (!selected) {
-                    throw new Error('Lock posti non valido o scaduto');
-                }
-                subtotal = (show.prezzoBase || 0) * selected;
 
+                lockInfo = lock;
+                showData = show;
+                const selected = Array.isArray(lock?.posti) ? lock.posti.length : 0;
+                if (!selected) throw new Error('Lock posti non valido o scaduto');
+
+                subtotal = (show.prezzoBase || 0) * selected;
                 credito = saldoRes?.saldo || 0;
 
+                await loadPreferredPaymentMethod();
+                renderMethodList();
+
                 document.getElementById('summary').innerHTML = `
-                    <div>Film: <strong>${escapeHtml(film.titolo)}</strong></div>
-                    <div>Cinema: <strong>${cinemaId}</strong> - Sala <strong>${salaId}</strong></div>
-                    <div>Data: <strong>${formatDate(show.data)}</strong>, ${(show.oraInizio || '').substring(0,5)}</div>
-                    <div>Posti: <strong>${(lock.posti || []).map(p => `Fila ${p.fila}, Posto ${p.numero}`).join(' | ')}</strong></div>
+                    <div>Film: <strong class="text-on-surface">${escapeHtml(film.titolo)}</strong></div>
+                    <div>Cinema: <strong class="text-on-surface">${cinemaId}</strong> - Sala <strong class="text-on-surface">${salaId}</strong></div>
+                    <div>Data: <strong class="text-on-surface">${formatDate(show.data)}</strong>, ${(show.oraInizio || '').substring(0,5)}</div>
+                    <div>Posti: <strong class="text-on-surface">${(lock.posti || []).map(p => `F${p.fila} P${p.numero}`).join(' | ')}</strong></div>
                 `;
 
                 document.getElementById('subtotal').textContent = subtotal.toFixed(2);
                 document.getElementById('credito').textContent = credito.toFixed(2);
 
                 recalc();
+                startLockTimer();
+
                 await initStripe();
+                await preparePaymentElement();
+                renderPaymentPanel();
             } catch (e) {
                 if (isLockExpiredError(e)) {
                     redirectToSeatSelection('Sessione posti scaduta. Seleziona di nuovo i posti.');
                     return;
                 }
-                Utils.showNotification(e.message || 'Errore caricamento pagamento', 'error');
+                Utils.showNotification(e.message || 'Errore caricamento pagina pagamento', 'error');
             } finally {
                 Utils.hideLoading();
             }
+        }
+
+        function renderMethodList() {
+            const container = document.getElementById('method-list');
+            container.innerHTML = PAYMENT_METHODS.map((method) => {
+                const active = method.id === selectedMethodId;
+                return `
+                    <button type="button" data-method-id="${method.id}" class="payment-method-btn w-full min-h-14 text-left rounded-xl border px-3 py-3 transition-all ${active ? 'border-primary-container bg-primary-container/10 ring-1 ring-primary-container/30 shadow-[0_10px_28px_-20px_rgba(229,9,20,0.9)]' : 'border-outline-variant/30 hover:border-outline-variant/60 hover:bg-surface-container-high/60'}">
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <span class="material-symbols-outlined text-${active ? 'primary-container' : 'on-surface-variant'}">${method.icon}</span>
+                                <div class="min-w-0">
+                                    <div class="font-medium truncate tracking-tight">${method.label}</div>
+                                    <div class="text-xs text-on-surface-variant truncate">${method.subtitle}</div>
+                                </div>
+                            </div>
+                            ${active ? '<span class="material-symbols-outlined text-primary-container">check_circle</span>' : ''}
+                        </div>
+                    </button>
+                `;
+            }).join('');
+
+            container.querySelectorAll('.payment-method-btn').forEach((btn) => {
+                btn.addEventListener('click', async () => {
+                    captureBillingFormState();
+                    selectedMethodId = btn.getAttribute('data-method-id');
+                    renderMethodList();
+                    await preparePaymentElement();
+                    renderPaymentPanel();
+                });
+            });
+
+            updateSelectedMethodHeader();
+        }
+
+        async function loadPreferredPaymentMethod() {
+            try {
+                const preference = await ApiClient.get('/user/payment-preference');
+                const method = (preference?.metodo || '').toLowerCase();
+                if (method && PAYMENT_METHODS.some((m) => m.id === method)) {
+                    preferredPaymentMethodId = method;
+                    selectedMethodId = method;
+                }
+            } catch {
+                preferredPaymentMethodId = null;
+            }
+        }
+
+        function updateSelectedMethodHeader() {
+            const method = getSelectedMethod();
+            document.getElementById('selected-method-title').textContent = method.label;
+            document.getElementById('selected-method-caption').textContent = method.subtitle;
+            document.getElementById('pay-btn').textContent = method.cta;
+        }
+
+        function getSelectedMethod() {
+            return PAYMENT_METHODS.find((m) => m.id === selectedMethodId) || PAYMENT_METHODS[0];
         }
 
         function recalc() {
             const used = useCredit ? Math.min(credito, subtotal) : 0;
             remaining = Math.max(0, subtotal - used);
             document.getElementById('remaining').textContent = remaining.toFixed(2);
-            document.getElementById('stripe-container').classList.toggle('hidden', remaining <= 0);
         }
 
         async function initStripe() {
@@ -184,56 +389,267 @@
             }
 
             if (!publishable || publishable.startsWith('pk_test_mock')) {
-                document.getElementById('stripe-container').classList.add('hidden');
+                stripeReady = false;
                 return;
             }
 
             try {
                 stripe = Stripe(publishable);
-                const elements = stripe.elements();
-                card = elements.create('card');
-                card.mount('#card-element');
+                stripeReady = true;
             } catch {
+                stripeReady = false;
             }
         }
 
+        async function preparePaymentElement() {
+            const method = getSelectedMethod();
+            if (!method.needsStripe || remaining <= 0 || !stripeReady) {
+                unmountPaymentElement();
+                return;
+            }
+
+            try {
+                const intent = await ApiClient.post('/acquisto/payment-intent', { importo: remaining });
+                clientSecret = intent.clientSecret;
+
+                unmountPaymentElement();
+                elements = stripe.elements({
+                    clientSecret,
+                    appearance: {
+                        theme: getCurrentTheme() === 'light' ? 'stripe' : 'night',
+                        variables: {
+                            colorPrimary: getCssVariable('--primary', '#e50914'),
+                            colorBackground: getCssVariable('--surface-high', '#2a2a2a'),
+                            colorText: getCssVariable('--text', '#f4f5f6'),
+                            colorDanger: '#f87171',
+                            borderRadius: '12px'
+                        }
+                    }
+                });
+
+                cardNumberElement = elements.create('cardNumber');
+                cardExpiryElement = elements.create('cardExpiry');
+                cardCvcElement = elements.create('cardCvc');
+
+                if (method.id === 'card') {
+                    paymentElement = null;
+                } else {
+                    const billing = getBillingState();
+                    paymentElement = elements.create('payment', {
+                        layout: 'tabs',
+                        defaultValues: {
+                            billingDetails: {
+                                name: billing.name,
+                                email: billing.email
+                            }
+                        }
+                    });
+                }
+            } catch (error) {
+                clientSecret = null;
+                unmountPaymentElement();
+                console.warn('Impossibile preparare payment element:', error);
+            }
+        }
+
+        function unmountPaymentElement() {
+            if (paymentElement) {
+                paymentElement.unmount();
+                paymentElement = null;
+            }
+            if (cardNumberElement) {
+                cardNumberElement.unmount();
+                cardNumberElement = null;
+            }
+            if (cardExpiryElement) {
+                cardExpiryElement.unmount();
+                cardExpiryElement = null;
+            }
+            if (cardCvcElement) {
+                cardCvcElement.unmount();
+                cardCvcElement = null;
+            }
+            elements = null;
+            clientSecret = null;
+        }
+
+        function renderPaymentPanel() {
+            updateSelectedMethodHeader();
+
+            const method = getSelectedMethod();
+            const container = document.getElementById('payment-panel-container');
+
+            if (remaining <= 0) {
+                container.innerHTML = `
+                    <div class="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-sm">
+                        <div class="flex items-center gap-2 text-emerald-300 font-medium">
+                            <span class="material-symbols-outlined text-base">check_circle</span>
+                            Il tuo credito copre l'intero importo
+                        </div>
+                        <p class="text-emerald-100/80 mt-1">Conferma l'ordine per emettere i biglietti senza addebito esterno.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            if (!stripeReady) {
+                container.innerHTML = `
+                    <div class="rounded-xl border border-amber-400/20 bg-amber-500/10 p-4 text-sm">
+                        <div class="flex items-center gap-2 text-amber-300 font-medium">
+                            <span class="material-symbols-outlined text-base">warning</span>
+                            Pagamenti esterni non disponibili
+                        </div>
+                        <p class="text-amber-100/80 mt-1">Manca la configurazione Stripe publishable key nel backend.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const billing = getBillingState();
+            const showMethodPanel = method.id !== 'card';
+            container.innerHTML = `
+                <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high p-4 space-y-4">
+                    <div class="text-sm text-on-surface-variant">Completa i dati carta e intestatario per il pagamento. Se scegli un wallet, usa anche il pannello dedicato del metodo selezionato.</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="space-y-1.5 sm:col-span-2">
+                            <label for="billing-name" class="text-sm font-medium text-on-surface">Intestatario pagamento</label>
+                            <input id="billing-name" type="text" class="w-full rounded-lg border border-outline-variant/40 bg-surface-container px-3 py-2 text-sm text-on-surface focus:border-primary-container focus:ring-primary-container" value="${escapeHtml(billing.name)}" autocomplete="name" placeholder="Mario Rossi">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label for="billing-email" class="text-sm font-medium text-on-surface">Email</label>
+                            <input id="billing-email" type="email" class="w-full rounded-lg border border-outline-variant/40 bg-surface-container px-3 py-2 text-sm text-on-surface focus:border-primary-container focus:ring-primary-container" value="${escapeHtml(billing.email)}" autocomplete="email" placeholder="mario@email.it">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label for="billing-phone" class="text-sm font-medium text-on-surface">Telefono (opzionale)</label>
+                            <input id="billing-phone" type="tel" class="w-full rounded-lg border border-outline-variant/40 bg-surface-container px-3 py-2 text-sm text-on-surface focus:border-primary-container focus:ring-primary-container" value="${escapeHtml(billing.phone)}" autocomplete="tel" placeholder="+39 333 1234567">
+                        </div>
+                    </div>
+                    <div class="space-y-1.5">
+                        <label class="text-sm font-medium text-on-surface">Numero carta</label>
+                        <div id="card-number-host" class="rounded-lg bg-surface-container p-3 border border-outline-variant/20"></div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="space-y-1.5">
+                            <label class="text-sm font-medium text-on-surface">Scadenza</label>
+                            <div id="card-expiry-host" class="rounded-lg bg-surface-container p-3 border border-outline-variant/20"></div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-sm font-medium text-on-surface">CVV</label>
+                            <div id="card-cvc-host" class="rounded-lg bg-surface-container p-3 border border-outline-variant/20"></div>
+                        </div>
+                    </div>
+                    ${showMethodPanel ? `
+                    <div class="pt-2 border-t border-outline-variant/20 space-y-2">
+                        <div class="text-sm text-on-surface-variant">Conferma con <strong class="text-on-surface">${method.label}</strong></div>
+                        <div id="payment-element-host" class="rounded-lg bg-surface-container p-3 border border-outline-variant/20"></div>
+                    </div>` : ''}
+                    <p class="text-xs text-on-surface-variant">I dati carta sono gestiti in sicurezza da Stripe e non vengono salvati sui nostri server.</p>
+                </div>
+            `;
+
+            if (cardNumberElement && cardExpiryElement && cardCvcElement) {
+                cardNumberElement.mount('#card-number-host');
+                cardExpiryElement.mount('#card-expiry-host');
+                cardCvcElement.mount('#card-cvc-host');
+            }
+
+            if (showMethodPanel && paymentElement) {
+                paymentElement.mount('#payment-element-host');
+            }
+            bindBillingFieldEvents();
+        }
+
         async function handlePay() {
+            const payBtn = document.getElementById('pay-btn');
+            payBtn.disabled = true;
+
             try {
                 Utils.showLoading();
-
                 let paymentIntentId = null;
+
                 if (remaining > 0) {
-                    if (!stripe || !card) {
-                        throw new Error('Stripe non configurato correttamente');
+                    if (!stripeReady || !stripe || !elements || !paymentElement || !clientSecret) {
+                        if (selectedMethodId !== 'card') {
+                            throw new Error('Metodo di pagamento non pronto. Riprova tra qualche secondo.');
+                        }
                     }
 
-                    const intent = await ApiClient.post('/acquisto/payment-intent', {
-                        importo: remaining
-                    });
-
-                    const confirmation = await stripe.confirmCardPayment(intent.clientSecret, {
-                        payment_method: { card }
-                    });
-
-                    if (confirmation.error) {
-                        throw new Error(confirmation.error.message || 'Pagamento carta fallito');
+                    const billingDetails = getBillingDetailsFromForm();
+                    if (!billingDetails.name) {
+                        throw new Error('Inserisci il nome dell\'intestatario.');
+                    }
+                    if (!billingDetails.email || !/^\S+@\S+\.\S+$/.test(billingDetails.email)) {
+                        throw new Error('Inserisci un indirizzo email valido.');
                     }
 
-                    if (!confirmation.paymentIntent || confirmation.paymentIntent.status !== 'succeeded') {
+                    let error = null;
+                    let paymentIntent = null;
+
+                    if (selectedMethodId === 'card') {
+                        if (!stripe || !elements || !cardNumberElement || !clientSecret) {
+                            throw new Error('Campi carta non pronti. Riprova tra qualche secondo.');
+                        }
+
+                        const cardResult = await stripe.confirmCardPayment(clientSecret, {
+                            payment_method: {
+                                card: cardNumberElement,
+                                billing_details: billingDetails
+                            }
+                        });
+
+                        error = cardResult.error;
+                        paymentIntent = cardResult.paymentIntent;
+                    } else {
+                        const genericResult = await stripe.confirmPayment({
+                            elements,
+                            confirmParams: {
+                                payment_method_data: {
+                                    billing_details: billingDetails
+                                }
+                            },
+                            redirect: 'if_required'
+                        });
+
+                        error = genericResult.error;
+                        paymentIntent = genericResult.paymentIntent;
+                    }
+
+                    if (error) {
+                        throw new Error(error.message || 'Pagamento esterno non riuscito');
+                    }
+
+                    if (!paymentIntent || paymentIntent.status !== 'succeeded') {
                         throw new Error('Pagamento non completato');
                     }
 
-                    paymentIntentId = confirmation.paymentIntent.id;
+                    paymentIntentId = paymentIntent.id;
                 }
 
+                const method = getSelectedMethod();
                 const conferma = await ApiClient.post('/acquisto/conferma', {
                     codiceTemporaneo: lockCode,
                     usaCredito: useCredit,
-                    paymentIntentId
+                    paymentIntentId,
+                    paymentMethodType: method.id,
+                    paymentMethodLabel: method.label,
+                    savePaymentMethodForFuture: document.getElementById('save-payment-method').checked
                 });
 
+                localStorage.removeItem('ticketPurchaseDraft');
+
+                const savePreference = document.getElementById('save-payment-method').checked;
+                if (savePreference && selectedMethodId !== preferredPaymentMethodId) {
+                    try {
+                        await ApiClient.put('/user/payment-preference', {
+                            metodo: method.id,
+                            etichetta: method.label
+                        });
+                    } catch {
+                    }
+                }
+
                 Utils.showNotification('Acquisto confermato con successo', 'success');
-                window.location.href = `/user-biglietti.html?acquistoId=${conferma.acquistoId}`;
+                window.location.href = `/conferma-acquisto.html?acquistoId=${conferma.acquistoId}&showId=${showId}&codice=${encodeURIComponent(conferma.codiceConferma || '')}`;
             } catch (e) {
                 if (isLockExpiredError(e)) {
                     redirectToSeatSelection('Sessione posti scaduta. Torniamo alla selezione posti.');
@@ -241,8 +657,103 @@
                 }
                 Utils.showNotification(e.message || 'Pagamento fallito', 'error');
             } finally {
+                payBtn.disabled = false;
                 Utils.hideLoading();
             }
+        }
+
+        function startLockTimer() {
+            const timerEl = document.getElementById('timer');
+            const expireAt = parseApiDate(lockInfo?.dataScadenza);
+            if (!expireAt) {
+                timerEl.textContent = '--:--';
+                return;
+            }
+
+            const tick = () => {
+                const rem = expireAt.getTime() - Date.now();
+                if (rem <= 0) {
+                    timerEl.textContent = '00:00';
+                    redirectToSeatSelection('Tempo scaduto: seleziona nuovamente i posti.');
+                    return;
+                }
+
+                const mm = Math.floor(rem / 60000).toString().padStart(2, '0');
+                const ss = Math.floor((rem % 60000) / 1000).toString().padStart(2, '0');
+                timerEl.textContent = `${mm}:${ss}`;
+                setTimeout(tick, 1000);
+            };
+
+            tick();
+        }
+
+        function parseApiDate(value) {
+            if (!value) return null;
+            if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+
+            const raw = String(value).trim();
+            if (!raw) return null;
+
+            const hasTimezone = /(?:Z|[+-]\d{2}:\d{2})$/i.test(raw);
+            const normalized = hasTimezone ? raw : `${raw}Z`;
+            const parsed = new Date(normalized);
+            return Number.isNaN(parsed.getTime()) ? null : parsed;
+        }
+
+        function buildBillingDefaults() {
+            const user = Auth.getUser?.() || null;
+            if (!user) {
+                return {
+                    name: '',
+                    email: '',
+                    phone: ''
+                };
+            }
+            const full = `${user.nome || ''} ${user.cognome || ''}`.trim();
+            return {
+                name: full || user.username || '',
+                email: user.email || '',
+                phone: user.telefono || ''
+            };
+        }
+
+        function getBillingState() {
+            return {
+                name: billingFormState?.name || '',
+                email: billingFormState?.email || '',
+                phone: billingFormState?.phone || ''
+            };
+        }
+
+        function captureBillingFormState() {
+            const current = getBillingDetailsFromForm();
+            if (current.name || current.email || current.phone) {
+                billingFormState = current;
+            }
+        }
+
+        function bindBillingFieldEvents() {
+            ['billing-name', 'billing-email', 'billing-phone'].forEach((id) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.addEventListener('input', () => {
+                    billingFormState = getBillingDetailsFromForm();
+                });
+            });
+        }
+
+        function getBillingDetailsFromForm() {
+            const name = (document.getElementById('billing-name')?.value || '').trim();
+            const email = (document.getElementById('billing-email')?.value || '').trim();
+            const phone = (document.getElementById('billing-phone')?.value || '').trim();
+            if (!name && !email && !phone) {
+                return getBillingState();
+            }
+            return {
+                name,
+                email,
+                phone
+            };
         }
 
         function isLockExpiredError(error) {
@@ -265,13 +776,26 @@
 
         function formatDate(dateIso) {
             if (!dateIso) return '-';
-            return new Date(dateIso).toLocaleDateString('it-IT');
+            return new Date(dateIso).toLocaleDateString('it-IT', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric'
+            });
         }
 
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text || '';
             return div.innerHTML;
+        }
+
+        function getCurrentTheme() {
+            return document.documentElement.getAttribute('data-theme') || 'dark';
+        }
+
+        function getCssVariable(name, fallback) {
+            const value = getComputedStyle(document.documentElement).getPropertyValue(name);
+            return value && value.trim() ? value.trim() : fallback;
         }
     </script>
 </body>

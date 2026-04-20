@@ -48,6 +48,8 @@ public class ProfiloUtenteDTO
     public string? Cognome { get; set; }
     public string? Telefono { get; set; }
     public DateTime DataRegistrazione { get; set; }
+    public string? MetodoPagamentoPreferito { get; set; }
+    public string? MetodoPagamentoPreferitoEtichetta { get; set; }
     public List<string> Ruoli { get; set; } = new();
     public List<ProiezioneSalvataDTO> ProiezioniSalvate { get; set; } = new();
 }
@@ -58,6 +60,12 @@ public class UpdateProfiloRequestDTO
     public string? Cognome { get; set; }
     public string? Telefono { get; set; }
     public string Email { get; set; } = string.Empty;
+}
+
+public class UpdatePreferredPaymentMethodDTO
+{
+    public string? Metodo { get; set; }
+    public string? Etichetta { get; set; }
 }
 
 public class ProiezioneSalvataDTO
@@ -88,4 +96,21 @@ public class PrenotazioneRequestDTO
 public class UpdateRuoliRequestDTO
 {
     public List<int> RuoloIds { get; set; } = new();
+}
+
+public class ExternalAuthProviderDTO
+{
+    public string Provider { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+}
+
+public class ExternalAuthStartResponseDTO
+{
+    public string RedirectUrl { get; set; } = string.Empty;
+}
+
+public class ExternalAuthCompleteRequestDTO
+{
+    public string Provider { get; set; } = string.Empty;
+    public string AuthCode { get; set; } = string.Empty;
 }

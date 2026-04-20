@@ -43,6 +43,14 @@ public class Acquisto
     [MaxLength(100)]
     public string? StripeChargeId { get; set; }
 
+    [MaxLength(50)]
+    public string? MetodoPagamento { get; set; }
+
+    [MaxLength(120)]
+    public string? MetodoPagamentoEtichetta { get; set; }
+
+    public bool MetodoPagamentoSalvato { get; set; }
+
     [Required]
     public StatoAcquisto Stato { get; set; } = StatoAcquisto.PAGATO;
 

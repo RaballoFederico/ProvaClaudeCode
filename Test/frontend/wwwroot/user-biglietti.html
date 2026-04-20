@@ -22,9 +22,31 @@
                 </span>
                 <h1 class="font-headline text-3xl md:text-5xl font-semibold">I Miei Biglietti</h1>
                 <p class="text-on-surface-variant mt-2">Storico acquisti, stato validazione e accesso rapido ai QR.</p>
+                <div class="mt-4 flex flex-wrap gap-2 text-xs">
+                    <span id="wallet-total-chip" class="app-chip">
+                        <span class="material-symbols-outlined text-sm">local_activity</span>
+                        0 ticket
+                    </span>
+                    <span id="wallet-pending-chip" class="app-chip">
+                        <span class="material-symbols-outlined text-sm">schedule</span>
+                        0 da validare
+                    </span>
+                </div>
             </section>
 
-            <section id="tickets-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 reveal-up delay-1"></section>
+            <section class="mb-6 reveal-up delay-1">
+                <div class="app-card p-4">
+                    <div class="flex items-center justify-between gap-3 mb-3">
+                        <h2 class="font-headline text-lg">Storico Acquisti</h2>
+                        <span class="text-xs text-on-surface-variant">Metodo pagamento incluso</span>
+                    </div>
+                    <div id="purchase-success-banner" class="hidden mb-3 rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-3 text-sm text-emerald-200"></div>
+                    <div id="acquisti-list" class="space-y-2"></div>
+                    <div id="acquisti-empty" class="hidden text-sm text-on-surface-variant">Nessun acquisto registrato.</div>
+                </div>
+            </section>
+
+            <section id="tickets-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 reveal-up delay-2"></section>
             <div id="empty" class="hidden text-on-surface-variant">Nessun biglietto disponibile.</div>
         </main>
     </div>
@@ -39,8 +61,67 @@
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();
+            renderSuccessBanner();
+            await loadAcquisti();
             await loadTickets();
         });
+
+        function renderSuccessBanner() {
+            const params = new URLSearchParams(window.location.search);
+            const acquistoId = parseInt(params.get('acquistoId') || '0');
+            if (!acquistoId) return;
+
+            const banner = document.getElementById('purchase-success-banner');
+            if (!banner) return;
+            banner.classList.remove('hidden');
+            banner.innerHTML = `
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <div class="font-semibold text-emerald-100">Acquisto #${acquistoId} completato</div>
+                        <div class="text-emerald-100/90 text-xs mt-0.5">QR e PDF disponibili qui sotto. Ti abbiamo inviato anche una email di conferma.</div>
+                    </div>
+                    <button id="dismiss-success" class="px-2 py-1 rounded-lg border border-emerald-300/40 text-emerald-100 text-xs">Chiudi</button>
+                </div>
+            `;
+
+            const dismiss = document.getElementById('dismiss-success');
+            if (dismiss) {
+                dismiss.addEventListener('click', () => {
+                    banner.classList.add('hidden');
+                });
+            }
+        }
+
+        async function loadAcquisti() {
+            try {
+                const acquisti = await ApiClient.get('/user/acquisti');
+                const container = document.getElementById('acquisti-list');
+                const empty = document.getElementById('acquisti-empty');
+
+                if (!Array.isArray(acquisti) || acquisti.length === 0) {
+                    container.innerHTML = '';
+                    empty.classList.remove('hidden');
+                    return;
+                }
+
+                empty.classList.add('hidden');
+                container.innerHTML = acquisti.slice(0, 8).map((a) => {
+                    const methodLabel = a.metodoPagamentoEtichetta || a.metodoPagamento || 'N/D';
+                    return `
+                        <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high p-3 text-sm flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                            <div class="text-on-surface-variant">Acquisto #${a.id} - ${new Date(a.dataAcquisto).toLocaleDateString('it-IT')}</div>
+                            <div class="text-on-surface">${Number(a.importoTotale).toFixed(2)} EUR</div>
+                            <div class="text-on-surface-variant">Metodo: <span class="text-on-surface">${escapeHtml(methodLabel)}</span></div>
+                            <button type="button" onclick="downloadAcquistoPdf(${a.id})" class="px-3 py-2 bg-surface-container border border-outline-variant/40 text-on-surface rounded-lg text-xs hover-lift">Scarica PDF</button>
+                        </div>
+                    `;
+                }).join('');
+            } catch {
+                const empty = document.getElementById('acquisti-empty');
+                empty.textContent = 'Impossibile caricare lo storico acquisti.';
+                empty.classList.remove('hidden');
+            }
+        }
 
         async function loadTickets() {
             try {
@@ -70,7 +151,8 @@
                     const canValidate = Auth.hasRole('Admin') || Auth.hasRole('PowerUser');
                     const checkinUrl = `/check-in.html?codice=${encodeURIComponent(t.codiceHash)}&cinemaId=${t.cinemaId}`;
                     return `
-                    <article class="bg-surface-container rounded-xl border ${highlighted ? 'border-emerald-500/50' : 'border-outline-variant/20'} p-4 hover-lift reveal-up" style="animation-delay:${(index % 8) * 0.04}s">
+                    <article class="app-card border ${highlighted ? 'border-emerald-500/50' : 'border-outline-variant/20'} p-4 hover-lift reveal-up relative overflow-hidden" style="animation-delay:${(index % 8) * 0.04}s">
+                        <div class="absolute top-0 right-0 px-2 py-1 text-[10px] ${t.validato ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-200'} rounded-bl-lg border-l border-b border-outline-variant/20">${t.validato ? 'VALIDATO' : 'ATTIVO'}</div>
                         <div class="flex items-center justify-between mb-2">
                             <div class="font-semibold">Biglietto #${t.id}</div>
                             <div class="text-xs ${t.validato ? 'text-emerald-400' : 'text-amber-300'}">${t.validato ? 'Validato' : 'Da validare'}</div>
@@ -82,10 +164,10 @@
                         <div class="text-sm text-on-surface-variant">Prezzo: ${Number(t.prezzo).toFixed(2)} EUR</div>
                         <div class="text-xs font-mono mt-2 break-all text-on-surface-variant">${escapeHtml(t.codiceHash)}</div>
                         <div class="mt-3 flex items-center gap-2">
-                            <button onclick="toggleQr(${t.id})" class="px-3 py-2 bg-primary-container text-white rounded-lg text-sm hover-lift">Mostra QR</button>
-                            ${qrValue ? `<a href="${escapeHtml(qrValue)}" target="_blank" class="px-3 py-2 bg-surface-container-high border border-outline-variant/40 text-on-surface rounded-lg text-sm hover-lift">Apri URL</a>` : ''}
-                            <a href="${checkinUrl}" class="px-3 py-2 bg-surface-container-high border border-outline-variant/40 text-on-surface rounded-lg text-sm hover-lift">Controlla ticket</a>
-                            ${canValidate ? `<a href="/validazione.html?codice=${encodeURIComponent(t.codiceHash)}&cinemaId=${t.cinemaId}" class="px-3 py-2 bg-surface-container-high border border-outline-variant/40 text-on-surface rounded-lg text-sm hover-lift">Vai a validazione</a>` : ''}
+                            <button onclick="toggleQr(${t.id})" class="app-btn app-btn-primary hover-lift">Mostra QR</button>
+                            ${qrValue ? `<a href="${escapeHtml(qrValue)}" target="_blank" class="app-btn app-btn-secondary hover-lift">Apri URL</a>` : ''}
+                            <a href="${checkinUrl}" class="app-btn app-btn-secondary hover-lift">Controlla ticket</a>
+                            ${canValidate ? `<a href="/validazione.html?codice=${encodeURIComponent(t.codiceHash)}&cinemaId=${t.cinemaId}" class="app-btn app-btn-secondary hover-lift">Vai a validazione</a>` : ''}
                         </div>
                         <div id="qr-wrap-${t.id}" class="hidden mt-3 p-3 rounded-lg bg-surface-container-high border border-outline-variant/30">
                             <div id="qr-${t.id}" class="inline-block" data-qr="${encodeURIComponent(qrValue || t.codiceHash)}"></div>
@@ -94,6 +176,12 @@
                     </article>
                 `;
                 }).join('');
+
+                const pending = sorted.filter((x) => !x.validato).length;
+                const totalChip = document.getElementById('wallet-total-chip');
+                const pendingChip = document.getElementById('wallet-pending-chip');
+                if (totalChip) totalChip.innerHTML = `<span class="material-symbols-outlined text-sm">local_activity</span>${sorted.length} ticket`;
+                if (pendingChip) pendingChip.innerHTML = `<span class="material-symbols-outlined text-sm">schedule</span>${pending} da validare`;
             } catch (e) {
                 Utils.showNotification(e.message || 'Errore caricamento biglietti', 'error');
             } finally {
@@ -105,6 +193,39 @@
             const raw = ticket.qRCodeUrl || ticket.qrcodeUrl || ticket.qrCodeUrl;
             if (raw && raw !== 'https://filmapi.com/validazione/qr/pending') return raw;
             return `${window.location.origin}/check-in.html?codice=${encodeURIComponent(ticket.codiceHash)}&cinemaId=${ticket.cinemaId}`;
+        }
+
+        async function downloadAcquistoPdf(acquistoId) {
+            try {
+                Utils.showLoading();
+                const headers = {};
+                if (Auth.accessToken) {
+                    headers.Authorization = `Bearer ${Auth.accessToken}`;
+                }
+
+                const response = await fetch(`${ApiClient.baseUrl}/acquisto/${acquistoId}/pdf`, {
+                    method: 'GET',
+                    headers
+                });
+
+                if (!response.ok) {
+                    throw new Error('Impossibile scaricare il PDF');
+                }
+
+                const blob = await response.blob();
+                const objectUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = objectUrl;
+                a.download = `biglietti-${acquistoId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(objectUrl);
+            } catch (error) {
+                Utils.showNotification(error.message || 'Errore download PDF', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
         }
 
         function toggleQr(ticketId) {

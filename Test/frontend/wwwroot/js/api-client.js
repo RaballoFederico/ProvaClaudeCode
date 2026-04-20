@@ -1,8 +1,23 @@
+const DEFAULT_API_BASE_URL = 'http://localhost:5001';
+
+function resolveInitialApiBaseUrl() {
+    const stored = (window.localStorage.getItem('apiBaseUrl') || '').trim();
+    if (!stored) return DEFAULT_API_BASE_URL;
+
+    const isLocalhostDifferentPort = /^https?:\/\/localhost:(\d+)/i.test(stored) && !stored.startsWith(DEFAULT_API_BASE_URL);
+    if (isLocalhostDifferentPort) {
+        window.localStorage.setItem('apiBaseUrl', DEFAULT_API_BASE_URL);
+        return DEFAULT_API_BASE_URL;
+    }
+
+    return stored;
+}
+
 const ApiClient = {
-    baseUrl: window.localStorage.getItem('apiBaseUrl') || 'http://localhost:5000',
+    baseUrl: resolveInitialApiBaseUrl(),
 
     getFallbackBaseUrls() {
-        const fallbacks = ['http://localhost:5000', 'https://localhost:7217'];
+        const fallbacks = ['http://localhost:5001', 'http://localhost:5000', 'https://localhost:7217'];
         return [this.baseUrl, ...fallbacks.filter(url => url !== this.baseUrl)];
     },
 

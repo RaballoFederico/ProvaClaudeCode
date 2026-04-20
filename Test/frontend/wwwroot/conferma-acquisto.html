@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conferma Acquisto | FilmAPI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col">
+    <div id="navbar-container"></div>
+    <div class="flex flex-1">
+        <div id="sidebar-container"></div>
+        <main class="flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
+            <section class="hero-banner p-6 md:p-8 mb-6 reveal-up">
+                <span class="badge-soft mb-3">
+                    <span class="material-symbols-outlined text-sm">check_circle</span>
+                    Acquisto completato
+                </span>
+                <h1 class="font-headline text-3xl md:text-5xl font-semibold">I tuoi biglietti sono pronti</h1>
+                <p class="text-on-surface-variant mt-2">Trovi QR, PDF e dettaglio acquisto nella tua area biglietti. Abbiamo inviato anche una email di conferma.</p>
+                <div class="mt-4 flex flex-wrap gap-2 text-xs">
+                    <span class="app-chip"><span class="material-symbols-outlined text-sm">mail</span>Email inviata automaticamente</span>
+                    <span class="app-chip"><span class="material-symbols-outlined text-sm">picture_as_pdf</span>PDF scaricabile subito</span>
+                </div>
+            </section>
+
+            <section class="app-card p-5 reveal-up delay-1">
+                <div id="purchase-summary" class="space-y-2 text-sm text-on-surface-variant"></div>
+                <div class="mt-6 flex flex-wrap gap-2">
+                    <a id="go-tickets" href="/user-biglietti.html" class="app-btn app-btn-primary hover-lift">Vai ai miei biglietti</a>
+                    <a id="download-pdf" href="#" class="app-btn app-btn-secondary hover-lift">Scarica PDF</a>
+                    <a href="/programmazione.html" class="app-btn app-btn-secondary hover-lift">Nuova prenotazione</a>
+                </div>
+            </section>
+        </main>
+    </div>
+    <div id="footer-container"></div>
+
+    <script src="/js/theme.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/route-guard.js"></script>
+    <script src="/js/template-loader.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllComponents();
+
+            const qp = new URLSearchParams(window.location.search);
+            const acquistoId = parseInt(qp.get('acquistoId') || '0');
+            const showId = parseInt(qp.get('showId') || '0');
+            const codice = qp.get('codice') || '';
+
+            if (!acquistoId) {
+                window.location.href = '/user-biglietti.html';
+                return;
+            }
+
+            document.getElementById('go-tickets').href = `/user-biglietti.html?acquistoId=${acquistoId}${showId ? `&showId=${showId}` : ''}`;
+            document.getElementById('download-pdf').addEventListener('click', async (event) => {
+                event.preventDefault();
+                await downloadPdf(acquistoId);
+            });
+
+            const primaryButton = document.getElementById('go-tickets');
+            if (primaryButton) {
+                setTimeout(() => primaryButton.focus(), 120);
+            }
+
+            const summary = document.getElementById('purchase-summary');
+            summary.innerHTML = `
+                <div>Acquisto: <strong class="text-on-surface">#${acquistoId}</strong></div>
+                ${codice ? `<div>Codice conferma: <strong class="text-on-surface">${escapeHtml(codice)}</strong></div>` : ''}
+                ${showId ? `<div>Show evidenziato: <strong class="text-on-surface">#${showId}</strong></div>` : ''}
+            `;
+        });
+
+        async function downloadPdf(acquistoId) {
+            try {
+                Utils.showLoading();
+                const headers = {};
+                if (Auth.accessToken) headers.Authorization = `Bearer ${Auth.accessToken}`;
+
+                const response = await fetch(`${ApiClient.baseUrl}/acquisto/${acquistoId}/pdf`, { headers });
+                if (!response.ok) throw new Error('Download PDF non disponibile');
+
+                const blob = await response.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `biglietti-${acquistoId}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                Utils.showNotification(e.message || 'Errore download PDF', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

@@ -130,15 +130,20 @@ public class FilmDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Username).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Email).IsRequired().HasMaxLength(100);
-            entity.Property(e => e.PasswordHash).IsRequired();
+            entity.Property(e => e.PasswordHash);
+            entity.Property(e => e.ExternalProvider).HasMaxLength(30);
+            entity.Property(e => e.ExternalProviderUserId).HasMaxLength(200);
             entity.Property(e => e.Nome).HasMaxLength(100);
             entity.Property(e => e.Cognome).HasMaxLength(100);
             entity.Property(e => e.Telefono).HasMaxLength(20);
             entity.Property(e => e.DataRegistrazione).IsRequired();
             entity.Property(e => e.Attivo).IsRequired();
+            entity.Property(e => e.PreferredPaymentMethod).HasMaxLength(50);
+            entity.Property(e => e.PreferredPaymentMethodLabel).HasMaxLength(120);
 
             entity.HasIndex(e => e.Username).IsUnique();
             entity.HasIndex(e => e.Email).IsUnique();
+            entity.HasIndex(e => new { e.ExternalProvider, e.ExternalProviderUserId }).IsUnique();
 
             entity.HasOne(e => e.PreferredCinema)
                 .WithMany()
@@ -203,6 +208,9 @@ public class FilmDbContext : DbContext
         modelBuilder.Entity<Acquisto>(entity =>
         {
             entity.HasKey(e => e.Id);
+            entity.Property(e => e.MetodoPagamento).HasMaxLength(50);
+            entity.Property(e => e.MetodoPagamentoEtichetta).HasMaxLength(120);
+            entity.Property(e => e.MetodoPagamentoSalvato).IsRequired();
 
             entity.HasOne(e => e.Utente)
                 .WithMany(u => u.Acquisti)

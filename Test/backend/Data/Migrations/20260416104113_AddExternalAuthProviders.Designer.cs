@@ -4,6 +4,7 @@ using FilmAPI.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FilmAPI.Data.Migrations
 {
     [DbContext(typeof(FilmDbContext))]
-    partial class FilmDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260416104113_AddExternalAuthProviders")]
+    partial class AddExternalAuthProviders
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -43,17 +46,6 @@ namespace FilmAPI.Data.Migrations
 
                     b.Property<decimal>("ImportoTotale")
                         .HasColumnType("decimal(10,2)");
-
-                    b.Property<string>("MetodoPagamento")
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<string>("MetodoPagamentoEtichetta")
-                        .HasMaxLength(120)
-                        .HasColumnType("varchar(120)");
-
-                    b.Property<bool>("MetodoPagamentoSalvato")
-                        .HasColumnType("tinyint(1)");
 
                     b.Property<int>("ShowId")
                         .HasColumnType("int");
@@ -748,14 +740,6 @@ namespace FilmAPI.Data.Migrations
 
                     b.Property<int?>("PreferredCinemaId")
                         .HasColumnType("int");
-
-                    b.Property<string>("PreferredPaymentMethod")
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
-
-                    b.Property<string>("PreferredPaymentMethodLabel")
-                        .HasMaxLength(120)
-                        .HasColumnType("varchar(120)");
 
                     b.Property<string>("RefreshToken")
                         .HasColumnType("longtext");

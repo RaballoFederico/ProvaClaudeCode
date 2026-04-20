@@ -37,6 +37,7 @@ var jwtSecretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ??
 builder.Services.AddSingleton(new JwtService(builder.Configuration));
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IExternalAuthService, ExternalAuthService>();
 builder.Services.AddScoped<ISalaService, SalaService>();
 builder.Services.AddScoped<IShowService, ShowService>();
 builder.Services.AddScoped<IBigliettoService, BigliettoService>();
@@ -80,6 +81,8 @@ builder.Services.AddAuthorization(options =>
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
+builder.Services.AddMemoryCache();
+builder.Services.AddHttpClient();
 
 builder.Services.AddCors(options =>
 {

@@ -18,8 +18,13 @@ public class Utente
     [MaxLength(100)]
     public string Email { get; set; } = string.Empty;
 
-    [Required]
-    public string PasswordHash { get; set; } = string.Empty;
+    public string? PasswordHash { get; set; }
+
+    [MaxLength(30)]
+    public string? ExternalProvider { get; set; }
+
+    [MaxLength(200)]
+    public string? ExternalProviderUserId { get; set; }
 
     [MaxLength(100)]
     public string? Nome { get; set; }
@@ -50,6 +55,12 @@ public class Utente
     public ICollection<ProiezioneSalvata> ProiezioniSalvate { get; set; } = new List<ProiezioneSalvata>();
 
     public int? PreferredCinemaId { get; set; }
+
+    [MaxLength(50)]
+    public string? PreferredPaymentMethod { get; set; }
+
+    [MaxLength(120)]
+    public string? PreferredPaymentMethodLabel { get; set; }
 
     [ForeignKey(nameof(PreferredCinemaId))]
     public Cinema? PreferredCinema { get; set; }

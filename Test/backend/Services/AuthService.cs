@@ -24,44 +24,13 @@ public class AuthService : IAuthService
             .ThenInclude(ur => ur.Ruolo)
             .FirstOrDefaultAsync(u => (u.Username == request.Username || u.Email == request.Username) && u.Attivo);
 
-        if (utente == null || !BCrypt.Net.BCrypt.Verify(request.Password, utente.PasswordHash))
+        if (utente == null || string.IsNullOrEmpty(utente.PasswordHash) || !BCrypt.Net.BCrypt.Verify(request.Password, utente.PasswordHash))
         {
             return (null, "INVALID_CREDENTIALS");
         }
 
-        utente.DataUltimoAccesso = DateTime.UtcNow;
-        var ruoli = utente.UtentiRuoli.Select(ur => ur.Ruolo.Nome).ToList();
-        var accessToken = _jwtService.GenerateAccessToken(utente, ruoli);
-        var refreshTokenValue = _jwtService.GenerateRefreshToken();
-        var refreshTokenExpiry = _jwtService.GetRefreshTokenExpiry();
-
-        utente.RefreshToken = refreshTokenValue;
-        utente.RefreshTokenExpiry = refreshTokenExpiry;
-
-        _db.RefreshTokens.Add(new RefreshToken
-        {
-            Token = refreshTokenValue,
-            UtenteId = utente.Id,
-            ExpiresAt = refreshTokenExpiry
-        });
-
-        await _db.SaveChangesAsync();
-
-        return (new LoginResponseDTO
-        {
-            AccessToken = accessToken,
-            RefreshToken = refreshTokenValue,
-            ExpiresAt = _jwtService.GetAccessTokenExpiry(),
-            Utente = new UtenteDTO
-            {
-                Id = utente.Id,
-                Username = utente.Username,
-                Email = utente.Email,
-                Nome = utente.Nome,
-                Cognome = utente.Cognome,
-                Ruoli = ruoli
-            }
-        }, null);
+        var response = await BuildLoginResponseAsync(utente);
+        return (response, null);
     }
 
     public async Task<(LoginResponseDTO? response, string? error)> RefreshAsync(RefreshTokenRequestDTO request)
@@ -169,6 +138,72 @@ public class AuthService : IAuthService
         return (utente.Id, null);
     }
 
+    public async Task<(LoginResponseDTO? response, string? error)> LoginOrRegisterExternalAsync(string provider, string providerUserId, string email, string? displayName, string? suggestedUsername)
+    {
+        if (string.IsNullOrWhiteSpace(provider) || string.IsNullOrWhiteSpace(providerUserId) || string.IsNullOrWhiteSpace(email))
+        {
+            return (null, "INVALID_EXTERNAL_LOGIN");
+        }
+
+        var normalizedProvider = provider.Trim().ToLowerInvariant();
+        var normalizedEmail = email.Trim().ToLowerInvariant();
+
+        var utente = await _db.Utenti
+            .Include(u => u.UtentiRuoli)
+            .ThenInclude(ur => ur.Ruolo)
+            .FirstOrDefaultAsync(u =>
+                u.ExternalProvider == normalizedProvider &&
+                u.ExternalProviderUserId == providerUserId &&
+                u.Attivo);
+
+        if (utente == null)
+        {
+            utente = await _db.Utenti
+                .Include(u => u.UtentiRuoli)
+                .ThenInclude(ur => ur.Ruolo)
+                .FirstOrDefaultAsync(u => u.Email == normalizedEmail && u.Attivo);
+
+            if (utente != null)
+            {
+                utente.ExternalProvider = normalizedProvider;
+                utente.ExternalProviderUserId = providerUserId;
+            }
+            else
+            {
+                var ruoloUser = await _db.Ruoli.FirstOrDefaultAsync(r => r.Nome == "User");
+                if (ruoloUser == null)
+                {
+                    return (null, "Ruolo User non trovato");
+                }
+
+                var generatedUsername = await GenerateUniqueUsernameAsync(suggestedUsername, normalizedEmail);
+                var (nome, cognome) = SplitDisplayName(displayName);
+
+                utente = new Utente
+                {
+                    Username = generatedUsername,
+                    Email = normalizedEmail,
+                    PasswordHash = null,
+                    ExternalProvider = normalizedProvider,
+                    ExternalProviderUserId = providerUserId,
+                    Nome = nome,
+                    Cognome = cognome,
+                    DataRegistrazione = DateTime.UtcNow,
+                    Attivo = true,
+                    UtentiRuoli = new List<UtenteRuolo>
+                    {
+                        new UtenteRuolo { RuoloId = ruoloUser.Id }
+                    }
+                };
+
+                _db.Utenti.Add(utente);
+            }
+        }
+
+        var response = await BuildLoginResponseAsync(utente);
+        return (response, null);
+    }
+
     public async Task<string?> LogoutAsync(int userId)
     {
         var utente = await _db.Utenti.FindAsync(userId);
@@ -214,5 +249,97 @@ public class AuthService : IAuthService
             Cognome = utente.Cognome,
             Ruoli = utente.UtentiRuoli.Select(ur => ur.Ruolo.Nome).ToList()
         };
+    }
+
+    private async Task<LoginResponseDTO> BuildLoginResponseAsync(Utente utente)
+    {
+        utente.DataUltimoAccesso = DateTime.UtcNow;
+        var ruoli = utente.UtentiRuoli.Select(ur => ur.Ruolo.Nome).ToList();
+        var accessToken = _jwtService.GenerateAccessToken(utente, ruoli);
+        var refreshTokenValue = _jwtService.GenerateRefreshToken();
+        var refreshTokenExpiry = _jwtService.GetRefreshTokenExpiry();
+
+        utente.RefreshToken = refreshTokenValue;
+        utente.RefreshTokenExpiry = refreshTokenExpiry;
+
+        _db.RefreshTokens.Add(new RefreshToken
+        {
+            Token = refreshTokenValue,
+            UtenteId = utente.Id,
+            ExpiresAt = refreshTokenExpiry
+        });
+
+        await _db.SaveChangesAsync();
+
+        return new LoginResponseDTO
+        {
+            AccessToken = accessToken,
+            RefreshToken = refreshTokenValue,
+            ExpiresAt = _jwtService.GetAccessTokenExpiry(),
+            Utente = new UtenteDTO
+            {
+                Id = utente.Id,
+                Username = utente.Username,
+                Email = utente.Email,
+                Nome = utente.Nome,
+                Cognome = utente.Cognome,
+                Ruoli = ruoli
+            }
+        };
+    }
+
+    private async Task<string> GenerateUniqueUsernameAsync(string? suggestedUsername, string email)
+    {
+        var baseValue = string.IsNullOrWhiteSpace(suggestedUsername)
+            ? email.Split('@')[0]
+            : suggestedUsername;
+
+        var sanitized = new string(baseValue
+            .Where(ch => char.IsLetterOrDigit(ch) || ch == '_' || ch == '.' || ch == '-')
+            .ToArray())
+            .Trim();
+
+        if (string.IsNullOrWhiteSpace(sanitized))
+        {
+            sanitized = "user";
+        }
+
+        if (sanitized.Length > 40)
+        {
+            sanitized = sanitized[..40];
+        }
+
+        var candidate = sanitized;
+        var suffix = 1;
+        while (await _db.Utenti.AnyAsync(u => u.Username == candidate))
+        {
+            candidate = $"{sanitized}{suffix}";
+            suffix++;
+        }
+
+        return candidate;
+    }
+
+    private static (string? nome, string? cognome) SplitDisplayName(string? displayName)
+    {
+        if (string.IsNullOrWhiteSpace(displayName))
+        {
+            return (null, null);
+        }
+
+        var parts = displayName
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+        if (parts.Length == 0)
+        {
+            return (null, null);
+        }
+
+        if (parts.Length == 1)
+        {
+            return (parts[0], null);
+        }
+
+        return (parts[0], string.Join(' ', parts.Skip(1)));
     }
 }

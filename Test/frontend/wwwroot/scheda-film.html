@@ -39,7 +39,17 @@
         <main class="flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
             <section id="film-header" class="rounded-2xl overflow-hidden border border-outline-variant/30 mb-6 reveal-up"></section>
 
-            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 mb-6 reveal-up delay-1">
+            <section id="booking-sticky-bar" class="sticky top-[72px] z-20 mb-4 bg-surface-container border border-outline-variant/20 rounded-xl p-3 hidden">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                    <div class="text-sm text-on-surface-variant">Prossima disponibilita: <span id="next-show-label" class="text-on-surface font-semibold">Non disponibile</span></div>
+                    <div class="flex items-center gap-2">
+                        <button id="jump-shows-btn" class="app-btn app-btn-secondary hover-lift">Vedi orari</button>
+                        <button id="quick-book-btn" class="app-btn app-btn-primary hover-lift" disabled>Prenota ora</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="app-card p-5 mb-6 reveal-up delay-1">
                 <div class="text-sm text-on-surface-variant mb-3">Seleziona data</div>
                 <div class="flex items-center gap-2">
                     <button id="prev-days" class="p-2 rounded-lg bg-surface-container-high"><span class="material-symbols-outlined">chevron_left</span></button>
@@ -48,7 +58,7 @@
                 </div>
             </section>
 
-            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 reveal-up delay-2">
+            <section class="app-card p-5 reveal-up delay-2">
                 <div class="flex items-center justify-between mb-4">
                     <h2 class="font-headline text-xl font-bold">Show nel tuo cinema</h2>
                     <a href="programmazione.html" class="text-sm text-primary-container hover:underline">Cambia cinema</a>
@@ -70,10 +80,12 @@
         let selectedDate = new Date();
         let selectedCinemaId = null;
         let currentFilm = null;
+        let latestShows = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();
             bindDateNav();
+            bindStickyActions();
             await initPage();
         });
 
@@ -91,6 +103,8 @@
 
                 const localCinema = localStorage.getItem('selectedCinema');
                 selectedCinemaId = localCinema ? parseInt(localCinema) : null;
+                const queryCinema = parseInt(params.get('cinemaId') || '0');
+                if (queryCinema) selectedCinemaId = queryCinema;
                 if (!selectedCinemaId && Auth.isAuthenticated()) {
                     try {
                         const pref = await ApiClient.get('/user/cinema-preferito');
@@ -142,6 +156,23 @@
             });
         }
 
+        function bindStickyActions() {
+            const jumpBtn = document.getElementById('jump-shows-btn');
+            const quickBtn = document.getElementById('quick-book-btn');
+            if (jumpBtn) {
+                jumpBtn.addEventListener('click', () => {
+                    document.getElementById('shows-container')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                });
+            }
+            if (quickBtn) {
+                quickBtn.addEventListener('click', () => {
+                    if (!latestShows.length) return;
+                    const first = latestShows[0];
+                    goToAcquisto(first.id, first.salaId);
+                });
+            }
+        }
+
         function renderDates() {
             const strip = document.getElementById('dates-strip');
             const today = new Date();
@@ -165,18 +196,33 @@
 
         async function loadShows() {
             const c = document.getElementById('shows-container');
+            const stickyBar = document.getElementById('booking-sticky-bar');
+            const nextLabel = document.getElementById('next-show-label');
+            const quickBtn = document.getElementById('quick-book-btn');
             if (!selectedCinemaId) {
                 c.innerHTML = `<div class="text-on-surface-variant">Seleziona un cinema dalla pagina programmazione.</div>`;
+                if (stickyBar) stickyBar.classList.remove('hidden');
+                if (nextLabel) nextLabel.textContent = 'Cinema non selezionato';
+                if (quickBtn) quickBtn.disabled = true;
                 return;
             }
 
             const d = selectedDate.toISOString().slice(0, 10);
             const shows = await ApiClient.get(`/film/${filmId}/shows?cinemaId=${selectedCinemaId}&data=${d}`);
+            latestShows = shows || [];
+            if (stickyBar) stickyBar.classList.remove('hidden');
 
             if (!shows.length) {
                 c.innerHTML = `<div class="text-on-surface-variant">Non disponibile nel tuo cinema per questa data.</div>`;
+                if (nextLabel) nextLabel.textContent = 'Nessuno show per la data selezionata';
+                if (quickBtn) quickBtn.disabled = true;
                 return;
             }
+
+            if (nextLabel) {
+                nextLabel.textContent = `${new Date(shows[0].data).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })} - ${(shows[0].oraInizio || '').substring(0, 5)}`;
+            }
+            if (quickBtn) quickBtn.disabled = false;
 
             const grouped = {};
             shows.forEach(s => {

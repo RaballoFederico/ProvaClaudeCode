@@ -83,6 +83,46 @@ public static class AuthEndpoints
             return Results.Ok(utente);
         });
 
+        group.MapGet("/external/providers", [AllowAnonymous] (IExternalAuthService externalAuthService) =>
+        {
+            return Results.Ok(externalAuthService.GetEnabledProviders());
+        });
+
+        group.MapGet("/external/{provider}/start", [AllowAnonymous] (string provider, HttpContext context, IExternalAuthService externalAuthService) =>
+        {
+            var backendBaseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
+            var returnUrl = context.Request.Query["returnUrl"].FirstOrDefault();
+
+            var (redirectUrl, error) = externalAuthService.CreateAuthorizationUrl(provider, returnUrl, backendBaseUrl);
+            if (redirectUrl == null)
+            {
+                return Results.BadRequest(new { message = error ?? "Provider non configurato" });
+            }
+
+            return Results.Ok(new ExternalAuthStartResponseDTO { RedirectUrl = redirectUrl });
+        });
+
+        group.MapGet("/external/{provider}/callback", [AllowAnonymous] async (string provider, HttpContext context, IExternalAuthService externalAuthService) =>
+        {
+            var backendBaseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
+            var code = context.Request.Query["code"].FirstOrDefault();
+            var state = context.Request.Query["state"].FirstOrDefault();
+            var oauthError = context.Request.Query["error"].FirstOrDefault();
+            var redirectUrl = await externalAuthService.HandleCallbackAsync(provider, backendBaseUrl, code, state, oauthError);
+            return Results.Redirect(redirectUrl);
+        });
+
+        group.MapPost("/external/complete", [AllowAnonymous] async (ExternalAuthCompleteRequestDTO request, IExternalAuthService externalAuthService) =>
+        {
+            var (response, error) = await externalAuthService.CompleteAsync(request);
+            if (response == null)
+            {
+                return Results.BadRequest(new { message = error ?? "Completamento login esterno non riuscito" });
+            }
+
+            return Results.Ok(response);
+        });
+
         return app;
     }
 }

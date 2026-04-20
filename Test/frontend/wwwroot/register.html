@@ -233,9 +233,11 @@
                     <div class="w-full border-t border-outline-variant/30"></div>
                 </div>
                 <div class="relative flex justify-center text-sm">
-                    <span class="px-2 bg-surface-container text-on-surface-variant">o</span>
+                    <span class="px-2 bg-surface-container text-on-surface-variant">oppure</span>
                 </div>
             </div>
+
+            <div id="external-register-buttons" class="space-y-3 mb-5"></div>
 
             <p class="text-center text-sm text-on-surface-variant">
                 Hai già un account? 
@@ -284,6 +286,78 @@
             document.getElementById('req-lower').classList.toggle('text-green-400', /[a-z]/.test(value));
             document.getElementById('req-number').classList.toggle('text-green-400', /[0-9]/.test(value));
         });
+
+        function getProviderIcon(provider) {
+            if (provider === 'google') return 'G';
+            if (provider === 'github') return 'GH';
+            if (provider === 'microsoft') return 'MS';
+            return provider.slice(0, 2).toUpperCase();
+        }
+
+        function getProviderButtonClass(provider) {
+            if (provider === 'google') {
+                return 'border-slate-200/70 text-slate-100 hover:border-slate-200 hover:bg-slate-700/20';
+            }
+            if (provider === 'github') {
+                return 'border-zinc-500/50 text-zinc-100 hover:border-zinc-400 hover:bg-zinc-600/20';
+            }
+            if (provider === 'microsoft') {
+                return 'border-blue-400/50 text-blue-100 hover:border-blue-300 hover:bg-blue-500/15';
+            }
+            return 'border-outline-variant/40 text-on-surface hover:border-outline-variant/60 hover:bg-surface-container-high';
+        }
+
+        async function renderExternalRegisterProviders() {
+            const container = document.getElementById('external-register-buttons');
+            try {
+                const providers = await Auth.getExternalProviders();
+                if (!providers || providers.length === 0) {
+                    container.innerHTML = `
+                        <a href="login.html" class="w-full py-3 px-4 rounded-xl border border-outline-variant/40 text-on-surface hover:border-outline-variant/60 hover:bg-surface-container-high transition-all duration-200 flex items-center justify-center gap-3 font-medium">
+                            <span class="material-symbols-outlined text-on-surface-variant">login</span>
+                            <span>Vai al login classico</span>
+                        </a>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = '';
+                providers.forEach((providerInfo) => {
+                    const provider = (providerInfo.provider || '').toLowerCase();
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `w-full py-3 px-4 rounded-xl border transition-all duration-200 flex items-center justify-center gap-3 font-medium ${getProviderButtonClass(provider)}`;
+                    btn.innerHTML = `
+                        <span class="inline-flex items-center justify-center min-w-7 h-7 px-1 rounded-md bg-surface-container-high text-xs font-semibold">${getProviderIcon(provider)}</span>
+                        <span>Registrati con ${providerInfo.displayName}</span>
+                    `;
+                    btn.addEventListener('click', async () => {
+                        btn.disabled = true;
+                        const originalText = btn.querySelector('span:last-child').textContent;
+                        btn.querySelector('span:last-child').textContent = 'Reindirizzamento...';
+                        try {
+                            await Auth.startExternalLogin(provider, window.location.origin + '/login.html');
+                        } catch (error) {
+                            const errorDiv = document.getElementById('error-message');
+                            const errorText = document.getElementById('error-text');
+                            errorText.textContent = error.message || 'Login esterno non disponibile';
+                            errorDiv.classList.remove('hidden');
+                            btn.disabled = false;
+                            btn.querySelector('span:last-child').textContent = originalText;
+                        }
+                    });
+
+                    container.appendChild(btn);
+                });
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="rounded-xl border border-outline-variant/30 bg-surface-container-high/60 p-3 text-xs text-on-surface-variant">
+                        Provider esterni non disponibili al momento. Puoi completare la registrazione classica.
+                    </div>
+                `;
+                console.warn('Provider esterni non caricati:', error);
+            }
+        }
 
         // Handle form submission
         document.getElementById('register-form').addEventListener('submit', async function(e) {
@@ -380,6 +454,8 @@
         if (Auth.isAuthenticated()) {
             window.location.href = 'home.html';
         }
+
+        renderExternalRegisterProviders();
     </script>
 </body>
 </html>

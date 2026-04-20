@@ -19,6 +19,7 @@ const RouteGuard = {
         'programmazione.html': null,
         'scheda-film.html': null,
         'my-cinemas.html': null,
+        'conferma-acquisto.html': 'auth',
         'validazione.html': 'manager',
         'ricarica-credito.html': 'manager',
         'acquista.html': 'auth',
