@@ -17,7 +17,7 @@ public static class ValidazioneEndpoints
             return info is null ? Results.NotFound() : Results.Ok(info);
         });
 
-        group.MapGet("/qr/{codiceHash}", async (string codiceHash, IBigliettoService bigliettoService) =>
+        group.MapGet("/qr/{codiceHash}", [Authorize(Roles = "Admin,PowerUser")] async (string codiceHash, IBigliettoService bigliettoService) =>
         {
             var info = await bigliettoService.GetBigliettoPerValidazioneAsync(codiceHash);
             return info is null ? Results.NotFound() : Results.Ok(info);

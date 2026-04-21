@@ -137,8 +137,6 @@ public static class AdminEndpoints
             }
 
             utente.Attivo = false;
-            utente.RefreshToken = null;
-            utente.RefreshTokenExpiry = null;
 
             await db.SaveChangesAsync();
 

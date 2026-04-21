@@ -57,6 +57,13 @@ public class JwtService
         return Convert.ToBase64String(randomBytes);
     }
 
+    public string HashRefreshToken(string refreshToken)
+    {
+        using var sha = System.Security.Cryptography.SHA256.Create();
+        var bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(refreshToken));
+        return Convert.ToBase64String(bytes);
+    }
+
     public ClaimsPrincipal? ValidateToken(string token, bool isRefreshToken = false)
     {
         var tokenHandler = new JwtSecurityTokenHandler();

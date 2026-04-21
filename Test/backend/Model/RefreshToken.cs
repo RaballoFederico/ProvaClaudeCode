@@ -12,7 +12,7 @@ public class RefreshToken
 
     [Required]
     [MaxLength(256)]
-    public string Token { get; set; } = string.Empty;
+    public string TokenHash { get; set; } = string.Empty;
 
     [Required]
     public int UtenteId { get; set; }
@@ -23,5 +23,23 @@ public class RefreshToken
     [Required]
     public DateTime ExpiresAt { get; set; }
 
+    [Required]
+    public DateTime CreatedAt { get; set; }
+
     public DateTime? RevokedAt { get; set; }
+
+    [MaxLength(256)]
+    public string? ReplacedByTokenHash { get; set; }
+
+    [MaxLength(64)]
+    public string? CreatedByIp { get; set; }
+
+    [MaxLength(256)]
+    public string? CreatedByUserAgent { get; set; }
+
+    [MaxLength(64)]
+    public string? RevokedByIp { get; set; }
+
+    [MaxLength(256)]
+    public string? RevokedByUserAgent { get; set; }
 }

@@ -17,7 +17,7 @@ public class AuthService : IAuthService
         _jwtService = jwtService;
     }
 
-    public async Task<(LoginResponseDTO? response, string? error)> LoginAsync(LoginRequestDTO request)
+    public async Task<(LoginResponseDTO? response, string? error)> LoginAsync(LoginRequestDTO request, string? ipAddress = null, string? userAgent = null)
     {
         var utente = await _db.Utenti
             .Include(u => u.UtentiRuoli)
@@ -29,39 +29,56 @@ public class AuthService : IAuthService
             return (null, "INVALID_CREDENTIALS");
         }
 
-        var response = await BuildLoginResponseAsync(utente);
+        var response = await BuildLoginResponseAsync(utente, ipAddress, userAgent);
         return (response, null);
     }
 
-    public async Task<(LoginResponseDTO? response, string? error)> RefreshAsync(RefreshTokenRequestDTO request)
+    public async Task<(LoginResponseDTO? response, string? error)> RefreshAsync(RefreshTokenRequestDTO request, string? ipAddress = null, string? userAgent = null)
     {
+        var tokenHash = _jwtService.HashRefreshToken(request.RefreshToken);
         var refreshToken = await _db.RefreshTokens
             .Include(rt => rt.Utente)
             .ThenInclude(u => u.UtentiRuoli)
             .ThenInclude(ur => ur.Ruolo)
-            .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken && rt.RevokedAt == null);
+            .FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash);
 
-        if (refreshToken == null || refreshToken.ExpiresAt <= DateTime.UtcNow || !refreshToken.Utente.Attivo)
+        if (refreshToken == null)
+        {
+            return (null, "INVALID_REFRESH");
+        }
+
+        if (refreshToken.RevokedAt != null)
+        {
+            await RevokeAllRefreshTokensAsync(refreshToken.UtenteId, ipAddress, userAgent);
+            return (null, "INVALID_REFRESH");
+        }
+
+        if (refreshToken.ExpiresAt <= DateTime.UtcNow || !refreshToken.Utente.Attivo)
         {
             return (null, "INVALID_REFRESH");
         }
 
         refreshToken.RevokedAt = DateTime.UtcNow;
+        refreshToken.RevokedByIp = ipAddress;
+        refreshToken.RevokedByUserAgent = userAgent;
 
         var utente = refreshToken.Utente;
         var ruoli = utente.UtentiRuoli.Select(ur => ur.Ruolo.Nome).ToList();
         var accessToken = _jwtService.GenerateAccessToken(utente, ruoli);
         var refreshTokenValue = _jwtService.GenerateRefreshToken();
         var refreshTokenExpiry = _jwtService.GetRefreshTokenExpiry();
+        var newHash = _jwtService.HashRefreshToken(refreshTokenValue);
 
-        utente.RefreshToken = refreshTokenValue;
-        utente.RefreshTokenExpiry = refreshTokenExpiry;
+        refreshToken.ReplacedByTokenHash = newHash;
 
         _db.RefreshTokens.Add(new RefreshToken
         {
-            Token = refreshTokenValue,
+            TokenHash = newHash,
             UtenteId = utente.Id,
-            ExpiresAt = refreshTokenExpiry
+            ExpiresAt = refreshTokenExpiry,
+            CreatedAt = DateTime.UtcNow,
+            CreatedByIp = ipAddress,
+            CreatedByUserAgent = userAgent
         });
 
         await _db.SaveChangesAsync();
@@ -138,7 +155,7 @@ public class AuthService : IAuthService
         return (utente.Id, null);
     }
 
-    public async Task<(LoginResponseDTO? response, string? error)> LoginOrRegisterExternalAsync(string provider, string providerUserId, string email, string? displayName, string? suggestedUsername)
+    public async Task<(LoginResponseDTO? response, string? error)> LoginOrRegisterExternalAsync(string provider, string providerUserId, string email, string? displayName, string? suggestedUsername, string? ipAddress = null, string? userAgent = null)
     {
         if (string.IsNullOrWhiteSpace(provider) || string.IsNullOrWhiteSpace(providerUserId) || string.IsNullOrWhiteSpace(email))
         {
@@ -200,11 +217,11 @@ public class AuthService : IAuthService
             }
         }
 
-        var response = await BuildLoginResponseAsync(utente);
+        var response = await BuildLoginResponseAsync(utente, ipAddress, userAgent);
         return (response, null);
     }
 
-    public async Task<string?> LogoutAsync(int userId)
+    public async Task<string?> LogoutAsync(int userId, string? ipAddress = null, string? userAgent = null)
     {
         var utente = await _db.Utenti.FindAsync(userId);
         if (utente == null)
@@ -212,19 +229,19 @@ public class AuthService : IAuthService
             return "NOT_FOUND";
         }
 
-        utente.RefreshToken = null;
-        utente.RefreshTokenExpiry = null;
+        await RevokeAllRefreshTokensAsync(userId, ipAddress, userAgent);
+        return null;
+    }
 
-        var activeTokens = await _db.RefreshTokens
-            .Where(rt => rt.UtenteId == userId && rt.RevokedAt == null)
-            .ToListAsync();
-
-        foreach (var token in activeTokens)
+    public async Task<string?> LogoutAllAsync(int userId, string? ipAddress = null, string? userAgent = null)
+    {
+        var utente = await _db.Utenti.FindAsync(userId);
+        if (utente == null)
         {
-            token.RevokedAt = DateTime.UtcNow;
+            return "NOT_FOUND";
         }
 
-        await _db.SaveChangesAsync();
+        await RevokeAllRefreshTokensAsync(userId, ipAddress, userAgent);
         return null;
     }
 
@@ -251,22 +268,23 @@ public class AuthService : IAuthService
         };
     }
 
-    private async Task<LoginResponseDTO> BuildLoginResponseAsync(Utente utente)
+    private async Task<LoginResponseDTO> BuildLoginResponseAsync(Utente utente, string? ipAddress = null, string? userAgent = null)
     {
         utente.DataUltimoAccesso = DateTime.UtcNow;
         var ruoli = utente.UtentiRuoli.Select(ur => ur.Ruolo.Nome).ToList();
         var accessToken = _jwtService.GenerateAccessToken(utente, ruoli);
         var refreshTokenValue = _jwtService.GenerateRefreshToken();
         var refreshTokenExpiry = _jwtService.GetRefreshTokenExpiry();
-
-        utente.RefreshToken = refreshTokenValue;
-        utente.RefreshTokenExpiry = refreshTokenExpiry;
+        var hash = _jwtService.HashRefreshToken(refreshTokenValue);
 
         _db.RefreshTokens.Add(new RefreshToken
         {
-            Token = refreshTokenValue,
+            TokenHash = hash,
             UtenteId = utente.Id,
-            ExpiresAt = refreshTokenExpiry
+            ExpiresAt = refreshTokenExpiry,
+            CreatedAt = DateTime.UtcNow,
+            CreatedByIp = ipAddress,
+            CreatedByUserAgent = userAgent
         });
 
         await _db.SaveChangesAsync();
@@ -286,6 +304,55 @@ public class AuthService : IAuthService
                 Ruoli = ruoli
             }
         };
+    }
+
+    public async Task<(bool success, string? error)> ChangePasswordAsync(int userId, ChangePasswordRequestDTO request)
+    {
+        var utente = await _db.Utenti.FirstOrDefaultAsync(u => u.Id == userId && u.Attivo);
+        if (utente == null)
+        {
+            return (false, "NOT_FOUND");
+        }
+
+        if (string.IsNullOrWhiteSpace(utente.PasswordHash))
+        {
+            return (false, "PASSWORD_NOT_SET");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.CurrentPassword) || string.IsNullOrWhiteSpace(request.NewPassword))
+        {
+            return (false, "INVALID_PASSWORD");
+        }
+
+        if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, utente.PasswordHash))
+        {
+            return (false, "INVALID_CREDENTIALS");
+        }
+
+        if (request.NewPassword.Length < 8)
+        {
+            return (false, "PASSWORD_TOO_SHORT");
+        }
+
+        utente.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        await _db.SaveChangesAsync();
+        return (true, null);
+    }
+
+    private async Task RevokeAllRefreshTokensAsync(int userId, string? ipAddress, string? userAgent)
+    {
+        var tokens = await _db.RefreshTokens
+            .Where(rt => rt.UtenteId == userId && rt.RevokedAt == null)
+            .ToListAsync();
+
+        foreach (var token in tokens)
+        {
+            token.RevokedAt = DateTime.UtcNow;
+            token.RevokedByIp = ipAddress;
+            token.RevokedByUserAgent = userAgent;
+        }
+
+        await _db.SaveChangesAsync();
     }
 
     private async Task<string> GenerateUniqueUsernameAsync(string? suggestedUsername, string email)

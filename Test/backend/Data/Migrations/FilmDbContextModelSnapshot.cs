@@ -538,13 +538,36 @@ namespace FilmAPI.Data.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("CreatedByIp")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("CreatedByUserAgent")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
                     b.Property<DateTime>("ExpiresAt")
                         .HasColumnType("datetime(6)");
+
+                    b.Property<string>("ReplacedByTokenHash")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
 
                     b.Property<DateTime?>("RevokedAt")
                         .HasColumnType("datetime(6)");
 
-                    b.Property<string>("Token")
+                    b.Property<string>("RevokedByIp")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("RevokedByUserAgent")
+                        .HasMaxLength(256)
+                        .HasColumnType("varchar(256)");
+
+                    b.Property<string>("TokenHash")
                         .IsRequired()
                         .HasMaxLength(256)
                         .HasColumnType("varchar(256)");
@@ -554,7 +577,7 @@ namespace FilmAPI.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Token")
+                    b.HasIndex("TokenHash")
                         .IsUnique();
 
                     b.HasIndex("UtenteId");
@@ -807,12 +830,6 @@ namespace FilmAPI.Data.Migrations
                     b.Property<string>("PreferredPaymentMethodLabel")
                         .HasMaxLength(120)
                         .HasColumnType("varchar(120)");
-
-                    b.Property<string>("RefreshToken")
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime?>("RefreshTokenExpiry")
-                        .HasColumnType("datetime(6)");
 
                     b.Property<string>("Telefono")
                         .HasMaxLength(20)

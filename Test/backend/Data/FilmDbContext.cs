@@ -179,9 +179,15 @@ public class FilmDbContext : DbContext
         modelBuilder.Entity<RefreshToken>(entity =>
         {
             entity.HasKey(e => e.Id);
-            entity.Property(e => e.Token).IsRequired().HasMaxLength(256);
+            entity.Property(e => e.TokenHash).IsRequired().HasMaxLength(256);
             entity.Property(e => e.ExpiresAt).IsRequired();
-            entity.HasIndex(e => e.Token).IsUnique();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.ReplacedByTokenHash).HasMaxLength(256);
+            entity.Property(e => e.CreatedByIp).HasMaxLength(64);
+            entity.Property(e => e.CreatedByUserAgent).HasMaxLength(256);
+            entity.Property(e => e.RevokedByIp).HasMaxLength(64);
+            entity.Property(e => e.RevokedByUserAgent).HasMaxLength(256);
+            entity.HasIndex(e => e.TokenHash).IsUnique();
 
             entity.HasOne(e => e.Utente)
                 .WithMany(u => u.RefreshTokens)

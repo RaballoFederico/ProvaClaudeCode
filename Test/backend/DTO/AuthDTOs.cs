@@ -19,6 +19,12 @@ public class RefreshTokenRequestDTO
     public string RefreshToken { get; set; } = string.Empty;
 }
 
+public class ChangePasswordRequestDTO
+{
+    public string CurrentPassword { get; set; } = string.Empty;
+    public string NewPassword { get; set; } = string.Empty;
+}
+
 public class RegistrazioneRequestDTO
 {
     public string Username { get; set; } = string.Empty;

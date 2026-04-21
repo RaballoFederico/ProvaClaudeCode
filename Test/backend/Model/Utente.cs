@@ -42,10 +42,6 @@ public class Utente
 
     public bool Attivo { get; set; } = true;
 
-    public string? RefreshToken { get; set; }
-
-    public DateTime? RefreshTokenExpiry { get; set; }
-
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 
     public ICollection<Prenotazione> Prenotazioni { get; set; } = new List<Prenotazione>();
