@@ -68,4 +68,6 @@ public class Utente
     public CreditoUtente? Credito { get; set; }
 
     public ICollection<Acquisto> Acquisti { get; set; } = new List<Acquisto>();
+
+    public ICollection<NotificaUtente> Notifiche { get; set; } = new List<NotificaUtente>();
 }

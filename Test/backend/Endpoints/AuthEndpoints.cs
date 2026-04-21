@@ -88,9 +88,9 @@ public static class AuthEndpoints
             return Results.Ok(externalAuthService.GetEnabledProviders());
         });
 
-        group.MapGet("/external/{provider}/start", [AllowAnonymous] (string provider, HttpContext context, IExternalAuthService externalAuthService) =>
+        group.MapGet("/external/{provider}/start", [AllowAnonymous] (string provider, HttpContext context, IConfiguration configuration, IExternalAuthService externalAuthService) =>
         {
-            var backendBaseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
+            var backendBaseUrl = ResolveBackendBaseUrl(context, configuration);
             var returnUrl = context.Request.Query["returnUrl"].FirstOrDefault();
 
             var (redirectUrl, error) = externalAuthService.CreateAuthorizationUrl(provider, returnUrl, backendBaseUrl);
@@ -102,9 +102,9 @@ public static class AuthEndpoints
             return Results.Ok(new ExternalAuthStartResponseDTO { RedirectUrl = redirectUrl });
         });
 
-        group.MapGet("/external/{provider}/callback", [AllowAnonymous] async (string provider, HttpContext context, IExternalAuthService externalAuthService) =>
+        group.MapGet("/external/{provider}/callback", [AllowAnonymous] async (string provider, HttpContext context, IConfiguration configuration, IExternalAuthService externalAuthService) =>
         {
-            var backendBaseUrl = $"{context.Request.Scheme}://{context.Request.Host}";
+            var backendBaseUrl = ResolveBackendBaseUrl(context, configuration);
             var code = context.Request.Query["code"].FirstOrDefault();
             var state = context.Request.Query["state"].FirstOrDefault();
             var oauthError = context.Request.Query["error"].FirstOrDefault();
@@ -124,5 +124,18 @@ public static class AuthEndpoints
         });
 
         return app;
+    }
+
+    private static string ResolveBackendBaseUrl(HttpContext context, IConfiguration configuration)
+    {
+        var configured = Environment.GetEnvironmentVariable("EXTERNAL_AUTH_BACKEND_BASE_URL")
+            ?? configuration["ExternalAuth:BackendBaseUrl"];
+
+        if (!string.IsNullOrWhiteSpace(configured))
+        {
+            return configured.TrimEnd('/');
+        }
+
+        return $"{context.Request.Scheme}://{context.Request.Host}";
     }
 }

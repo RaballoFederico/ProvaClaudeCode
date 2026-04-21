@@ -137,6 +137,7 @@ app.MapProgrammazioneEndpoints();
 app.MapAcquistoEndpoints();
 app.MapCreditoEndpoints();
 app.MapValidazioneEndpoints();
+app.MapNotificheEndpoints();
 
 app.MapGroup("/registi").MapRegistiEndpoints();
 app.MapGroup("/films").MapFilmsEndpoints();

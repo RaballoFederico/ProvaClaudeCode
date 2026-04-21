@@ -48,6 +48,9 @@
     <script>
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();
+            if (typeof Utils !== 'undefined' && Utils.syncNotificationsFromServer) {
+                await Utils.syncNotificationsFromServer();
+            }
 
             const qp = new URLSearchParams(window.location.search);
             const acquistoId = parseInt(qp.get('acquistoId') || '0');

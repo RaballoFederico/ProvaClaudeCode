@@ -47,9 +47,30 @@
             const isAdmin = user.ruoli && user.ruoli.includes('Admin');
 
             navAuthSection.innerHTML = `
-                <button class="hidden md:inline-flex p-2.5 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors" title="Notifiche">
-                    <span class="material-symbols-outlined">notifications</span>
-                </button>
+                <div class="relative">
+                    <button id="nav-notif-toggle" class="hidden md:inline-flex p-2.5 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors" title="Notifiche">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span id="nav-notif-badge" class="hidden absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-primary-container text-white text-[10px] leading-5 text-center">0</span>
+                    </button>
+                    <div id="nav-notif-menu" class="hidden absolute right-0 top-full mt-2 w-[360px] max-w-[90vw] bg-surface-container rounded-2xl border border-outline-variant/20 shadow-xl z-50 overflow-hidden">
+                        <div class="px-4 py-3 border-b border-outline-variant/20 flex items-center justify-between">
+                            <div class="text-sm font-semibold">Notifiche</div>
+                            <div class="flex items-center gap-3">
+                                <button id="nav-notif-read-all" class="text-xs text-primary-container hover:underline">Segna tutte lette</button>
+                                <button id="nav-notif-clear-all" class="text-xs text-red-400 hover:underline">Elimina tutte</button>
+                            </div>
+                        </div>
+                        <div class="px-4 py-2 border-b border-outline-variant/20 bg-surface-container-high/40">
+                            <select id="nav-notif-filter" class="w-full rounded-lg border border-outline-variant/30 bg-surface-container px-2 py-1.5 text-xs text-on-surface">
+                                <option value="all">Tutte le notifiche</option>
+                                <option value="payment">Pagamenti</option>
+                                <option value="booking">Prenotazioni</option>
+                                <option value="new-film">Nuovi film</option>
+                            </select>
+                        </div>
+                        <div id="nav-notif-list" class="max-h-[360px] overflow-auto"></div>
+                    </div>
+                </div>
                 <div class="relative">
                     <button id="nav-user-toggle" class="flex items-center gap-2 bg-surface-container-high border border-outline-variant/20 rounded-full pl-1.5 pr-3 py-1.5 hover:border-primary-container/40 transition-colors">
                         <span class="w-9 h-9 rounded-full bg-primary-container text-white text-sm font-bold flex items-center justify-center">${initials}</span>
@@ -247,18 +268,137 @@
 
         const userToggle = document.getElementById('nav-user-toggle');
         const userMenu = document.getElementById('nav-user-menu');
+        const notifToggle = document.getElementById('nav-notif-toggle');
+        const notifMenu = document.getElementById('nav-notif-menu');
+        const notifList = document.getElementById('nav-notif-list');
+        const notifBadge = document.getElementById('nav-notif-badge');
+        const readAllBtn = document.getElementById('nav-notif-read-all');
+        const clearAllBtn = document.getElementById('nav-notif-clear-all');
+        const notifFilter = document.getElementById('nav-notif-filter');
+        let currentFilter = 'all';
+
+        const renderNotifications = () => {
+            if (!notifList || typeof Utils === 'undefined') return;
+
+            const items = Utils.listAppNotifications(currentFilter);
+            const unread = Utils.getUnreadNotificationCount();
+
+            if (notifBadge) {
+                notifBadge.textContent = unread > 99 ? '99+' : String(unread);
+                notifBadge.classList.toggle('hidden', unread <= 0);
+            }
+
+            if (!items.length) {
+                notifList.innerHTML = '<div class="px-4 py-6 text-sm text-on-surface-variant">Nessuna notifica al momento.</div>';
+                return;
+            }
+
+            notifList.innerHTML = items.map((n) => {
+                const icon = n.type === 'payment'
+                    ? 'payments'
+                    : n.type === 'booking'
+                        ? 'event_seat'
+                        : n.type === 'new-film'
+                            ? 'movie'
+                            : 'notifications';
+                return `
+                    <button data-notif-id="${n.id}" data-notif-url="${escapeHtml(n.url || '')}" class="notif-item w-full text-left px-4 py-3 border-b border-outline-variant/10 hover:bg-surface-container-high/60 transition-colors ${n.read ? 'opacity-75' : ''}">
+                        <div class="flex gap-3 items-start">
+                            <span class="material-symbols-outlined text-sm mt-0.5 ${n.read ? 'text-on-surface-variant' : 'text-primary-container'}">${icon}</span>
+                            <div class="min-w-0">
+                                <div class="text-sm ${n.read ? 'text-on-surface-variant' : 'text-on-surface font-medium'}">${escapeHtml(n.title || '')}</div>
+                                ${n.message ? `<div class="text-xs text-on-surface-variant mt-1 line-clamp-2">${escapeHtml(n.message)}</div>` : ''}
+                                <div class="text-[11px] text-on-surface-variant/80 mt-1">${formatRelativeDate(n.createdAt)}</div>
+                            </div>
+                        </div>
+                    </button>
+                `;
+            }).join('');
+
+            notifList.querySelectorAll('.notif-item').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const id = btn.getAttribute('data-notif-id');
+                    const url = btn.getAttribute('data-notif-url');
+                    if (typeof Utils !== 'undefined') Utils.markNotificationRead(id);
+                    renderNotifications();
+                    if (url) window.location.href = url;
+                });
+            });
+        };
+
+        if (notifToggle && notifMenu) {
+            notifToggle.addEventListener('click', (event) => {
+                event.stopPropagation();
+                notifMenu.classList.toggle('hidden');
+                if (!notifMenu.classList.contains('hidden')) {
+                    if (userMenu) userMenu.classList.add('hidden');
+                    if (typeof Utils !== 'undefined' && Utils.syncNotificationsFromServer) {
+                        Utils.syncNotificationsFromServer().finally(renderNotifications);
+                    }
+                    renderNotifications();
+                }
+            });
+        }
+
+        if (readAllBtn) {
+            readAllBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                if (typeof Utils !== 'undefined') Utils.markAllNotificationsRead();
+                renderNotifications();
+            });
+        }
+
+        if (clearAllBtn) {
+            clearAllBtn.addEventListener('click', (event) => {
+                event.stopPropagation();
+                if (typeof Utils !== 'undefined') Utils.clearAllNotifications();
+                renderNotifications();
+            });
+        }
+
+        if (notifFilter) {
+            notifFilter.addEventListener('change', () => {
+                currentFilter = notifFilter.value || 'all';
+                renderNotifications();
+            });
+        }
+
+        window.addEventListener('notifications:updated', renderNotifications);
+        renderNotifications();
+
         if (userToggle && userMenu) {
             userToggle.addEventListener('click', (event) => {
                 event.stopPropagation();
                 userMenu.classList.toggle('hidden');
+                if (!userMenu.classList.contains('hidden') && notifMenu) {
+                    notifMenu.classList.add('hidden');
+                }
             });
 
             document.addEventListener('click', (event) => {
                 if (!userMenu.contains(event.target) && !userToggle.contains(event.target)) {
                     userMenu.classList.add('hidden');
                 }
+                if (notifMenu && notifToggle && !notifMenu.contains(event.target) && !notifToggle.contains(event.target)) {
+                    notifMenu.classList.add('hidden');
+                }
             });
         }
+    }
+
+    function formatRelativeDate(value) {
+        const date = new Date(value || Date.now());
+        if (Number.isNaN(date.getTime())) return 'adesso';
+
+        const diffSec = Math.max(0, Math.floor((Date.now() - date.getTime()) / 1000));
+        if (diffSec < 60) return 'adesso';
+        const diffMin = Math.floor(diffSec / 60);
+        if (diffMin < 60) return `${diffMin} min fa`;
+        const diffHour = Math.floor(diffMin / 60);
+        if (diffHour < 24) return `${diffHour} h fa`;
+        const diffDay = Math.floor(diffHour / 24);
+        if (diffDay < 7) return `${diffDay} g fa`;
+        return date.toLocaleDateString('it-IT');
     }
 
     document.addEventListener('DOMContentLoaded', initNavbar);

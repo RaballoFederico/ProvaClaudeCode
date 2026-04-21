@@ -13,7 +13,8 @@ public class BigliettoService(
     ICreditoService creditoService,
     IPagamentoService pagamentoService,
     IEmailService emailService,
-    IPdfService pdfService) : IBigliettoService
+    IPdfService pdfService,
+    IConfiguration configuration) : IBigliettoService
 {
     public async Task<IEnumerable<PostoStatoDTO>> GetPiantinaStatoAsync(int showId)
     {
@@ -201,7 +202,7 @@ public class BigliettoService(
                 TipologiaSala = show.Sala.Tipologia.ToString(),
                 Prezzo = show.PrezzoBase,
                 CodiceUnivoco = codiceUnivoco,
-                CodiceHash = string.Empty,
+                CodiceHash = Guid.NewGuid().ToString("N"),
                 CinemaId = show.Sala.CinemaId,
                 QRCodeUrl = string.Empty
             };
@@ -246,7 +247,8 @@ public class BigliettoService(
                     Posto = x.b.Posto,
                     Prezzo = x.b.Prezzo,
                     CodiceUnivoco = x.b.CodiceUnivoco,
-                    CodiceHash = x.b.CodiceHash
+                    CodiceHash = x.b.CodiceHash,
+                    QRCodeUrl = x.b.QRCodeUrl
                 })
             .ToListAsync();
 
@@ -261,14 +263,24 @@ public class BigliettoService(
                 acquisto.CodiceConferma,
                 acquisto.ImportoTotale,
                 acquisto.CreditoUsato,
-                ticketPdfData);
+                ticketPdfData,
+                configuration["Branding:Name"] ?? "FilmAPI",
+                configuration["Branding:PrimaryColor"] ?? "#0f172a",
+                configuration["Branding:AccentColor"] ?? "#bfdbfe",
+                configuration["Branding:EmailLogoUrl"],
+                Environment.GetEnvironmentVariable("SMTP_FROM") ?? configuration["SMTP:From"]);
+
+            var safeFilmTitle = string.Concat(ticketPdfData[0].FilmTitolo.Where(c => !Path.GetInvalidFileNameChars().Contains(c))).Trim();
+            if (string.IsNullOrWhiteSpace(safeFilmTitle)) safeFilmTitle = "film";
+            var attachmentName = $"FilmAPI-Biglietti-{DateTime.Now:yyyyMMdd}-{safeFilmTitle}-{acquisto.CodiceConferma}.pdf";
+            var subject = $"FilmAPI | Conferma ordine {acquisto.CodiceConferma} - {ticketPdfData[0].FilmTitolo}";
 
             await emailService.InviaConfermaAcquistoAsync(
                 acquistoConUtente.Utente.Email,
-                $"Conferma Acquisto - {ticketPdfData[0].FilmTitolo}",
+                subject,
                 html,
                 pdf,
-                $"biglietti-{acquisto.CodiceConferma}.pdf");
+                attachmentName);
         }
 
         return new AcquistoResultDTO

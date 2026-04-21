@@ -1,11 +1,31 @@
-const DEFAULT_API_BASE_URL = 'http://localhost:5001';
+function getPreferredApiBaseUrls() {
+    const urls = [
+        'http://localhost:5001',
+        'http://localhost:5000',
+        'https://localhost:7217'
+    ];
+
+    return [...new Set(urls)];
+}
+
+const DEFAULT_API_BASE_URL = getPreferredApiBaseUrls()[0];
 
 function resolveInitialApiBaseUrl() {
     const stored = (window.localStorage.getItem('apiBaseUrl') || '').trim();
     if (!stored) return DEFAULT_API_BASE_URL;
 
-    const isLocalhostDifferentPort = /^https?:\/\/localhost:(\d+)/i.test(stored) && !stored.startsWith(DEFAULT_API_BASE_URL);
-    if (isLocalhostDifferentPort) {
+    let parsed = null;
+    try {
+        parsed = new URL(stored);
+    } catch {
+        window.localStorage.setItem('apiBaseUrl', DEFAULT_API_BASE_URL);
+        return DEFAULT_API_BASE_URL;
+    }
+
+    const isLocalDevHost = parsed.hostname === 'localhost';
+    const isWrongLocalPort = isLocalDevHost && parsed.port !== '5001' && parsed.port !== '5000' && parsed.port !== '7217';
+
+    if (isWrongLocalPort) {
         window.localStorage.setItem('apiBaseUrl', DEFAULT_API_BASE_URL);
         return DEFAULT_API_BASE_URL;
     }
@@ -17,7 +37,7 @@ const ApiClient = {
     baseUrl: resolveInitialApiBaseUrl(),
 
     getFallbackBaseUrls() {
-        const fallbacks = ['http://localhost:5001', 'http://localhost:5000', 'https://localhost:7217'];
+        const fallbacks = getPreferredApiBaseUrls();
         return [this.baseUrl, ...fallbacks.filter(url => url !== this.baseUrl)];
     },
 

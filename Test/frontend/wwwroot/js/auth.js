@@ -1,9 +1,40 @@
-function getApiCandidates() {
-    const stored = window.localStorage.getItem('apiBaseUrl');
-    const defaults = ['http://localhost:5001', 'http://localhost:5000', 'https://localhost:7217'];
+function getAuthApiDefaults() {
+    const defaults = [
+        'http://localhost:5001',
+        'http://localhost:5000',
+        'https://localhost:7217'
+    ];
+
+    return [...new Set(defaults)];
+}
+
+function normalizeStoredApiBaseUrl() {
+    const stored = (window.localStorage.getItem('apiBaseUrl') || '').trim();
     if (!stored || stored === 'undefined' || stored === 'null') {
+        return null;
+    }
+
+    try {
+        const parsed = new URL(stored);
+        const isLocalDevHost = parsed.hostname === 'localhost';
+        const isWrongLocalPort = isLocalDevHost && parsed.port !== '5001' && parsed.port !== '5000' && parsed.port !== '7217';
+        if (isWrongLocalPort) {
+            return null;
+        }
+
+        return parsed.origin;
+    } catch {
+        return null;
+    }
+}
+
+function getApiCandidates() {
+    const defaults = getAuthApiDefaults();
+    const stored = normalizeStoredApiBaseUrl();
+    if (!stored) {
         return defaults;
     }
+
     return [stored, ...defaults.filter(url => url !== stored)];
 }
 

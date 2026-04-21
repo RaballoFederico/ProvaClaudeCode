@@ -165,7 +165,6 @@
                         <div class="text-xs font-mono mt-2 break-all text-on-surface-variant">${escapeHtml(t.codiceHash)}</div>
                         <div class="mt-3 flex items-center gap-2">
                             <button onclick="toggleQr(${t.id})" class="app-btn app-btn-primary hover-lift">Mostra QR</button>
-                            ${qrValue ? `<a href="${escapeHtml(qrValue)}" target="_blank" class="app-btn app-btn-secondary hover-lift">Apri URL</a>` : ''}
                             <a href="${checkinUrl}" class="app-btn app-btn-secondary hover-lift">Controlla ticket</a>
                             ${canValidate ? `<a href="/validazione.html?codice=${encodeURIComponent(t.codiceHash)}&cinemaId=${t.cinemaId}" class="app-btn app-btn-secondary hover-lift">Vai a validazione</a>` : ''}
                         </div>
@@ -191,7 +190,24 @@
 
         function getQrValue(ticket) {
             const raw = ticket.qRCodeUrl || ticket.qrcodeUrl || ticket.qrCodeUrl;
-            if (raw && raw !== 'https://filmapi.com/validazione/qr/pending') return raw;
+            if (raw && raw !== 'https://filmapi.com/validazione/qr/pending') {
+                try {
+                    const parsed = new URL(raw, window.location.origin);
+                    const marker = '/validazione/qr/';
+                    const idx = parsed.pathname.indexOf(marker);
+                    if (idx >= 0) {
+                        const hash = parsed.pathname.slice(idx + marker.length).split('/')[0];
+                        if (hash) {
+                            return `${window.location.origin}/check-in.html?codice=${encodeURIComponent(hash)}&cinemaId=${ticket.cinemaId}`;
+                        }
+                    }
+
+                    if (parsed.pathname.endsWith('/check-in.html')) {
+                        return parsed.toString();
+                    }
+                } catch {
+                }
+            }
             return `${window.location.origin}/check-in.html?codice=${encodeURIComponent(ticket.codiceHash)}&cinemaId=${ticket.cinemaId}`;
         }
 

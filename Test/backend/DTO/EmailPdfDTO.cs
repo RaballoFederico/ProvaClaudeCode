@@ -15,4 +15,5 @@ public class BigliettoPdfDTO
     public decimal Prezzo { get; set; }
     public string CodiceUnivoco { get; set; } = string.Empty;
     public string CodiceHash { get; set; } = string.Empty;
+    public string QRCodeUrl { get; set; } = string.Empty;
 }

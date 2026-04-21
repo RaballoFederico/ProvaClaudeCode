@@ -155,6 +155,9 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();
+            if (typeof Utils !== 'undefined' && Utils.syncNotificationsFromServer) {
+                await Utils.syncNotificationsFromServer();
+            }
             bindEvents();
             await bootstrap();
         });
@@ -282,6 +285,9 @@
 
             try {
                 films = await ApiClient.get(`/programmazione${params.toString() ? `?${params.toString()}` : ''}`);
+                if (typeof Utils !== 'undefined' && Utils.registerFilmCatalogSnapshot) {
+                    Utils.registerFilmCatalogSnapshot(films);
+                }
             } catch (e) {
                 Utils.showNotification(e.message || 'Errore caricamento film', 'error');
                 films = [];

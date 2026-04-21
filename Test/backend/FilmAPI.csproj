@@ -27,6 +27,7 @@
     <PackageReference Include="MailKit" Version="4.16.0" />
     <PackageReference Include="MimeKit" Version="4.16.0" />
     <PackageReference Include="QuestPDF" Version="2025.7.3" />
+    <PackageReference Include="QRCoder" Version="1.6.0" />
     <PackageReference Include="Stripe.net" Version="49.2.0" />
   </ItemGroup>
 

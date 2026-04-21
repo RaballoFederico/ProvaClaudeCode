@@ -28,6 +28,7 @@ public class FilmDbContext : DbContext
     public DbSet<Categoria> Categorie { get; set; } = null!;
     public DbSet<FilmCategoria> FilmsCategorie { get; set; } = null!;
     public DbSet<ProiezioneSalvata> ProiezioniSalvate { get; set; } = null!;
+    public DbSet<NotificaUtente> NotificheUtente { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -318,6 +319,19 @@ public class FilmDbContext : DbContext
             entity.HasOne(e => e.Proiezione)
                 .WithMany()
                 .HasForeignKey(e => e.ProiezioneId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<NotificaUtente>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.UtenteId, e.DataCreazione });
+            entity.HasIndex(e => new { e.UtenteId, e.Letta });
+            entity.HasIndex(e => new { e.UtenteId, e.DedupeKey }).IsUnique();
+
+            entity.HasOne(e => e.Utente)
+                .WithMany(u => u.Notifiche)
+                .HasForeignKey(e => e.UtenteId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

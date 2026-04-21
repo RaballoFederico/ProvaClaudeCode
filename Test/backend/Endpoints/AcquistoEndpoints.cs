@@ -132,7 +132,8 @@ public static class AcquistoEndpoints
                     Posto = x.b.Posto,
                     Prezzo = x.b.Prezzo,
                     CodiceUnivoco = x.b.CodiceUnivoco,
-                    CodiceHash = x.b.CodiceHash
+                    CodiceHash = x.b.CodiceHash,
+                    QRCodeUrl = x.b.QRCodeUrl
                 }).ToListAsync();
 
             if (data.Count == 0) return Results.NotFound();

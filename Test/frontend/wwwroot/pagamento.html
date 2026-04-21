@@ -221,6 +221,9 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();
+            if (typeof Utils !== 'undefined' && Utils.syncNotificationsFromServer) {
+                await Utils.syncNotificationsFromServer();
+            }
 
             const qp = new URLSearchParams(window.location.search);
             showId = parseInt(qp.get('IdShow') || '0');
@@ -634,6 +637,18 @@
                     paymentMethodLabel: method.label,
                     savePaymentMethodForFuture: document.getElementById('save-payment-method').checked
                 });
+
+                if (typeof Utils !== 'undefined' && Utils.addAppNotification) {
+                    const amount = Number(subtotal || 0).toFixed(2);
+                    const ticketsUrl = `/user-biglietti.html?acquistoId=${conferma.acquistoId}&showId=${showId}`;
+                    Utils.addAppNotification({
+                        type: 'payment',
+                        title: `Pagamento completato - ordine #${conferma.acquistoId}`,
+                        message: `${amount} EUR confermati. Apri i tuoi biglietti per QR e PDF.`,
+                        url: ticketsUrl,
+                        dedupeKey: `payment-${conferma.acquistoId}`
+                    });
+                }
 
                 localStorage.removeItem('ticketPurchaseDraft');
 

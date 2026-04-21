@@ -102,6 +102,9 @@
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();
+            if (typeof Utils !== 'undefined' && Utils.syncNotificationsFromServer) {
+                await Utils.syncNotificationsFromServer();
+            }
             const qp = new URLSearchParams(window.location.search);
             showId = parseInt(qp.get('IdShow') || '0');
             filmId = parseInt(qp.get('IdFilm') || '0');
@@ -228,6 +231,16 @@
             lockExpireAt = new Date(lock.dataScadenza);
             startTimer();
             saveDraft();
+
+            if (typeof Utils !== 'undefined' && Utils.addAppNotification) {
+                Utils.addAppNotification({
+                    type: 'booking',
+                    title: 'Posti prenotati temporaneamente',
+                    message: `${selectedSeats.length} posto/i bloccati per 10 minuti. Completa il pagamento per confermare i biglietti.`,
+                    url: `/pagamento.html?IdShow=${showId}&IdFilm=${filmId}&IdSala=${salaId}&IdCinema=${cinemaId}&lock=${encodeURIComponent(lockCode)}`,
+                    dedupeKey: `lock-${lockCode}`
+                });
+            }
         }
 
         function startTimer() {
