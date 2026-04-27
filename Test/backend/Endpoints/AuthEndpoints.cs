@@ -7,11 +7,13 @@ namespace FilmAPI.Endpoints;
 
 public static class AuthEndpoints
 {
+    private const string RefreshTokenCookieName = "filmapi_refresh_token";
+
     public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/auth");
 
-        group.MapPost("/login", [AllowAnonymous] async (LoginRequestDTO request, IAuthService authService) =>
+        group.MapPost("/login", [AllowAnonymous] async (HttpContext context, LoginRequestDTO request, IAuthService authService) =>
         {
             var (response, error) = await authService.LoginAsync(request);
             if (error != null)
@@ -19,16 +21,31 @@ public static class AuthEndpoints
                 return Results.Unauthorized();
             }
 
+            AppendRefreshTokenCookie(context, response!.RefreshToken);
+
             return Results.Ok(response);
         });
 
-        group.MapPost("/refresh", [AllowAnonymous] async (RefreshTokenRequestDTO request, IAuthService authService) =>
+        group.MapPost("/refresh", [AllowAnonymous] async (HttpContext context, RefreshTokenRequestDTO request, IAuthService authService) =>
         {
-            var (response, error) = await authService.RefreshAsync(request);
+            var requestToken = request.RefreshToken;
+            if (string.IsNullOrWhiteSpace(requestToken))
+            {
+                requestToken = context.Request.Cookies[RefreshTokenCookieName] ?? string.Empty;
+            }
+
+            var (response, error) = await authService.RefreshAsync(new RefreshTokenRequestDTO
+            {
+                RefreshToken = requestToken
+            });
+
             if (error != null)
             {
+                DeleteRefreshTokenCookie(context);
                 return Results.Unauthorized();
             }
+
+            AppendRefreshTokenCookie(context, response!.RefreshToken);
 
             return Results.Ok(response);
         });
@@ -42,6 +59,7 @@ public static class AuthEndpoints
             }
 
             await authService.LogoutAsync(userIdValue);
+            DeleteRefreshTokenCookie(context);
             return Results.Ok(new { message = "Logout effettuato con successo" });
         });
 
@@ -112,13 +130,15 @@ public static class AuthEndpoints
             return Results.Redirect(redirectUrl);
         });
 
-        group.MapPost("/external/complete", [AllowAnonymous] async (ExternalAuthCompleteRequestDTO request, IExternalAuthService externalAuthService) =>
+        group.MapPost("/external/complete", [AllowAnonymous] async (HttpContext context, ExternalAuthCompleteRequestDTO request, IExternalAuthService externalAuthService) =>
         {
             var (response, error) = await externalAuthService.CompleteAsync(request);
             if (response == null)
             {
                 return Results.BadRequest(new { message = error ?? "Completamento login esterno non riuscito" });
             }
+
+            AppendRefreshTokenCookie(context, response.RefreshToken);
 
             return Results.Ok(response);
         });
@@ -137,5 +157,37 @@ public static class AuthEndpoints
         }
 
         return $"{context.Request.Scheme}://{context.Request.Host}";
+    }
+
+    private static void AppendRefreshTokenCookie(HttpContext context, string refreshToken)
+    {
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            return;
+        }
+
+        var isHttps = context.Request.IsHttps;
+
+        context.Response.Cookies.Append(RefreshTokenCookieName, refreshToken, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isHttps,
+            SameSite = SameSiteMode.Lax,
+            Path = "/",
+            MaxAge = TimeSpan.FromDays(7)
+        });
+    }
+
+    private static void DeleteRefreshTokenCookie(HttpContext context)
+    {
+        var isHttps = context.Request.IsHttps;
+
+        context.Response.Cookies.Delete(RefreshTokenCookieName, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isHttps,
+            SameSite = SameSiteMode.Lax,
+            Path = "/"
+        });
     }
 }

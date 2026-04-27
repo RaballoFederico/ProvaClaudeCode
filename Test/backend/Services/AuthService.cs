@@ -50,7 +50,7 @@ public class AuthService : IAuthService
 
         var utente = refreshToken.Utente;
         var ruoli = utente.UtentiRuoli.Select(ur => ur.Ruolo.Nome).ToList();
-        var accessToken = _jwtService.GenerateAccessToken(utente, ruoli);
+        var (accessToken, accessTokenExpiry) = _jwtService.GenerateAccessTokenWithExpiry(utente, ruoli);
         var refreshTokenValue = _jwtService.GenerateRefreshToken();
         var refreshTokenExpiry = _jwtService.GetRefreshTokenExpiry();
 
@@ -70,7 +70,7 @@ public class AuthService : IAuthService
         {
             AccessToken = accessToken,
             RefreshToken = refreshTokenValue,
-            ExpiresAt = _jwtService.GetAccessTokenExpiry(),
+            ExpiresAt = accessTokenExpiry,
             Utente = new UtenteDTO
             {
                 Id = utente.Id,
@@ -255,7 +255,7 @@ public class AuthService : IAuthService
     {
         utente.DataUltimoAccesso = DateTime.UtcNow;
         var ruoli = utente.UtentiRuoli.Select(ur => ur.Ruolo.Nome).ToList();
-        var accessToken = _jwtService.GenerateAccessToken(utente, ruoli);
+        var (accessToken, accessTokenExpiry) = _jwtService.GenerateAccessTokenWithExpiry(utente, ruoli);
         var refreshTokenValue = _jwtService.GenerateRefreshToken();
         var refreshTokenExpiry = _jwtService.GetRefreshTokenExpiry();
 
@@ -275,7 +275,7 @@ public class AuthService : IAuthService
         {
             AccessToken = accessToken,
             RefreshToken = refreshTokenValue,
-            ExpiresAt = _jwtService.GetAccessTokenExpiry(),
+            ExpiresAt = accessTokenExpiry,
             Utente = new UtenteDTO
             {
                 Id = utente.Id,

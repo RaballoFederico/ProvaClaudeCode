@@ -4,11 +4,6 @@
 let profiloData = null;
 let proiezioneDaPrenotare = null;
 
-// Verifica autenticazione
-if (!Auth.isAuthenticated()) {
-    window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
-}
-
 // Carica il profilo
 async function loadProfile() {
     try {
@@ -374,6 +369,12 @@ async function annullaPrenotazione(id) {
 
 // Inizializza
 document.addEventListener('DOMContentLoaded', async () => {
+    const ok = await Auth.ensureInitialized();
+    if (!ok || !Auth.isAuthenticated()) {
+        window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
+        return;
+    }
+
     if (typeof loadAllComponents === 'function') {
         await loadAllComponents();
     }

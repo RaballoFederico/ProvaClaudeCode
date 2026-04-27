@@ -86,9 +86,10 @@ const ApiClient = {
                 throw fetchError || new Error('Failed to fetch');
             }
 
-            // Se token scaduto, prova a fare refresh
-            if (response.status === 401 && Auth.refreshToken) {
-                const refreshed = await Auth.refresh();
+            // Se token scaduto, prova a fare refresh (refresh token in cookie HttpOnly)
+            const isAuthEndpoint = endpoint.startsWith('/auth/');
+            if (response.status === 401 && !isAuthEndpoint) {
+                const refreshed = await Auth.refresh({ silent: true });
                 if (refreshed) {
                     // Riprova la richiesta con il nuovo token
                     headers['Authorization'] = `Bearer ${Auth.accessToken}`;

@@ -450,12 +450,15 @@
             }
         });
 
-        // Check if already logged in
-        if (Auth.isAuthenticated()) {
-            window.location.href = 'home.html';
-        }
+        (async () => {
+            await Auth.ensureInitialized();
+            if (Auth.isAuthenticated()) {
+                window.location.href = 'programmazione.html';
+                return;
+            }
 
-        renderExternalRegisterProviders();
+            await renderExternalRegisterProviders();
+        })();
     </script>
 </body>
 </html>

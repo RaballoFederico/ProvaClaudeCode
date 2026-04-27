@@ -46,7 +46,7 @@ public class ConfermaAcquistoDTO
 {
     public string CodiceTemporaneo { get; set; } = string.Empty;
     public bool UsaCredito { get; set; }
-    public string? PaymentIntentId { get; set; }
+    public string? CheckoutSessionId { get; set; }
     public string? PaymentMethodType { get; set; }
     public string? PaymentMethodLabel { get; set; }
     public bool SavePaymentMethodForFuture { get; set; }

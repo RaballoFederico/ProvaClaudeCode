@@ -45,24 +45,13 @@ public static class AcquistoEndpoints
             return Results.Ok(res);
         });
 
-        group.MapPost("/payment-intent", async (HttpContext ctx, CreatePaymentIntentRequestDTO dto, IPagamentoService pagamentoService) =>
+        group.MapPost("/checkout-session", async (HttpContext ctx, CreateCheckoutSessionRequestDTO dto, IPagamentoService pagamentoService) =>
         {
             var userId = GetUserId(ctx);
             if (userId is null) return Results.Unauthorized();
-            var intent = await pagamentoService.CreaPaymentIntentAsync(dto.Importo, userId.Value);
-            return Results.Ok(intent);
-        });
 
-        group.MapGet("/stripe-publishable", (IConfiguration cfg) =>
-        {
-            var key = Environment.GetEnvironmentVariable("STRIPE_PUBLISHABLE_KEY")
-                ?? cfg["Stripe:PublishableKey"]
-                ?? string.Empty;
-
-            if (key.StartsWith("pk_test_", StringComparison.OrdinalIgnoreCase) && key.Contains("..."))
-                key = string.Empty;
-
-            return Results.Ok(new { publishableKey = key });
+            var session = await pagamentoService.CreaCheckoutSessionAsync(dto.Importo, userId.Value, dto.SuccessUrl, dto.CancelUrl);
+            return Results.Ok(session);
         });
 
         group.MapGet("/lock/{codice}", async (string codice, HttpContext ctx, IBigliettoService bigliettoService) =>

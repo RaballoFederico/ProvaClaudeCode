@@ -27,6 +27,10 @@ async function loadComponent(elementId, componentPath) {
 }
 
 async function loadAllComponents() {
+    if (typeof Auth !== 'undefined' && typeof Auth.ensureInitialized === 'function') {
+        await Auth.ensureInitialized();
+    }
+
     const components = [
         { id: 'sidebar-container', path: '/components/sidebar.html' },
         { id: 'navbar-container', path: '/components/navbar.html' },

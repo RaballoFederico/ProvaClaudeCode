@@ -45,8 +45,10 @@ public class Film
 
     public DateTime? DataRilascio { get; set; }
 
-    [MaxLength(50)]
+    [MaxLength(200)]
     public string? Genere { get; set; }
+
+    public int? TmdbId { get; set; }
 
     public ICollection<Proiezione> Proiezioni { get; set; } = new List<Proiezione>();
 

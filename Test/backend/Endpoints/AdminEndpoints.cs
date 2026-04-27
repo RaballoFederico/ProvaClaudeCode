@@ -1,6 +1,7 @@
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
+using FilmAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 
@@ -159,6 +160,12 @@ public static class AdminEndpoints
             await db.SaveChangesAsync();
 
             return Results.Ok(new { message = "Utente riattivato con successo" });
+        });
+
+        group.MapPost("/tmdb-sync", [Authorize(Roles = "Admin")] async (TMDBFilmSyncService syncService) =>
+        {
+            await syncService.SyncPopularMoviesAsync();
+            return Results.Ok(new { message = "Sincronizzazione TMDB avviata" });
         });
 
         utentiGroup.MapGet("/", [Authorize(Roles = "Admin")] async (FilmDbContext db) =>

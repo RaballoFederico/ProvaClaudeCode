@@ -19,7 +19,6 @@
         </div>
 
         <div class="flex items-center gap-2 md:gap-3 shrink-0">
-            <div id="nav-cinema-switcher" class="hidden lg:block"></div>
             <button onclick="window.Theme && Theme.toggle()" class="p-2.5 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors" title="Cambia tema">
                 <span id="theme-toggle-icon" data-theme-toggle-icon class="material-symbols-outlined">light_mode</span>
             </button>
@@ -40,11 +39,15 @@
         if (!navAuthSection) return;
 
         if (typeof Auth !== 'undefined' && Auth.isAuthenticated()) {
-            const user = Auth.getUser();
-            const initials = ((user.nome?.[0] || '') + (user.cognome?.[0] || '') || user.username[0]).toUpperCase();
-            const fullName = user.nome && user.cognome ? `${user.nome} ${user.cognome}` : user.username;
-            const isManager = user.ruoli && (user.ruoli.includes('Admin') || user.ruoli.includes('PowerUser'));
-            const isAdmin = user.ruoli && user.ruoli.includes('Admin');
+            const user = Auth.getUser() || {};
+            const username = String(user.username || user.email || 'utente');
+            const firstNameInitial = (user.nome && user.nome[0]) ? user.nome[0] : '';
+            const lastNameInitial = (user.cognome && user.cognome[0]) ? user.cognome[0] : '';
+            const initials = ((firstNameInitial + lastNameInitial) || username[0] || 'U').toUpperCase();
+            const fullName = user.nome && user.cognome ? `${user.nome} ${user.cognome}` : username;
+            const roles = Array.isArray(user.ruoli) ? user.ruoli : [];
+            const isManager = roles.includes('Admin') || roles.includes('PowerUser');
+            const isAdmin = roles.includes('Admin');
 
             navAuthSection.innerHTML = `
                 <div class="relative">
@@ -167,98 +170,11 @@
         }
     }
 
-    async function initCinemaSwitcher() {
-        const container = document.getElementById('nav-cinema-switcher');
-        if (!container || typeof ApiClient === 'undefined') return;
-
-        const currentPath = window.location.pathname.split('/').pop() || '';
-        const onProgrammazione = currentPath === 'programmazione.html';
-
-        let cinemas = [];
-        try {
-            cinemas = await ApiClient.get('/cinemas');
-        } catch {
-            container.innerHTML = '';
-            return;
-        }
-
-        if (!Array.isArray(cinemas) || cinemas.length === 0) {
-            container.innerHTML = '';
-            return;
-        }
-
-        const qp = new URLSearchParams(window.location.search);
-        const queryCinemaId = parseInt(qp.get('cinemaId') || '0');
-        const localCinemaId = parseInt(localStorage.getItem('selectedCinema') || '0');
-        const selectedId = queryCinemaId || localCinemaId || cinemas[0].id;
-        const selectedCinema = cinemas.find((c) => c.id === selectedId) || null;
-
-        container.innerHTML = `
-            <label class="flex items-center gap-2 rounded-full border border-outline-variant/30 bg-surface-container-high px-3 py-1.5 text-xs text-on-surface-variant" title="Cambia cinema rapido">
-                <span class="material-symbols-outlined text-sm">location_city</span>
-                <span>Cinema</span>
-                <select id="nav-cinema-select" class="bg-transparent border-none text-sm text-on-surface focus:ring-0 pr-6 max-w-[190px]">
-                    ${cinemas.map((c) => `<option value="${c.id}" ${c.id === selectedId ? 'selected' : ''}>${escapeHtml(c.nome)} (${escapeHtml(c.citta)})</option>`).join('')}
-                </select>
-                <span id="nav-cinema-distance" class="hidden xl:inline text-[10px] text-on-surface-variant/80"></span>
-            </label>
-        `;
-
-        const select = document.getElementById('nav-cinema-select');
-        const distanceLabel = document.getElementById('nav-cinema-distance');
-        if (!select) return;
-
-        if (navigator.geolocation && selectedCinema && selectedCinema.latitudine && selectedCinema.longitudine && distanceLabel) {
-            navigator.geolocation.getCurrentPosition((pos) => {
-                const km = calcKm(
-                    pos.coords.latitude,
-                    pos.coords.longitude,
-                    Number(selectedCinema.latitudine),
-                    Number(selectedCinema.longitudine)
-                );
-                distanceLabel.textContent = `${km.toFixed(1)} km`;
-                distanceLabel.classList.remove('hidden');
-            });
-        }
-
-        select.addEventListener('change', async () => {
-            const cinemaId = parseInt(select.value || '0');
-            if (!cinemaId) return;
-
-            localStorage.setItem('selectedCinema', String(cinemaId));
-            if (typeof Auth !== 'undefined' && Auth.isAuthenticated()) {
-                ApiClient.put(`/user/cinema-preferito?cinemaId=${cinemaId}`).catch(() => {});
-            }
-
-            window.dispatchEvent(new CustomEvent('cinema:changed', { detail: { cinemaId } }));
-
-            if (onProgrammazione) {
-                const params = new URLSearchParams(window.location.search);
-                params.set('cinemaId', String(cinemaId));
-                history.replaceState({}, '', `/programmazione.html?${params.toString()}`);
-                return;
-            }
-
-            window.location.href = `/programmazione.html?cinemaId=${cinemaId}`;
-        });
-    }
-
-    function calcKm(lat1, lng1, lat2, lng2) {
-        const R = 6371;
-        const dLat = ((lat2 - lat1) * Math.PI) / 180;
-        const dLon = ((lng2 - lng1) * Math.PI) / 180;
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-            + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180)
-            * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        return 2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    }
-
     function initNavbar() {
         if (window.__navbarInitialized) return;
         window.__navbarInitialized = true;
 
         updateNavbar();
-        initCinemaSwitcher();
 
         const page = window.location.pathname.split('/').pop() || 'home.html';
         const backBtn = document.getElementById('nav-back-btn');

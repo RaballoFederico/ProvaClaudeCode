@@ -153,14 +153,17 @@ public class BigliettoService(
         var saldo = await creditoService.GetSaldoAsync(utenteId);
         var creditoUsato = dto.UsaCredito ? Math.Min(saldo, importoTotale) : 0m;
         var rimanenteCarta = importoTotale - creditoUsato;
+        var externalPaymentId = string.Empty;
         if (rimanenteCarta > 0m)
         {
-            if (string.IsNullOrWhiteSpace(dto.PaymentIntentId))
-                throw new InvalidOperationException("PaymentIntentId richiesto");
+            if (string.IsNullOrWhiteSpace(dto.CheckoutSessionId))
+                throw new InvalidOperationException("CheckoutSessionId richiesto per pagamento carta");
 
-            var verified = await pagamentoService.VerificaPaymentIntentAsync(dto.PaymentIntentId, rimanenteCarta);
-            if (!verified)
-                throw new InvalidOperationException("Pagamento carta non verificato");
+            var checkoutVerification = await pagamentoService.VerificaCheckoutSessionAsync(dto.CheckoutSessionId, rimanenteCarta);
+            if (!checkoutVerification.Success)
+                throw new InvalidOperationException("Pagamento checkout non verificato");
+
+            externalPaymentId = checkoutVerification.PaymentIntentId;
         }
 
         var acquisto = new Acquisto
@@ -170,7 +173,7 @@ public class BigliettoService(
             DataAcquisto = DateTime.UtcNow,
             ImportoTotale = importoTotale,
             CreditoUsato = creditoUsato,
-            StripeChargeId = dto.PaymentIntentId,
+            StripeChargeId = externalPaymentId,
             MetodoPagamento = NormalizeValue(dto.PaymentMethodType, 50),
             MetodoPagamentoEtichetta = NormalizeValue(dto.PaymentMethodLabel, 120),
             MetodoPagamentoSalvato = dto.SavePaymentMethodForFuture,

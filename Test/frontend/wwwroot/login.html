@@ -354,13 +354,15 @@
             }
         });
 
-        renderExternalProviders();
-        completeExternalLoginIfNeeded();
+        (async () => {
+            await Auth.ensureInitialized();
+            await renderExternalProviders();
+            await completeExternalLoginIfNeeded();
 
-        // Check if already logged in
-        if (Auth.isAuthenticated()) {
-            window.location.href = 'home.html';
-        }
+            if (Auth.isAuthenticated()) {
+                redirectByRole(Auth.getUser());
+            }
+        })();
     </script>
 </body>
 </html>

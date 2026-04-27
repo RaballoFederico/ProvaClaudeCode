@@ -45,6 +45,9 @@ builder.Services.AddScoped<ICreditoService, CreditoService>();
 builder.Services.AddScoped<IPagamentoService, PagamentoService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IPdfService, PdfService>();
+builder.Services.AddScoped<ITMDBService, TMDBService>();
+builder.Services.AddSingleton<TMDBFilmSyncService>();
+builder.Services.AddHostedService(sp => sp.GetRequiredService<TMDBFilmSyncService>());
 builder.Services.AddHostedService<PrenotazioneTempCleanupService>();
 
 StripeConfiguration.ApiKey = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY")
@@ -88,15 +91,18 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(
-                "http://localhost:5001",
-                "http://localhost:5285",
-                "https://localhost:7217")
+        policy.SetIsOriginAllowed(origin =>
+            Uri.TryCreate(origin, UriKind.Absolute, out var uri)
+            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+            && (uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+                || uri.Host.Equals("127.0.0.1")))
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
     });
 });
+
+builder.Services.AddSwaggerDocument();
 
 var app = builder.Build();
 
@@ -109,11 +115,6 @@ app.UseAuthorization();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
-}
-
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage();
 }
 
 // Seed dati iniziali (solo se non in testing)

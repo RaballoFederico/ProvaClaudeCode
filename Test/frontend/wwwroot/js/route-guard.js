@@ -85,8 +85,9 @@ const RouteGuard = {
     }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     if (typeof Auth !== 'undefined') {
+        await Auth.ensureInitialized();
         RouteGuard.enforceCurrentPage();
     }
 });

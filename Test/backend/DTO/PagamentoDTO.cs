@@ -21,7 +21,6 @@ public class PagamentoRequestDTO
     public int ShowId { get; set; }
     public int NumeroBiglietti { get; set; }
     public bool UsaCredito { get; set; }
-    public string? PaymentIntentId { get; set; }
 }
 
 public class PagamentoResultDTO
@@ -39,13 +38,21 @@ public class RimborsoResultDTO
     public string Message { get; set; } = string.Empty;
 }
 
-public class StripePaymentIntentDTO
+public class StripeCheckoutSessionDTO
 {
-    public string ClientSecret { get; set; } = string.Empty;
-    public string PaymentIntentId { get; set; } = string.Empty;
+    public string SessionId { get; set; } = string.Empty;
+    public string Url { get; set; } = string.Empty;
 }
 
-public class CreatePaymentIntentRequestDTO
+public class CreateCheckoutSessionRequestDTO
 {
     public decimal Importo { get; set; }
+    public string SuccessUrl { get; set; } = string.Empty;
+    public string CancelUrl { get; set; } = string.Empty;
+}
+
+public class StripeCheckoutVerificationDTO
+{
+    public bool Success { get; set; }
+    public string PaymentIntentId { get; set; } = string.Empty;
 }
