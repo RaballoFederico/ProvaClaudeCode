@@ -56,3 +56,15 @@ public class StripeCheckoutVerificationDTO
     public bool Success { get; set; }
     public string PaymentIntentId { get; set; } = string.Empty;
 }
+
+public class StripeWebhookResultDTO
+{
+    public bool Success { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public string EventType { get; set; } = string.Empty;
+    public string EventId { get; set; } = string.Empty;
+    public string CheckoutSessionId { get; set; } = string.Empty;
+    public int? UserId { get; set; }
+    public decimal? Amount { get; set; }
+    public bool AlreadyProcessed { get; set; }
+}

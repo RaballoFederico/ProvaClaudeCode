@@ -1,7 +1,7 @@
 function getAuthApiDefaults() {
     const defaults = [
         'http://localhost:5001',
-        'http://localhost:5000',
+        'http://127.0.0.1:5001',
         'https://localhost:7217'
     ];
 
@@ -16,8 +16,8 @@ function normalizeStoredApiBaseUrl() {
 
     try {
         const parsed = new URL(stored);
-        const isLocalDevHost = parsed.hostname === 'localhost';
-        const isWrongLocalPort = isLocalDevHost && parsed.port !== '5001' && parsed.port !== '5000' && parsed.port !== '7217';
+        const isLocalDevHost = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
+        const isWrongLocalPort = isLocalDevHost && parsed.port !== '5001' && parsed.port !== '7217';
         if (isWrongLocalPort) {
             return null;
         }

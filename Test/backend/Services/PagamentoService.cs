@@ -60,7 +60,7 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
         return new RimborsoResultDTO { Success = true, Message = "Rimborso registrato" };
     }
 
-    public async Task<StripeCheckoutSessionDTO> CreaCheckoutSessionAsync(decimal importo, int utenteId, string successUrl, string cancelUrl)
+    public async Task<StripeCheckoutSessionDTO> CreaCheckoutSessionAsync(decimal importo, int utenteId, string successUrl, string cancelUrl, string? productName = null, string integration = "filmapi_checkout", Dictionary<string, string>? extraMetadata = null)
     {
         if (importo <= 0)
         {
@@ -82,6 +82,29 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
             };
         }
 
+        var normalizedProductName = string.IsNullOrWhiteSpace(productName)
+            ? "Acquisto biglietti FilmAPI"
+            : productName.Trim();
+
+        var metadata = new Dictionary<string, string>
+        {
+            { "integration", string.IsNullOrWhiteSpace(integration) ? "filmapi_checkout" : integration.Trim() },
+            { "utenteId", utenteId.ToString() }
+        };
+
+        if (extraMetadata is not null)
+        {
+            foreach (var item in extraMetadata)
+            {
+                if (string.IsNullOrWhiteSpace(item.Key))
+                {
+                    continue;
+                }
+
+                metadata[item.Key.Trim()] = item.Value;
+            }
+        }
+
         var options = new SessionCreateOptions
         {
             Mode = "payment",
@@ -99,16 +122,12 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
                         UnitAmount = (long)Math.Round(importo * 100m, 0, MidpointRounding.AwayFromZero),
                         ProductData = new SessionLineItemPriceDataProductDataOptions
                         {
-                            Name = "Acquisto biglietti FilmAPI"
+                            Name = normalizedProductName
                         }
                     }
                 }
             },
-            Metadata = new Dictionary<string, string>
-            {
-                { "integration", "filmapi_checkout" },
-                { "utenteId", utenteId.ToString() }
-            }
+            Metadata = metadata
         };
 
         var service = new SessionService();
@@ -151,6 +170,159 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
         {
             Success = paid,
             PaymentIntentId = paid ? (session?.PaymentIntentId ?? string.Empty) : string.Empty
+        };
+    }
+
+    public async Task<StripeWebhookResultDTO> GestisciWebhookAsync(string payload, string? stripeSignature, string? expectedWebhookSecret)
+    {
+        if (string.IsNullOrWhiteSpace(payload))
+        {
+            return new StripeWebhookResultDTO
+            {
+                Success = false,
+                Message = "Payload webhook vuoto"
+            };
+        }
+
+        Stripe.Event stripeEvent;
+        try
+        {
+            if (!string.IsNullOrWhiteSpace(expectedWebhookSecret))
+            {
+                if (string.IsNullOrWhiteSpace(stripeSignature))
+                {
+                    return new StripeWebhookResultDTO
+                    {
+                        Success = false,
+                        Message = "Header Stripe-Signature mancante"
+                    };
+                }
+
+                stripeEvent = EventUtility.ConstructEvent(payload, stripeSignature, expectedWebhookSecret);
+            }
+            else
+            {
+                stripeEvent = EventUtility.ParseEvent(payload);
+            }
+        }
+        catch (Exception ex)
+        {
+            return new StripeWebhookResultDTO
+            {
+                Success = false,
+                Message = $"Webhook Stripe non valido: {ex.Message}"
+            };
+        }
+
+        if (!string.Equals(stripeEvent.Type, "checkout.session.completed", StringComparison.OrdinalIgnoreCase))
+        {
+            return new StripeWebhookResultDTO
+            {
+                Success = true,
+                Message = $"Evento ignorato: {stripeEvent.Type}",
+                EventType = stripeEvent.Type,
+                EventId = stripeEvent.Id
+            };
+        }
+
+        var checkoutSession = stripeEvent.Data.Object as Session;
+        if (checkoutSession is null || string.IsNullOrWhiteSpace(checkoutSession.Id))
+        {
+            return new StripeWebhookResultDTO
+            {
+                Success = false,
+                Message = "Evento checkout.session.completed senza Session valida",
+                EventType = stripeEvent.Type,
+                EventId = stripeEvent.Id
+            };
+        }
+
+        var metadata = checkoutSession.Metadata ?? new Dictionary<string, string>();
+
+        var integration = metadata.TryGetValue("integration", out var integrationValue)
+            ? integrationValue
+            : "";
+
+        if (!string.Equals(integration, "filmapi_credit_topup", StringComparison.OrdinalIgnoreCase))
+        {
+            return new StripeWebhookResultDTO
+            {
+                Success = true,
+                Message = "Sessione checkout non destinata alla ricarica credito",
+                EventType = stripeEvent.Type,
+                EventId = stripeEvent.Id,
+                CheckoutSessionId = checkoutSession.Id
+            };
+        }
+
+        var userIdRaw = metadata.TryGetValue("utenteId", out var userIdString) ? userIdString : null;
+        if (string.IsNullOrWhiteSpace(userIdRaw) || !int.TryParse(userIdRaw, out var userId))
+        {
+            return new StripeWebhookResultDTO
+            {
+                Success = false,
+                Message = "Metadata utenteId mancante o non valida",
+                EventType = stripeEvent.Type,
+                EventId = stripeEvent.Id,
+                CheckoutSessionId = checkoutSession.Id
+            };
+        }
+
+        var amountTotal = checkoutSession.AmountTotal ?? 0;
+        if (amountTotal <= 0)
+        {
+            return new StripeWebhookResultDTO
+            {
+                Success = false,
+                Message = "Importo checkout non valido",
+                EventType = stripeEvent.Type,
+                EventId = stripeEvent.Id,
+                CheckoutSessionId = checkoutSession.Id
+            };
+        }
+
+        var importo = decimal.Round(amountTotal / 100m, 2, MidpointRounding.AwayFromZero);
+        var sessionTag = $"[stripe_session:{checkoutSession.Id}]";
+
+        var alreadyProcessed = await context.TransazioniCredito.AnyAsync(t =>
+            t.UtenteId == userId
+            && t.Tipo == Model.TipoTransazione.RICARICA
+            && t.Descrizione != null
+            && t.Descrizione.Contains(sessionTag));
+
+        if (alreadyProcessed)
+        {
+            return new StripeWebhookResultDTO
+            {
+                Success = true,
+                Message = "Webhook gia elaborato in precedenza",
+                EventType = stripeEvent.Type,
+                EventId = stripeEvent.Id,
+                CheckoutSessionId = checkoutSession.Id,
+                Amount = importo,
+                UserId = userId,
+                AlreadyProcessed = true
+            };
+        }
+
+        await creditoService.RicaricaAsync(userId, new RicaricaCreditoDTO
+        {
+            UtenteId = userId,
+            Importo = importo,
+            Descrizione = $"Ricarica credito da webhook Stripe {sessionTag}",
+            CinemaId = null
+        });
+
+        return new StripeWebhookResultDTO
+        {
+            Success = true,
+            Message = "Webhook elaborato correttamente",
+            EventType = stripeEvent.Type,
+            EventId = stripeEvent.Id,
+            CheckoutSessionId = checkoutSession.Id,
+            Amount = importo,
+            UserId = userId,
+            AlreadyProcessed = false
         };
     }
 }

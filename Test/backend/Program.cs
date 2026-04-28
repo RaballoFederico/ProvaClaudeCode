@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -28,6 +29,8 @@ if (!isTesting)
     builder.Services.AddDbContext<FilmDbContext>(options =>
         options.UseMySql(connectionString, ServerVersion.Parse("8.0.29-mysql")));
 }
+
+var startupValidation = ValidateStartupConfiguration(builder.Configuration, builder.Environment, isTesting);
 
 // Configurazione JWT
 var jwtSecretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ??
@@ -87,6 +90,44 @@ builder.Services.AddOpenApi();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient();
 
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 300,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
+    options.AddPolicy("auth", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
+    options.AddPolicy("webhook", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 120,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+});
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
@@ -106,7 +147,53 @@ builder.Services.AddSwaggerDocument();
 
 var app = builder.Build();
 
+if (startupValidation.Errors.Count > 0)
+{
+    foreach (var error in startupValidation.Errors)
+    {
+        app.Logger.LogError("Configurazione startup non valida: {Message}", error);
+    }
+
+    throw new InvalidOperationException("Configurazione applicativa non valida. Correggi i valori richiesti e riavvia.");
+}
+
+foreach (var warning in startupValidation.Warnings)
+{
+    app.Logger.LogWarning("Configurazione startup: {Message}", warning);
+}
+
 app.UseCors("AllowFrontend");
+
+app.Use(async (context, next) =>
+{
+    var startedAt = DateTime.UtcNow;
+    await next();
+
+    var elapsedMs = (DateTime.UtcNow - startedAt).TotalMilliseconds;
+    var statusCode = context.Response.StatusCode;
+    var path = context.Request.Path.HasValue ? context.Request.Path.Value! : "/";
+
+    if (statusCode >= 500)
+    {
+        app.Logger.LogError("{Method} {Path} => {StatusCode} in {ElapsedMs} ms (trace: {TraceId})",
+            context.Request.Method,
+            path,
+            statusCode,
+            Math.Round(elapsedMs, 2),
+            context.TraceIdentifier);
+    }
+    else if (statusCode >= 400)
+    {
+        app.Logger.LogWarning("{Method} {Path} => {StatusCode} in {ElapsedMs} ms (trace: {TraceId})",
+            context.Request.Method,
+            path,
+            statusCode,
+            Math.Round(elapsedMs, 2),
+            context.TraceIdentifier);
+    }
+});
+
+app.UseRateLimiter();
 
 // Middleware di autenticazione e autorizzazione
 app.UseAuthentication();
@@ -116,6 +203,45 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+app.MapGet("/health", async (IServiceProvider services) =>
+{
+    var checks = new List<object>();
+    var status = "Healthy";
+
+    if (!isTesting)
+    {
+        var started = DateTime.UtcNow;
+        var dbOk = false;
+        try
+        {
+            using var scope = services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<FilmDbContext>();
+            dbOk = await db.Database.CanConnectAsync();
+        }
+        catch
+        {
+            dbOk = false;
+        }
+
+        var elapsed = (DateTime.UtcNow - started).TotalMilliseconds;
+        checks.Add(new
+        {
+            name = "database",
+            status = dbOk ? "Healthy" : "Unhealthy",
+            duration = Math.Round(elapsed, 2)
+        });
+
+        if (!dbOk)
+        {
+            status = "Unhealthy";
+        }
+    }
+
+    return status == "Healthy"
+        ? Results.Ok(new { status, checks })
+        : Results.Json(new { status, checks }, statusCode: StatusCodes.Status503ServiceUnavailable);
+});
 
 // Seed dati iniziali (solo se non in testing)
 if (!isTesting)
@@ -139,6 +265,7 @@ app.MapAcquistoEndpoints();
 app.MapCreditoEndpoints();
 app.MapValidazioneEndpoints();
 app.MapNotificheEndpoints();
+app.MapStripeWebhookEndpoints();
 
 app.MapGroup("/registi").MapRegistiEndpoints();
 app.MapGroup("/films").MapFilmsEndpoints();
@@ -146,5 +273,84 @@ app.MapGroup("/cinemas").MapCinemasEndpoints();
 app.MapGroup("/proiezioni").MapProiezioniEndpoints();
 
 app.Run();
+
+static (List<string> Errors, List<string> Warnings) ValidateStartupConfiguration(IConfiguration configuration, IWebHostEnvironment environment, bool isTesting)
+{
+    var errors = new List<string>();
+    var warnings = new List<string>();
+
+    if (isTesting)
+    {
+        return (errors, warnings);
+    }
+
+    var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY")
+        ?? configuration["Jwt:SecretKey"]
+        ?? string.Empty;
+
+    if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32 || IsPlaceholder(jwtSecret))
+    {
+        var message = "JWT_SECRET_KEY non configurata correttamente (minimo 32 caratteri, no placeholder).";
+        if (environment.IsProduction()) errors.Add(message); else warnings.Add(message);
+    }
+
+    var stripeSecret = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY")
+        ?? configuration["Stripe:SecretKey"]
+        ?? string.Empty;
+
+    if (!string.IsNullOrWhiteSpace(stripeSecret) && IsPlaceholder(stripeSecret))
+    {
+        var message = "STRIPE_SECRET_KEY contiene un placeholder non valido.";
+        if (environment.IsProduction()) errors.Add(message); else warnings.Add(message);
+    }
+    else if (string.IsNullOrWhiteSpace(stripeSecret))
+    {
+        warnings.Add("STRIPE_SECRET_KEY non impostata: i pagamenti carta saranno disabilitati.");
+    }
+
+    var webhookSecret = Environment.GetEnvironmentVariable("STRIPE_WEBHOOK_SECRET")
+        ?? configuration["Stripe:WebhookSecret"]
+        ?? string.Empty;
+
+    if (string.IsNullOrWhiteSpace(webhookSecret))
+    {
+        warnings.Add("STRIPE_WEBHOOK_SECRET non impostata: webhook Stripe non verificabile.");
+    }
+    else if (IsPlaceholder(webhookSecret))
+    {
+        var message = "STRIPE_WEBHOOK_SECRET contiene un placeholder non valido.";
+        if (environment.IsProduction()) errors.Add(message); else warnings.Add(message);
+    }
+
+    var backendBaseUrl = Environment.GetEnvironmentVariable("EXTERNAL_AUTH_BACKEND_BASE_URL")
+        ?? configuration["ExternalAuth:BackendBaseUrl"];
+    if (!string.IsNullOrWhiteSpace(backendBaseUrl)
+        && !Uri.TryCreate(backendBaseUrl, UriKind.Absolute, out _))
+    {
+        errors.Add("ExternalAuth:BackendBaseUrl non e un URL assoluto valido.");
+    }
+
+    if (environment.IsProduction())
+    {
+        var allowedReturnUrls = configuration.GetSection("ExternalAuth:AllowedReturnUrls").Get<string[]>() ?? Array.Empty<string>();
+        if (allowedReturnUrls.Any(url => url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)))
+        {
+            warnings.Add("In produzione sono presenti AllowedReturnUrls non HTTPS per ExternalAuth.");
+        }
+    }
+
+    return (errors, warnings);
+}
+
+static bool IsPlaceholder(string value)
+{
+    var trimmed = value.Trim();
+    if (string.IsNullOrWhiteSpace(trimmed)) return true;
+
+    return trimmed.Contains("your-", StringComparison.OrdinalIgnoreCase)
+           || trimmed.Contains("example", StringComparison.OrdinalIgnoreCase)
+           || trimmed.Contains("placeholder", StringComparison.OrdinalIgnoreCase)
+           || trimmed.Contains("...", StringComparison.OrdinalIgnoreCase);
+}
 
 public partial class Program { }

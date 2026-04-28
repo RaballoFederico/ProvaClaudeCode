@@ -11,6 +11,7 @@ public static class CreditoEndpoints
     public static IEndpointRouteBuilder MapCreditoEndpoints(this IEndpointRouteBuilder app)
     {
         var adminGroup = app.MapGroup("/admin/credito").RequireAuthorization("PowerUserOrAdmin");
+        var userGroup = app.MapGroup("/credito").RequireAuthorization("Authenticated");
 
         adminGroup.MapPost("/ricarica", async (HttpContext ctx, RicaricaCreditoDTO dto, ICreditoService creditoService) =>
         {
@@ -50,6 +51,80 @@ public static class CreditoEndpoints
                 .Take(20)
                 .ToListAsync();
             return Results.Ok(users);
+        });
+
+        userGroup.MapPost("/checkout-session", async (HttpContext ctx, CreateCheckoutSessionRequestDTO dto, IPagamentoService pagamentoService) =>
+        {
+            var userId = GetUserId(ctx);
+            if (userId is null) return Results.Unauthorized();
+
+            if (dto.Importo <= 0)
+            {
+                return Results.BadRequest(new { message = "Importo non valido" });
+            }
+
+            var session = await pagamentoService.CreaCheckoutSessionAsync(
+                dto.Importo,
+                userId.Value,
+                dto.SuccessUrl,
+                dto.CancelUrl,
+                "Ricarica credito FilmAPI",
+                "filmapi_credit_topup");
+
+            return Results.Ok(session);
+        });
+
+        userGroup.MapPost("/conferma-checkout", async (
+            HttpContext ctx,
+            ConfermaRicaricaCheckoutDTO dto,
+            FilmDbContext db,
+            IPagamentoService pagamentoService,
+            ICreditoService creditoService) =>
+        {
+            var userId = GetUserId(ctx);
+            if (userId is null) return Results.Unauthorized();
+
+            if (dto.Importo <= 0)
+            {
+                return Results.BadRequest(new { message = "Importo non valido" });
+            }
+
+            if (string.IsNullOrWhiteSpace(dto.CheckoutSessionId))
+            {
+                return Results.BadRequest(new { message = "CheckoutSessionId mancante" });
+            }
+
+            var sessionTag = $"[stripe_session:{dto.CheckoutSessionId}]";
+            var alreadyProcessed = await db.TransazioniCredito
+                .AnyAsync(t => t.UtenteId == userId.Value
+                               && t.Tipo == Model.TipoTransazione.RICARICA
+                               && t.Descrizione != null
+                               && t.Descrizione.Contains(sessionTag));
+            if (alreadyProcessed)
+            {
+                return Results.Conflict(new { message = "Questa sessione Stripe e gia stata elaborata" });
+            }
+
+            var verification = await pagamentoService.VerificaCheckoutSessionAsync(dto.CheckoutSessionId, dto.Importo);
+            if (!verification.Success)
+            {
+                return Results.BadRequest(new { message = "Pagamento Stripe non verificato" });
+            }
+
+            var baseDescrizione = string.IsNullOrWhiteSpace(dto.Descrizione)
+                ? "Ricarica credito utente"
+                : dto.Descrizione.Trim();
+            var finalDescrizione = $"{baseDescrizione} {sessionTag}";
+
+            var tx = await creditoService.RicaricaAsync(userId.Value, new RicaricaCreditoDTO
+            {
+                UtenteId = userId.Value,
+                Importo = dto.Importo,
+                Descrizione = finalDescrizione,
+                CinemaId = null
+            });
+
+            return Results.Ok(tx);
         });
 
         return app;

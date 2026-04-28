@@ -2,6 +2,7 @@ using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace FilmAPI.Endpoints;
 
@@ -12,6 +13,7 @@ public static class AuthEndpoints
     public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/auth");
+        group.RequireRateLimiting("auth");
 
         group.MapPost("/login", [AllowAnonymous] async (HttpContext context, LoginRequestDTO request, IAuthService authService) =>
         {
