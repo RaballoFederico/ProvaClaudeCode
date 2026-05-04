@@ -74,12 +74,6 @@ public class UpdatePreferredPaymentMethodDTO
     public string? Etichetta { get; set; }
 }
 
-public class ChangePasswordRequestDTO
-{
-    public string CurrentPassword { get; set; } = string.Empty;
-    public string NewPassword { get; set; } = string.Empty;
-}
-
 public class ProiezioneSalvataDTO
 {
     public int Id { get; set; }
@@ -125,4 +119,16 @@ public class ExternalAuthCompleteRequestDTO
 {
     public string Provider { get; set; } = string.Empty;
     public string AuthCode { get; set; } = string.Empty;
+}
+
+public class ForgotPasswordRequestDTO
+{
+    public string Email { get; set; } = string.Empty;
+    public string? ReturnUrl { get; set; }
+}
+
+public class ResetPasswordRequestDTO
+{
+    public string Token { get; set; } = string.Empty;
+    public string NewPassword { get; set; } = string.Empty;
 }

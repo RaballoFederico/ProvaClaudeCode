@@ -3,6 +3,9 @@ using FilmAPI.DTO;
 using FilmAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
+using System.Security.Cryptography;
 
 namespace FilmAPI.Endpoints;
 
@@ -145,6 +148,86 @@ public static class AuthEndpoints
             return Results.Ok(response);
         });
 
+        group.MapPost("/forgot-password", [AllowAnonymous] async (
+            ForgotPasswordRequestDTO request,
+            FilmDbContext db,
+            IMemoryCache cache,
+            IEmailService emailService,
+            IConfiguration configuration) =>
+        {
+            var email = (request.Email ?? string.Empty).Trim().ToLowerInvariant();
+            if (string.IsNullOrWhiteSpace(email) || !email.Contains('@'))
+            {
+                return Results.BadRequest(new { message = "Inserisci una email valida" });
+            }
+
+            var user = await db.Utenti.FirstOrDefaultAsync(u => u.Email.ToLower() == email && u.Attivo);
+            if (user == null)
+            {
+                return Results.BadRequest(new
+                {
+                    message = "Nessun account trovato con questa email"
+                });
+            }
+
+            var token = CreateRandomUrlSafeToken();
+            cache.Set($"pwd-reset:{token}", user.Id, TimeSpan.FromMinutes(30));
+
+            var frontendBaseUrl = ResolveFrontendBaseUrl(configuration, request.ReturnUrl);
+            var resetUrl = $"{frontendBaseUrl.TrimEnd('/')}/login.html?resetToken={Uri.EscapeDataString(token)}";
+
+            var html = $@"
+                    <div style='font-family:Segoe UI,Arial,sans-serif;line-height:1.45;color:#1f2937'>
+                        <h2 style='margin-bottom:8px'>Reset password FilmHub</h2>
+                        <p>Abbiamo ricevuto una richiesta di reimpostazione password.</p>
+                        <p>Per impostare una nuova password clicca qui:</p>
+                        <p><a href='{resetUrl}' style='display:inline-block;padding:10px 16px;background:#e50914;color:#fff;text-decoration:none;border-radius:8px'>Reimposta password</a></p>
+                        <p>Il link scade tra 30 minuti.</p>
+                        <p>Se non hai richiesto tu il reset, puoi ignorare questa email.</p>
+                    </div>";
+
+            await emailService.InviaConfermaAcquistoAsync(
+                user.Email,
+                "FilmHub - Reimpostazione password",
+                html);
+
+            return Results.Ok(new
+            {
+                message = "Email trovata: ti abbiamo inviato il link per il reset password."
+            });
+        });
+
+        group.MapPost("/reset-password", [AllowAnonymous] async (
+            ResetPasswordRequestDTO request,
+            IMemoryCache cache,
+            IAuthService authService) =>
+        {
+            var token = (request.Token ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                return Results.BadRequest(new { message = "Token non valido" });
+            }
+
+            if (!cache.TryGetValue($"pwd-reset:{token}", out int userId) || userId <= 0)
+            {
+                return Results.BadRequest(new { message = "Token scaduto o non valido" });
+            }
+
+            var (success, error) = await authService.SetPasswordAsync(userId, request.NewPassword);
+            if (!success)
+            {
+                if (string.Equals(error, "WEAK_PASSWORD", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Results.BadRequest(new { message = "Password troppo debole: usa almeno 8 caratteri, con maiuscola, minuscola, numero e simbolo" });
+                }
+
+                return Results.BadRequest(new { message = "Impossibile aggiornare la password" });
+            }
+
+            cache.Remove($"pwd-reset:{token}");
+            return Results.Ok(new { message = "Password aggiornata con successo" });
+        });
+
         return app;
     }
 
@@ -159,6 +242,47 @@ public static class AuthEndpoints
         }
 
         return $"{context.Request.Scheme}://{context.Request.Host}";
+    }
+
+    private static string ResolveFrontendBaseUrl(IConfiguration configuration, string? returnUrl)
+    {
+        if (!string.IsNullOrWhiteSpace(returnUrl))
+        {
+            try
+            {
+                var parsed = new Uri(returnUrl);
+                return $"{parsed.Scheme}://{parsed.Authority}";
+            }
+            catch
+            {
+                // fallback below
+            }
+        }
+
+        var configured = Environment.GetEnvironmentVariable("EXTERNAL_AUTH_FRONTEND_BASE_URL")
+            ?? configuration["ExternalAuth:DefaultReturnUrl"];
+
+        if (!string.IsNullOrWhiteSpace(configured))
+        {
+            try
+            {
+                var parsed = new Uri(configured);
+                return $"{parsed.Scheme}://{parsed.Authority}";
+            }
+            catch
+            {
+                return configured.TrimEnd('/');
+            }
+        }
+
+        return "http://localhost:5002";
+    }
+
+    private static string CreateRandomUrlSafeToken()
+    {
+        Span<byte> bytes = stackalloc byte[32];
+        RandomNumberGenerator.Fill(bytes);
+        return Convert.ToBase64String(bytes.ToArray()).TrimEnd('=').Replace('+', '-').Replace('/', '_');
     }
 
     private static void AppendRefreshTokenCookie(HttpContext context, string refreshToken)

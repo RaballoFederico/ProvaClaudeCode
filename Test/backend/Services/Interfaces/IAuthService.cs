@@ -11,5 +11,6 @@ public interface IAuthService
     Task<string?> LogoutAsync(int userId, string? ipAddress = null, string? userAgent = null);
     Task<string?> LogoutAllAsync(int userId, string? ipAddress = null, string? userAgent = null);
     Task<(bool success, string? error)> ChangePasswordAsync(int userId, ChangePasswordRequestDTO request);
+    Task<(bool success, string? error)> SetPasswordAsync(int userId, string newPassword);
     Task<UtenteDTO?> GetMeAsync(int userId);
 }

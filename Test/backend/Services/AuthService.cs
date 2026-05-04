@@ -23,7 +23,7 @@ public class AuthService : IAuthService
         _jwtService = jwtService;
     }
 
-    public async Task<(LoginResponseDTO? response, string? error)> LoginAsync(LoginRequestDTO request)
+    public async Task<(LoginResponseDTO? response, string? error)> LoginAsync(LoginRequestDTO request, string? ipAddress = null, string? userAgent = null)
     {
         var loginValue = (request.Username ?? string.Empty).Trim();
         if (string.IsNullOrWhiteSpace(loginValue) || string.IsNullOrWhiteSpace(request.Password))
@@ -49,13 +49,15 @@ public class AuthService : IAuthService
         return (response, null);
     }
 
-    public async Task<(LoginResponseDTO? response, string? error)> RefreshAsync(RefreshTokenRequestDTO request)
+    public async Task<(LoginResponseDTO? response, string? error)> RefreshAsync(RefreshTokenRequestDTO request, string? ipAddress = null, string? userAgent = null)
     {
+        var incomingRefreshTokenHash = _jwtService.HashRefreshToken(request.RefreshToken ?? string.Empty);
+
         var refreshToken = await _db.RefreshTokens
             .Include(rt => rt.Utente)
             .ThenInclude(u => u.UtentiRuoli)
             .ThenInclude(ur => ur.Ruolo)
-            .FirstOrDefaultAsync(rt => rt.Token == request.RefreshToken && rt.RevokedAt == null);
+            .FirstOrDefaultAsync(rt => rt.TokenHash == incomingRefreshTokenHash && rt.RevokedAt == null);
 
         if (refreshToken == null || refreshToken.ExpiresAt <= DateTime.UtcNow || !refreshToken.Utente.Attivo)
         {
@@ -63,6 +65,8 @@ public class AuthService : IAuthService
         }
 
         refreshToken.RevokedAt = DateTime.UtcNow;
+        refreshToken.RevokedByIp = ipAddress;
+        refreshToken.RevokedByUserAgent = userAgent;
         await RevokeActiveRefreshTokensAsync(refreshToken.UtenteId);
 
         var utente = refreshToken.Utente;
@@ -71,14 +75,15 @@ public class AuthService : IAuthService
         var refreshTokenValue = _jwtService.GenerateRefreshToken();
         var refreshTokenExpiry = _jwtService.GetRefreshTokenExpiry();
 
-        utente.RefreshToken = refreshTokenValue;
-        utente.RefreshTokenExpiry = refreshTokenExpiry;
-
+        var refreshTokenHash = _jwtService.HashRefreshToken(refreshTokenValue);
         _db.RefreshTokens.Add(new RefreshToken
         {
-            Token = refreshTokenValue,
+            TokenHash = refreshTokenHash,
             UtenteId = utente.Id,
-            ExpiresAt = refreshTokenExpiry
+            ExpiresAt = refreshTokenExpiry,
+            CreatedAt = DateTime.UtcNow,
+            CreatedByIp = ipAddress,
+            CreatedByUserAgent = userAgent
         });
 
         await _db.SaveChangesAsync();
@@ -158,7 +163,7 @@ public class AuthService : IAuthService
         return (utente.Id, null);
     }
 
-    public async Task<(LoginResponseDTO? response, string? error)> LoginOrRegisterExternalAsync(string provider, string providerUserId, string email, string? displayName, string? suggestedUsername)
+    public async Task<(LoginResponseDTO? response, string? error)> LoginOrRegisterExternalAsync(string provider, string providerUserId, string email, string? displayName, string? suggestedUsername, string? ipAddress = null, string? userAgent = null)
     {
         if (string.IsNullOrWhiteSpace(provider) || string.IsNullOrWhiteSpace(providerUserId) || string.IsNullOrWhiteSpace(email))
         {
@@ -236,16 +241,13 @@ public class AuthService : IAuthService
         return (response, null);
     }
 
-    public async Task<string?> LogoutAsync(int userId)
+    public async Task<string?> LogoutAsync(int userId, string? ipAddress = null, string? userAgent = null)
     {
         var utente = await _db.Utenti.FindAsync(userId);
         if (utente == null)
         {
             return "NOT_FOUND";
         }
-
-        utente.RefreshToken = null;
-        utente.RefreshTokenExpiry = null;
 
         var activeTokens = await _db.RefreshTokens
             .Where(rt => rt.UtenteId == userId && rt.RevokedAt == null)
@@ -258,6 +260,56 @@ public class AuthService : IAuthService
 
         await _db.SaveChangesAsync();
         return null;
+    }
+
+    public async Task<string?> LogoutAllAsync(int userId, string? ipAddress = null, string? userAgent = null)
+    {
+        return await LogoutAsync(userId, ipAddress, userAgent);
+    }
+
+    public async Task<(bool success, string? error)> ChangePasswordAsync(int userId, ChangePasswordRequestDTO request)
+    {
+        var utente = await _db.Utenti.FirstOrDefaultAsync(u => u.Id == userId && u.Attivo);
+        if (utente == null)
+        {
+            return (false, "NOT_FOUND");
+        }
+
+        if (string.IsNullOrWhiteSpace(utente.PasswordHash))
+        {
+            return (false, "PASSWORD_NOT_SET");
+        }
+
+        if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, utente.PasswordHash))
+        {
+            return (false, "INVALID_CURRENT_PASSWORD");
+        }
+
+        if (!IsStrongPassword(request.NewPassword))
+        {
+            return (false, "WEAK_PASSWORD");
+        }
+
+        return await SetPasswordAsync(userId, request.NewPassword);
+    }
+
+    public async Task<(bool success, string? error)> SetPasswordAsync(int userId, string newPassword)
+    {
+        var utente = await _db.Utenti.FirstOrDefaultAsync(u => u.Id == userId && u.Attivo);
+        if (utente == null)
+        {
+            return (false, "NOT_FOUND");
+        }
+
+        if (!IsStrongPassword(newPassword))
+        {
+            return (false, "WEAK_PASSWORD");
+        }
+
+        utente.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+        await RevokeActiveRefreshTokensAsync(userId);
+        await _db.SaveChangesAsync();
+        return (true, null);
     }
 
     public async Task<UtenteDTO?> GetMeAsync(int userId)
@@ -292,14 +344,13 @@ public class AuthService : IAuthService
         var refreshTokenValue = _jwtService.GenerateRefreshToken();
         var refreshTokenExpiry = _jwtService.GetRefreshTokenExpiry();
 
-        utente.RefreshToken = refreshTokenValue;
-        utente.RefreshTokenExpiry = refreshTokenExpiry;
-
+        var refreshTokenHash = _jwtService.HashRefreshToken(refreshTokenValue);
         _db.RefreshTokens.Add(new RefreshToken
         {
-            Token = refreshTokenValue,
+            TokenHash = refreshTokenHash,
             UtenteId = utente.Id,
-            ExpiresAt = refreshTokenExpiry
+            ExpiresAt = refreshTokenExpiry,
+            CreatedAt = DateTime.UtcNow
         });
 
         await _db.SaveChangesAsync();

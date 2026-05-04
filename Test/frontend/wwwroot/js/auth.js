@@ -181,6 +181,47 @@ const Auth = {
         }
     },
 
+    async forgotPassword(email, returnUrl) {
+        try {
+            const response = await fetchWithApiFallback('/auth/forgot-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, returnUrl })
+            });
+
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('Funzione reset password non disponibile sul server attuale: riavvia il backend aggiornato.');
+                }
+                throw new Error(payload.message || 'Errore durante la richiesta reset password');
+            }
+
+            return { success: true, message: payload.message || 'Controlla la tua email per il link di reset.' };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    },
+
+    async resetPassword(token, newPassword) {
+        try {
+            const response = await fetchWithApiFallback('/auth/reset-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token, newPassword })
+            });
+
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(payload.message || 'Errore durante il reset password');
+            }
+
+            return { success: true, message: payload.message || 'Password aggiornata con successo' };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    },
+
     async getExternalProviders() {
         const response = await fetchWithApiFallback('/auth/external/providers', {
             method: 'GET',

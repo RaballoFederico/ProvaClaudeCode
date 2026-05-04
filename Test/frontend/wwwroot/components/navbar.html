@@ -13,10 +13,9 @@
         </div>
 
         <div id="nav-search-wrapper" class="hidden lg:block relative min-w-[320px] max-w-[440px] w-full">
-            <div class="flex items-center gap-3 bg-surface-container-high rounded-full px-4 py-2 border border-outline-variant/20">
-                <span class="material-symbols-outlined text-on-surface-variant text-base">search</span>
-                <input id="nav-search-input" autocomplete="off" class="bg-transparent border-none focus:ring-0 w-full text-sm text-on-surface placeholder:text-on-surface-variant/60" placeholder="Cerca pagina..." type="text" />
-                <span class="text-[10px] uppercase tracking-widest text-on-surface-variant">Ctrl K</span>
+            <div class="nav-search-shell flex items-center gap-3 bg-surface-container-high rounded-full px-3.5 py-2 border border-outline-variant/20">
+                <span class="nav-search-icon material-symbols-outlined text-on-surface-variant text-base">search</span>
+                <input id="nav-search-input" autocomplete="off" class="bg-transparent border-none focus:ring-0 w-full text-sm text-on-surface" placeholder="" aria-label="Cerca" type="text" />
             </div>
             <div id="nav-search-results" class="hidden absolute left-0 right-0 top-full mt-2 bg-surface-container border border-outline-variant/30 rounded-2xl shadow-xl overflow-hidden z-50">
                 <div id="nav-search-results-list" class="max-h-[320px] overflow-auto p-1.5"></div>

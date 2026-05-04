@@ -115,6 +115,31 @@
                     </div>
                 </div>
 
+                <div class="space-y-2">
+                    <button id="toggle-forgot-password" type="button" class="block mx-auto text-center text-sm text-primary-container hover:opacity-80 font-medium transition-opacity">
+                        Password dimenticata?
+                    </button>
+                </div>
+
+                <div id="reset-password-panel" class="hidden space-y-3 p-3 rounded-xl bg-surface-container-high/70 border border-outline-variant/20">
+                    <div class="text-sm text-on-surface-variant">Imposta una nuova password</div>
+                    <input
+                        type="password"
+                        id="reset-new-password"
+                        class="w-full px-3 py-2.5 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all duration-200"
+                        placeholder="Nuova password"
+                    >
+                    <input
+                        type="password"
+                        id="reset-confirm-password"
+                        class="w-full px-3 py-2.5 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all duration-200"
+                        placeholder="Conferma nuova password"
+                    >
+                    <button type="button" id="reset-password-btn" class="w-full py-2.5 px-4 bg-primary-container text-white rounded-xl hover:opacity-90 transition-opacity">
+                        Aggiorna password
+                    </button>
+                </div>
+
                 <div id="error-message" class="hidden text-sm text-red-400 bg-red-400/10 p-3 rounded-lg">
                     <span class="material-symbols-outlined text-sm align-middle mr-1">error</span>
                     <span id="error-text"></span>
@@ -181,7 +206,18 @@
         const errorText = document.getElementById('error-text');
         const externalRetryBtn = document.getElementById('external-retry-btn');
 
+        function setErrorStyle() {
+            errorDiv.classList.remove('text-emerald-300', 'bg-emerald-500/10');
+            errorDiv.classList.add('text-red-400', 'bg-red-400/10');
+        }
+
+        function setSuccessStyle() {
+            errorDiv.classList.remove('text-red-400', 'bg-red-400/10');
+            errorDiv.classList.add('text-emerald-300', 'bg-emerald-500/10');
+        }
+
         function showError(message, options = {}) {
+            setErrorStyle();
             const code = options.code ? ` [${options.code}]` : '';
             errorText.textContent = message;
             if (code) {
@@ -189,6 +225,13 @@
             }
             errorDiv.classList.remove('hidden');
             externalRetryBtn.classList.toggle('hidden', !options.canRetryExternal);
+        }
+
+        function showSuccess(message) {
+            setSuccessStyle();
+            errorText.textContent = message;
+            errorDiv.classList.remove('hidden');
+            externalRetryBtn.classList.add('hidden');
         }
 
         function hideError() {
@@ -334,6 +377,86 @@
             window.location.href = url.pathname + (url.searchParams.toString() ? `?${url.searchParams}` : '');
         });
 
+        const toggleForgotBtn = document.getElementById('toggle-forgot-password');
+        const usernameInput = document.getElementById('username');
+        const resetPanel = document.getElementById('reset-password-panel');
+        const resetPasswordBtn = document.getElementById('reset-password-btn');
+        const resetNewPasswordInput = document.getElementById('reset-new-password');
+        const resetConfirmPasswordInput = document.getElementById('reset-confirm-password');
+
+        toggleForgotBtn.addEventListener('click', async () => {
+            hideError();
+            const email = (usernameInput.value || '').trim();
+            if (!email) {
+                showError('Inserisci la tua email nel campo "Username o Email" qui sopra.');
+                usernameInput.focus();
+                return;
+            }
+
+            if (!email.includes('@')) {
+                showError('Per il recupero password inserisci un indirizzo email valido nel campo sopra.');
+                usernameInput.focus();
+                return;
+            }
+
+            toggleForgotBtn.disabled = true;
+            toggleForgotBtn.textContent = 'Invio in corso...';
+            try {
+                const result = await Auth.forgotPassword(email, window.location.origin + '/login.html');
+                if (!result.success) {
+                    throw new Error(result.error || 'Errore invio email reset');
+                }
+                showSuccess(result.message || 'Controlla la tua email per il link reset.');
+            } catch (error) {
+                showError(error.message || 'Errore invio email reset');
+            } finally {
+                toggleForgotBtn.disabled = false;
+                toggleForgotBtn.textContent = 'Password dimenticata?';
+            }
+        });
+
+        resetPasswordBtn.addEventListener('click', async () => {
+            hideError();
+            const newPassword = resetNewPasswordInput.value || '';
+            const confirmPassword = resetConfirmPasswordInput.value || '';
+
+            if (!newPassword || !confirmPassword) {
+                showError('Compila entrambi i campi password.');
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                showError('Le password non coincidono.');
+                return;
+            }
+
+            const token = new URLSearchParams(window.location.search).get('resetToken');
+            if (!token) {
+                showError('Token reset non presente.');
+                return;
+            }
+
+            resetPasswordBtn.disabled = true;
+            resetPasswordBtn.textContent = 'Aggiornamento...';
+            try {
+                const result = await Auth.resetPassword(token, newPassword);
+                if (!result.success) {
+                    throw new Error(result.error || 'Reset password non riuscito');
+                }
+
+                showSuccess('Password aggiornata. Ora puoi fare login.');
+                const url = new URL(window.location.href);
+                url.searchParams.delete('resetToken');
+                window.history.replaceState({}, document.title, url.pathname + (url.searchParams.toString() ? `?${url.searchParams}` : ''));
+                resetPanel.classList.add('hidden');
+            } catch (error) {
+                showError(error.message || 'Reset password non riuscito');
+            } finally {
+                resetPasswordBtn.disabled = false;
+                resetPasswordBtn.textContent = 'Aggiorna password';
+            }
+        });
+
         // Handle form submission
         document.getElementById('login-form').addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -371,6 +494,12 @@
         });
 
         (async () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const resetToken = urlParams.get('resetToken');
+            if (resetToken) {
+                resetPanel.classList.remove('hidden');
+            }
+
             await Auth.ensureInitialized();
             await renderExternalProviders();
             await completeExternalLoginIfNeeded();

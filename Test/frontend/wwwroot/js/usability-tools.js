@@ -122,7 +122,10 @@
         ];
         map.forEach(([id, key]) => {
             const input = document.getElementById(id);
-            if (input) input.checked = !!state[key];
+            if (input) {
+                input.checked = !!state[key];
+                input.closest('.a11y-toggle')?.classList.toggle('is-checked', !!state[key]);
+            }
         });
     }
 
@@ -147,6 +150,7 @@
             if (!el) return;
             el.addEventListener('change', () => {
                 state[key] = !!el.checked;
+                el.closest('.a11y-toggle')?.classList.toggle('is-checked', !!el.checked);
                 saveSettings();
                 applySettings();
             });
