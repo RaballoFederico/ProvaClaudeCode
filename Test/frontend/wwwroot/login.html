@@ -118,6 +118,7 @@
                 <div id="error-message" class="hidden text-sm text-red-400 bg-red-400/10 p-3 rounded-lg">
                     <span class="material-symbols-outlined text-sm align-middle mr-1">error</span>
                     <span id="error-text"></span>
+                    <button id="external-retry-btn" type="button" class="hidden ml-2 underline text-red-300 hover:text-red-200">Riprova login esterno</button>
                 </div>
 
                 <button 
@@ -178,14 +179,21 @@
 
         const errorDiv = document.getElementById('error-message');
         const errorText = document.getElementById('error-text');
+        const externalRetryBtn = document.getElementById('external-retry-btn');
 
-        function showError(message) {
+        function showError(message, options = {}) {
+            const code = options.code ? ` [${options.code}]` : '';
             errorText.textContent = message;
+            if (code) {
+                errorText.textContent = `${errorText.textContent}${code}`;
+            }
             errorDiv.classList.remove('hidden');
+            externalRetryBtn.classList.toggle('hidden', !options.canRetryExternal);
         }
 
         function hideError() {
             errorDiv.classList.add('hidden');
+            externalRetryBtn.classList.add('hidden');
         }
 
         function redirectByRole(user) {
@@ -280,7 +288,7 @@
             const extAuthError = url.searchParams.get('extAuthError');
 
             if (extAuthError) {
-                showError(extAuthError);
+                showError(extAuthError, { canRetryExternal: true, code: 'EXT_AUTH' });
                 url.searchParams.delete('extAuthError');
                 url.searchParams.delete('provider');
                 window.history.replaceState({}, document.title, url.pathname + (url.search ? `?${url.searchParams}` : ''));
@@ -311,12 +319,20 @@
                 window.history.replaceState({}, document.title, url.pathname + (url.search ? `?${url.searchParams}` : ''));
                 redirectByRole(result.user);
             } catch (error) {
-                showError(error.message || 'Login esterno non riuscito');
+                showError(error.message || 'Login esterno non riuscito', { canRetryExternal: true, code: 'EXT_COMPLETE' });
                 loginBtn.disabled = false;
                 btnText.textContent = 'Accedi';
                 btnLoading.classList.add('hidden');
             }
         }
+
+        externalRetryBtn.addEventListener('click', () => {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('extAuthError');
+            url.searchParams.delete('extAuthCode');
+            url.searchParams.delete('provider');
+            window.location.href = url.pathname + (url.searchParams.toString() ? `?${url.searchParams}` : '');
+        });
 
         // Handle form submission
         document.getElementById('login-form').addEventListener('submit', async function(e) {
@@ -354,13 +370,15 @@
             }
         });
 
-        renderExternalProviders();
-        completeExternalLoginIfNeeded();
+        (async () => {
+            await Auth.ensureInitialized();
+            await renderExternalProviders();
+            await completeExternalLoginIfNeeded();
 
-        // Check if already logged in
-        if (Auth.isAuthenticated()) {
-            window.location.href = 'home.html';
-        }
+            if (Auth.isAuthenticated()) {
+                redirectByRole(Auth.getUser());
+            }
+        })();
     </script>
 </body>
 </html>

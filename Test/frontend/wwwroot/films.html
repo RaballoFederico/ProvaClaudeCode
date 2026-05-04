@@ -216,7 +216,8 @@
 
             filteredFilms = allFilms.filter(film => {
                 const matchesSearch = film.titolo.toLowerCase().includes(search) || 
-                    `FLM-${String(film.id).padStart(3, '0')}`.toLowerCase().includes(search);
+                    `FLM-${String(film.id).padStart(3, '0')}`.toLowerCase().includes(search) ||
+                    (film.cast || '').toLowerCase().includes(search);
                 const matchesRegista = !registaId || film.registaId === parseInt(registaId);
                 const matchesYear = !year || (film.dataProduzione && new Date(film.dataProduzione).getFullYear().toString() === year);
                 const matchesCategoria = !categoriaId || (Array.isArray(film.categorieIds) && film.categorieIds.includes(parseInt(categoriaId)));
@@ -325,6 +326,13 @@
                             </div>
                             
                             <div class="bg-surface-container-high rounded-xl p-3">
+                                <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-2">Attori</p>
+                                <div class="flex flex-wrap gap-1">
+                                    ${formatCastBadges(film.cast)}
+                                </div>
+                            </div>
+                            
+                            <div class="bg-surface-container-high rounded-xl p-3">
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-2">Data Produzione</p>
                                 <p class="text-sm font-semibold text-on-surface">${film.dataProduzione ? Utils.formatDate(film.dataProduzione) : 'Non specificata'}</p>
                             </div>
@@ -365,6 +373,14 @@
             showModal('Nuovo Film', `
                 <form id="film-form" onsubmit="handleSubmit(event)">
                     <div class="space-y-4">
+                        <div class="bg-surface-container-high rounded-xl p-3">
+                            <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-2">Importa da TMDB</p>
+                            <div class="flex gap-2">
+                                <input type="text" id="tmdb-search-input" placeholder="Cerca titolo su TMDB..." class="flex-1 bg-surface-container-highest border-none rounded-lg px-3 py-2 text-on-surface focus:ring-1 focus:ring-primary text-sm">
+                                <button type="button" onclick="searchTmdbInModal()" class="px-3 py-2 bg-surface-container-highest rounded-lg text-sm font-semibold">Cerca</button>
+                            </div>
+                            <div id="tmdb-results" class="mt-2 space-y-1"></div>
+                        </div>
                         <div>
                             <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Titolo *</label>
                             <input type="text" name="titolo" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
@@ -386,6 +402,7 @@
                                 <input type="number" name="durata" min="1" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
                             </div>
                         </div>
+                        <input type="hidden" name="tmdbId" value="">
                         <div>
                             <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Copertina Path</label>
                             <input type="text" name="copertinaPath" placeholder="/media/defaults/cover.jpg" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
@@ -393,6 +410,11 @@
                         <div>
                             <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Filmato Path</label>
                             <input type="text" name="filmatoPath" placeholder="/media/videos/film.mp4" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Attori</label>
+                            <textarea name="cast" rows="3" placeholder="Es. Robert Downey Jr., Chris Evans, Scarlett Johansson" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary resize-y"></textarea>
+                            <p class="mt-1 text-[11px] text-on-surface-variant">Separa gli attori con una virgola.</p>
                         </div>
                         <div>
                             <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Categorie</label>
@@ -429,6 +451,13 @@
             showModal('Modifica Film', `
                 <form id="film-form" onsubmit="handleSubmit(event)">
                     <div class="space-y-4">
+                        <div class="bg-surface-container-high rounded-xl p-3">
+                            <div class="flex items-center justify-between gap-2">
+                                <p class="text-[10px] text-on-surface-variant uppercase tracking-widest">TMDB</p>
+                                <button type="button" onclick="syncCastFromTmdb(${id})" class="px-3 py-1.5 bg-surface-container-highest rounded-lg text-xs font-semibold">Aggiorna attori da TMDB</button>
+                            </div>
+                            <p class="mt-1 text-[11px] text-on-surface-variant">Sincronizza automaticamente il cast del film.</p>
+                        </div>
                         <div>
                             <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Titolo *</label>
                             <input type="text" name="titolo" value="${escapeHtml(film.titolo)}" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
@@ -458,6 +487,11 @@
                             <input type="text" name="filmatoPath" value="${escapeHtml(film.filmatoPath || '')}" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
                         </div>
                         <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Attori</label>
+                            <textarea name="cast" rows="3" placeholder="Es. Robert Downey Jr., Chris Evans, Scarlett Johansson" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary resize-y">${escapeHtml(film.cast || '')}</textarea>
+                            <p class="mt-1 text-[11px] text-on-surface-variant">Separa gli attori con una virgola.</p>
+                        </div>
+                        <div>
                             <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Categorie</label>
                             <div class="w-full min-h-24 bg-surface-container-highest rounded-lg px-3 py-3 border border-outline-variant/30">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -472,6 +506,7 @@
                         </div>
                     </div>
                     <input type="hidden" name="id" value="${id}">
+                    <input type="hidden" name="tmdbId" value="${film.tmdbId || ''}">
                     <div class="flex justify-end gap-3 mt-6">
                         <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Annulla</button>
                         <button type="submit" class="noir-gradient px-6 py-2 text-white rounded-lg font-bold hover:opacity-90 transition-opacity">Salva</button>
@@ -495,6 +530,8 @@
                 durata: parseInt(form.durata.value) || null,
                 copertinaPath: form.copertinaPath.value || null,
                 filmatoPath: form.filmatoPath.value || null,
+                cast: form.cast.value?.trim() || null,
+                tmdbId: form.tmdbId?.value ? parseInt(form.tmdbId.value, 10) : null,
                 categoriaIds: Array.from(form.querySelectorAll('input[name="categorieIds"]:checked')).map(i => parseInt(i.value))
             };
 
@@ -557,6 +594,86 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        function formatCastBadges(cast) {
+            const names = (cast || '')
+                .split(',')
+                .map(n => n.trim())
+                .filter(Boolean)
+                .slice(0, 8);
+
+            if (!names.length) {
+                return '<span class="text-xs text-on-surface-variant">Non specificati</span>';
+            }
+
+            return names
+                .map(name => `<span class="px-2 py-0.5 rounded-full text-[10px] bg-surface-container-highest text-tertiary">${escapeHtml(name)}</span>`)
+                .join('');
+        }
+
+        async function searchTmdbInModal() {
+            const queryEl = document.getElementById('tmdb-search-input');
+            const resultsEl = document.getElementById('tmdb-results');
+            const form = document.getElementById('film-form');
+            const query = queryEl?.value?.trim();
+            if (!query || !resultsEl || !form) return;
+
+            try {
+                resultsEl.innerHTML = '<p class="text-xs text-on-surface-variant">Ricerca in corso...</p>';
+                const results = await ApiClient.get(`/films/tmdb-search?q=${encodeURIComponent(query)}`);
+                if (!Array.isArray(results) || results.length === 0) {
+                    resultsEl.innerHTML = '<p class="text-xs text-on-surface-variant">Nessun risultato.</p>';
+                    return;
+                }
+
+                resultsEl.innerHTML = results.map(item => `
+                    <button type="button" onclick="importTmdbMovie(${item.id})" class="w-full text-left px-3 py-2 rounded-lg hover:bg-surface-container-highest transition-colors">
+                        <div class="text-sm font-semibold text-on-surface">${escapeHtml(item.titolo || 'Senza titolo')}</div>
+                        <div class="text-xs text-on-surface-variant">${escapeHtml((item.dataRilascio || '').substring(0, 10))}</div>
+                    </button>
+                `).join('');
+            } catch (error) {
+                resultsEl.innerHTML = '<p class="text-xs text-error">Errore ricerca TMDB</p>';
+            }
+        }
+
+        async function importTmdbMovie(tmdbMovieId) {
+            const form = document.getElementById('film-form');
+            if (!form) return;
+
+            try {
+                Utils.showLoading();
+                const result = await ApiClient.post('/films/import-tmdb', { tmdbMovieId });
+                if (!result?.filmId) {
+                    Utils.showNotification('Import TMDB completato ma ID film non trovato', 'warning');
+                    return;
+                }
+
+                closeModal();
+                await loadData();
+                openEditModal(result.filmId);
+                Utils.showNotification('Dati TMDB importati, inclusi attori', 'success');
+            } catch (error) {
+                Utils.showNotification(error.message || 'Errore import TMDB', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        async function syncCastFromTmdb(filmId) {
+            try {
+                Utils.showLoading();
+                await ApiClient.post(`/films/${filmId}/sync-cast-tmdb`, {});
+                Utils.showNotification('Attori aggiornati da TMDB', 'success');
+                closeModal();
+                await loadData();
+                openEditModal(filmId);
+            } catch (error) {
+                Utils.showNotification(error.message || 'Errore sincronizzazione cast', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
         }
     </script>
 </body>

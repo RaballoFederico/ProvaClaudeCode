@@ -107,12 +107,22 @@
                 empty.classList.add('hidden');
                 container.innerHTML = acquisti.slice(0, 8).map((a) => {
                     const methodLabel = a.metodoPagamentoEtichetta || a.metodoPagamento || 'N/D';
+                    const creditoUsato = Number(a.creditoUsato || 0);
+                    const importoTotale = Number(a.importoTotale || 0);
+                    const cartaUsata = Math.max(0, importoTotale - creditoUsato);
+                    const pagamentoMisto = creditoUsato > 0 && cartaUsata > 0;
+                    const canRefund = String(a.stato || '').toUpperCase() === 'PAGATO';
                     return `
                         <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high p-3 text-sm flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                             <div class="text-on-surface-variant">Acquisto #${a.id} - ${new Date(a.dataAcquisto).toLocaleDateString('it-IT')}</div>
-                            <div class="text-on-surface">${Number(a.importoTotale).toFixed(2)} EUR</div>
+                            <div class="text-on-surface">${importoTotale.toFixed(2)} EUR</div>
                             <div class="text-on-surface-variant">Metodo: <span class="text-on-surface">${escapeHtml(methodLabel)}</span></div>
-                            <button type="button" onclick="downloadAcquistoPdf(${a.id})" class="px-3 py-2 bg-surface-container border border-outline-variant/40 text-on-surface rounded-lg text-xs hover-lift">Scarica PDF</button>
+                            <div class="text-on-surface-variant">Stato: <span class="text-on-surface">${escapeHtml(a.stato || 'N/D')}</span></div>
+                            <div class="text-on-surface-variant">${pagamentoMisto ? `Misto: credito ${creditoUsato.toFixed(2)} EUR + carta ${cartaUsata.toFixed(2)} EUR` : (creditoUsato > 0 ? `Pagato con credito: ${creditoUsato.toFixed(2)} EUR` : `Pagato con carta: ${cartaUsata.toFixed(2)} EUR`)}</div>
+                            <div class="flex items-center gap-2">
+                                <button type="button" onclick="downloadAcquistoPdf(${a.id})" class="px-3 py-2 bg-surface-container border border-outline-variant/40 text-on-surface rounded-lg text-xs hover-lift">Scarica PDF</button>
+                                ${canRefund ? `<button type="button" onclick="richiediRimborso(${a.id})" class="px-3 py-2 bg-amber-500/20 border border-amber-400/40 text-amber-200 rounded-lg text-xs hover-lift">Richiedi rimborso</button>` : ''}
+                            </div>
                         </div>
                     `;
                 }).join('');
@@ -152,10 +162,10 @@
                     const checkinUrl = `/check-in.html?codice=${encodeURIComponent(t.codiceHash)}&cinemaId=${t.cinemaId}`;
                     return `
                     <article class="app-card border ${highlighted ? 'border-emerald-500/50' : 'border-outline-variant/20'} p-4 hover-lift reveal-up relative overflow-hidden" style="animation-delay:${(index % 8) * 0.04}s">
-                        <div class="absolute top-0 right-0 px-2 py-1 text-[10px] ${t.validato ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-200'} rounded-bl-lg border-l border-b border-outline-variant/20">${t.validato ? 'VALIDATO' : 'ATTIVO'}</div>
+                        <div class="absolute top-0 right-0 px-2 py-1 text-[10px] ${t.rimborsato ? 'bg-sky-500/20 text-sky-300' : (t.validato ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-200')} rounded-bl-lg border-l border-b border-outline-variant/20">${t.rimborsato ? 'RIMBORSATO' : (t.validato ? 'VALIDATO' : 'ATTIVO')}</div>
                         <div class="flex items-center justify-between mb-2">
                             <div class="font-semibold">Biglietto #${t.id}</div>
-                            <div class="text-xs ${t.validato ? 'text-emerald-400' : 'text-amber-300'}">${t.validato ? 'Validato' : 'Da validare'}</div>
+                            <div class="text-xs ${t.rimborsato ? 'text-sky-300' : (t.validato ? 'text-emerald-400' : 'text-amber-300')}">${t.rimborsato ? 'Rimborsato' : (t.validato ? 'Validato' : 'Da validare')}</div>
                         </div>
                         <div class="text-sm text-on-surface-variant">Acquisto: ${t.acquistoId}</div>
                         <div class="text-sm text-on-surface-variant">Show: ${t.showId}</div>
@@ -166,6 +176,7 @@
                         <div class="mt-3 flex items-center gap-2">
                             <button onclick="toggleQr(${t.id})" class="app-btn app-btn-primary hover-lift">Mostra QR</button>
                             <a href="${checkinUrl}" class="app-btn app-btn-secondary hover-lift">Controlla ticket</a>
+                            ${t.rimborsoDisponibile ? `<button type="button" onclick="richiediRimborsoBiglietto(${t.id})" class="app-btn app-btn-secondary hover-lift">Rimborsa ticket</button>` : ''}
                             ${canValidate ? `<a href="/validazione.html?codice=${encodeURIComponent(t.codiceHash)}&cinemaId=${t.cinemaId}" class="app-btn app-btn-secondary hover-lift">Vai a validazione</a>` : ''}
                         </div>
                         <div id="qr-wrap-${t.id}" class="hidden mt-3 p-3 rounded-lg bg-surface-container-high border border-outline-variant/30">
@@ -239,6 +250,40 @@
                 URL.revokeObjectURL(objectUrl);
             } catch (error) {
                 Utils.showNotification(error.message || 'Errore download PDF', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        async function richiediRimborso(acquistoId) {
+            const ok = window.confirm(`Confermare rimborso per acquisto #${acquistoId}? L'importo verra accreditato sul credito sito.`);
+            if (!ok) return;
+
+            try {
+                Utils.showLoading();
+                const res = await ApiClient.post(`/acquisto/${acquistoId}/rimborso`, {});
+                Utils.showNotification(res?.message || 'Rimborso completato', 'success');
+                await loadAcquisti();
+                await loadTickets();
+            } catch (error) {
+                Utils.showNotification(error.message || 'Rimborso non disponibile', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        async function richiediRimborsoBiglietto(ticketId) {
+            const ok = window.confirm(`Confermare rimborso del biglietto #${ticketId}? L'importo verra accreditato sul credito sito.`);
+            if (!ok) return;
+
+            try {
+                Utils.showLoading();
+                const res = await ApiClient.post(`/acquisto/biglietti/${ticketId}/rimborso`, {});
+                Utils.showNotification(res?.message || 'Rimborso ticket completato', 'success');
+                await loadAcquisti();
+                await loadTickets();
+            } catch (error) {
+                Utils.showNotification(error.message || 'Rimborso ticket non disponibile', 'error');
             } finally {
                 Utils.hideLoading();
             }

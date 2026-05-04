@@ -74,6 +74,12 @@ public class UpdatePreferredPaymentMethodDTO
     public string? Etichetta { get; set; }
 }
 
+public class ChangePasswordRequestDTO
+{
+    public string CurrentPassword { get; set; } = string.Empty;
+    public string NewPassword { get; set; } = string.Empty;
+}
+
 public class ProiezioneSalvataDTO
 {
     public int Id { get; set; }

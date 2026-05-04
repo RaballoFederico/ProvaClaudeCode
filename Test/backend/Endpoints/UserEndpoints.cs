@@ -211,6 +211,46 @@ public static class UserEndpoints
             return Results.Ok(new { message = "Profilo aggiornato con successo" });
         });
 
+        // PUT /user/change-password - Cambia password utente corrente
+        group.MapPut("/change-password", async (HttpContext context, ChangePasswordRequestDTO request, FilmDbContext db) =>
+        {
+            var userId = GetUserId(context);
+            if (userId == null) return Results.Unauthorized();
+
+            var utente = await db.Utenti.FindAsync(userId);
+            if (utente == null) return Results.NotFound();
+
+            if (string.IsNullOrWhiteSpace(utente.PasswordHash))
+            {
+                return Results.BadRequest(new { message = "Questo account usa accesso esterno: imposta prima una password tramite assistenza." });
+            }
+
+            if (string.IsNullOrWhiteSpace(request.CurrentPassword) || string.IsNullOrWhiteSpace(request.NewPassword))
+            {
+                return Results.BadRequest(new { message = "Compila password attuale e nuova password" });
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, utente.PasswordHash))
+            {
+                return Results.BadRequest(new { message = "Password attuale non corretta" });
+            }
+
+            if (request.NewPassword.Length < 8)
+            {
+                return Results.BadRequest(new { message = "La nuova password deve contenere almeno 8 caratteri" });
+            }
+
+            if (request.NewPassword == request.CurrentPassword)
+            {
+                return Results.BadRequest(new { message = "La nuova password deve essere diversa dalla precedente" });
+            }
+
+            utente.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new { message = "Password aggiornata con successo" });
+        });
+
         // GET /user/proiezioni-salvate
         group.MapGet("/proiezioni-salvate", async (HttpContext context, FilmDbContext db) =>
         {

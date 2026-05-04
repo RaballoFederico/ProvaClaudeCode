@@ -59,10 +59,10 @@
                 </div>
             </section>
 
-            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-4 md:p-5 mb-6 reveal-up delay-1 sticky top-[72px] z-20 backdrop-blur-xl">
+            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-4 md:p-5 mb-6 reveal-up delay-1">
                 <div class="flex flex-col md:flex-row md:items-center gap-3 mb-4">
-                    <button id="open-cinema-modal" class="app-btn app-btn-primary hover-lift">Seleziona Cinema</button>
-                    <div class="text-sm text-on-surface-variant">Cinema attuale: <span id="selected-cinema-label" class="text-on-surface font-semibold">Nessuno</span></div>
+                    <button id="open-cinema-modal" class="app-btn app-btn-primary hover-lift w-full md:w-auto">Seleziona Cinema</button>
+                    <div class="text-sm text-on-surface-variant w-full md:w-auto text-center md:text-left">Cinema: <span id="selected-cinema-label" class="text-on-surface font-semibold">Nessuno</span></div>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
                     <div class="md:col-span-1">
@@ -115,7 +115,7 @@
             </section>
 
             <section class="reveal-up delay-2">
-                <div id="films-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4"></div>
+                <div id="films-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-3 md:gap-4"></div>
                 <div id="empty-state" class="hidden text-center py-12 text-on-surface-variant">
                     <div class="mb-3">Nessun film trovato con i filtri selezionati.</div>
                     <button id="clear-filters-btn" class="app-btn app-btn-secondary hover-lift">Rimuovi filtri</button>
@@ -274,6 +274,21 @@
             const sortBy = document.getElementById('sort-filter').value;
             const search = document.getElementById('search-input').value.trim().toLowerCase();
 
+            if (!selectedCinema?.id) {
+                films = [];
+                renderFilms([]);
+                const empty = document.getElementById('empty-state');
+                empty.classList.remove('hidden');
+                empty.innerHTML = `
+                    <div class="mb-3">Seleziona un cinema per vedere solo i film disponibili alla visione.</div>
+                    <button id="clear-filters-btn" class="app-btn app-btn-primary hover-lift">Scegli cinema</button>
+                `;
+                const openBtn = document.getElementById('clear-filters-btn');
+                if (openBtn) openBtn.addEventListener('click', () => toggleCinemaModal(true));
+                loadingFilms = false;
+                return;
+            }
+
             const params = new URLSearchParams();
             if (selectedCinema?.id) params.set('cinemaId', String(selectedCinema.id));
             if (genre) params.set('genere', genre);
@@ -297,6 +312,7 @@
             const twoWeeks = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
 
             const filtered = films.filter(f => {
+                if (!isFilmAvailableForViewing(f)) return false;
                 if (tag === 'featured' && !f.featured) return false;
                 if (tag === 'coming') {
                     if (!f.dataRilascio) return false;
@@ -329,6 +345,14 @@
             loadingFilms = false;
         }
 
+        function isFilmAvailableForViewing(film) {
+            // In programmazione mostriamo solo film realmente disponibili nel cinema selezionato.
+            if (film.inSelectedCinema === true && !!film.nextShowDate) return true;
+            if ((film.showsNext7Days || 0) > 0 && film.inSelectedCinema === true) return true;
+            if (typeof film.showCount === 'number' && film.showCount > 0) return true;
+            return false;
+        }
+
         function syncFiltersToQuery(filters) {
             const params = new URLSearchParams(window.location.search);
 
@@ -350,13 +374,8 @@
             const empty = document.getElementById('empty-state');
             empty.classList.add('hidden');
             grid.innerHTML = Array.from({ length: 8 }).map(() => `
-                <article class="bg-surface-container rounded-xl border border-outline-variant/20 overflow-hidden animate-pulse">
-                    <div class="h-56 bg-surface-container-high"></div>
-                    <div class="p-4 space-y-2">
-                        <div class="h-4 bg-surface-container-high rounded w-3/4"></div>
-                        <div class="h-3 bg-surface-container-high rounded w-1/2"></div>
-                        <div class="h-3 bg-surface-container-high rounded w-2/3 mt-3"></div>
-                    </div>
+                <article class="rounded-xl overflow-hidden animate-pulse bg-surface-container border border-outline-variant/20">
+                    <div class="aspect-[2/3] bg-surface-container-high"></div>
                 </article>
             `).join('');
         }
@@ -388,46 +407,18 @@
 
             empty.classList.add('hidden');
             grid.innerHTML = items.map((f, index) => {
-                const inCinema = selectedCinema ? !!f.inSelectedCinema : false;
-                const releaseSoon = f.dataRilascio ? (() => {
-                    const now = new Date();
-                    const rel = new Date(f.dataRilascio);
-                    const diff = rel.getTime() - now.getTime();
-                    return diff > 0 && diff <= (14 * 24 * 60 * 60 * 1000);
-                })() : false;
-
-                const nextShowLabel = f.nextShowDate
-                    ? `${new Date(f.nextShowDate).toLocaleDateString('it-IT', { day: 'numeric', month: 'short' })}${f.nextShowTime ? ` - ${(f.nextShowTime || '').substring(0, 5)}` : ''}`
-                    : 'Nessuna proiezione';
-
                 return `
-                    <article class="film-poster-card bg-surface-container rounded-xl border border-outline-variant/20 overflow-hidden hover:border-outline-variant/40 transition cursor-pointer hover-lift reveal-up" style="animation-delay:${(index % 8) * 0.04}s" onclick="openFilm(${f.id})">
-                        <div class="h-56 bg-surface-container-high relative">
+                    <article class="film-poster-card rounded-xl overflow-hidden border border-outline-variant/20 hover:border-outline-variant/40 transition cursor-pointer hover-lift reveal-up bg-surface-container" style="animation-delay:${(index % 8) * 0.04}s" onclick="openFilmShows(${f.id})" title="Apri proiezioni">
+                        <div class="aspect-[2/3] bg-surface-container-high relative">
                             <img src="${escapeHtml(f.copertinaPath || '')}" alt="${escapeHtml(f.titolo)}" class="w-full h-full object-cover" loading="lazy" onerror="this.style.display='none'" />
-                            <div class="absolute top-2 left-2 right-2 flex flex-wrap gap-1.5">
-                                ${f.featured ? '<span class="film-chip bg-amber-400/90 text-black">In evidenza</span>' : ''}
-                                ${releaseSoon ? '<span class="film-chip bg-sky-400/90 text-black">In uscita</span>' : ''}
-                                ${inCinema ? '<span class="film-chip bg-emerald-500/90 text-white">Nel tuo cinema</span>' : ''}
-                            </div>
-                            <div class="absolute inset-x-0 bottom-0 px-3 py-2 bg-gradient-to-t from-black/80 to-transparent text-xs text-white/90">
-                                Prossima proiezione: ${escapeHtml(nextShowLabel)}
-                            </div>
-                        </div>
-                        <div class="p-4">
-                            <h3 class="font-headline font-bold text-lg line-clamp-2">${escapeHtml(f.titolo)}</h3>
-                            <div class="text-xs text-on-surface-variant mt-1">${f.durata || '-'} min${f.genere ? ' - ' + escapeHtml(f.genere) : ''}</div>
-                            <div class="mt-3 flex items-center gap-2">
-                                <button onclick="event.stopPropagation(); openFilm(${f.id})" class="px-3 py-2 rounded-lg bg-primary-container text-white text-xs hover-lift">Dettagli</button>
-                                <button onclick="event.stopPropagation(); openFilmShows(${f.id})" class="px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant/40 text-on-surface text-xs hover-lift">Orari</button>
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
+                            <div class="absolute left-2 right-2 bottom-2 text-xs text-white font-semibold truncate">
+                                ${escapeHtml(f.titolo)}
                             </div>
                         </div>
                     </article>
                 `;
             }).join('');
-        }
-
-        function openFilm(id) {
-            window.location.href = `/scheda-film.html?id=${id}`;
         }
 
         function openFilmShows(id) {

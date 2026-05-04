@@ -1,23 +1,27 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FilmAPI.Model;
 
+[Table("refresh_tokens")]
 public class RefreshToken
 {
     [Key]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }
 
     [Required]
-    public string TokenHash { get; set; } = string.Empty;
+    [MaxLength(256)]
+    public string Token { get; set; } = string.Empty;
 
     [Required]
-    public string UserId { get; set; } = string.Empty;
+    public int UtenteId { get; set; }
 
-    public AppUser? User { get; set; }
+    [ForeignKey(nameof(UtenteId))]
+    public Utente Utente { get; set; } = null!;
 
-    public DateTime ExpiresAtUtc { get; set; }
+    [Required]
+    public DateTime ExpiresAt { get; set; }
 
-    public DateTime CreatedAtUtc { get; set; }
-
-    public DateTime? RevokedAtUtc { get; set; }
+    public DateTime? RevokedAt { get; set; }
 }

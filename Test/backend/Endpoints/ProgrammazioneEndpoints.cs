@@ -15,21 +15,42 @@ public static class ProgrammazioneEndpoints
             if (!string.IsNullOrWhiteSpace(search)) query = query.Where(f => f.Titolo.Contains(search));
             if (!string.IsNullOrWhiteSpace(genere)) query = query.Where(f => f.Genere != null && f.Genere == genere);
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var nowLocal = DateTime.Now;
+            var today = DateOnly.FromDateTime(nowLocal);
+            var nowTime = TimeOnly.FromDateTime(nowLocal);
             var next7 = today.AddDays(7);
-            query = query.Where(f => f.Shows.Any(s => s.Data >= today));
-            if (cinemaId.HasValue) query = query.Where(f => f.Shows.Any(s => s.Sala != null && s.Sala.CinemaId == cinemaId.Value));
+            var next15 = today.AddDays(14);
+            query = query.Where(f => f.Shows.Any(s =>
+                (s.Data > today || (s.Data == today && s.OraInizio >= nowTime)) &&
+                s.Data <= next15));
+            if (cinemaId.HasValue)
+            {
+                query = query.Where(f => f.Shows.Any(s =>
+                    s.Sala != null &&
+                    s.Sala.CinemaId == cinemaId.Value &&
+                    (s.Data > today || (s.Data == today && s.OraInizio >= nowTime)) &&
+                    s.Data <= next15));
+            }
 
             if (!string.IsNullOrWhiteSpace(tipologia))
             {
                 var tipoNormalized = tipologia.Trim().ToUpperInvariant();
                 if (cinemaId.HasValue)
                 {
-                    query = query.Where(f => f.Shows.Any(s => s.Data >= today && s.Sala != null && s.Sala.CinemaId == cinemaId.Value && s.Sala.Tipologia.ToString() == tipoNormalized));
+                    query = query.Where(f => f.Shows.Any(s =>
+                        (s.Data > today || (s.Data == today && s.OraInizio >= nowTime)) &&
+                        s.Data <= next15 &&
+                        s.Sala != null &&
+                        s.Sala.CinemaId == cinemaId.Value &&
+                        s.Sala.Tipologia.ToString() == tipoNormalized));
                 }
                 else
                 {
-                    query = query.Where(f => f.Shows.Any(s => s.Data >= today && s.Sala != null && s.Sala.Tipologia.ToString() == tipoNormalized));
+                    query = query.Where(f => f.Shows.Any(s =>
+                        (s.Data > today || (s.Data == today && s.OraInizio >= nowTime)) &&
+                        s.Data <= next15 &&
+                        s.Sala != null &&
+                        s.Sala.Tipologia.ToString() == tipoNormalized));
                 }
             }
 
@@ -43,18 +64,44 @@ public static class ProgrammazioneEndpoints
                     {
                         query = normalizedBand switch
                         {
-                            "mattina" => query.Where(f => f.Shows.Any(s => s.Data >= today && s.Sala != null && s.Sala.CinemaId == cinemaId.Value && s.OraInizio < new TimeOnly(14, 0))),
-                            "pomeriggio" => query.Where(f => f.Shows.Any(s => s.Data >= today && s.Sala != null && s.Sala.CinemaId == cinemaId.Value && s.OraInizio >= new TimeOnly(14, 0) && s.OraInizio < new TimeOnly(19, 0))),
-                            _ => query.Where(f => f.Shows.Any(s => s.Data >= today && s.Sala != null && s.Sala.CinemaId == cinemaId.Value && s.OraInizio >= new TimeOnly(19, 0)))
+                            "mattina" => query.Where(f => f.Shows.Any(s =>
+                                (s.Data > today || (s.Data == today && s.OraInizio >= nowTime)) &&
+                                s.Data <= next15 &&
+                                s.Sala != null &&
+                                s.Sala.CinemaId == cinemaId.Value &&
+                                s.OraInizio < new TimeOnly(14, 0))),
+                            "pomeriggio" => query.Where(f => f.Shows.Any(s =>
+                                (s.Data > today || (s.Data == today && s.OraInizio >= nowTime)) &&
+                                s.Data <= next15 &&
+                                s.Sala != null &&
+                                s.Sala.CinemaId == cinemaId.Value &&
+                                s.OraInizio >= new TimeOnly(14, 0) &&
+                                s.OraInizio < new TimeOnly(19, 0))),
+                            _ => query.Where(f => f.Shows.Any(s =>
+                                (s.Data > today || (s.Data == today && s.OraInizio >= nowTime)) &&
+                                s.Data <= next15 &&
+                                s.Sala != null &&
+                                s.Sala.CinemaId == cinemaId.Value &&
+                                s.OraInizio >= new TimeOnly(19, 0)))
                         };
                     }
                     else
                     {
                         query = normalizedBand switch
                         {
-                            "mattina" => query.Where(f => f.Shows.Any(s => s.Data >= today && s.OraInizio < new TimeOnly(14, 0))),
-                            "pomeriggio" => query.Where(f => f.Shows.Any(s => s.Data >= today && s.OraInizio >= new TimeOnly(14, 0) && s.OraInizio < new TimeOnly(19, 0))),
-                            _ => query.Where(f => f.Shows.Any(s => s.Data >= today && s.OraInizio >= new TimeOnly(19, 0)))
+                            "mattina" => query.Where(f => f.Shows.Any(s =>
+                                (s.Data > today || (s.Data == today && s.OraInizio >= nowTime)) &&
+                                s.Data <= next15 &&
+                                s.OraInizio < new TimeOnly(14, 0))),
+                            "pomeriggio" => query.Where(f => f.Shows.Any(s =>
+                                (s.Data > today || (s.Data == today && s.OraInizio >= nowTime)) &&
+                                s.Data <= next15 &&
+                                s.OraInizio >= new TimeOnly(14, 0) &&
+                                s.OraInizio < new TimeOnly(19, 0))),
+                            _ => query.Where(f => f.Shows.Any(s =>
+                                (s.Data > today || (s.Data == today && s.OraInizio >= nowTime)) &&
+                                s.Data <= next15 &&
+                                s.OraInizio >= new TimeOnly(19, 0)))
                         };
                     }
                 }
@@ -70,17 +117,31 @@ public static class ProgrammazioneEndpoints
                     f.Genere,
                     f.Featured,
                     f.DataRilascio,
-                    ShowsNext7Days = f.Shows.Count(s => s.Data >= today && s.Data <= next7),
-                    FeaturedTag = f.Featured || f.Shows.Count(s => s.Data >= today && s.Data <= next7) >= 5,
-                    InSelectedCinema = cinemaId.HasValue && f.Shows.Any(s => s.Sala != null && s.Sala.CinemaId == cinemaId.Value),
+                    ShowsNext7Days = f.Shows.Count(s =>
+                        (s.Data > today || (s.Data == today && s.OraInizio >= nowTime)) &&
+                        s.Data <= next7),
+                    FeaturedTag = f.Featured || f.Shows.Count(s =>
+                        (s.Data > today || (s.Data == today && s.OraInizio >= nowTime)) &&
+                        s.Data <= next7) >= 5,
+                    InSelectedCinema = cinemaId.HasValue && f.Shows.Any(s =>
+                        s.Sala != null &&
+                        s.Sala.CinemaId == cinemaId.Value &&
+                        (s.Data > today || (s.Data == today && s.OraInizio >= nowTime)) &&
+                        s.Data <= next15),
                     NextShowDate = f.Shows
-                        .Where(s => s.Data >= today && (!cinemaId.HasValue || (s.Sala != null && s.Sala.CinemaId == cinemaId.Value)))
+                        .Where(s =>
+                            (s.Data > today || (s.Data == today && s.OraInizio >= nowTime)) &&
+                            s.Data <= next15 &&
+                            (!cinemaId.HasValue || (s.Sala != null && s.Sala.CinemaId == cinemaId.Value)))
                         .OrderBy(s => s.Data)
                         .ThenBy(s => s.OraInizio)
                         .Select(s => (DateOnly?)s.Data)
                         .FirstOrDefault(),
                     NextShowTime = f.Shows
-                        .Where(s => s.Data >= today && (!cinemaId.HasValue || (s.Sala != null && s.Sala.CinemaId == cinemaId.Value)))
+                        .Where(s =>
+                            (s.Data > today || (s.Data == today && s.OraInizio >= nowTime)) &&
+                            s.Data <= next15 &&
+                            (!cinemaId.HasValue || (s.Sala != null && s.Sala.CinemaId == cinemaId.Value)))
                         .OrderBy(s => s.Data)
                         .ThenBy(s => s.OraInizio)
                         .Select(s => (TimeOnly?)s.OraInizio)
@@ -118,9 +179,26 @@ public static class ProgrammazioneEndpoints
 
         app.MapGet("/film/{id:int}/shows", async (int id, int? cinemaId, DateOnly? data, FilmDbContext db) =>
         {
+            var nowLocal = DateTime.Now;
+            var today = DateOnly.FromDateTime(nowLocal);
+            var nowTime = TimeOnly.FromDateTime(nowLocal);
+            var next15 = today.AddDays(14);
+
             var query = db.Shows.Include(s => s.Sala).ThenInclude(s => s!.Cinema).Where(s => s.FilmId == id);
             if (cinemaId.HasValue) query = query.Where(s => s.Sala != null && s.Sala.CinemaId == cinemaId.Value);
-            if (data.HasValue) query = query.Where(s => s.Data == data.Value);
+            if (data.HasValue)
+            {
+                query = query.Where(s => s.Data == data.Value);
+            }
+            else
+            {
+                query = query.Where(s => (s.Data > today || (s.Data == today && s.OraInizio >= nowTime)) && s.Data <= next15);
+            }
+
+            if (data.HasValue && data.Value == today)
+            {
+                query = query.Where(s => s.OraInizio >= nowTime);
+            }
 
             var items = await query.OrderBy(s => s.OraInizio).Select(s => new
             {

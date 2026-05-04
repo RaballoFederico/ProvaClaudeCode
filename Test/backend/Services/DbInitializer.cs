@@ -158,7 +158,22 @@ public static class DbInitializer
             new Cinema { Nome = "Cinema Ducale", Citta = "Parma", Indirizzo = "Piazzale della Pilotta 1", PostiMassimi = 280, Latitudine = 44.80150000m, Longitudine = 10.32550000m, CodiceLocale = "DUC-PAR" },
             new Cinema { Nome = "UCI Torino Lingotto", Citta = "Torino", Indirizzo = "Via Nizza 280", PostiMassimi = 340, Latitudine = 45.02850000m, Longitudine = 7.66540000m, CodiceLocale = "UCI-TOR" },
             new Cinema { Nome = "Cinema Adriano", Citta = "Roma", Indirizzo = "Piazza Cavour 22", PostiMassimi = 300, Latitudine = 41.90350000m, Longitudine = 12.46800000m, CodiceLocale = "ADR-ROM" },
-            new Cinema { Nome = "Cinema Moderno", Citta = "Bologna", Indirizzo = "Via Rizzoli 1", PostiMassimi = 250, Latitudine = 44.49490000m, Longitudine = 11.34640000m, CodiceLocale = "MOD-BOL" }
+            new Cinema { Nome = "Cinema Moderno", Citta = "Bologna", Indirizzo = "Via Rizzoli 1", PostiMassimi = 250, Latitudine = 44.49490000m, Longitudine = 11.34640000m, CodiceLocale = "MOD-BOL" },
+            new Cinema { Nome = "UCI Roma Parco de' Medici", Citta = "Roma", Indirizzo = "Via Vito G. Galoppini 15", PostiMassimi = 380, Latitudine = 41.86300000m, Longitudine = 12.43300000m, CodiceLocale = "UCI-ROM" },
+            new Cinema { Nome = "Cinepolis Galleria", Citta = "Napoli", Indirizzo = "Via Toledo 402", PostiMassimi = 290, Latitudine = 40.83690000m, Longitudine = 14.24840000m, CodiceLocale = "CPS-NAP" },
+            new Cinema { Nome = "Cinema Fiume", Citta = "Palermo", Indirizzo = "Via E. F. 88", PostiMassimi = 240, Latitudine = 38.11570000m, Longitudine = 13.35850000m, CodiceLocale = "FLM-PAL" },
+            new Cinema { Nome = "Odeon Firenze", Citta = "Firenze", Indirizzo = "Piazza Strozzi 6", PostiMassimi = 310, Latitudine = 43.77370000m, Longitudine = 11.25670000m, CodiceLocale = "ODE-FIR" },
+            new Cinema { Nome = "Cinema Republic", Citta = "Genova", Indirizzo = "Via流水 45", PostiMassimi = 230, Latitudine = 44.40760000m, Longitudine = 8.93930000m, CodiceLocale = "REP-GEN" },
+            new Cinema { Nome = "UCI Fiumara", Citta = "Genova", Indirizzo = "Via Pammatone 8", PostiMassimi = 350, Latitudine = 44.42400000m, Longitudine = 8.89100000m, CodiceLocale = "UCI-FIU" },
+            new Cinema { Nome = "Cinecitta World", Citta = "Roma", Indirizzo = "Via di Settebello 29", PostiMassimi = 400, Latitudine = 41.89200000m, Longitudine = 12.50200000m, CodiceLocale = "CCW-ROM" },
+            new Cinema { Nome = "UCI Verona", Citta = "Verona", Indirizzo = "Via Monte Baldo 8", PostiMassimi = 270, Latitudine = 45.44300000m, Longitudine = 10.98700000m, CodiceLocale = "UCI-VER" },
+            new Cinema { Nome = "Cinema Azzurro", Citta = "Padova", Indirizzo = "Corso Milano 22", PostiMassimi = 220, Latitudine = 45.40650000m, Longitudine = 11.87370000m, CodiceLocale = "AZZ-PAD" },
+            new Cinema { Nome = "UCI Brescia", Citta = "Brescia", Indirizzo = "Via C. B. 14", PostiMassimi = 330, Latitudine = 45.53900000m, Longitudine = 10.22400000m, CodiceLocale = "UCI-BRE" },
+            new Cinema { Nome = "Cinema Maestoso", Citta = "Trieste", Indirizzo = "Via Torino 12", PostiMassimi = 200, Latitudine = 45.64950000m, Longitudine = 13.77000000m, CodiceLocale = "MAE-TRI" },
+            new Cinema { Nome = "UCI Bari", Citta = "Bari", Indirizzo = "Via J. R. 50", PostiMassimi = 310, Latitudine = 41.06200000m, Longitudine = 16.86500000m, CodiceLocale = "UCI-BAR" },
+            new Cinema { Nome = "Cineporti", Citta = "Catania", Indirizzo = "Via S. F. 110", PostiMassimi = 280, Latitudine = 37.50800000m, Longitudine = 15.09300000m, CodiceLocale = "CPR-CAT" },
+            new Cinema { Nome = "UCI Bergamo", Citta = "Bergamo", Indirizzo = "Via A. stop 6", PostiMassimi = 260, Latitudine = 45.69400000m, Longitudine = 9.66300000m, CodiceLocale = "UCI-BER" },
+            new Cinema { Nome = "Cinema Teatro", Citta = "Varese", Indirizzo = "Via D. M. 18", PostiMassimi = 215, Latitudine = 45.81800000m, Longitudine = 8.82600000m, CodiceLocale = "CTE-VAR" }
         };
 
         foreach (var c in cinemas)
@@ -524,7 +539,10 @@ public static class DbInitializer
         }
 
         await context.SaveChangesAsync();
-        return await context.Films.ToDictionaryAsync(f => f.Titolo, f => f);
+        return await context.Films
+            .GroupBy(f => f.Titolo)
+            .Select(g => g.OrderByDescending(x => x.Id).First())
+            .ToDictionaryAsync(f => f.Titolo, f => f);
     }
 
     private static async Task<Dictionary<string, Show>> EnsureShowsAsync(
@@ -541,7 +559,7 @@ public static class DbInitializer
             var standardSlots = new[] { new TimeOnly(15, 30), new TimeOnly(20, 15) };
             var weekendSlots = new[] { new TimeOnly(11, 30), new TimeOnly(15, 30), new TimeOnly(20, 15) };
 
-            for (var dayOffset = -4; dayOffset <= 20; dayOffset++)
+            for (var dayOffset = -10; dayOffset <= 60; dayOffset++)
             {
                 var data = today.AddDays(dayOffset);
                 var isWeekend = data.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday;

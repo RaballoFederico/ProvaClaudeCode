@@ -76,6 +76,7 @@
                     <div class="bg-surface-container rounded-2xl p-6 border border-outline-variant/20 reveal-up delay-1">
                         <div class="flex items-center gap-4 mb-6">
                             <div class="w-16 h-16 rounded-full bg-primary-container flex items-center justify-center shadow-lg shadow-primary-container/20">
+                                <img id="profile-avatar-img" alt="Foto profilo" class="w-full h-full rounded-full object-cover hidden">
                                 <span id="user-initials" class="text-2xl font-bold text-white"></span>
                             </div>
                             <div>
@@ -83,10 +84,21 @@
                                 <p id="user-username" class="text-on-surface-variant text-sm"></p>
                                 <div id="user-roles" class="flex gap-2 mt-2"></div>
                             </div>
-                            <button id="edit-profile-btn" class="ml-auto px-4 py-2 bg-primary-container text-white rounded-lg text-sm transition-colors flex items-center gap-2 hover-lift">
+                            <div class="ml-auto flex flex-wrap justify-end gap-2">
+                                <input type="file" id="profile-picture-input" accept="image/*" class="hidden">
+                                <button id="change-picture-btn" type="button" class="px-4 py-2 border border-outline-variant/30 rounded-lg text-sm text-on-surface transition-colors flex items-center gap-2 hover:bg-surface-container-high hover-lift">
+                                    <span class="material-symbols-outlined text-sm">photo_camera</span>
+                                    Foto profilo
+                                </button>
+                                <button id="open-security-btn" type="button" class="px-4 py-2 border border-outline-variant/30 rounded-lg text-sm text-on-surface transition-colors flex items-center gap-2 hover:bg-surface-container-high hover-lift">
+                                    <span class="material-symbols-outlined text-sm">lock</span>
+                                    Password
+                                </button>
+                                <button id="edit-profile-btn" class="px-4 py-2 bg-primary-container text-white rounded-lg text-sm transition-colors flex items-center gap-2 hover-lift">
                                 <span class="material-symbols-outlined text-sm">edit</span>
                                 Modifica
-                            </button>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -185,6 +197,45 @@
                     <button type="submit" id="save-btn" class="flex-1 py-2 px-4 bg-primary-container text-white rounded-lg transition-colors flex items-center justify-center gap-2 hover-lift">
                         <span id="save-text">Salva</span>
                         <span id="save-loading" class="material-symbols-outlined animate-spin hidden">refresh</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Security Modal -->
+    <div id="security-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-surface-container rounded-2xl p-6 w-full max-w-md border border-outline-variant/20">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-on-surface">Cambia Password</h3>
+                <button id="close-security-modal" class="text-on-surface-variant hover:text-on-surface">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+
+            <form id="security-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm text-on-surface-variant mb-1">Password attuale *</label>
+                    <input type="password" id="current-password" required class="w-full px-4 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-on-surface">
+                </div>
+                <div>
+                    <label class="block text-sm text-on-surface-variant mb-1">Nuova password *</label>
+                    <input type="password" id="new-password" required minlength="8" class="w-full px-4 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-on-surface">
+                </div>
+                <div>
+                    <label class="block text-sm text-on-surface-variant mb-1">Conferma nuova password *</label>
+                    <input type="password" id="confirm-password" required minlength="8" class="w-full px-4 py-2 bg-surface-container-high border border-outline-variant/30 rounded-lg text-on-surface">
+                </div>
+
+                <div id="security-error" class="hidden text-sm text-error bg-error-container/20 p-3 rounded-lg"></div>
+
+                <div class="flex gap-3 mt-6">
+                    <button type="button" id="cancel-security" class="flex-1 py-2 px-4 border border-outline-variant/30 rounded-lg text-on-surface hover:bg-surface-container-high transition-colors">
+                        Annulla
+                    </button>
+                    <button type="submit" id="security-save-btn" class="flex-1 py-2 px-4 bg-primary-container text-white rounded-lg transition-colors flex items-center justify-center gap-2 hover-lift">
+                        <span id="security-save-text">Aggiorna</span>
+                        <span id="security-save-loading" class="material-symbols-outlined animate-spin hidden">refresh</span>
                     </button>
                 </div>
             </form>

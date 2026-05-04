@@ -10,94 +10,121 @@
     </button>
 </div>
 
-<aside id="sidebar" class="fixed md:sticky left-0 top-0 h-screen w-[86vw] max-w-[300px] md:w-72 z-50 md:z-30 bg-surface-container border-r border-outline-variant/20 p-4 md:p-5 flex flex-col -translate-x-full md:translate-x-0">
-    <div class="mb-4">
-        <div class="rounded-2xl bg-surface-container-high p-4 border border-outline-variant/20">
+<aside id="sidebar" class="fixed md:sticky left-0 top-0 h-screen w-[82vw] max-w-[280px] md:w-64 z-50 md:z-30 bg-surface-container border-r border-outline-variant/20 p-3 md:p-4 flex flex-col -translate-x-full md:translate-x-0">
+    <div class="mb-3">
+        <div class="rounded-2xl bg-surface-container-high p-3 border border-outline-variant/20">
             <p class="text-[10px] uppercase tracking-[0.2em] text-on-surface-variant">Navigazione</p>
-            <h2 class="mt-1 font-headline text-2xl text-on-surface">Film Hub</h2>
-            <p class="text-xs text-on-surface-variant mt-1">Gestione completa del tuo cinema</p>
+            <h2 class="mt-1 font-headline text-xl text-on-surface">Film Hub</h2>
+            <p class="text-[11px] text-on-surface-variant mt-1">Gestione completa del tuo cinema</p>
         </div>
     </div>
 
-    <nav class="flex-1 overflow-y-auto pr-1 space-y-1.5">
-        <a href="home.html" data-access="public" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
-            <span class="material-symbols-outlined text-[20px]">home</span>
-            <span>Home</span>
-        </a>
-        <a href="my-cinemas.html" data-access="public" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
-            <span class="material-symbols-outlined text-[20px]">location_city</span>
-            <span>I nostri cinema</span>
-        </a>
-        <a href="proiezioni-pubblico.html" data-access="auth" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
-            <span class="material-symbols-outlined text-[20px]">movie</span>
-            <span>Programmazione</span>
-        </a>
-        <a href="programmazione.html" data-access="auth" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
-            <span class="material-symbols-outlined text-[20px]">event</span>
-            <span>Prenotazioni</span>
-        </a>
-        <a href="user-biglietti.html" data-access="auth" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
-            <span class="material-symbols-outlined text-[20px]">local_activity</span>
-            <span>I miei biglietti</span>
-        </a>
+    <nav class="flex-1 overflow-y-auto pr-1 space-y-2">
+        <div id="sidebar-group-main" class="sidebar-group" data-default-open="true">
+            <button type="button" class="sidebar-group-toggle w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[10px] uppercase tracking-[0.2em] text-on-surface-variant hover:bg-surface-container-high transition-colors" data-target="sidebar-group-main-links">
+                <span class="inline-flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[16px]">apps</span>
+                    Pagine principali
+                </span>
+                <span class="material-symbols-outlined text-[16px]" data-group-icon>expand_less</span>
+            </button>
 
-        <div data-access="auth" class="pt-4 pb-1 px-3 text-[10px] uppercase tracking-[0.2em] text-on-surface-variant">Backoffice</div>
-        <a href="index.html" data-access="manager" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
-            <span class="material-symbols-outlined text-[20px]">dashboard</span>
-            <span>Dashboard</span>
-        </a>
-        <a href="films.html" data-access="manager" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
-            <span class="material-symbols-outlined text-[20px]">movie_edit</span>
-            <span>Film</span>
-        </a>
-        <a href="cinemas.html" data-access="manager" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
-            <span class="material-symbols-outlined text-[20px]">theaters</span>
-            <span>Cinema</span>
-        </a>
-        <a href="proiezioni.html" data-access="manager" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
-            <span class="material-symbols-outlined text-[20px]">schedule</span>
-            <span>Proiezioni</span>
-        </a>
-        <a href="shows.html" data-access="manager" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
-            <span class="material-symbols-outlined text-[20px]">movie_info</span>
-            <span>Show</span>
-        </a>
-        <a href="sale.html" data-access="admin" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
-            <span class="material-symbols-outlined text-[20px]">meeting_room</span>
-            <span>Sale</span>
-        </a>
-        <a href="validazione.html" data-access="manager" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
-            <span class="material-symbols-outlined text-[20px]">qr_code_scanner</span>
-            <span>Validazione</span>
-        </a>
-        <a href="ricarica-credito.html" data-access="manager" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
-            <span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
-            <span>Ricarica credito</span>
-        </a>
-        <a href="registi.html" data-access="manager" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
-            <span class="material-symbols-outlined text-[20px]">theater_comedy</span>
-            <span>Registi</span>
-        </a>
-        <a href="categorie.html" data-access="admin" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
-            <span class="material-symbols-outlined text-[20px]">category</span>
-            <span>Categorie</span>
-        </a>
+            <div id="sidebar-group-main-links" class="sidebar-group-links mt-1 space-y-1">
+                <a href="home.html" data-access="guest" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">home</span>
+                    <span>Home</span>
+                </a>
+                <a href="my-cinemas.html" data-access="public" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">location_city</span>
+                    <span>I nostri cinema</span>
+                </a>
+                <a href="proiezioni-pubblico.html" data-access="auth" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">movie</span>
+                    <span>Programmazione</span>
+                </a>
+                <a href="programmazione.html" data-access="auth" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">event</span>
+                    <span>Prenotazioni</span>
+                </a>
+                <a href="user-biglietti.html" data-access="auth" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">local_activity</span>
+                    <span>I miei biglietti</span>
+                </a>
+                <a href="ricarica-credito-utente.html" data-access="user" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+                    <span>Ricarica credito</span>
+                </a>
+            </div>
+        </div>
+
+        <div id="sidebar-group-backoffice" class="sidebar-group" data-default-open="false" data-access="manager">
+            <button type="button" class="sidebar-group-toggle w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[10px] uppercase tracking-[0.2em] text-on-surface-variant hover:bg-surface-container-high transition-colors" data-target="sidebar-group-backoffice-links">
+                <span class="inline-flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[16px]">admin_panel_settings</span>
+                    Backoffice
+                </span>
+                <span class="material-symbols-outlined text-[16px]" data-group-icon>expand_more</span>
+            </button>
+
+            <div id="sidebar-group-backoffice-links" class="sidebar-group-links mt-1 space-y-1 hidden">
+                <a href="index.html" data-access="manager" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="films.html" data-access="manager" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">movie_edit</span>
+                    <span>Film</span>
+                </a>
+                <a href="cinemas.html" data-access="manager" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">theaters</span>
+                    <span>Cinema</span>
+                </a>
+                <a href="proiezioni.html" data-access="manager" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">schedule</span>
+                    <span>Proiezioni</span>
+                </a>
+                <a href="shows.html" data-access="manager" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">movie_info</span>
+                    <span>Show</span>
+                </a>
+                <a href="sale.html" data-access="admin" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">meeting_room</span>
+                    <span>Sale</span>
+                </a>
+                <a href="validazione.html" data-access="manager" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">qr_code_scanner</span>
+                    <span>Validazione</span>
+                </a>
+                <a href="registi.html" data-access="manager" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">theater_comedy</span>
+                    <span>Registi</span>
+                </a>
+                <a href="categorie.html" data-access="admin" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">category</span>
+                    <span>Categorie</span>
+                </a>
+                <a href="ricarica-credito.html" data-access="manager" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
+                    <span>Ricarica credito utenti</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="pt-3 mt-2 border-t border-outline-variant/20 space-y-1">
+            <a href="profilo.html" data-access="auth" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                <span class="material-symbols-outlined text-[20px]">person</span>
+                <span>Profilo</span>
+            </a>
+            <a href="#" id="logout-btn" data-access="auth" class="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-red-400 hover:bg-red-400/10 transition-colors">
+                <span class="material-symbols-outlined text-[20px]">logout</span>
+                <span>Esci</span>
+            </a>
+        </div>
     </nav>
-
-    <div class="mt-4 pt-4 border-t border-outline-variant/20 space-y-1.5">
-        <a href="profilo.html" data-access="auth" class="nav-link flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:bg-surface-container-high transition-colors">
-            <span class="material-symbols-outlined text-[20px]">person</span>
-            <span>Profilo</span>
-        </a>
-        <a href="#" id="logout-btn" data-access="auth" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-400 hover:bg-red-400/10 transition-colors">
-            <span class="material-symbols-outlined text-[20px]">logout</span>
-            <span>Esci</span>
-        </a>
-    </div>
 </aside>
 
 <nav id="mobile-bottom-nav" class="md:hidden fixed bottom-0 left-0 right-0 z-40 glass-panel border-t border-outline-variant/20 px-2 py-2 grid grid-cols-5 gap-1">
-    <a href="home.html" data-access="public" class="nav-link flex flex-col items-center justify-center gap-1 py-1.5 text-on-surface-variant rounded-lg">
+    <a href="home.html" data-access="guest" class="nav-link flex flex-col items-center justify-center gap-1 py-1.5 text-on-surface-variant rounded-lg">
         <span class="material-symbols-outlined text-[20px]">home</span>
         <span class="text-[10px]">Home</span>
     </a>
@@ -121,12 +148,14 @@
 
 <script>
     function canAccessSidebar(rule, user) {
+        if (typeof AccessControl !== 'undefined' && typeof AccessControl.canAccessByRule === 'function') {
+            return AccessControl.canAccessByRule(rule, user);
+        }
+
         if (rule === 'public') return true;
+        if (rule === 'guest') return !user;
         if (!user) return false;
-        if (rule === 'auth') return true;
-        if (rule === 'manager') return user.ruoli.includes('Admin') || user.ruoli.includes('PowerUser');
-        if (rule === 'admin') return user.ruoli.includes('Admin');
-        return false;
+        return rule === 'auth';
     }
 
     function closeSidebarMobile() {
@@ -164,12 +193,52 @@
             if (link.getAttribute('href') === currentPath) {
                 link.classList.add('bg-surface-container-high', 'text-primary-container');
                 link.classList.remove('text-on-surface-variant');
+
+                const group = link.closest('.sidebar-group');
+                if (group) {
+                    setSidebarGroupState(group, true, true);
+                }
             }
+        });
+    }
+
+    function setSidebarGroupState(groupElement, isOpen, persistState) {
+        const groupLinks = groupElement.querySelector('.sidebar-group-links');
+        const icon = groupElement.querySelector('[data-group-icon]');
+        if (!groupLinks || !icon) return;
+
+        groupLinks.classList.toggle('hidden', !isOpen);
+        icon.textContent = isOpen ? 'expand_less' : 'expand_more';
+
+        if (!persistState) return;
+
+        const storageKey = `sidebar_group_state_${groupElement.id}`;
+        localStorage.setItem(storageKey, isOpen ? '1' : '0');
+    }
+
+    function initSidebarGroups() {
+        document.querySelectorAll('.sidebar-group').forEach((groupElement) => {
+            const toggle = groupElement.querySelector('.sidebar-group-toggle');
+            if (!toggle) return;
+
+            const defaultOpen = groupElement.getAttribute('data-default-open') !== 'false';
+            const storageKey = `sidebar_group_state_${groupElement.id}`;
+            const storedState = localStorage.getItem(storageKey);
+            const initialOpen = storedState === null ? defaultOpen : storedState === '1';
+            setSidebarGroupState(groupElement, initialOpen, false);
+
+            toggle.addEventListener('click', () => {
+                const groupLinks = groupElement.querySelector('.sidebar-group-links');
+                if (!groupLinks) return;
+                const isOpen = !groupLinks.classList.contains('hidden');
+                setSidebarGroupState(groupElement, !isOpen, true);
+            });
         });
     }
 
     function initSidebar() {
         applySidebarAccessControl();
+        initSidebarGroups();
         applyActiveState();
         initMobileCinemaBadge();
 

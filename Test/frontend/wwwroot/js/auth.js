@@ -1,7 +1,7 @@
 function getAuthApiDefaults() {
     const defaults = [
         'http://localhost:5001',
-        'http://localhost:5000',
+        'http://127.0.0.1:5001',
         'https://localhost:7217'
     ];
 
@@ -16,8 +16,8 @@ function normalizeStoredApiBaseUrl() {
 
     try {
         const parsed = new URL(stored);
-        const isLocalDevHost = parsed.hostname === 'localhost';
-        const isWrongLocalPort = isLocalDevHost && parsed.port !== '5001' && parsed.port !== '5000' && parsed.port !== '7217';
+        const isLocalDevHost = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
+        const isWrongLocalPort = isLocalDevHost && parsed.port !== '5001' && parsed.port !== '7217';
         if (isWrongLocalPort) {
             return null;
         }
@@ -64,20 +64,67 @@ async function fetchWithApiFallback(path, options = {}) {
 
 const Auth = {
     accessToken: localStorage.getItem('accessToken'),
-    refreshToken: localStorage.getItem('refreshToken'),
+    refreshToken: null,
     tokenExpiry: localStorage.getItem('tokenExpiry') ? new Date(localStorage.getItem('tokenExpiry')) : null,
     user: JSON.parse(localStorage.getItem('user') || 'null'),
+    initPromise: null,
+    autoRefreshTimeoutId: null,
+    refreshPromise: null,
+    sessionVersion: 0,
 
     saveSession(data) {
+        this.sessionVersion += 1;
         this.accessToken = data.accessToken;
-        this.refreshToken = data.refreshToken;
+        this.refreshToken = null;
         this.tokenExpiry = new Date(data.expiresAt);
         this.user = data.utente;
 
-        localStorage.setItem('accessToken', data.accessToken);
-        localStorage.setItem('refreshToken', data.refreshToken);
-        localStorage.setItem('tokenExpiry', data.expiresAt);
         localStorage.setItem('user', JSON.stringify(data.utente));
+        localStorage.removeItem('refreshToken');
+        localStorage.setItem('accessToken', data.accessToken || '');
+        localStorage.setItem('tokenExpiry', data.expiresAt || '');
+
+        this.scheduleAutoRefresh();
+    },
+
+    clearSession() {
+        this.sessionVersion += 1;
+        this.accessToken = null;
+        this.refreshToken = null;
+        this.tokenExpiry = null;
+        this.user = null;
+
+        if (this.autoRefreshTimeoutId) {
+            clearTimeout(this.autoRefreshTimeoutId);
+            this.autoRefreshTimeoutId = null;
+        }
+
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        localStorage.removeItem('tokenExpiry');
+        localStorage.removeItem('user');
+    },
+
+    scheduleAutoRefresh() {
+        if (this.autoRefreshTimeoutId) {
+            clearTimeout(this.autoRefreshTimeoutId);
+            this.autoRefreshTimeoutId = null;
+        }
+
+        if (!this.tokenExpiry) {
+            return;
+        }
+
+        const expiryTime = new Date(this.tokenExpiry).getTime();
+        const now = Date.now();
+        const timeUntilRefresh = expiryTime - now - (60 * 1000);
+        if (timeUntilRefresh <= 0) {
+            return;
+        }
+
+        this.autoRefreshTimeoutId = setTimeout(() => {
+            this.refresh({ silent: true });
+        }, timeUntilRefresh);
     },
 
     async login(username, password) {
@@ -85,7 +132,8 @@ const Auth = {
             const response = await fetchWithApiFallback('/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify({ username, password }),
+                credentials: 'include'
             });
 
             if (!response.ok) {
@@ -178,7 +226,8 @@ const Auth = {
         const response = await fetchWithApiFallback('/auth/external/complete', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ provider, authCode })
+            body: JSON.stringify({ provider, authCode }),
+            credentials: 'include'
         });
 
         if (!response.ok) {
@@ -197,40 +246,70 @@ const Auth = {
         return { success: true, user: data.utente };
     },
 
-    async refresh() {
-        try {
-            if (!this.refreshToken) {
-                throw new Error('Nessun refresh token');
-            }
-
-            const response = await fetchWithApiFallback('/auth/refresh', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ refreshToken: this.refreshToken })
-            });
-
-            if (!response.ok) {
-                this.logout();
-                throw new Error('Sessione scaduta');
-            }
-
-            const data = await response.json();
-
-            this.accessToken = data.accessToken;
-            this.refreshToken = data.refreshToken;
-            this.tokenExpiry = new Date(data.expiresAt);
-            this.user = data.utente;
-
-            localStorage.setItem('accessToken', data.accessToken);
-            localStorage.setItem('refreshToken', data.refreshToken);
-            localStorage.setItem('tokenExpiry', data.expiresAt);
-            localStorage.setItem('user', JSON.stringify(data.utente));
-
-            return true;
-        } catch (error) {
-            this.logout();
-            return false;
+    async refresh(options = {}) {
+        if (this.refreshPromise) {
+            return this.refreshPromise;
         }
+
+        const silent = !!options.silent;
+        const startedSessionVersion = this.sessionVersion;
+        this.refreshPromise = (async () => {
+            try {
+                const response = await fetchWithApiFallback('/auth/refresh', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ refreshToken: '' }),
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    if (this.sessionVersion === startedSessionVersion) {
+                        this.clearSession();
+                        if (!silent) {
+                            window.location.href = '/login.html';
+                        }
+                    }
+                    throw new Error('Sessione scaduta');
+                }
+
+                const data = await response.json();
+                this.saveSession(data);
+                return true;
+            } catch (error) {
+                if (this.sessionVersion === startedSessionVersion) {
+                    this.clearSession();
+                    if (!silent) {
+                        window.location.href = '/login.html';
+                    }
+                }
+                return false;
+            }
+        })();
+
+        try {
+            return await this.refreshPromise;
+        } finally {
+            this.refreshPromise = null;
+        }
+    },
+
+    ensureInitialized() {
+        if (!this.initPromise) {
+            const hasValidToken = this.isAuthenticated() && !!this.user;
+            const initAction = hasValidToken
+                ? Promise.resolve(true)
+                : this.refresh({ silent: true });
+
+            this.initPromise = initAction.finally(() => {
+                window.dispatchEvent(new CustomEvent('auth:ready', {
+                    detail: {
+                        authenticated: this.isAuthenticated()
+                    }
+                }));
+            });
+        }
+
+        return this.initPromise;
     },
 
     async logout() {
@@ -238,22 +317,15 @@ const Auth = {
             if (this.accessToken) {
                 await fetchWithApiFallback('/auth/logout', {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${this.accessToken}` }
+                    headers: { 'Authorization': `Bearer ${this.accessToken}` },
+                    credentials: 'include'
                 });
             }
         } catch (e) {
             console.log('Errore logout:', e);
         }
 
-        this.accessToken = null;
-        this.refreshToken = null;
-        this.tokenExpiry = null;
-        this.user = null;
-
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('tokenExpiry');
-        localStorage.removeItem('user');
+        this.clearSession();
 
         window.location.href = '/login.html';
     },
@@ -264,8 +336,8 @@ const Auth = {
     },
 
     async ensureToken() {
-        if (!this.isAuthenticated() && this.refreshToken) {
-            return await this.refresh();
+        if (!this.isAuthenticated()) {
+            return await this.refresh({ silent: true });
         }
         return this.isAuthenticated();
     },
@@ -304,6 +376,10 @@ const Auth = {
 
 // Inizializza controllo token all'avvio
 document.addEventListener('DOMContentLoaded', () => {
+    if (Auth.tokenExpiry && new Date(Auth.tokenExpiry) <= new Date()) {
+        Auth.clearSession();
+    }
+
     // Aggiungi event listener per logout
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {
@@ -313,16 +389,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Setup auto-refresh token (5 minuti prima della scadenza)
-    if (Auth.tokenExpiry) {
-        const expiryTime = new Date(Auth.tokenExpiry).getTime();
-        const now = Date.now();
-        const timeUntilRefresh = expiryTime - now - (5 * 60 * 1000); // 5 minuti prima
-
-        if (timeUntilRefresh > 0) {
-            setTimeout(() => {
-                Auth.refresh();
-            }, timeUntilRefresh);
-        }
-    }
+    Auth.ensureInitialized();
 });

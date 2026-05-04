@@ -1,0 +1,16 @@
+bin/
+obj/
+**/bin/
+**/obj/
+*.log
+*.out.log
+*.err.log
+*.run.log
+tmp-cookies.txt
+nul
+**/nul
+.env
+**/.env
+*.user
+*.suo
+*.pdb

@@ -2,36 +2,52 @@ using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace FilmAPI.Endpoints;
 
 public static class AuthEndpoints
 {
+    private const string RefreshTokenCookieName = "filmapi_refresh_token";
+
     public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/auth");
+        group.RequireRateLimiting("auth");
 
-        group.MapPost("/login", [AllowAnonymous] async (LoginRequestDTO request, HttpContext context, IAuthService authService) =>
+        group.MapPost("/login", [AllowAnonymous] async (HttpContext context, LoginRequestDTO request, IAuthService authService) =>
         {
-            var (ipAddress, userAgent) = GetRequestContext(context);
-            var (response, error) = await authService.LoginAsync(request, ipAddress, userAgent);
+            var (response, error) = await authService.LoginAsync(request);
             if (error != null)
             {
                 return Results.Unauthorized();
             }
+
+            AppendRefreshTokenCookie(context, response!.RefreshToken);
 
             return Results.Ok(response);
         });
 
-        group.MapPost("/refresh", [AllowAnonymous] async (RefreshTokenRequestDTO request, HttpContext context, IAuthService authService) =>
+        group.MapPost("/refresh", [AllowAnonymous] async (HttpContext context, RefreshTokenRequestDTO request, IAuthService authService) =>
         {
-            var (ipAddress, userAgent) = GetRequestContext(context);
-            var (response, error) = await authService.RefreshAsync(request, ipAddress, userAgent);
+            var requestToken = request.RefreshToken;
+            if (string.IsNullOrWhiteSpace(requestToken))
+            {
+                requestToken = context.Request.Cookies[RefreshTokenCookieName] ?? string.Empty;
+            }
+
+            var (response, error) = await authService.RefreshAsync(new RefreshTokenRequestDTO
+            {
+                RefreshToken = requestToken
+            });
+
             if (error != null)
             {
+                DeleteRefreshTokenCookie(context);
                 return Results.Unauthorized();
             }
+
+            AppendRefreshTokenCookie(context, response!.RefreshToken);
 
             return Results.Ok(response);
         });
@@ -44,22 +60,9 @@ public static class AuthEndpoints
                 return Results.Unauthorized();
             }
 
-            var (ipAddress, userAgent) = GetRequestContext(context);
-            await authService.LogoutAsync(userIdValue, ipAddress, userAgent);
+            await authService.LogoutAsync(userIdValue);
+            DeleteRefreshTokenCookie(context);
             return Results.Ok(new { message = "Logout effettuato con successo" });
-        });
-
-        group.MapPost("/logout/all", [Authorize] async (HttpContext context, IAuthService authService) =>
-        {
-            var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (userId == null || !int.TryParse(userId, out var userIdValue))
-            {
-                return Results.Unauthorized();
-            }
-
-            var (ipAddress, userAgent) = GetRequestContext(context);
-            await authService.LogoutAllAsync(userIdValue, ipAddress, userAgent);
-            return Results.Ok(new { message = "Logout globale effettuato con successo" });
         });
 
         group.MapPost("/register", [AllowAnonymous] async (RegistrazioneRequestDTO request, IAuthService authService) =>
@@ -100,30 +103,6 @@ public static class AuthEndpoints
             return Results.Ok(utente);
         });
 
-        group.MapPost("/change-password", [Authorize] async (HttpContext context, ChangePasswordRequestDTO request, IAuthService authService) =>
-        {
-            var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (userId == null || !int.TryParse(userId, out var userIdValue))
-            {
-                return Results.Unauthorized();
-            }
-
-            var (ok, error) = await authService.ChangePasswordAsync(userIdValue, request);
-            if (!ok)
-            {
-                return error switch
-                {
-                    "NOT_FOUND" => Results.NotFound(),
-                    "PASSWORD_NOT_SET" => Results.BadRequest(new { message = "Password non impostata per questo account" }),
-                    "INVALID_CREDENTIALS" => Results.Unauthorized(),
-                    "PASSWORD_TOO_SHORT" => Results.BadRequest(new { message = "Password deve essere di almeno 8 caratteri" }),
-                    _ => Results.BadRequest(new { message = "Richiesta non valida" })
-                };
-            }
-
-            return Results.NoContent();
-        });
-
         group.MapGet("/external/providers", [AllowAnonymous] (IExternalAuthService externalAuthService) =>
         {
             return Results.Ok(externalAuthService.GetEnabledProviders());
@@ -153,7 +132,7 @@ public static class AuthEndpoints
             return Results.Redirect(redirectUrl);
         });
 
-        group.MapPost("/external/complete", [AllowAnonymous] async (ExternalAuthCompleteRequestDTO request, IExternalAuthService externalAuthService) =>
+        group.MapPost("/external/complete", [AllowAnonymous] async (HttpContext context, ExternalAuthCompleteRequestDTO request, IExternalAuthService externalAuthService) =>
         {
             var (response, error) = await externalAuthService.CompleteAsync(request);
             if (response == null)
@@ -161,26 +140,12 @@ public static class AuthEndpoints
                 return Results.BadRequest(new { message = error ?? "Completamento login esterno non riuscito" });
             }
 
+            AppendRefreshTokenCookie(context, response.RefreshToken);
+
             return Results.Ok(response);
         });
 
-        group.MapGet("/roles", [Authorize(Roles = "Admin")] async (FilmDbContext db) =>
-        {
-            var roles = await db.Ruoli
-                .OrderBy(r => r.Nome)
-                .Select(r => new { r.Id, r.Nome, r.Descrizione })
-                .ToListAsync();
-            return Results.Ok(roles);
-        });
-
         return app;
-    }
-
-    private static (string? ipAddress, string? userAgent) GetRequestContext(HttpContext context)
-    {
-        var ipAddress = context.Connection.RemoteIpAddress?.ToString();
-        var userAgent = context.Request.Headers.UserAgent.ToString();
-        return (ipAddress, string.IsNullOrWhiteSpace(userAgent) ? null : userAgent);
     }
 
     private static string ResolveBackendBaseUrl(HttpContext context, IConfiguration configuration)
@@ -194,5 +159,37 @@ public static class AuthEndpoints
         }
 
         return $"{context.Request.Scheme}://{context.Request.Host}";
+    }
+
+    private static void AppendRefreshTokenCookie(HttpContext context, string refreshToken)
+    {
+        if (string.IsNullOrWhiteSpace(refreshToken))
+        {
+            return;
+        }
+
+        var isHttps = context.Request.IsHttps;
+
+        context.Response.Cookies.Append(RefreshTokenCookieName, refreshToken, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isHttps,
+            SameSite = SameSiteMode.Lax,
+            Path = "/",
+            MaxAge = TimeSpan.FromDays(7)
+        });
+    }
+
+    private static void DeleteRefreshTokenCookie(HttpContext context)
+    {
+        var isHttps = context.Request.IsHttps;
+
+        context.Response.Cookies.Delete(RefreshTokenCookieName, new CookieOptions
+        {
+            HttpOnly = true,
+            Secure = isHttps,
+            SameSite = SameSiteMode.Lax,
+            Path = "/"
+        });
     }
 }

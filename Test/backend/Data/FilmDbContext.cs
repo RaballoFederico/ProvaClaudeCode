@@ -54,7 +54,7 @@ public class FilmDbContext : DbContext
             entity.Property(e => e.RegistaNome).HasMaxLength(100);
             entity.Property(e => e.Cast).HasMaxLength(1000);
             entity.Property(e => e.Featured).HasDefaultValue(false);
-            entity.Property(e => e.Genere).HasMaxLength(50);
+            entity.Property(e => e.Genere).HasMaxLength(200);
 
             entity.HasOne(e => e.Regista)
                 .WithMany(r => r.Films)

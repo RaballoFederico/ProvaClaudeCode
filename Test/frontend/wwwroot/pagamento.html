@@ -8,7 +8,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="/css/styles.css">
-    <script src="https://js.stripe.com/v3/"></script>
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -149,44 +148,11 @@
     <script>
         const PAYMENT_METHODS = [
             {
-                id: 'card',
-                label: 'Carta / Postepay',
-                icon: 'credit_card',
-                subtitle: 'Visa, Mastercard, Postepay',
-                needsStripe: true,
-                cta: 'Paga con carta'
-            },
-            {
-                id: 'apple_pay',
-                label: 'Apple Pay',
-                icon: 'phone_iphone',
-                subtitle: 'Wallet rapido Apple',
-                needsStripe: true,
-                cta: 'Paga con Apple Pay'
-            },
-            {
-                id: 'google_pay',
-                label: 'Google Pay',
-                icon: 'android',
-                subtitle: 'Wallet rapido Google',
-                needsStripe: true,
-                cta: 'Paga con Google Pay'
-            },
-            {
-                id: 'revolut',
-                label: 'Revolut Pay',
-                icon: 'bolt',
-                subtitle: 'Pagamento istantaneo',
-                needsStripe: true,
-                cta: 'Paga con Revolut'
-            },
-            {
-                id: 'paypal',
-                label: 'PayPal',
-                icon: 'account_balance_wallet',
-                subtitle: 'Reindirizzamento protetto',
-                needsStripe: true,
-                cta: 'Paga con PayPal'
+                id: 'stripe_checkout',
+                label: 'Stripe Checkout',
+                icon: 'lock',
+                subtitle: 'Pagina sicura ospitata da Stripe',
+                cta: 'Vai a Stripe Checkout'
             }
         ];
 
@@ -196,20 +162,11 @@
         let cinemaId = 0;
         let lockCode = '';
 
-        let stripe = null;
-        let paymentElement = null;
-        let cardNumberElement = null;
-        let cardExpiryElement = null;
-        let cardCvcElement = null;
-        let elements = null;
-        let clientSecret = null;
-        let stripeReady = false;
-
         let subtotal = 0;
         let credito = 0;
         let remaining = 0;
         let useCredit = true;
-        let selectedMethodId = 'card';
+        let selectedMethodId = 'stripe_checkout';
         let preferredPaymentMethodId = null;
         let lockInfo = null;
         let showData = null;
@@ -245,19 +202,12 @@
 
         function bindEvents() {
             document.getElementById('use-credit').addEventListener('change', (e) => {
-                captureBillingFormState();
                 useCredit = e.target.checked;
                 recalc();
                 renderPaymentPanel();
             });
 
             document.getElementById('pay-btn').addEventListener('click', handlePay);
-            window.addEventListener('theme:changed', async () => {
-                if (remaining > 0 && stripeReady) {
-                    await preparePaymentElement();
-                    renderPaymentPanel();
-                }
-            });
             document.getElementById('back-btn').addEventListener('click', () => {
                 const params = new URLSearchParams({
                     IdShow: String(showId),
@@ -303,8 +253,7 @@
                 recalc();
                 startLockTimer();
 
-                await initStripe();
-                await preparePaymentElement();
+                await resumeCheckoutIfNeeded();
                 renderPaymentPanel();
             } catch (e) {
                 if (isLockExpiredError(e)) {
@@ -339,10 +288,8 @@
 
             container.querySelectorAll('.payment-method-btn').forEach((btn) => {
                 btn.addEventListener('click', async () => {
-                    captureBillingFormState();
                     selectedMethodId = btn.getAttribute('data-method-id');
                     renderMethodList();
-                    await preparePaymentElement();
                     renderPaymentPanel();
                 });
             });
@@ -380,102 +327,6 @@
             document.getElementById('remaining').textContent = remaining.toFixed(2);
         }
 
-        async function initStripe() {
-            let publishable = localStorage.getItem('stripePublishableKey') || '';
-            if (!publishable) {
-                try {
-                    const cfg = await ApiClient.get('/acquisto/stripe-publishable');
-                    publishable = cfg?.publishableKey || '';
-                    if (publishable) localStorage.setItem('stripePublishableKey', publishable);
-                } catch {
-                }
-            }
-
-            if (!publishable || publishable.startsWith('pk_test_mock')) {
-                stripeReady = false;
-                return;
-            }
-
-            try {
-                stripe = Stripe(publishable);
-                stripeReady = true;
-            } catch {
-                stripeReady = false;
-            }
-        }
-
-        async function preparePaymentElement() {
-            const method = getSelectedMethod();
-            if (!method.needsStripe || remaining <= 0 || !stripeReady) {
-                unmountPaymentElement();
-                return;
-            }
-
-            try {
-                const intent = await ApiClient.post('/acquisto/payment-intent', { importo: remaining });
-                clientSecret = intent.clientSecret;
-
-                unmountPaymentElement();
-                elements = stripe.elements({
-                    clientSecret,
-                    appearance: {
-                        theme: getCurrentTheme() === 'light' ? 'stripe' : 'night',
-                        variables: {
-                            colorPrimary: getCssVariable('--primary', '#e50914'),
-                            colorBackground: getCssVariable('--surface-high', '#2a2a2a'),
-                            colorText: getCssVariable('--text', '#f4f5f6'),
-                            colorDanger: '#f87171',
-                            borderRadius: '12px'
-                        }
-                    }
-                });
-
-                cardNumberElement = elements.create('cardNumber');
-                cardExpiryElement = elements.create('cardExpiry');
-                cardCvcElement = elements.create('cardCvc');
-
-                if (method.id === 'card') {
-                    paymentElement = null;
-                } else {
-                    const billing = getBillingState();
-                    paymentElement = elements.create('payment', {
-                        layout: 'tabs',
-                        defaultValues: {
-                            billingDetails: {
-                                name: billing.name,
-                                email: billing.email
-                            }
-                        }
-                    });
-                }
-            } catch (error) {
-                clientSecret = null;
-                unmountPaymentElement();
-                console.warn('Impossibile preparare payment element:', error);
-            }
-        }
-
-        function unmountPaymentElement() {
-            if (paymentElement) {
-                paymentElement.unmount();
-                paymentElement = null;
-            }
-            if (cardNumberElement) {
-                cardNumberElement.unmount();
-                cardNumberElement = null;
-            }
-            if (cardExpiryElement) {
-                cardExpiryElement.unmount();
-                cardExpiryElement = null;
-            }
-            if (cardCvcElement) {
-                cardCvcElement.unmount();
-                cardCvcElement = null;
-            }
-            elements = null;
-            clientSecret = null;
-        }
-
         function renderPaymentPanel() {
             updateSelectedMethodHeader();
 
@@ -495,71 +346,16 @@
                 return;
             }
 
-            if (!stripeReady) {
-                container.innerHTML = `
-                    <div class="rounded-xl border border-amber-400/20 bg-amber-500/10 p-4 text-sm">
-                        <div class="flex items-center gap-2 text-amber-300 font-medium">
-                            <span class="material-symbols-outlined text-base">warning</span>
-                            Pagamenti esterni non disponibili
-                        </div>
-                        <p class="text-amber-100/80 mt-1">Manca la configurazione Stripe publishable key nel backend.</p>
-                    </div>
-                `;
-                return;
-            }
-
-            const billing = getBillingState();
-            const showMethodPanel = method.id !== 'card';
             container.innerHTML = `
                 <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high p-4 space-y-4">
-                    <div class="text-sm text-on-surface-variant">Completa i dati carta e intestatario per il pagamento. Se scegli un wallet, usa anche il pannello dedicato del metodo selezionato.</div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div class="space-y-1.5 sm:col-span-2">
-                            <label for="billing-name" class="text-sm font-medium text-on-surface">Intestatario pagamento</label>
-                            <input id="billing-name" type="text" class="w-full rounded-lg border border-outline-variant/40 bg-surface-container px-3 py-2 text-sm text-on-surface focus:border-primary-container focus:ring-primary-container" value="${escapeHtml(billing.name)}" autocomplete="name" placeholder="Mario Rossi">
-                        </div>
-                        <div class="space-y-1.5">
-                            <label for="billing-email" class="text-sm font-medium text-on-surface">Email</label>
-                            <input id="billing-email" type="email" class="w-full rounded-lg border border-outline-variant/40 bg-surface-container px-3 py-2 text-sm text-on-surface focus:border-primary-container focus:ring-primary-container" value="${escapeHtml(billing.email)}" autocomplete="email" placeholder="mario@email.it">
-                        </div>
-                        <div class="space-y-1.5">
-                            <label for="billing-phone" class="text-sm font-medium text-on-surface">Telefono (opzionale)</label>
-                            <input id="billing-phone" type="tel" class="w-full rounded-lg border border-outline-variant/40 bg-surface-container px-3 py-2 text-sm text-on-surface focus:border-primary-container focus:ring-primary-container" value="${escapeHtml(billing.phone)}" autocomplete="tel" placeholder="+39 333 1234567">
-                        </div>
+                    <div class="text-sm text-on-surface-variant">Confermando verrai reindirizzato su Stripe Checkout (pagina hosted da Stripe) e tornerai qui in automatico al termine.</div>
+                    <div class="rounded-lg bg-surface-container border border-outline-variant/20 px-3 py-3 text-sm">
+                        <div class="font-medium mb-1">Importo da addebitare</div>
+                        <div class="text-secondary text-lg font-semibold">${remaining.toFixed(2)} EUR</div>
                     </div>
-                    <div class="space-y-1.5">
-                        <label class="text-sm font-medium text-on-surface">Numero carta</label>
-                        <div id="card-number-host" class="rounded-lg bg-surface-container p-3 border border-outline-variant/20"></div>
-                    </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div class="space-y-1.5">
-                            <label class="text-sm font-medium text-on-surface">Scadenza</label>
-                            <div id="card-expiry-host" class="rounded-lg bg-surface-container p-3 border border-outline-variant/20"></div>
-                        </div>
-                        <div class="space-y-1.5">
-                            <label class="text-sm font-medium text-on-surface">CVV</label>
-                            <div id="card-cvc-host" class="rounded-lg bg-surface-container p-3 border border-outline-variant/20"></div>
-                        </div>
-                    </div>
-                    ${showMethodPanel ? `
-                    <div class="pt-2 border-t border-outline-variant/20 space-y-2">
-                        <div class="text-sm text-on-surface-variant">Conferma con <strong class="text-on-surface">${method.label}</strong></div>
-                        <div id="payment-element-host" class="rounded-lg bg-surface-container p-3 border border-outline-variant/20"></div>
-                    </div>` : ''}
-                    <p class="text-xs text-on-surface-variant">I dati carta sono gestiti in sicurezza da Stripe e non vengono salvati sui nostri server.</p>
+                    <p class="text-xs text-on-surface-variant">Nessun dato carta passa dal frontend dell'app: inserimento e autorizzazione avvengono su Stripe Checkout.</p>
                 </div>
             `;
-
-            if (cardNumberElement && cardExpiryElement && cardCvcElement) {
-                cardNumberElement.mount('#card-number-host');
-                cardExpiryElement.mount('#card-expiry-host');
-                cardCvcElement.mount('#card-cvc-host');
-            }
-
-            if (showMethodPanel && paymentElement) {
-                paymentElement.mount('#payment-element-host');
-            }
-            bindBillingFieldEvents();
         }
 
         async function handlePay() {
@@ -568,103 +364,31 @@
 
             try {
                 Utils.showLoading();
-                let paymentIntentId = null;
-
-                if (remaining > 0) {
-                    if (!stripeReady || !stripe || !elements || !paymentElement || !clientSecret) {
-                        if (selectedMethodId !== 'card') {
-                            throw new Error('Metodo di pagamento non pronto. Riprova tra qualche secondo.');
-                        }
-                    }
-
-                    const billingDetails = getBillingDetailsFromForm();
-                    if (!billingDetails.name) {
-                        throw new Error('Inserisci il nome dell\'intestatario.');
-                    }
-                    if (!billingDetails.email || !/^\S+@\S+\.\S+$/.test(billingDetails.email)) {
-                        throw new Error('Inserisci un indirizzo email valido.');
-                    }
-
-                    let error = null;
-                    let paymentIntent = null;
-
-                    if (selectedMethodId === 'card') {
-                        if (!stripe || !elements || !cardNumberElement || !clientSecret) {
-                            throw new Error('Campi carta non pronti. Riprova tra qualche secondo.');
-                        }
-
-                        const cardResult = await stripe.confirmCardPayment(clientSecret, {
-                            payment_method: {
-                                card: cardNumberElement,
-                                billing_details: billingDetails
-                            }
-                        });
-
-                        error = cardResult.error;
-                        paymentIntent = cardResult.paymentIntent;
-                    } else {
-                        const genericResult = await stripe.confirmPayment({
-                            elements,
-                            confirmParams: {
-                                payment_method_data: {
-                                    billing_details: billingDetails
-                                }
-                            },
-                            redirect: 'if_required'
-                        });
-
-                        error = genericResult.error;
-                        paymentIntent = genericResult.paymentIntent;
-                    }
-
-                    if (error) {
-                        throw new Error(error.message || 'Pagamento esterno non riuscito');
-                    }
-
-                    if (!paymentIntent || paymentIntent.status !== 'succeeded') {
-                        throw new Error('Pagamento non completato');
-                    }
-
-                    paymentIntentId = paymentIntent.id;
+                if (remaining <= 0) {
+                    await finalizePurchase(null);
+                    return;
                 }
 
-                const method = getSelectedMethod();
-                const conferma = await ApiClient.post('/acquisto/conferma', {
-                    codiceTemporaneo: lockCode,
-                    usaCredito: useCredit,
-                    paymentIntentId,
-                    paymentMethodType: method.id,
-                    paymentMethodLabel: method.label,
-                    savePaymentMethodForFuture: document.getElementById('save-payment-method').checked
+                const params = new URLSearchParams(window.location.search);
+                params.set('checkout', 'success');
+                params.set('session_id', '{CHECKOUT_SESSION_ID}');
+                const successUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+
+                params.set('checkout', 'cancel');
+                params.delete('session_id');
+                const cancelUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+
+                const session = await ApiClient.post('/acquisto/checkout-session', {
+                    importo: remaining,
+                    successUrl,
+                    cancelUrl
                 });
 
-                if (typeof Utils !== 'undefined' && Utils.addAppNotification) {
-                    const amount = Number(subtotal || 0).toFixed(2);
-                    const ticketsUrl = `/user-biglietti.html?acquistoId=${conferma.acquistoId}&showId=${showId}`;
-                    Utils.addAppNotification({
-                        type: 'payment',
-                        title: `Pagamento completato - ordine #${conferma.acquistoId}`,
-                        message: `${amount} EUR confermati. Apri i tuoi biglietti per QR e PDF.`,
-                        url: ticketsUrl,
-                        dedupeKey: `payment-${conferma.acquistoId}`
-                    });
+                if (!session?.url) {
+                    throw new Error('Checkout Stripe non disponibile');
                 }
 
-                localStorage.removeItem('ticketPurchaseDraft');
-
-                const savePreference = document.getElementById('save-payment-method').checked;
-                if (savePreference && selectedMethodId !== preferredPaymentMethodId) {
-                    try {
-                        await ApiClient.put('/user/payment-preference', {
-                            metodo: method.id,
-                            etichetta: method.label
-                        });
-                    } catch {
-                    }
-                }
-
-                Utils.showNotification('Acquisto confermato con successo', 'success');
-                window.location.href = `/conferma-acquisto.html?acquistoId=${conferma.acquistoId}&showId=${showId}&codice=${encodeURIComponent(conferma.codiceConferma || '')}`;
+                window.location.href = session.url;
             } catch (e) {
                 if (isLockExpiredError(e)) {
                     redirectToSeatSelection('Sessione posti scaduta. Torniamo alla selezione posti.');
@@ -675,6 +399,64 @@
                 payBtn.disabled = false;
                 Utils.hideLoading();
             }
+        }
+
+        async function resumeCheckoutIfNeeded() {
+            const qp = new URLSearchParams(window.location.search);
+            const checkoutResult = qp.get('checkout');
+            const sessionId = qp.get('session_id');
+
+            if (checkoutResult === 'cancel') {
+                Utils.showNotification('Pagamento annullato su Stripe Checkout', 'info');
+                qp.delete('checkout');
+                qp.delete('session_id');
+                window.history.replaceState({}, document.title, `${window.location.pathname}?${qp.toString()}`);
+                return;
+            }
+
+            if (checkoutResult === 'success' && sessionId) {
+                await finalizePurchase(sessionId);
+            }
+        }
+
+        async function finalizePurchase(checkoutSessionId) {
+            const method = getSelectedMethod();
+            const conferma = await ApiClient.post('/acquisto/conferma', {
+                codiceTemporaneo: lockCode,
+                usaCredito: useCredit,
+                checkoutSessionId,
+                paymentMethodType: method.id,
+                paymentMethodLabel: method.label,
+                savePaymentMethodForFuture: document.getElementById('save-payment-method').checked
+            });
+
+            if (typeof Utils !== 'undefined' && Utils.addAppNotification) {
+                const amount = Number(subtotal || 0).toFixed(2);
+                const ticketsUrl = `/user-biglietti.html?acquistoId=${conferma.acquistoId}&showId=${showId}`;
+                Utils.addAppNotification({
+                    type: 'payment',
+                    title: `Pagamento completato - ordine #${conferma.acquistoId}`,
+                    message: `${amount} EUR confermati. Apri i tuoi biglietti per QR e PDF.`,
+                    url: ticketsUrl,
+                    dedupeKey: `payment-${conferma.acquistoId}`
+                });
+            }
+
+            localStorage.removeItem('ticketPurchaseDraft');
+
+            const savePreference = document.getElementById('save-payment-method').checked;
+            if (savePreference && selectedMethodId !== preferredPaymentMethodId) {
+                try {
+                    await ApiClient.put('/user/payment-preference', {
+                        metodo: method.id,
+                        etichetta: method.label
+                    });
+                } catch {
+                }
+            }
+
+            Utils.showNotification('Acquisto confermato con successo', 'success');
+            window.location.href = `/conferma-acquisto.html?acquistoId=${conferma.acquistoId}&showId=${showId}&codice=${encodeURIComponent(conferma.codiceConferma || '')}`;
         }
 
         function startLockTimer() {
@@ -716,59 +498,7 @@
         }
 
         function buildBillingDefaults() {
-            const user = Auth.getUser?.() || null;
-            if (!user) {
-                return {
-                    name: '',
-                    email: '',
-                    phone: ''
-                };
-            }
-            const full = `${user.nome || ''} ${user.cognome || ''}`.trim();
-            return {
-                name: full || user.username || '',
-                email: user.email || '',
-                phone: user.telefono || ''
-            };
-        }
-
-        function getBillingState() {
-            return {
-                name: billingFormState?.name || '',
-                email: billingFormState?.email || '',
-                phone: billingFormState?.phone || ''
-            };
-        }
-
-        function captureBillingFormState() {
-            const current = getBillingDetailsFromForm();
-            if (current.name || current.email || current.phone) {
-                billingFormState = current;
-            }
-        }
-
-        function bindBillingFieldEvents() {
-            ['billing-name', 'billing-email', 'billing-phone'].forEach((id) => {
-                const el = document.getElementById(id);
-                if (!el) return;
-                el.addEventListener('input', () => {
-                    billingFormState = getBillingDetailsFromForm();
-                });
-            });
-        }
-
-        function getBillingDetailsFromForm() {
-            const name = (document.getElementById('billing-name')?.value || '').trim();
-            const email = (document.getElementById('billing-email')?.value || '').trim();
-            const phone = (document.getElementById('billing-phone')?.value || '').trim();
-            if (!name && !email && !phone) {
-                return getBillingState();
-            }
-            return {
-                name,
-                email,
-                phone
-            };
+            return { name: '', email: '', phone: '' };
         }
 
         function isLockExpiredError(error) {

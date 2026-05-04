@@ -25,15 +25,21 @@ public static class AcquistoEndpoints
             return Results.Ok(result);
         });
 
-        group.MapPost("/rinnova-lock", async (RinnovaLockRequestDTO dto, IBigliettoService bigliettoService) =>
+        group.MapPost("/rinnova-lock", async (HttpContext ctx, RinnovaLockRequestDTO dto, IBigliettoService bigliettoService) =>
         {
-            var ok = await bigliettoService.RinnovaLockAsync(dto.CodiceTemporaneo);
+            var userId = GetUserId(ctx);
+            if (userId is null) return Results.Unauthorized();
+
+            var ok = await bigliettoService.RinnovaLockAsync(userId.Value, dto.CodiceTemporaneo);
             return ok ? Results.Ok(new { success = true }) : Results.NotFound();
         });
 
-        group.MapDelete("/lock/{codice}", async (string codice, IBigliettoService bigliettoService) =>
+        group.MapDelete("/lock/{codice}", async (string codice, HttpContext ctx, IBigliettoService bigliettoService) =>
         {
-            var ok = await bigliettoService.RilasciaLockAsync(codice);
+            var userId = GetUserId(ctx);
+            if (userId is null) return Results.Unauthorized();
+
+            var ok = await bigliettoService.RilasciaLockAsync(userId.Value, codice);
             return ok ? Results.NoContent() : Results.NotFound();
         });
 
@@ -45,24 +51,13 @@ public static class AcquistoEndpoints
             return Results.Ok(res);
         });
 
-        group.MapPost("/payment-intent", async (HttpContext ctx, CreatePaymentIntentRequestDTO dto, IPagamentoService pagamentoService) =>
+        group.MapPost("/checkout-session", async (HttpContext ctx, CreateCheckoutSessionRequestDTO dto, IPagamentoService pagamentoService) =>
         {
             var userId = GetUserId(ctx);
             if (userId is null) return Results.Unauthorized();
-            var intent = await pagamentoService.CreaPaymentIntentAsync(dto.Importo, userId.Value);
-            return Results.Ok(intent);
-        });
 
-        group.MapGet("/stripe-publishable", (IConfiguration cfg) =>
-        {
-            var key = Environment.GetEnvironmentVariable("STRIPE_PUBLISHABLE_KEY")
-                ?? cfg["Stripe:PublishableKey"]
-                ?? string.Empty;
-
-            if (key.StartsWith("pk_test_", StringComparison.OrdinalIgnoreCase) && key.Contains("..."))
-                key = string.Empty;
-
-            return Results.Ok(new { publishableKey = key });
+            var session = await pagamentoService.CreaCheckoutSessionAsync(dto.Importo, userId.Value, dto.SuccessUrl, dto.CancelUrl);
+            return Results.Ok(session);
         });
 
         group.MapGet("/lock/{codice}", async (string codice, HttpContext ctx, IBigliettoService bigliettoService) =>
@@ -87,6 +82,34 @@ public static class AcquistoEndpoints
             {
                 return Results.BadRequest(new { message = ex.Message });
             }
+        });
+
+        group.MapPost("/{id:int}/rimborso", async (int id, HttpContext ctx, IBigliettoService bigliettoService) =>
+        {
+            var userId = GetUserId(ctx);
+            if (userId is null) return Results.Unauthorized();
+
+            var (success, message) = await bigliettoService.RichiediRimborsoAsync(userId.Value, id);
+            if (!success)
+            {
+                return Results.BadRequest(new { message });
+            }
+
+            return Results.Ok(new { message });
+        });
+
+        group.MapPost("/biglietti/{id:int}/rimborso", async (int id, HttpContext ctx, IBigliettoService bigliettoService) =>
+        {
+            var userId = GetUserId(ctx);
+            if (userId is null) return Results.Unauthorized();
+
+            var (success, message) = await bigliettoService.RichiediRimborsoBigliettoAsync(userId.Value, id);
+            if (!success)
+            {
+                return Results.BadRequest(new { message });
+            }
+
+            return Results.Ok(new { message });
         });
 
         group.MapPost("/pagamento", async (HttpContext ctx, PagamentoRequestDTO dto, IPagamentoService pagamentoService) =>

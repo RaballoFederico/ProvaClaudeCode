@@ -1,198 +1,88 @@
 using FilmAPI.Data;
 using FilmAPI.DTO;
-using FilmAPI.Model;
-using FilmAPI.Services;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
+using FilmAPI.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FilmAPI.Endpoints;
 
 public static class AuthEndpoints
 {
-    public static RouteGroupBuilder MapAuthEndpoints(this RouteGroupBuilder group)
+    public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
-        group.MapPost("/register", async (
-            RegisterRequest request,
-            UserManager<AppUser> userManager,
-            RoleManager<IdentityRole> roleManager) =>
+        var group = app.MapGroup("/auth");
+
+        group.MapPost("/login", [AllowAnonymous] async (LoginRequestDTO request, IAuthService authService) =>
         {
-            var existing = await userManager.FindByEmailAsync(request.Email);
-            if (existing is not null)
+            var (response, error) = await authService.LoginAsync(request);
+            if (error != null)
             {
-                return Results.Conflict("Email already registered");
+                return Results.Unauthorized();
             }
 
-            var user = new AppUser
-            {
-                UserName = request.Email,
-                Email = request.Email
-            };
-
-            var created = await userManager.CreateAsync(user, request.Password);
-            if (!created.Succeeded)
-            {
-                return Results.BadRequest(created.Errors.Select(e => e.Description));
-            }
-
-            if (!string.IsNullOrWhiteSpace(request.FullName))
-            {
-                await userManager.SetAuthenticationTokenAsync(user, "local", "full_name", request.FullName);
-            }
-
-            if (!await roleManager.RoleExistsAsync("User"))
-            {
-                await roleManager.CreateAsync(new IdentityRole("User"));
-            }
-
-            await userManager.AddToRoleAsync(user, "User");
-
-            return Results.Created($"/auth/users/{user.Id}", new { user.Id, user.Email });
+            return Results.Ok(response);
         });
 
-        group.MapPost("/login", async (
-            LoginRequest request,
-            UserManager<AppUser> userManager,
-            TokenService tokenService,
-            FilmDbContext db,
-            IOptions<AuthSettings> options) =>
+        group.MapPost("/refresh", [AllowAnonymous] async (RefreshTokenRequestDTO request, IAuthService authService) =>
         {
-            var user = await userManager.FindByEmailAsync(request.Email);
-            if (user is null)
+            var (response, error) = await authService.RefreshAsync(request);
+            if (error != null)
             {
                 return Results.Unauthorized();
             }
 
-            var valid = await userManager.CheckPasswordAsync(user, request.Password);
-            if (!valid)
-            {
-                return Results.Unauthorized();
-            }
-
-            var roles = await userManager.GetRolesAsync(user);
-            var (token, expiresAtUtc) = tokenService.CreateAccessToken(user, roles);
-            var refreshToken = tokenService.CreateRefreshToken();
-            var refreshTokenHash = tokenService.HashRefreshToken(refreshToken);
-
-            db.RefreshTokens.Add(new RefreshToken
-            {
-                TokenHash = refreshTokenHash,
-                UserId = user.Id,
-                CreatedAtUtc = DateTime.UtcNow,
-                ExpiresAtUtc = DateTime.UtcNow.AddDays(options.Value.RefreshTokenDays)
-            });
-            await db.SaveChangesAsync();
-
-            return Results.Ok(new AuthResponse(token, refreshToken, expiresAtUtc));
+            return Results.Ok(response);
         });
 
-        group.MapPost("/refresh", async (
-            RefreshRequest request,
-            UserManager<AppUser> userManager,
-            TokenService tokenService,
-            FilmDbContext db,
-            IOptions<AuthSettings> options) =>
+        group.MapPost("/logout", [Authorize] async (HttpContext context, IAuthService authService) =>
         {
-            var refreshTokenHash = tokenService.HashRefreshToken(request.RefreshToken);
-
-            var stored = await db.RefreshTokens
-                .Include(r => r.User)
-                .FirstOrDefaultAsync(r => r.TokenHash == refreshTokenHash);
-
-            if (stored is null || stored.RevokedAtUtc is not null || stored.ExpiresAtUtc < DateTime.UtcNow)
+            var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null || !int.TryParse(userId, out var userIdValue))
             {
                 return Results.Unauthorized();
             }
 
-            if (stored.User is null)
-            {
-                return Results.Unauthorized();
-            }
-
-            stored.RevokedAtUtc = DateTime.UtcNow;
-
-            var roles = await userManager.GetRolesAsync(stored.User);
-            var (token, expiresAtUtc) = tokenService.CreateAccessToken(stored.User, roles);
-            var newRefreshToken = tokenService.CreateRefreshToken();
-            var newHash = tokenService.HashRefreshToken(newRefreshToken);
-
-            db.RefreshTokens.Add(new RefreshToken
-            {
-                TokenHash = newHash,
-                UserId = stored.User.Id,
-                CreatedAtUtc = DateTime.UtcNow,
-                ExpiresAtUtc = DateTime.UtcNow.AddDays(options.Value.RefreshTokenDays)
-            });
-
-            await db.SaveChangesAsync();
-
-            return Results.Ok(new AuthResponse(token, newRefreshToken, expiresAtUtc));
+            await authService.LogoutAsync(userIdValue);
+            return Results.Ok(new { message = "Logout effettuato con successo" });
         });
 
-        group.MapPost("/logout", async (
-            RefreshRequest request,
-            TokenService tokenService,
-            FilmDbContext db) =>
+        group.MapPost("/register", [AllowAnonymous] async (RegistrazioneRequestDTO request, IAuthService authService) =>
         {
-            var refreshTokenHash = tokenService.HashRefreshToken(request.RefreshToken);
-            var stored = await db.RefreshTokens.FirstOrDefaultAsync(r => r.TokenHash == refreshTokenHash);
-            if (stored is null)
+            var (utenteId, error) = await authService.RegisterAsync(request);
+            if (error != null)
             {
-                return Results.NoContent();
+                if (error.Contains("gia' in uso", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Results.Conflict(new { message = error });
+                }
+
+                if (error.Contains("Ruolo User", StringComparison.OrdinalIgnoreCase))
+                {
+                    return Results.Problem(error);
+                }
+
+                return Results.BadRequest(new { message = error });
             }
 
-            stored.RevokedAtUtc = DateTime.UtcNow;
-            await db.SaveChangesAsync();
-            return Results.NoContent();
+            return Results.Created($"/auth/me", new { message = "Registrazione completata con successo", utenteId });
         });
 
-        group.MapPost("/change-password", async (
-            ChangePasswordRequest request,
-            UserManager<AppUser> userManager,
-            HttpContext httpContext) =>
+        group.MapGet("/me", [Authorize] async (HttpContext context, IAuthService authService) =>
         {
-            var userId = httpContext.User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(userId))
+            var userId = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null || !int.TryParse(userId, out var userIdValue))
             {
                 return Results.Unauthorized();
             }
 
-            var user = await userManager.FindByIdAsync(userId);
-            if (user is null)
+            var utente = await authService.GetMeAsync(userIdValue);
+            if (utente is null)
             {
-                return Results.Unauthorized();
+                return Results.NotFound();
             }
 
-            var result = await userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
-            if (!result.Succeeded)
-            {
-                return Results.BadRequest(result.Errors.Select(e => e.Description));
-            }
+            return Results.Ok(utente);
+        });
 
-            return Results.NoContent();
-        }).RequireAuthorization();
-
-        group.MapGet("/me", async (
-            UserManager<AppUser> userManager,
-            HttpContext httpContext) =>
-        {
-            var userId = httpContext.User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                return Results.Unauthorized();
-            }
-
-            var user = await userManager.FindByIdAsync(userId);
-            if (user is null)
-            {
-                return Results.Unauthorized();
-            }
-
-            var roles = await userManager.GetRolesAsync(user);
-            var fullName = await userManager.GetAuthenticationTokenAsync(user, "local", "full_name");
-            return Results.Ok(new UserResponse(user.Id, user.Email ?? string.Empty, fullName, roles));
-        }).RequireAuthorization();
-
-        return group;
+        return app;
     }
 }

@@ -1,8 +1,7 @@
 function getPreferredApiBaseUrls() {
     const urls = [
         'http://localhost:5001',
-        'http://localhost:5000',
-        'https://localhost:7217'
+        'http://127.0.0.1:5001'
     ];
 
     return [...new Set(urls)];
@@ -22,8 +21,8 @@ function resolveInitialApiBaseUrl() {
         return DEFAULT_API_BASE_URL;
     }
 
-    const isLocalDevHost = parsed.hostname === 'localhost';
-    const isWrongLocalPort = isLocalDevHost && parsed.port !== '5001' && parsed.port !== '5000' && parsed.port !== '7217';
+    const isLocalDevHost = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
+    const isWrongLocalPort = isLocalDevHost && parsed.port !== '5001';
 
     if (isWrongLocalPort) {
         window.localStorage.setItem('apiBaseUrl', DEFAULT_API_BASE_URL);
@@ -86,9 +85,10 @@ const ApiClient = {
                 throw fetchError || new Error('Failed to fetch');
             }
 
-            // Se token scaduto, prova a fare refresh
-            if (response.status === 401 && Auth.refreshToken) {
-                const refreshed = await Auth.refresh();
+            // Se token scaduto, prova a fare refresh (refresh token in cookie HttpOnly)
+            const isAuthEndpoint = endpoint.startsWith('/auth/');
+            if (response.status === 401 && !isAuthEndpoint) {
+                const refreshed = await Auth.refresh({ silent: true });
                 if (refreshed) {
                     // Riprova la richiesta con il nuovo token
                     headers['Authorization'] = `Bearer ${Auth.accessToken}`;

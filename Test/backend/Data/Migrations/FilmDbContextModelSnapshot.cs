@@ -278,8 +278,8 @@ namespace FilmAPI.Data.Migrations
                         .HasColumnType("varchar(500)");
 
                     b.Property<string>("Genere")
-                        .HasMaxLength(50)
-                        .HasColumnType("varchar(50)");
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
 
                     b.Property<int>("RegistaId")
                         .HasColumnType("int");
@@ -292,6 +292,9 @@ namespace FilmAPI.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("varchar(200)");
+
+                    b.Property<int?>("TmdbId")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 

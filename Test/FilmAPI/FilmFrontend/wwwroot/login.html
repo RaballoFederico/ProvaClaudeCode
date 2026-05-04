@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - FilmAPI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="css/styles.css">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#e50914",
+                        "secondary": "#e9c176",
+                        "background": "#131313",
+                        "surface": "#131313",
+                        "surface-container": "#201f1f",
+                        "surface-container-low": "#1c1b1b",
+                        "surface-container-high": "#2a2a2a",
+                        "on-surface": "#e5e2e1",
+                        "on-surface-variant": "#e9bcb6",
+                        "outline-variant": "#5e3f3b",
+                        "tertiary-container": "#0076c5",
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-background">
+    <button onclick="Theme.toggle()" class="fixed top-4 right-4 p-2 rounded-full bg-surface-container-high text-on-surface-variant border border-outline-variant/20">
+        <span id="theme-toggle-icon" data-theme-toggle-icon class="material-symbols-outlined">light_mode</span>
+    </button>
+    <div class="w-full max-w-md mx-4">
+        <!-- Logo e Titolo -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#e50914] mb-4">
+                <span class="material-symbols-outlined text-3xl text-white">movie</span>
+            </div>
+            <h1 class="text-2xl font-black text-on-surface font-['Manrope'] tracking-tight">FilmAPI</h1>
+            <p class="text-sm text-on-surface-variant mt-1">Accedi alla tua area personale</p>
+        </div>
+
+        <!-- Form Login -->
+        <div class="bg-surface-container rounded-2xl p-8 shadow-2xl border border-outline-variant/20">
+            <form id="login-form" class="space-y-6">
+                <!-- Username/Email -->
+                <div>
+                    <label for="username" class="block text-sm font-medium text-on-surface-variant mb-2">
+                        Username o Email
+                    </label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
+                            person
+                        </span>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            required
+                            class="w-full pl-10 pr-4 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-[#e50914] focus:ring-1 focus:ring-[#e50914] transition-all duration-200"
+                            placeholder="Inserisci username o email"
+                        >
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-on-surface-variant mb-2">
+                        Password
+                    </label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
+                            lock
+                        </span>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            required
+                            class="w-full pl-10 pr-12 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-[#e50914] focus:ring-1 focus:ring-[#e50914] transition-all duration-200"
+                            placeholder="Inserisci password"
+                        >
+                        <button type="button" id="toggle-password" class="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface">
+                            <span class="material-symbols-outlined">visibility_off</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Error Message -->
+                <div id="error-message" class="hidden text-sm text-red-400 bg-red-400/10 p-3 rounded-lg">
+                    <span class="material-symbols-outlined text-sm align-middle mr-1">error</span>
+                    <span id="error-text"></span>
+                </div>
+
+                <!-- Submit Button -->
+                <button 
+                    type="submit" 
+                    id="login-btn"
+                    class="w-full py-3 px-4 bg-[#e50914] hover:bg-[#c0000c] text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <span id="btn-text">Accedi</span>
+                    <span id="btn-loading" class="material-symbols-outlined animate-spin hidden">refresh</span>
+                </button>
+            </form>
+
+            <!-- Divider -->
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-outline-variant/30"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-surface-container text-on-surface-variant">o</span>
+                </div>
+            </div>
+
+            <!-- Register Link -->
+            <p class="text-center text-sm text-on-surface-variant">
+                Non hai un account? 
+                <a href="register.html" class="text-[#e50914] hover:text-[#c0000c] font-medium transition-colors">
+                    Registrati
+                </a>
+            </p>
+        </div>
+
+        <!-- Back Link -->
+        <div class="mt-6 text-center">
+            <a href="home.html" class="text-sm text-on-surface-variant hover:text-on-surface flex items-center justify-center gap-1 transition-colors">
+                <span class="material-symbols-outlined text-sm">arrow_back</span>
+                Torna alla home
+            </a>
+        </div>
+    </div>
+
+    <script src="js/theme.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/route-guard.js"></script>
+    <script src="js/utils.js"></script>
+    <script>
+        // Toggle password visibility
+        document.getElementById('toggle-password').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('.material-symbols-outlined');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.textContent = 'visibility';
+            } else {
+                passwordInput.type = 'password';
+                icon.textContent = 'visibility_off';
+            }
+        });
+
+        // Handle form submission
+        document.getElementById('login-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+            const btn = document.getElementById('login-btn');
+            const btnText = document.getElementById('btn-text');
+            const btnLoading = document.getElementById('btn-loading');
+            
+            // Reset error
+            errorDiv.classList.add('hidden');
+            
+            // Show loading
+            btn.disabled = true;
+            btnText.textContent = 'Accesso in corso...';
+            btnLoading.classList.remove('hidden');
+            
+            try {
+                const result = await Auth.login(username, password);
+                
+                if (result.success) {
+                    // Redirect based on role
+                    if (result.user.ruoli.includes('Admin') || result.user.ruoli.includes('PowerUser')) {
+                        window.location.href = 'index.html';
+                    } else {
+                        window.location.href = 'proiezioni-pubblico.html';
+                    }
+                } else {
+                    throw new Error(result.error || 'Errore durante il login');
+                }
+            } catch (error) {
+                errorText.textContent = error.message;
+                errorDiv.classList.remove('hidden');
+                
+                // Reset button
+                btn.disabled = false;
+                btnText.textContent = 'Accedi';
+                btnLoading.classList.add('hidden');
+            }
+        });
+
+        // Check if already logged in
+        if (Auth.isAuthenticated()) {
+            window.location.href = 'home.html';
+        }
+    </script>
+</body>
+</html>

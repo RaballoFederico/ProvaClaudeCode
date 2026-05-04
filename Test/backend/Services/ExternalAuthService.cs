@@ -171,7 +171,28 @@ public class ExternalAuthService : IExternalAuthService
         catch (Exception ex)
         {
             _logger.LogError(ex, "External callback failed for provider {Provider}", normalizedProvider);
-            return AppendQuery(returnUrl, "extAuthError", "Errore durante il login con provider esterno");
+            var isDevelopment = string.Equals(
+                Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+                "Development",
+                StringComparison.OrdinalIgnoreCase);
+
+            if (!isDevelopment)
+            {
+                return AppendQuery(returnUrl, "extAuthError", "Errore durante il login con provider esterno");
+            }
+
+            var compactMessage = ex.Message;
+            if (!string.IsNullOrWhiteSpace(ex.InnerException?.Message))
+            {
+                compactMessage = $"{compactMessage} | {ex.InnerException.Message}";
+            }
+
+            if (compactMessage.Length > 220)
+            {
+                compactMessage = compactMessage[..220];
+            }
+
+            return AppendQuery(returnUrl, "extAuthError", $"Errore provider {DisplayNames[normalizedProvider]}: {compactMessage}");
         }
     }
 
@@ -333,8 +354,8 @@ public class ExternalAuthService : IExternalAuthService
 
     private async Task<ExternalProfile> HandleMicrosoftAsync(HttpClient client, ProviderConfig cfg, string code, string redirectUri)
     {
-        var tenantId = string.IsNullOrWhiteSpace(cfg.TenantId) ? "common" : cfg.TenantId;
-        var tokenEndpoint = $"https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token";
+        var tenant = string.IsNullOrWhiteSpace(cfg.TenantId) ? "common" : cfg.TenantId;
+        var tokenUrl = $"https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token";
 
         var tokenPayload = new Dictionary<string, string>
         {
@@ -342,48 +363,46 @@ public class ExternalAuthService : IExternalAuthService
             ["client_secret"] = cfg.ClientSecret,
             ["code"] = code,
             ["grant_type"] = "authorization_code",
-            ["redirect_uri"] = redirectUri
+            ["redirect_uri"] = redirectUri,
+            ["scope"] = "openid profile email User.Read offline_access"
         };
 
-        using var tokenResponse = await client.PostAsync(tokenEndpoint, new FormUrlEncodedContent(tokenPayload));
+        using var tokenResponse = await client.PostAsync(tokenUrl, new FormUrlEncodedContent(tokenPayload));
         tokenResponse.EnsureSuccessStatusCode();
 
         using var tokenDoc = JsonDocument.Parse(await tokenResponse.Content.ReadAsStringAsync());
         var accessToken = tokenDoc.RootElement.GetProperty("access_token").GetString()
             ?? throw new InvalidOperationException("Microsoft access token mancante");
 
-        using var req = new HttpRequestMessage(HttpMethod.Get, "https://graph.microsoft.com/oidc/userinfo");
-        req.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        using var userReq = new HttpRequestMessage(HttpMethod.Get, "https://graph.microsoft.com/v1.0/me?$select=id,displayName,mail,userPrincipalName");
+        userReq.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
-        using var userResponse = await client.SendAsync(req);
+        using var userResponse = await client.SendAsync(userReq);
         userResponse.EnsureSuccessStatusCode();
 
         using var userDoc = JsonDocument.Parse(await userResponse.Content.ReadAsStringAsync());
         var root = userDoc.RootElement;
 
-        var providerUserId = root.TryGetProperty("sub", out var subEl)
-            ? subEl.GetString()
-            : root.TryGetProperty("oid", out var oidEl)
-                ? oidEl.GetString()
-                : null;
+        var providerUserId = root.TryGetProperty("id", out var idEl) ? idEl.GetString() : null;
+        if (string.IsNullOrWhiteSpace(providerUserId))
+            throw new InvalidOperationException("Microsoft user id mancante");
 
-        var email = root.TryGetProperty("email", out var emailEl)
-            ? emailEl.GetString()
-            : root.TryGetProperty("preferred_username", out var preferredEl)
-                ? preferredEl.GetString()
-                : null;
-
-        if (string.IsNullOrWhiteSpace(providerUserId) || string.IsNullOrWhiteSpace(email))
+        var displayName = root.TryGetProperty("displayName", out var nameEl) ? nameEl.GetString() : null;
+        var email = root.TryGetProperty("mail", out var mailEl) ? mailEl.GetString() : null;
+        if (string.IsNullOrWhiteSpace(email))
         {
-            throw new InvalidOperationException("Microsoft claims insufficienti");
+            email = root.TryGetProperty("userPrincipalName", out var upnEl) ? upnEl.GetString() : null;
         }
+
+        if (string.IsNullOrWhiteSpace(email))
+            throw new InvalidOperationException("Microsoft email mancante");
 
         return new ExternalProfile
         {
             ProviderUserId = providerUserId,
             Email = email,
-            DisplayName = root.TryGetProperty("name", out var nameEl) ? nameEl.GetString() : null,
-            SuggestedUsername = root.TryGetProperty("given_name", out var givenNameEl) ? givenNameEl.GetString() : null
+            DisplayName = displayName,
+            SuggestedUsername = displayName
         };
     }
 
@@ -393,7 +412,7 @@ public class ExternalAuthService : IExternalAuthService
         {
             "google" => $"https://accounts.google.com/o/oauth2/v2/auth?response_type=code&client_id={Uri.EscapeDataString(cfg.ClientId)}&redirect_uri={Uri.EscapeDataString(redirectUri)}&scope={Uri.EscapeDataString("openid profile email")}&state={Uri.EscapeDataString(state)}&prompt=select_account",
             "github" => $"https://github.com/login/oauth/authorize?client_id={Uri.EscapeDataString(cfg.ClientId)}&redirect_uri={Uri.EscapeDataString(redirectUri)}&scope={Uri.EscapeDataString("read:user user:email")}&state={Uri.EscapeDataString(state)}",
-            "microsoft" => $"https://login.microsoftonline.com/{Uri.EscapeDataString(string.IsNullOrWhiteSpace(cfg.TenantId) ? "common" : cfg.TenantId)}/oauth2/v2.0/authorize?response_type=code&client_id={Uri.EscapeDataString(cfg.ClientId)}&redirect_uri={Uri.EscapeDataString(redirectUri)}&scope={Uri.EscapeDataString("openid profile email")}&state={Uri.EscapeDataString(state)}&prompt=select_account",
+            "microsoft" => $"https://login.microsoftonline.com/{Uri.EscapeDataString(string.IsNullOrWhiteSpace(cfg.TenantId) ? "common" : cfg.TenantId!)}/oauth2/v2.0/authorize?client_id={Uri.EscapeDataString(cfg.ClientId)}&response_type=code&redirect_uri={Uri.EscapeDataString(redirectUri)}&response_mode=query&scope={Uri.EscapeDataString("openid profile email User.Read offline_access")}&state={Uri.EscapeDataString(state)}&prompt=select_account",
             _ => throw new InvalidOperationException("Provider non supportato")
         };
     }

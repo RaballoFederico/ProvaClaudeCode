@@ -27,6 +27,10 @@ async function loadComponent(elementId, componentPath) {
 }
 
 async function loadAllComponents() {
+    if (typeof Auth !== 'undefined' && typeof Auth.ensureInitialized === 'function') {
+        await Auth.ensureInitialized();
+    }
+
     const components = [
         { id: 'sidebar-container', path: '/components/sidebar.html' },
         { id: 'navbar-container', path: '/components/navbar.html' },
@@ -57,10 +61,12 @@ function isAuthenticatedUser() {
 
 function applyPageAccessControl() {
     const currentPath = window.location.pathname.split('/').pop() || 'home.html';
-
-    const managerOnlyPages = ['index.html', 'registi.html', 'proiezioni.html', 'shows.html', 'validazione.html', 'ricarica-credito.html'];
-    if (managerOnlyPages.includes(currentPath) && !isManagerUser()) {
-        window.location.href = '/programmazione.html';
+    if (typeof AccessControl !== 'undefined' && AccessControl.pageRules) {
+        const rule = AccessControl.pageRules[currentPath];
+        if (rule !== undefined && !AccessControl.canAccess(rule)) {
+            window.location.href = AccessControl.getDefaultRoute();
+            return;
+        }
     }
 }
 

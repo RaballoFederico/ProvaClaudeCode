@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ricarica Credito | FilmAPI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col">
+    <div id="navbar-container"></div>
+    <div class="flex flex-1">
+        <div id="sidebar-container"></div>
+        <main class="flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
+            <section class="hero-banner p-6 md:p-8 mb-5 reveal-up">
+                <span class="badge-soft mb-3">
+                    <span class="material-symbols-outlined text-sm">account_balance_wallet</span>
+                    Credito account
+                </span>
+                <h1 class="font-headline text-3xl md:text-5xl font-semibold mb-3">Ricarica il tuo credito</h1>
+                <p class="text-sm text-on-surface-variant">Il pagamento con carta avviene su Stripe Checkout in pagina sicura.</p>
+            </section>
+
+            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 mb-5 reveal-up delay-1">
+                <h2 class="font-headline text-lg font-bold mb-3">Il tuo saldo</h2>
+                <div class="text-2xl font-bold mb-1"><span id="self-saldo">0.00</span> EUR</div>
+            </section>
+
+            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 reveal-up delay-2">
+                <h2 class="font-headline text-lg font-bold mb-3">Nuova ricarica</h2>
+                <form id="self-recharge-form" class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input name="importo" type="number" step="0.01" min="0.01" placeholder="Importo EUR" class="bg-surface-container-high rounded-lg border-none" required />
+                    <input name="descrizione" type="text" placeholder="Note (opzionale)" class="bg-surface-container-high rounded-lg border-none" />
+                    <button type="submit" class="px-4 py-2 bg-primary-container text-white rounded-lg hover-lift">Ricarica con carta</button>
+                </form>
+                <div id="self-tx-result" class="mt-4"></div>
+            </section>
+        </main>
+    </div>
+    <div id="footer-container"></div>
+
+    <script src="/js/theme.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/route-guard.js"></script>
+    <script src="/js/template-loader.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        const SELF_CHECKOUT_DRAFT_KEY = 'filmapi_credito_checkout_draft';
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllComponents();
+            
+            const user = (typeof Auth !== 'undefined') ? Auth.getUser() : null;
+            const roles = user?.ruoli || [];
+            const isManager = roles.includes('Admin') || roles.includes('PowerUser');
+            
+            if (isManager) {
+                window.location.href = '/ricarica-credito.html';
+                return;
+            }
+            
+            bindEvents();
+            await refreshSelfSaldo();
+            await resumeSelfCheckoutIfNeeded();
+        });
+
+        function bindEvents() {
+            const selfForm = document.getElementById('self-recharge-form');
+            if (selfForm) selfForm.addEventListener('submit', onRechargeSelf);
+        }
+
+        async function refreshSelfSaldo() {
+            const saldoRes = await ApiClient.get('/user/credito');
+            const saldo = Number(saldoRes?.saldo || 0);
+            document.getElementById('self-saldo').textContent = saldo.toFixed(2);
+        }
+
+        async function onRechargeSelf(e) {
+            e.preventDefault();
+            const f = e.target;
+            const importo = parseFloat(f.importo.value);
+            const descrizione = f.descrizione.value || null;
+            if (!Number.isFinite(importo) || importo <= 0) {
+                Utils.showNotification('Importo non valido', 'error');
+                return;
+            }
+
+            try {
+                const currentUrl = new URL(window.location.href);
+                currentUrl.searchParams.set('checkout', 'success');
+                currentUrl.searchParams.set('session_id', '{CHECKOUT_SESSION_ID}');
+                const successUrl = currentUrl.toString();
+
+                const cancelUrlObj = new URL(window.location.href);
+                cancelUrlObj.searchParams.set('checkout', 'cancel');
+                cancelUrlObj.searchParams.delete('session_id');
+                const cancelUrl = cancelUrlObj.toString();
+
+                saveCheckoutDraft({ importo, descrizione });
+
+                const session = await ApiClient.post('/credito/checkout-session', {
+                    importo,
+                    successUrl,
+                    cancelUrl
+                });
+
+                if (!session?.url) {
+                    throw new Error('Checkout Stripe non disponibile');
+                }
+
+                window.location.href = session.url;
+            } catch (err) {
+                Utils.showNotification(err.message || 'Errore ricarica', 'error');
+            }
+        }
+
+        async function resumeSelfCheckoutIfNeeded() {
+            const params = new URLSearchParams(window.location.search);
+            const checkoutStatus = params.get('checkout');
+            const sessionId = params.get('session_id');
+
+            if (!checkoutStatus) return;
+
+            if (checkoutStatus === 'cancel') {
+                clearCheckoutDraft();
+                Utils.showNotification('Pagamento annullato su Stripe Checkout', 'info');
+                cleanupCheckoutQuery(params);
+                return;
+            }
+
+            if (checkoutStatus !== 'success' || !sessionId) return;
+
+            const draft = readCheckoutDraft();
+            if (!draft || !Number.isFinite(Number(draft.importo)) || Number(draft.importo) <= 0) {
+                Utils.showNotification('Ricarica non completabile: dati checkout mancanti', 'error');
+                cleanupCheckoutQuery(params);
+                return;
+            }
+
+            try {
+                const tx = await ApiClient.post('/credito/conferma-checkout', {
+                    checkoutSessionId: sessionId,
+                    importo: Number(draft.importo),
+                    descrizione: draft.descrizione || null
+                });
+
+                document.getElementById('self-tx-result').innerHTML = `
+                    <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-sm">
+                        <div>Ricarica completata</div>
+                        <div>Importo: <strong>${Number(tx.importo).toFixed(2)} EUR</strong></div>
+                        <div>Saldo precedente: <strong>${Number(tx.saldoPrecedente).toFixed(2)} EUR</strong></div>
+                        <div>Nuovo saldo: <strong>${Number(tx.saldoSuccessivo).toFixed(2)} EUR</strong></div>
+                        <div>Data: <strong>${new Date(tx.dataTransazione).toLocaleString('it-IT')}</strong></div>
+                    </div>
+                `;
+
+                clearCheckoutDraft();
+                document.getElementById('self-recharge-form').reset();
+                await refreshSelfSaldo();
+                Utils.showNotification('Credito aggiornato con successo', 'success');
+            } catch (err) {
+                const message = err?.message || 'Errore conferma ricarica';
+                if (String(message).toLowerCase().includes('gia stata elaborata')) {
+                    clearCheckoutDraft();
+                    await refreshSelfSaldo();
+                    Utils.showNotification('Ricarica gia registrata', 'info');
+                } else {
+                    Utils.showNotification(message, 'error');
+                }
+            } finally {
+                cleanupCheckoutQuery(params);
+            }
+        }
+
+        function cleanupCheckoutQuery(params) {
+            params.delete('checkout');
+            params.delete('session_id');
+            const query = params.toString();
+            window.history.replaceState({}, document.title, query ? `${window.location.pathname}?${query}` : window.location.pathname);
+        }
+
+        function saveCheckoutDraft(draft) {
+            localStorage.setItem(SELF_CHECKOUT_DRAFT_KEY, JSON.stringify(draft));
+        }
+
+        function readCheckoutDraft() {
+            const raw = localStorage.getItem(SELF_CHECKOUT_DRAFT_KEY);
+            if (!raw) return null;
+            try {
+                return JSON.parse(raw);
+            } catch {
+                return null;
+            }
+        }
+
+        function clearCheckoutDraft() {
+            localStorage.removeItem(SELF_CHECKOUT_DRAFT_KEY);
+        }
+    </script>
+</body>
+</html>

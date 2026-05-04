@@ -430,6 +430,7 @@
                 });
                 
                 if (result.success) {
+                    localStorage.setItem('filmhub_tour_pending_email', String(email || '').trim().toLowerCase());
                     successText.textContent = 'Registrazione completata! Verrai reindirizzato al login...';
                     successDiv.classList.remove('hidden');
                     
@@ -450,12 +451,15 @@
             }
         });
 
-        // Check if already logged in
-        if (Auth.isAuthenticated()) {
-            window.location.href = 'home.html';
-        }
+        (async () => {
+            await Auth.ensureInitialized();
+            if (Auth.isAuthenticated()) {
+                window.location.href = 'programmazione.html';
+                return;
+            }
 
-        renderExternalRegisterProviders();
+            await renderExternalRegisterProviders();
+        })();
     </script>
 </body>
 </html>

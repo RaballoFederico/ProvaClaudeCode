@@ -7,9 +7,11 @@ public interface IBigliettoService
     Task<IEnumerable<PostoStatoDTO>> GetPiantinaStatoAsync(int showId);
     Task<PrenotazioneTempDTO> LockPostiAsync(int utenteId, int showId, List<PostoDTO> posti, string sessionId);
     Task<LockDettaglioDTO?> GetLockDettaglioAsync(string codiceTemporaneo, int utenteId);
-    Task<bool> RinnovaLockAsync(string codiceTemporaneo);
-    Task<bool> RilasciaLockAsync(string codiceTemporaneo);
+    Task<bool> RinnovaLockAsync(int utenteId, string codiceTemporaneo);
+    Task<bool> RilasciaLockAsync(int utenteId, string codiceTemporaneo);
     Task<AcquistoResultDTO> ConfermaAcquistoAsync(int utenteId, ConfermaAcquistoDTO dto);
+    Task<(bool success, string message)> RichiediRimborsoAsync(int utenteId, int acquistoId);
+    Task<(bool success, string message)> RichiediRimborsoBigliettoAsync(int utenteId, int bigliettoId);
     Task<BigliettoDTO?> GetBigliettoAsync(int id);
     Task<IEnumerable<BigliettoDTO>> GetBigliettiUtenteAsync(int utenteId);
     Task<BigliettoValidazioneDTO?> GetBigliettoPerValidazioneAsync(string codiceHash);
