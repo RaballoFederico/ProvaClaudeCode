@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proiezioni - FilmAPI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="css/styles.css">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#e50914",
+                        "secondary": "#e9c176",
+                        "background": "#131313",
+                        "surface": "#131313",
+                        "surface-container": "#201f1f",
+                        "surface-container-low": "#1c1b1b",
+                        "surface-container-high": "#2a2a2a",
+                        "on-surface": "#e5e2e1",
+                        "on-surface-variant": "#e9bcb6",
+                        "outline-variant": "#5e3f3b",
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col">
+    <div id="navbar-container"></div>
+    <div class="flex flex-1">
+        <div id="sidebar-container"></div>
+
+    <!-- Main Content -->
+    <main class="flex-1 py-8 px-4 md:px-8 lg:px-12 pb-20 md:pb-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-black text-on-surface font-['Manrope']">Proiezioni in Programma</h1>
+                <p class="text-on-surface-variant mt-2">Scopri i film in programmazione nelle nostre sale</p>
+            </div>
+
+            <!-- Loading -->
+            <div id="loading" class="flex items-center justify-center py-20">
+                <span class="material-symbols-outlined text-4xl animate-spin text-primary-container">refresh</span>
+            </div>
+
+            <!-- Proiezioni Grid -->
+            <div id="proiezioni-grid" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Proiezioni verranno caricate qui -->
+            </div>
+
+            <!-- Error -->
+            <div id="error" class="hidden text-center py-20">
+                <span class="material-symbols-outlined text-4xl text-red-400 mb-4">error</span>
+                <p id="error-text" class="text-on-surface-variant"></p>
+                <button onclick="loadProiezioni()" class="mt-4 px-4 py-2 bg-primary-container hover:bg-[#c0000c] text-white rounded-lg text-sm transition-colors">
+                    Riprova
+                </button>
+            </div>
+        </div>
+    </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <script src="js/theme.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/route-guard.js"></script>
+    <script src="js/template-loader.js"></script>
+    <script src="js/api-client.js"></script>
+    <script src="js/utils.js"></script>
+    <script>
+        let selectedFilmId = null;
+
+        // Carica proiezioni
+        async function loadProiezioni() {
+            try {
+                showLoading(true);
+
+                const params = new URLSearchParams(window.location.search);
+                selectedFilmId = params.get('filmId') ? parseInt(params.get('filmId')) : null;
+                
+                // Carica proiezioni con dettagli
+                const [proiezioni, films, cinemas] = await Promise.all([
+                    ApiClient.get('/proiezioni'),
+                    ApiClient.get('/films'),
+                    ApiClient.get('/cinemas')
+                ]);
+                
+                const filmsMap = new Map(films.map(f => [f.id, f]));
+                const cinemasMap = new Map(cinemas.map(c => [c.id, c]));
+                
+                // Filtra solo proiezioni future
+                const oggi = new Date();
+                oggi.setHours(0, 0, 0, 0);
+                
+                let proiezioniFuture = proiezioni.filter(p => {
+                    const dataProiezione = new Date(p.data);
+                    return dataProiezione >= oggi;
+                }).sort((a, b) => new Date(a.data) - new Date(b.data));
+
+                if (selectedFilmId) {
+                    proiezioniFuture = proiezioniFuture.filter(p => p.filmId === selectedFilmId);
+                }
+                
+                showLoading(false);
+                renderProiezioni(films, proiezioniFuture, cinemasMap);
+            } catch (error) {
+                showLoading(false);
+                showError(error.message);
+            }
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').classList.toggle('hidden', !show);
+            document.getElementById('proiezioni-grid').classList.add('hidden');
+            document.getElementById('error').classList.add('hidden');
+        }
+
+        function showError(message) {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('proiezioni-grid').classList.add('hidden');
+            document.getElementById('error').classList.remove('hidden');
+            document.getElementById('error-text').textContent = message;
+        }
+
+        function renderProiezioni(films, proiezioni, cinemasMap) {
+            const grid = document.getElementById('proiezioni-grid');
+
+            let filmsToRender = films;
+            if (selectedFilmId) {
+                filmsToRender = films.filter(f => f.id === selectedFilmId);
+            }
+            
+            if (filmsToRender.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-12">
+                        <span class="material-symbols-outlined text-4xl text-on-surface-variant/50 mb-4">event_busy</span>
+                        <p class="text-on-surface-variant">Nessun film trovato</p>
+                        <a href="films.html" class="inline-block mt-3 text-primary-container hover:text-[#c0000c] text-sm">Vai al catalogo film</a>
+                    </div>
+                `;
+                grid.classList.remove('hidden');
+                return;
+            }
+            
+            grid.innerHTML = filmsToRender.map(film => {
+                const imageUrl = film.copertinaPath || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=600&h=900&fit=crop';
+                const filmProiezioni = proiezioni
+                    .filter(p => p.filmId === film.id)
+                    .sort((a, b) => {
+                        const dateA = new Date(`${a.data.split('T')[0]}T${a.ora}`);
+                        const dateB = new Date(`${b.data.split('T')[0]}T${b.ora}`);
+                        return dateA - dateB;
+                    });
+                const visibleProiezioni = selectedFilmId ? filmProiezioni : filmProiezioni.slice(0, 3);
+                
+                return `
+                    <div class="bg-surface-container rounded-2xl overflow-hidden border border-outline-variant/20 hover:border-outline-variant/40 transition-all duration-300 hover:transform hover:scale-[1.02]">
+                        <div class="h-52 bg-surface-container-high">
+                            <img src="${imageUrl}" alt="${film.titolo}" class="w-full h-full object-cover" loading="lazy" />
+                        </div>
+                        <div class="p-6">
+                            <h3 class="text-xl font-bold text-on-surface mb-3">${film.titolo}</h3>
+                            ${filmProiezioni.length === 0 ? `
+                                <div class="text-sm text-on-surface-variant bg-surface-container-high rounded-lg p-3">
+                                    Nessuna proiezione in programma al momento per questo film.
+                                </div>
+                            ` : `
+                                <div class="space-y-3">
+                                    ${visibleProiezioni.map(p => {
+                                        const cinema = cinemasMap.get(p.cinemaId);
+                                        const data = new Date(p.data);
+                                        const dataFormattata = data.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short' });
+                                        return `
+                                            <div class="bg-surface-container-high rounded-lg p-3">
+                                                <div class="text-sm text-on-surface font-semibold">${cinema?.nome || 'Cinema'}</div>
+                                                <div class="text-xs text-on-surface-variant mb-2">${cinema?.citta || 'Città'} - ${dataFormattata}, ${p.ora.substring(0, 5)}</div>
+                                                ${Auth.isAuthenticated() ? `
+                                                <button onclick="salvaProiezione(${p.id})" class="w-full py-2 bg-primary-container hover:bg-[#c0000c] text-white rounded-lg text-sm transition-colors flex items-center justify-center gap-2">
+                                                    <span class="material-symbols-outlined text-base">bookmark_add</span>
+                                                    Salva proiezione
+                                                </button>
+                                                ` : ''}
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                    ${!selectedFilmId && filmProiezioni.length > 3 ? `<p class="text-xs text-on-surface-variant text-center">+ ${filmProiezioni.length - 3} altre proiezioni disponibili</p>` : ''}
+                                    ${!selectedFilmId && filmProiezioni.length > 0 ? `<a href="proiezioni-pubblico.html?filmId=${film.id}" class="block text-center text-sm text-primary-container hover:text-[#c0000c] mt-1">Vedi tutte le proiezioni di questo film</a>` : ''}
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            grid.classList.remove('hidden');
+        }
+
+        async function salvaProiezione(id) {
+            // Se non autenticato, reindirizza al login
+            if (!Auth.isAuthenticated()) {
+                window.location.href = `/login.html?redirect=${encodeURIComponent(window.location.pathname)}`;
+                return;
+            }
+            
+            try {
+                await ApiClient.post('/user/proiezioni-salvate', { proiezioneId: id });
+                
+                if (typeof Utils !== 'undefined') {
+                    Utils.showNotification('Proiezione salvata con successo!', 'success');
+                } else {
+                    alert('Proiezione salvata con successo!');
+                }
+            } catch (error) {
+                if (error.message.includes('già salvata')) {
+                    if (typeof Utils !== 'undefined') {
+                        Utils.showNotification('Proiezione già salvata', 'info');
+                    } else {
+                        alert('Proiezione già salvata');
+                    }
+                } else {
+                    if (typeof Utils !== 'undefined') {
+                        Utils.showNotification('Errore: ' + error.message, 'error');
+                    } else {
+                        alert('Errore: ' + error.message);
+                    }
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllComponents();
+            loadProiezioni();
+        });
+    </script>
+</body>
+</html>

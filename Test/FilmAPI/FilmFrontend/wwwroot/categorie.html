@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html class="dark" lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categorie | FilmAPI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col">
+    <div id="navbar-container"></div>
+    <div class="flex flex-1">
+        <div id="sidebar-container"></div>
+        <main class="flex-1 p-4 md:p-8 lg:p-12 pb-20 md:pb-0">
+            <div class="flex items-end justify-between gap-4 mb-6">
+                <div>
+                    <h1 class="font-headline text-3xl md:text-5xl font-bold text-white">Categorie</h1>
+                    <p class="text-on-surface-variant mt-2">CRUD categorie film (solo admin).</p>
+                </div>
+                <button onclick="openCreate()" class="px-5 py-3 rounded-xl bg-primary-container text-white font-bold">Nuova Categoria</button>
+            </div>
+
+            <div id="categorie-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+        </main>
+    </div>
+    <div id="footer-container"></div>
+    <div id="modal-container"></div>
+
+    <script src="/js/theme.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/route-guard.js"></script>
+    <script src="/js/template-loader.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        let categorie = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllComponents();
+            if (!Auth.isAdmin()) {
+                window.location.href = '/programmazione.html';
+                return;
+            }
+            await loadCategorie();
+        });
+
+        async function loadCategorie() {
+            categorie = await ApiClient.get('/categorie');
+            render();
+        }
+
+        function render() {
+            const grid = document.getElementById('categorie-grid');
+            grid.innerHTML = categorie.map(c => `
+                <article class="bg-surface-container-low border border-outline-variant/20 rounded-xl p-4">
+                    <h3 class="text-lg font-bold text-white">${escapeHtml(c.nome)}</h3>
+                    <p class="text-sm text-on-surface-variant mt-1 min-h-10">${escapeHtml(c.descrizione || 'Nessuna descrizione')}</p>
+                    <div class="mt-4 flex gap-2 justify-end">
+                        <button onclick="openEdit(${c.id})" class="px-3 py-2 rounded-lg bg-surface-container-high text-sm">Modifica</button>
+                        <button onclick="removeCategoria(${c.id})" class="px-3 py-2 rounded-lg bg-error-container/30 text-error text-sm">Elimina</button>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        function openCreate() {
+            showForm('Nuova Categoria', { nome: '', descrizione: '' }, async data => {
+                await ApiClient.post('/categorie', data);
+                await loadCategorie();
+            });
+        }
+
+        function openEdit(id) {
+            const categoria = categorie.find(c => c.id === id);
+            if (!categoria) return;
+            showForm('Modifica Categoria', categoria, async data => {
+                await ApiClient.put(`/categorie/${id}`, data);
+                await loadCategorie();
+            });
+        }
+
+        async function removeCategoria(id) {
+            if (!confirm('Eliminare la categoria?')) return;
+            await ApiClient.delete(`/categorie/${id}`);
+            await loadCategorie();
+        }
+
+        function showForm(title, initial, onSave) {
+            const modal = document.getElementById('modal-container');
+            modal.innerHTML = `
+                <div class="modal-backdrop" onclick="if(event.target===this) closeModal()">
+                    <div class="modal-content max-w-lg">
+                        <h3 class="text-xl font-bold mb-4">${title}</h3>
+                        <form id="cat-form" class="space-y-3">
+                            <input id="cat-nome" value="${escapeHtml(initial.nome || '')}" placeholder="Nome" class="w-full bg-surface-container-high border-none rounded-lg" required>
+                            <textarea id="cat-desc" placeholder="Descrizione" class="w-full bg-surface-container-high border-none rounded-lg">${escapeHtml(initial.descrizione || '')}</textarea>
+                            <div class="flex justify-end gap-2 mt-4">
+                                <button type="button" onclick="closeModal()" class="px-4 py-2 rounded-lg bg-surface-container-high">Annulla</button>
+                                <button type="submit" class="px-4 py-2 rounded-lg bg-primary-container text-white">Salva</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('cat-form').addEventListener('submit', async e => {
+                e.preventDefault();
+                const data = {
+                    nome: document.getElementById('cat-nome').value.trim(),
+                    descrizione: document.getElementById('cat-desc').value.trim()
+                };
+                await onSave(data);
+                closeModal();
+            });
+        }
+
+        function closeModal() {
+            document.getElementById('modal-container').innerHTML = '';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

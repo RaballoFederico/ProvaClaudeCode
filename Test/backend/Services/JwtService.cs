@@ -38,7 +38,7 @@ public class JwtService
             claims.Add(new Claim(ClaimTypes.Role, ruolo));
         }
 
-        var secretKey = GetJwtValue("Jwt:SecretKey", "JWT_SECRET_KEY", "your-super-secret-key-min-32-characters-for-jwt");
+        var secretKey = GetJwtValue("Jwt:SecretKey", "JWT_SECRET_KEY", string.Empty);
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
@@ -68,7 +68,7 @@ public class JwtService
     public ClaimsPrincipal? ValidateToken(string token, bool isRefreshToken = false)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var key = Encoding.UTF8.GetBytes(GetJwtValue("Jwt:SecretKey", "JWT_SECRET_KEY", "your-super-secret-key-min-32-characters-for-jwt"));
+        var key = Encoding.UTF8.GetBytes(GetJwtValue("Jwt:SecretKey", "JWT_SECRET_KEY", string.Empty));
 
         try
         {

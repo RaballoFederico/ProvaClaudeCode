@@ -52,6 +52,14 @@ public class TMDBService : ITMDBService
         return await _httpClient.GetStringAsync(url);
     }
 
+    public async Task<string?> GetPersonMovieCreditsAsync(int personId, string language = "it-IT")
+    {
+        if (!IsConfigured) return null;
+
+        var url = $"{BaseUrl}/person/{personId}/movie_credits?api_key={_apiKey}&language={language}";
+        return await _httpClient.GetStringAsync(url);
+    }
+
     public async Task<string?> GetPopularMoviesAsync(int page = 1, string language = "it-IT")
     {
         if (!IsConfigured) return null;
@@ -85,6 +93,7 @@ public interface ITMDBService
     Task<string?> GetMovieDetailAsync(int tmdbId, string language = "it-IT");
     Task<string?> GetMovieCreditsAsync(int tmdbId, string language = "it-IT");
     Task<string?> GetPersonDetailAsync(int personId, string language = "it-IT");
+    Task<string?> GetPersonMovieCreditsAsync(int personId, string language = "it-IT");
     Task<string?> GetPopularMoviesAsync(int page = 1, string language = "it-IT");
     string GetPosterUrl(string? posterPath, string size = "w500");
     string GetBackdropUrl(string? backdropPath, string size = "w1280");

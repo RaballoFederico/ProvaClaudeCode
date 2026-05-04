@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrazione - FilmAPI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="css/styles.css">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#e50914",
+                        "secondary": "#e9c176",
+                        "background": "#131313",
+                        "surface": "#131313",
+                        "surface-container": "#201f1f",
+                        "surface-container-high": "#2a2a2a",
+                        "on-surface": "#e5e2e1",
+                        "on-surface-variant": "#e9bcb6",
+                        "outline-variant": "#5e3f3b",
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex items-center justify-center bg-background py-8">
+    <button onclick="Theme.toggle()" class="fixed top-4 right-4 p-2 rounded-full bg-surface-container-high text-on-surface-variant border border-outline-variant/20">
+        <span id="theme-toggle-icon" data-theme-toggle-icon class="material-symbols-outlined">light_mode</span>
+    </button>
+    <div class="w-full max-w-md mx-4">
+        <!-- Logo e Titolo -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#e50914] mb-4">
+                <span class="material-symbols-outlined text-3xl text-white">movie</span>
+            </div>
+            <h1 class="text-2xl font-black text-on-surface font-['Manrope'] tracking-tight">FilmAPI</h1>
+            <p class="text-sm text-on-surface-variant mt-1">Crea il tuo account</p>
+        </div>
+
+        <!-- Form Registrazione -->
+        <div class="bg-surface-container rounded-2xl p-8 shadow-2xl border border-outline-variant/20">
+            <form id="register-form" class="space-y-5">
+                <!-- Username -->
+                <div>
+                    <label for="username" class="block text-sm font-medium text-on-surface-variant mb-2">
+                        Username *
+                    </label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
+                            person
+                        </span>
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            required
+                            minlength="3"
+                            class="w-full pl-10 pr-4 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-[#e50914] focus:ring-1 focus:ring-[#e50914] transition-all duration-200"
+                            placeholder="Scegli un username"
+                        >
+                    </div>
+                    <p class="text-xs text-on-surface-variant/60 mt-1">Almeno 3 caratteri</p>
+                </div>
+
+                <!-- Email -->
+                <div>
+                    <label for="email" class="block text-sm font-medium text-on-surface-variant mb-2">
+                        Email *
+                    </label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
+                            email
+                        </span>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            required
+                            class="w-full pl-10 pr-4 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-[#e50914] focus:ring-1 focus:ring-[#e50914] transition-all duration-200"
+                            placeholder="Inserisci la tua email"
+                        >
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <label for="password" class="block text-sm font-medium text-on-surface-variant mb-2">
+                        Password *
+                    </label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
+                            lock
+                        </span>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            required
+                            minlength="8"
+                            class="w-full pl-10 pr-12 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-[#e50914] focus:ring-1 focus:ring-[#e50914] transition-all duration-200"
+                            placeholder="Crea una password"
+                        >
+                        <button type="button" class="toggle-password absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface" data-target="password">
+                            <span class="material-symbols-outlined">visibility_off</span>
+                        </button>
+                    </div>
+                    <ul class="text-xs text-on-surface-variant/60 mt-1 space-y-1">
+                        <li id="req-length">• Almeno 8 caratteri</li>
+                        <li id="req-upper">• Una lettera maiuscola</li>
+                        <li id="req-lower">• Una lettera minuscola</li>
+                        <li id="req-number">• Un numero</li>
+                    </ul>
+                </div>
+
+                <!-- Confirm Password -->
+                <div>
+                    <label for="confirm-password" class="block text-sm font-medium text-on-surface-variant mb-2">
+                        Conferma Password *
+                    </label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
+                            lock
+                        </span>
+                        <input 
+                            type="password" 
+                            id="confirm-password" 
+                            name="confirm-password" 
+                            required
+                            class="w-full pl-10 pr-12 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-[#e50914] focus:ring-1 focus:ring-[#e50914] transition-all duration-200"
+                            placeholder="Conferma la password"
+                        >
+                        <button type="button" class="toggle-password absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface" data-target="confirm-password">
+                            <span class="material-symbols-outlined">visibility_off</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Nome e Cognome -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="nome" class="block text-sm font-medium text-on-surface-variant mb-2">
+                            Nome
+                        </label>
+                        <input 
+                            type="text" 
+                            id="nome" 
+                            name="nome"
+                            class="w-full px-4 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-[#e50914] focus:ring-1 focus:ring-[#e50914] transition-all duration-200"
+                            placeholder="Nome"
+                        >
+                    </div>
+                    <div>
+                        <label for="cognome" class="block text-sm font-medium text-on-surface-variant mb-2">
+                            Cognome
+                        </label>
+                        <input 
+                            type="text" 
+                            id="cognome" 
+                            name="cognome"
+                            class="w-full px-4 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-[#e50914] focus:ring-1 focus:ring-[#e50914] transition-all duration-200"
+                            placeholder="Cognome"
+                        >
+                    </div>
+                </div>
+
+                <!-- Telefono -->
+                <div>
+                    <label for="telefono" class="block text-sm font-medium text-on-surface-variant mb-2">
+                        Telefono
+                    </label>
+                    <div class="relative">
+                        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
+                            phone
+                        </span>
+                        <input 
+                            type="tel" 
+                            id="telefono" 
+                            name="telefono"
+                            class="w-full pl-10 pr-4 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-[#e50914] focus:ring-1 focus:ring-[#e50914] transition-all duration-200"
+                            placeholder="Inserisci il tuo numero di telefono"
+                        >
+                    </div>
+                </div>
+
+                <!-- Error Message -->
+                <div id="error-message" class="hidden text-sm text-red-400 bg-red-400/10 p-3 rounded-lg">
+                    <span class="material-symbols-outlined text-sm align-middle mr-1">error</span>
+                    <span id="error-text"></span>
+                </div>
+
+                <!-- Success Message -->
+                <div id="success-message" class="hidden text-sm text-green-400 bg-green-400/10 p-3 rounded-lg">
+                    <span class="material-symbols-outlined text-sm align-middle mr-1">check_circle</span>
+                    <span id="success-text"></span>
+                </div>
+
+                <!-- Submit Button -->
+                <button 
+                    type="submit" 
+                    id="register-btn"
+                    class="w-full py-3 px-4 bg-[#e50914] hover:bg-[#c0000c] text-white font-semibold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <span id="btn-text">Registrati</span>
+                    <span id="btn-loading" class="material-symbols-outlined animate-spin hidden">refresh</span>
+                </button>
+            </form>
+
+            <!-- Divider -->
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-outline-variant/30"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-surface-container text-on-surface-variant">o</span>
+                </div>
+            </div>
+
+            <!-- Login Link -->
+            <p class="text-center text-sm text-on-surface-variant">
+                Hai già un account? 
+                <a href="login.html" class="text-[#e50914] hover:text-[#c0000c] font-medium transition-colors">
+                    Accedi
+                </a>
+            </p>
+        </div>
+
+        <!-- Back Link -->
+        <div class="mt-6 text-center">
+            <a href="home.html" class="text-sm text-on-surface-variant hover:text-on-surface flex items-center justify-center gap-1 transition-colors">
+                <span class="material-symbols-outlined text-sm">arrow_back</span>
+                Torna alla home
+            </a>
+        </div>
+    </div>
+
+    <script src="js/theme.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/route-guard.js"></script>
+    <script>
+        // Toggle password visibility
+        document.querySelectorAll('.toggle-password').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const targetId = this.getAttribute('data-target');
+                const passwordInput = document.getElementById(targetId);
+                const icon = this.querySelector('.material-symbols-outlined');
+                
+                if (passwordInput.type === 'password') {
+                    passwordInput.type = 'text';
+                    icon.textContent = 'visibility';
+                } else {
+                    passwordInput.type = 'password';
+                    icon.textContent = 'visibility_off';
+                }
+            });
+        });
+
+        // Password validation
+        const password = document.getElementById('password');
+        password.addEventListener('input', function() {
+            const value = this.value;
+            
+            document.getElementById('req-length').classList.toggle('text-green-400', value.length >= 8);
+            document.getElementById('req-upper').classList.toggle('text-green-400', /[A-Z]/.test(value));
+            document.getElementById('req-lower').classList.toggle('text-green-400', /[a-z]/.test(value));
+            document.getElementById('req-number').classList.toggle('text-green-400', /[0-9]/.test(value));
+        });
+
+        // Handle form submission
+        document.getElementById('register-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+            const nome = document.getElementById('nome').value;
+            const cognome = document.getElementById('cognome').value;
+            const telefono = document.getElementById('telefono').value;
+            
+            const errorDiv = document.getElementById('error-message');
+            const errorText = document.getElementById('error-text');
+            const successDiv = document.getElementById('success-message');
+            const successText = document.getElementById('success-text');
+            const btn = document.getElementById('register-btn');
+            const btnText = document.getElementById('btn-text');
+            const btnLoading = document.getElementById('btn-loading');
+            
+            // Reset messages
+            errorDiv.classList.add('hidden');
+            successDiv.classList.add('hidden');
+            
+            // Validation
+            if (password !== confirmPassword) {
+                errorText.textContent = 'Le password non coincidono';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            if (password.length < 8) {
+                errorText.textContent = 'La password deve essere di almeno 8 caratteri';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            if (!/[A-Z]/.test(password)) {
+                errorText.textContent = 'La password deve contenere almeno una lettera maiuscola';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            if (!/[a-z]/.test(password)) {
+                errorText.textContent = 'La password deve contenere almeno una lettera minuscola';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            if (!/[0-9]/.test(password)) {
+                errorText.textContent = 'La password deve contenere almeno un numero';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            
+            // Show loading
+            btn.disabled = true;
+            btnText.textContent = 'Registrazione in corso...';
+            btnLoading.classList.remove('hidden');
+            
+            try {
+                const result = await Auth.register({
+                    username,
+                    email,
+                    password,
+                    nome,
+                    cognome,
+                    telefono
+                });
+                
+                if (result.success) {
+                    successText.textContent = 'Registrazione completata! Verrai reindirizzato al login...';
+                    successDiv.classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'login.html';
+                    }, 2000);
+                } else {
+                    throw new Error(result.error || 'Errore durante la registrazione');
+                }
+            } catch (error) {
+                errorText.textContent = error.message;
+                errorDiv.classList.remove('hidden');
+                
+                // Reset button
+                btn.disabled = false;
+                btnText.textContent = 'Registrati';
+                btnLoading.classList.add('hidden');
+            }
+        });
+
+        // Check if already logged in
+        if (Auth.isAuthenticated()) {
+            window.location.href = 'home.html';
+        }
+    </script>
+</body>
+</html>

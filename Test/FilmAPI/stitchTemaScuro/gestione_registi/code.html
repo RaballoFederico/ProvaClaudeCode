@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Directors Management | The Cinematic Director’s Suite</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#e50914",
+                        "outline-variant": "#5e3f3b",
+                        "on-primary": "#690003",
+                        "secondary-fixed": "#ffdea5",
+                        "surface-container-highest": "#353534",
+                        "on-tertiary-container": "#f8f9ff",
+                        "on-surface": "#e5e2e1",
+                        "surface-bright": "#393939",
+                        "on-tertiary": "#003258",
+                        "surface-tint": "#ffb4aa",
+                        "error-container": "#93000a",
+                        "tertiary-fixed-dim": "#9ecaff",
+                        "on-background": "#e5e2e1",
+                        "surface-container": "#201f1f",
+                        "background": "#131313",
+                        "on-primary-fixed": "#410001",
+                        "on-error-container": "#ffdad6",
+                        "on-surface-variant": "#e9bcb6",
+                        "tertiary-fixed": "#d1e4ff",
+                        "outline": "#af8782",
+                        "on-secondary-fixed-variant": "#5d4201",
+                        "on-primary-container": "#fff7f6",
+                        "on-secondary": "#412d00",
+                        "on-tertiary-fixed": "#001d36",
+                        "surface-variant": "#353534",
+                        "primary-fixed-dim": "#ffb4aa",
+                        "inverse-on-surface": "#313030",
+                        "surface-container-high": "#2a2a2a",
+                        "tertiary-container": "#0076c5",
+                        "inverse-primary": "#c0000c",
+                        "tertiary": "#9ecaff",
+                        "surface-container-lowest": "#0e0e0e",
+                        "secondary": "#e9c176",
+                        "primary": "#ffb4aa",
+                        "on-secondary-container": "#dab36a",
+                        "inverse-surface": "#e5e2e1",
+                        "secondary-fixed-dim": "#e9c176",
+                        "surface-dim": "#131313",
+                        "secondary-container": "#604403",
+                        "surface-container-low": "#1c1b1b",
+                        "error": "#ffb4ab",
+                        "on-primary-fixed-variant": "#930007",
+                        "on-secondary-fixed": "#261900",
+                        "primary-fixed": "#ffdad5",
+                        "on-error": "#690005",
+                        "surface": "#131313",
+                        "on-tertiary-fixed-variant": "#00497d"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                        "label": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #131313;
+            color: #e5e2e1;
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="flex min-h-screen overflow-x-hidden">
+<!-- SideNavBar Component -->
+<aside class="hidden md:flex flex-col h-screen w-64 left-0 top-0 sticky bg-[#201F1F] py-12 gap-y-4">
+<div class="px-8 mb-8">
+<h1 class="text-lg font-bold text-[#E9C176] font-['Manrope']">Director's Suite</h1>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant">Backstage Access</p>
+</div>
+<nav class="flex-1 flex flex-col gap-y-2">
+<a class="flex items-center gap-4 px-6 py-3 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1 font-['Manrope'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-3 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1 font-['Manrope'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined">movie</span>
+<span>Películas</span>
+</a>
+<!-- Active State: Directores -->
+<a class="flex items-center gap-4 px-6 py-3 bg-[#2A2A2A] text-[#E50914] rounded-lg mx-2 opacity-80 font-['Manrope'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined">theater_comedy</span>
+<span>Directores</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-3 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1 font-['Manrope'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined">theaters</span>
+<span>Cines</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-3 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1 font-['Manrope'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined">schedule</span>
+<span>Proyecciones</span>
+</a>
+</nav>
+<div class="mt-auto flex flex-col gap-y-2">
+<a class="flex items-center gap-4 px-6 py-3 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1 font-['Manrope'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined">help</span>
+<span>Help</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-3 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1 font-['Manrope'] font-medium text-sm" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</aside>
+<div class="flex-1 flex flex-col min-w-0">
+<!-- TopNavBar Component -->
+<header class="flex justify-between items-center w-full px-8 py-4 bg-[#1C1B1B] sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<span class="md:hidden text-2xl font-black text-[#E50914] tracking-tighter font-['Manrope'] uppercase">CDS</span>
+<span class="hidden md:block text-2xl font-black text-[#E50914] tracking-tighter font-['Manrope'] uppercase">The Cinematic Director’s Suite</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden lg:flex items-center bg-[#2A2A2A] rounded-full px-4 py-1.5 gap-3">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm text-on-surface w-48 placeholder:text-on-surface-variant/50" placeholder="Search directors..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-on-surface-variant hover:bg-[#2A2A2A] rounded-full transition-all duration-300">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:bg-[#2A2A2A] rounded-full transition-all duration-300">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-outline-variant/30">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="Close up of professional male user avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDCW9GPQXxHuMLOvj-mVnRW5cE6VGMESPVQ88JO3yeYxBHR_CZV1eIAzLdX0b2GjVpF8GkCn92BgSLUANHgQS1YF1jUEmkP6M745bRKxk5ZKyffJFBT3dW1wDqrZwoMgoyZA5zsAl8ZEs5Y-Uz3ojmsqCAw0P862l3qjiNykfNvENIwbXVGC7t7QxxuBhVfkifjsOL3dNrpDNtvPPBhaP75szhmjsbYt6K6CXUssyZw27caoopCE8aSCft1U5wMIz9LjMEidKFprdE"/>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 p-8 md:p-12 max-w-7xl w-full mx-auto">
+<!-- Header Section with Asymmetric Layout -->
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+<div class="max-w-2xl">
+<span class="text-secondary uppercase tracking-[0.3em] text-[10px] font-bold mb-2 block">Management Portal</span>
+<h2 class="font-headline text-5xl md:text-6xl font-extralight tracking-tight text-on-surface">Director <span class="text-primary-container font-black italic">Registry</span></h2>
+<p class="mt-4 text-on-surface-variant font-body leading-relaxed opacity-80">Manage the elite roster of cinematic visionaries. From industry veterans to rising auteurs, oversee their portfolio and collaborative history within the database.</p>
+</div>
+<div>
+<button class="flex items-center gap-3 bg-gradient-to-br from-primary-container to-inverse-primary text-on-primary-container px-8 py-4 rounded-xl font-headline font-bold uppercase tracking-wider text-sm hover:scale-[1.02] active:scale-95 transition-all duration-300 shadow-xl shadow-primary-container/20">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">add_circle</span>
+                        Add New Director
+                    </button>
+</div>
+</div>
+<!-- Bento Grid - Stats & Table -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Quick Stats Cards (Tonal Layering) -->
+<div class="col-span-12 lg:col-span-3 space-y-6">
+<div class="bg-surface-container-high p-6 rounded-xl border border-outline-variant/5">
+<p class="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Total Auteurs</p>
+<h3 class="text-4xl font-headline font-light text-secondary">142</h3>
+<div class="mt-4 h-1 w-full bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-3/4"></div>
+</div>
+</div>
+<div class="bg-surface-container-high p-6 rounded-xl border border-outline-variant/5">
+<p class="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Global Diversity</p>
+<h3 class="text-4xl font-headline font-light text-on-surface">28 <span class="text-lg text-on-surface-variant font-body tracking-normal">Nations</span></h3>
+<div class="mt-4 flex -space-x-2">
+<div class="w-8 h-8 rounded-full bg-surface-variant border border-surface flex items-center justify-center text-[10px]">US</div>
+<div class="w-8 h-8 rounded-full bg-surface-variant border border-surface flex items-center justify-center text-[10px]">FR</div>
+<div class="w-8 h-8 rounded-full bg-surface-variant border border-surface flex items-center justify-center text-[10px]">JP</div>
+<div class="w-8 h-8 rounded-full bg-surface-variant border border-surface flex items-center justify-center text-[10px]">IT</div>
+<div class="w-8 h-8 rounded-full bg-surface-variant border border-surface flex items-center justify-center text-[10px] text-primary">+24</div>
+</div>
+</div>
+</div>
+<!-- Main Data Table Container (Glassmorphism & Tonal Shifts) -->
+<div class="col-span-12 lg:col-span-9 bg-surface-container-low rounded-xl overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-lowest">
+<th class="px-6 py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">ID Ref</th>
+<th class="px-6 py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">Nome</th>
+<th class="px-6 py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">Cognome</th>
+<th class="px-6 py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold">Nazionalità</th>
+<th class="px-6 py-5 font-headline text-[10px] uppercase tracking-[0.2em] text-on-surface-variant font-bold text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-high transition-colors duration-200 group">
+<td class="px-6 py-6 text-sm font-mono text-primary/70">DIR-001</td>
+<td class="px-6 py-6 text-sm font-semibold text-on-surface">Quentin</td>
+<td class="px-6 py-6 text-sm font-semibold text-on-surface">Tarantino</td>
+<td class="px-6 py-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-surface-variant text-secondary tracking-widest">United States</span>
+</td>
+<td class="px-6 py-6 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-on-surface-variant hover:text-secondary transition-colors"><span class="material-symbols-outlined text-lg">edit</span></button>
+<button class="p-2 text-on-surface-variant hover:text-primary-container transition-colors"><span class="material-symbols-outlined text-lg">delete</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="bg-surface-container/30 hover:bg-surface-container-high transition-colors duration-200 group">
+<td class="px-6 py-6 text-sm font-mono text-primary/70">DIR-042</td>
+<td class="px-6 py-6 text-sm font-semibold text-on-surface">Christopher</td>
+<td class="px-6 py-6 text-sm font-semibold text-on-surface">Nolan</td>
+<td class="px-6 py-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-surface-variant text-secondary tracking-widest">United Kingdom</span>
+</td>
+<td class="px-6 py-6 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-on-surface-variant hover:text-secondary transition-colors"><span class="material-symbols-outlined text-lg">edit</span></button>
+<button class="p-2 text-on-surface-variant hover:text-primary-container transition-colors"><span class="material-symbols-outlined text-lg">delete</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-high transition-colors duration-200 group">
+<td class="px-6 py-6 text-sm font-mono text-primary/70">DIR-115</td>
+<td class="px-6 py-6 text-sm font-semibold text-on-surface">Greta</td>
+<td class="px-6 py-6 text-sm font-semibold text-on-surface">Gerwig</td>
+<td class="px-6 py-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-surface-variant text-secondary tracking-widest">United States</span>
+</td>
+<td class="px-6 py-6 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-on-surface-variant hover:text-secondary transition-colors"><span class="material-symbols-outlined text-lg">edit</span></button>
+<button class="p-2 text-on-surface-variant hover:text-primary-container transition-colors"><span class="material-symbols-outlined text-lg">delete</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="bg-surface-container/30 hover:bg-surface-container-high transition-colors duration-200 group">
+<td class="px-6 py-6 text-sm font-mono text-primary/70">DIR-208</td>
+<td class="px-6 py-6 text-sm font-semibold text-on-surface">Bong</td>
+<td class="px-6 py-6 text-sm font-semibold text-on-surface">Joon-ho</td>
+<td class="px-6 py-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-surface-variant text-secondary tracking-widest">South Korea</span>
+</td>
+<td class="px-6 py-6 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-on-surface-variant hover:text-secondary transition-colors"><span class="material-symbols-outlined text-lg">edit</span></button>
+<button class="p-2 text-on-surface-variant hover:text-primary-container transition-colors"><span class="material-symbols-outlined text-lg">delete</span></button>
+</div>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-container-high transition-colors duration-200 group">
+<td class="px-6 py-6 text-sm font-mono text-primary/70">DIR-332</td>
+<td class="px-6 py-6 text-sm font-semibold text-on-surface">Denis</td>
+<td class="px-6 py-6 text-sm font-semibold text-on-surface">Villeneuve</td>
+<td class="px-6 py-6">
+<span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold uppercase bg-surface-variant text-secondary tracking-widest">Canada</span>
+</td>
+<td class="px-6 py-6 text-right">
+<div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+<button class="p-2 text-on-surface-variant hover:text-secondary transition-colors"><span class="material-symbols-outlined text-lg">edit</span></button>
+<button class="p-2 text-on-surface-variant hover:text-primary-container transition-colors"><span class="material-symbols-outlined text-lg">delete</span></button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Minimalist Pagination -->
+<div class="flex items-center justify-between px-8 py-4 bg-surface-container-lowest/50">
+<span class="text-[10px] font-headline text-on-surface-variant/60 uppercase tracking-widest">Showing 1-5 of 142 Auteurs</span>
+<div class="flex gap-4">
+<button class="p-2 hover:bg-surface-container rounded-lg text-on-surface-variant disabled:opacity-30" disabled="">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+<button class="p-2 hover:bg-surface-container rounded-lg text-on-surface">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Spotlight Card (Extra Feature: Recent Work) -->
+<section class="mt-16">
+<h3 class="font-headline text-2xl font-light mb-8 text-on-surface">Director <span class="text-secondary italic">Spotlight</span></h3>
+<div class="relative group h-96 w-full rounded-2xl overflow-hidden border border-outline-variant/10">
+<img alt="Cinematic set" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="Dramatic high contrast black and white photo of a film camera on a movie set" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDP43rGymy95mSiZ8CoQvlVjopu9T2lmVJ-HI49mFWa43uJSfBYCh2ZEq0-PzqOnGYrnvnRWZXYcgH3pQWX1kw0kqAokjkaX4E0jhbS_4guHBFSt9V_a1TOfWXTFYwGwp2pJ1EZ950H1YQaxOz_yvFK2s5YvDP6utZx-bBX02FIp7nsefyLU9pXMRrqOLk8XIw0Q2kdoBH4W3aprGzxevrnGsMimgrw6Q-DVk1NXgazkPmJ8s0nyKdTR1hTp_47LnyrwelOym91WDQ"/>
+<div class="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-12 w-full flex justify-between items-end">
+<div>
+<span class="bg-primary-container text-on-primary-container text-[10px] px-3 py-1 rounded-full font-bold uppercase tracking-widest">Masterclass</span>
+<h4 class="text-4xl font-headline font-bold mt-4">Wes Anderson</h4>
+<p class="text-on-surface-variant max-w-md mt-2">Symmetry, pastel palettes, and meticulous framing. Explore the architectural mind of the modern auteur.</p>
+</div>
+<button class="bg-surface-container-highest/80 backdrop-blur-md text-on-surface px-6 py-3 rounded-full font-headline text-sm flex items-center gap-2 hover:bg-surface-bright transition-all">
+                            View Portfolio <span class="material-symbols-outlined text-sm">arrow_outward</span>
+</button>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer Component -->
+<footer class="flex justify-between items-center px-12 py-6 mt-auto border-t border-[#5E3F3B]/15 bg-[#131313]">
+<p class="font-['Inter'] text-[10px] uppercase tracking-widest text-gray-500">© 2024 Cinematic Director’s Suite. All rights reserved.</p>
+<div class="flex gap-8">
+<a class="font-['Inter'] text-[10px] uppercase tracking-widest text-gray-500 hover:text-white transition-colors" href="#">Support</a>
+<a class="font-['Inter'] text-[10px] uppercase tracking-widest text-gray-500 hover:text-white transition-colors" href="#">Privacy Policy</a>
+<a class="font-['Inter'] text-[10px] uppercase tracking-widest text-gray-500 hover:text-white transition-colors" href="#">Terms of Service</a>
+</div>
+</footer>
+</div>
+<!-- Mobile Navigation Shell (Responsive Pivot) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-[#1C1B1B] border-t border-outline-variant/10 flex justify-around items-center z-[100] px-4">
+<a class="flex flex-col items-center gap-1 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined text-xl">dashboard</span>
+<span class="text-[8px] uppercase font-bold">Dash</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary-container" href="#">
+<span class="material-symbols-outlined text-xl" style="font-variation-settings: 'FILL' 1;">theater_comedy</span>
+<span class="text-[8px] uppercase font-bold">Directors</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined text-xl">movie</span>
+<span class="text-[8px] uppercase font-bold">Films</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined text-xl">account_circle</span>
+<span class="text-[8px] uppercase font-bold">Profile</span>
+</a>
+</nav>
+</body></html>

@@ -61,10 +61,12 @@ function isAuthenticatedUser() {
 
 function applyPageAccessControl() {
     const currentPath = window.location.pathname.split('/').pop() || 'home.html';
-
-    const managerOnlyPages = ['index.html', 'registi.html', 'proiezioni.html', 'shows.html', 'validazione.html', 'ricarica-credito.html'];
-    if (managerOnlyPages.includes(currentPath) && !isManagerUser()) {
-        window.location.href = '/programmazione.html';
+    if (typeof AccessControl !== 'undefined' && AccessControl.pageRules) {
+        const rule = AccessControl.pageRules[currentPath];
+        if (rule !== undefined && !AccessControl.canAccess(rule)) {
+            window.location.href = AccessControl.getDefaultRoute();
+            return;
+        }
     }
 }
 

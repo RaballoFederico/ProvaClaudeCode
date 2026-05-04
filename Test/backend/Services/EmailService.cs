@@ -2,11 +2,33 @@ using FilmAPI.Services.Interfaces;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using MimeKit;
+using System.Net.Sockets;
 
 namespace FilmAPI.Services;
 
 public class EmailService(IConfiguration configuration, ILogger<EmailService> logger) : IEmailService
 {
+    private static string? NormalizeSetting(string? value, bool removeAllSpaces = false)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        if (trimmed.Length >= 2 && trimmed.StartsWith('"') && trimmed.EndsWith('"'))
+        {
+            trimmed = trimmed[1..^1].Trim();
+        }
+
+        if (removeAllSpaces)
+        {
+            trimmed = trimmed.Replace(" ", string.Empty);
+        }
+
+        return string.IsNullOrWhiteSpace(trimmed) ? null : trimmed;
+    }
+
     private static bool IsPlaceholder(string value)
     {
         if (string.IsNullOrWhiteSpace(value)) return true;
@@ -18,15 +40,22 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
 
     public async Task InviaConfermaAcquistoAsync(string toEmail, string soggetto, string htmlBody, byte[]? allegatoPdf = null, string? nomeFile = null)
     {
-        var host = Environment.GetEnvironmentVariable("SMTP_HOST") ?? configuration["SMTP:Host"];
-        var portRaw = Environment.GetEnvironmentVariable("SMTP_PORT") ?? configuration["SMTP:Port"];
-        var user = Environment.GetEnvironmentVariable("SMTP_USER") ?? configuration["SMTP:User"];
-        var pass = Environment.GetEnvironmentVariable("SMTP_PASSWORD") ?? configuration["SMTP:Password"];
-        var from = Environment.GetEnvironmentVariable("SMTP_FROM") ?? configuration["SMTP:From"] ?? user;
+        var host = NormalizeSetting(Environment.GetEnvironmentVariable("SMTP_HOST")) ?? NormalizeSetting(configuration["SMTP:Host"]);
+        var portRaw = NormalizeSetting(Environment.GetEnvironmentVariable("SMTP_PORT")) ?? NormalizeSetting(configuration["SMTP:Port"]);
+        var user = NormalizeSetting(Environment.GetEnvironmentVariable("SMTP_USER")) ?? NormalizeSetting(configuration["SMTP:User"]);
+        var pass = NormalizeSetting(Environment.GetEnvironmentVariable("SMTP_PASSWORD"), removeAllSpaces: true) ?? NormalizeSetting(configuration["SMTP:Password"], removeAllSpaces: true);
+        var from = NormalizeSetting(Environment.GetEnvironmentVariable("SMTP_FROM")) ?? NormalizeSetting(configuration["SMTP:From"]) ?? user;
 
         if (string.IsNullOrWhiteSpace(host) || string.IsNullOrWhiteSpace(portRaw) || string.IsNullOrWhiteSpace(user) || string.IsNullOrWhiteSpace(pass) || string.IsNullOrWhiteSpace(from))
         {
-            logger.LogWarning("Configurazione SMTP mancante: invio email saltato per {Email}", toEmail);
+            logger.LogWarning(
+                "Configurazione SMTP mancante: invio email saltato per {Email}. Host:{HasHost} Port:{HasPort} User:{HasUser} Pass:{HasPass} From:{HasFrom}",
+                toEmail,
+                !string.IsNullOrWhiteSpace(host),
+                !string.IsNullOrWhiteSpace(portRaw),
+                !string.IsNullOrWhiteSpace(user),
+                !string.IsNullOrWhiteSpace(pass),
+                !string.IsNullOrWhiteSpace(from));
             return;
         }
 
@@ -35,6 +64,14 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
             logger.LogInformation("Configurazione SMTP placeholder rilevata: invio email saltato per {Email}", toEmail);
             return;
         }
+
+        logger.LogInformation(
+            "SMTP diagnostica -> Host:{Host} Port:{Port} User:{User} From:{From} PasswordLength:{PasswordLength}",
+            host,
+            portRaw,
+            user,
+            from,
+            pass?.Length ?? 0);
 
         if (!int.TryParse(portRaw, out var port))
         {
@@ -57,10 +94,60 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
         try
         {
             using var client = new SmtpClient();
-            await client.ConnectAsync(host, port, SecureSocketOptions.StartTls);
+            client.Timeout = 15000;
+
+            var attempts = new List<(int Port, SecureSocketOptions Security)>
+            {
+                (port, SecureSocketOptions.StartTls)
+            };
+
+            if (port != 465)
+            {
+                attempts.Add((465, SecureSocketOptions.SslOnConnect));
+            }
+
+            if (port != 587)
+            {
+                attempts.Add((587, SecureSocketOptions.StartTls));
+            }
+
+            Exception? lastException = null;
+            var connected = false;
+
+            foreach (var attempt in attempts.Distinct())
+            {
+                try
+                {
+                    await client.ConnectAsync(host, attempt.Port, attempt.Security);
+                    connected = true;
+                    break;
+                }
+                catch (SocketException ex)
+                {
+                    lastException = ex;
+                    logger.LogWarning(
+                        "Tentativo SMTP fallito verso {Host}:{Port} ({Security}) per {Email}. SocketError: {ErrorCode}",
+                        host, attempt.Port, attempt.Security, toEmail, ex.SocketErrorCode);
+                }
+                catch (Exception ex)
+                {
+                    lastException = ex;
+                    logger.LogWarning(
+                        ex,
+                        "Tentativo SMTP fallito verso {Host}:{Port} ({Security}) per {Email}",
+                        host, attempt.Port, attempt.Security, toEmail);
+                }
+            }
+
+            if (!connected)
+            {
+                throw lastException ?? new InvalidOperationException("Connessione SMTP non riuscita");
+            }
+
             await client.AuthenticateAsync(user, pass);
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
+            logger.LogInformation("Email inviata con successo verso {Email} (oggetto: {Subject})", toEmail, soggetto);
         }
         catch (Exception ex)
         {

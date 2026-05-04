@@ -30,28 +30,28 @@ public class PdfService(IConfiguration configuration) : IPdfService
 
                 container.Page(page =>
                 {
-                    page.Margin(20);
+                    page.Margin(18);
                     page.Size(PageSizes.A4);
                     page.DefaultTextStyle(x => x.FontSize(11).FontColor(Colors.Grey.Darken4));
 
                     page.Header().Element(header =>
                     {
-                        header.Background(primaryColor).Padding(16).Column(col =>
+                        header.Background(primaryColor).Padding(14).Column(col =>
                         {
                             col.Spacing(4);
                             if (logoBytes is not null)
                                 col.Item().Width(120).Height(28).Image(logoBytes);
                             col.Item().Text(brandName.ToUpperInvariant()).FontColor(Colors.White).Bold().FontSize(10);
-                            col.Item().Text("Biglietto Elettronico").FontColor(Colors.White).Bold().FontSize(20);
-                            col.Item().Text($"Codice acquisto: {codiceConferma}").FontColor(accentColor).FontSize(10);
+                            col.Item().Text("Biglietto Elettronico").FontColor(Colors.White).Bold().FontSize(18);
+                            col.Item().Text($"Conferma acquisto: {codiceConferma}").FontColor(accentColor).FontSize(10);
                         });
                     });
 
                     page.Content().Column(col =>
                     {
-                        col.Spacing(12);
+                        col.Spacing(10);
 
-                        col.Item().PaddingTop(8).Text(b.FilmTitolo).FontSize(22).Bold().FontColor(Colors.Grey.Darken4);
+                        col.Item().PaddingTop(8).Text(b.FilmTitolo).FontSize(21).Bold().FontColor(Colors.Grey.Darken4);
 
                         col.Item().Row(meta =>
                         {
@@ -61,32 +61,35 @@ public class PdfService(IConfiguration configuration) : IPdfService
 
                         col.Item().Row(row =>
                         {
-                            row.RelativeItem(4).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(14).Column(info =>
+                            row.RelativeItem(7).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(14).Column(info =>
                             {
-                                info.Spacing(8);
-                                info.Item().Text($"Data e ora: {b.Data:dd/MM/yyyy} - {b.OraInizio:hh\\:mm}").SemiBold();
+                                info.Spacing(7);
+                                info.Item().Text("Dettagli spettacolo").SemiBold().FontSize(12).FontColor(Colors.Blue.Darken2);
+                                info.Item().Text($"Data: {b.Data:dd/MM/yyyy}").SemiBold();
+                                info.Item().Text($"Ora: {b.OraInizio:hh\\:mm}").SemiBold();
                                 info.Item().Text($"Cinema: {b.NomeCinema} ({b.CodiceLocaleCinema})");
                                 info.Item().Text($"Indirizzo: {b.IndirizzoCinema}");
-                                info.Item().Text($"Sala: {b.SalaNumero} ({b.TipologiaSala})");
-                                info.Item().Text($"Posto: {b.Posto}").SemiBold();
+                                info.Item().Text($"Sala: {b.SalaNumero} - {b.TipologiaSala}");
+                                info.Item().Text($"Posto assegnato: {b.Posto}").SemiBold().FontSize(12);
                             });
 
-                            row.ConstantItem(140).PaddingLeft(10).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(10).Column(qr =>
+                            row.RelativeItem(3).PaddingLeft(10).Border(1).BorderColor(Colors.Grey.Lighten2).Padding(10).Column(qr =>
                             {
                                 qr.Spacing(6);
-                                qr.Item().AlignCenter().Text("Verifica").SemiBold().FontSize(10);
+                                qr.Item().AlignCenter().Text("Validazione").SemiBold().FontSize(10);
                                 qr.Item().AlignCenter().Width(110).Height(110).Image(qrPng);
                                 qr.Item().AlignCenter().Text("Scansiona all'ingresso").FontSize(8).FontColor(Colors.Grey.Darken1);
+                                qr.Item().AlignCenter().Text($"Hash: {b.CodiceHash[..Math.Min(12, b.CodiceHash.Length)]}...").FontSize(7).FontColor(Colors.Grey.Darken1);
                             });
                         });
 
-                        col.Item().Table(table =>
+                        col.Item().Background("#f8fafc").Border(1).BorderColor(Colors.Grey.Lighten2).Padding(10).Table(table =>
                         {
                             table.ColumnsDefinition(columns =>
                             {
-                                columns.RelativeColumn(2);
-                                columns.RelativeColumn(2);
-                                columns.RelativeColumn(3);
+                                columns.RelativeColumn(2.2f);
+                                columns.RelativeColumn(2.8f);
+                                columns.RelativeColumn(4f);
                             });
 
                             table.Cell().Element(CellHeader).Text("Prezzo");
@@ -98,21 +101,97 @@ public class PdfService(IConfiguration configuration) : IPdfService
                             table.Cell().Element(CellValue).Text(b.CodiceHash).FontSize(9);
                         });
 
-                        col.Item().Background("#f8fafc").Border(1).BorderColor(Colors.Grey.Lighten2).Padding(10).Text(t =>
+                        col.Item().Background("#fff7ed").Border(1).BorderColor("#fed7aa").Padding(10).Text(t =>
                         {
-                            t.Span("Nota: ").SemiBold();
-                            t.Span("presentare questo biglietto (digitale o stampato) all'ingresso della sala.");
+                            t.Span("Nota ingresso: ").SemiBold();
+                            t.Span("presentare questo biglietto (digitale o stampato) all'ingresso della sala. Il QR e associato al posto acquistato.");
                         });
 
-                        col.Item().PaddingTop(6).Text($"Supporto: {brandName}").FontSize(9).FontColor(accentColor);
+                        col.Item().PaddingTop(4).Text($"Supporto: {brandName}").FontSize(9).FontColor(accentColor);
                     });
 
                     page.Footer().AlignCenter().Text(text =>
                     {
-                        text.Span($"Documento emesso da {brandName} - valido come titolo di accesso").FontSize(9).FontColor(Colors.Grey.Darken1);
+                        text.Span($"Documento emesso da {brandName} - valido come titolo di accesso in sala").FontSize(9).FontColor(Colors.Grey.Darken1);
                     });
                 });
             }
+        }).GeneratePdf();
+    }
+
+    public byte[] GeneraRicevutaRicaricaPdf(
+        string nominativo,
+        decimal importo,
+        decimal saldoPrecedente,
+        decimal saldoSuccessivo,
+        DateTime dataOperazione,
+        string causale)
+    {
+        var brandName = configuration["Branding:Name"] ?? "FilmAPI";
+        var primaryColor = configuration["Branding:PrimaryColor"] ?? "#0f172a";
+        var accentColor = configuration["Branding:AccentColor"] ?? "#bfdbfe";
+        var logoBytes = TryLoadLogo(configuration["Branding:PdfLogoUrl"]);
+
+        return Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Margin(20);
+                page.Size(PageSizes.A4);
+                page.DefaultTextStyle(x => x.FontSize(11).FontColor(Colors.Grey.Darken4));
+
+                page.Header().Element(header =>
+                {
+                    header.Background(primaryColor).Padding(14).Column(col =>
+                    {
+                        col.Spacing(4);
+                        if (logoBytes is not null)
+                            col.Item().Width(120).Height(28).Image(logoBytes);
+                        col.Item().Text(brandName.ToUpperInvariant()).FontColor(Colors.White).Bold().FontSize(10);
+                        col.Item().Text("Ricevuta Ricarica Credito").FontColor(Colors.White).Bold().FontSize(20);
+                        col.Item().Text($"Data operazione: {dataOperazione:dd/MM/yyyy HH:mm}").FontColor(accentColor).FontSize(10);
+                    });
+                });
+
+                page.Content().PaddingTop(14).Column(col =>
+                {
+                    col.Spacing(10);
+                    col.Item().Text($"Intestatario: {nominativo}").SemiBold().FontSize(13);
+                    col.Item().Text($"Causale: {causale}");
+
+                    col.Item().Background("#f8fafc").Border(1).BorderColor(Colors.Grey.Lighten2).Padding(12).Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn(2.5f);
+                            columns.RelativeColumn(2f);
+                        });
+
+                        table.Cell().Element(CellHeader).Text("Voce");
+                        table.Cell().Element(CellHeader).AlignRight().Text("Importo");
+
+                        table.Cell().Element(CellValue).Text("Saldo precedente");
+                        table.Cell().Element(CellValue).AlignRight().Text($"{saldoPrecedente:0.00} EUR");
+
+                        table.Cell().Element(CellValue).Text("Ricarica");
+                        table.Cell().Element(CellValue).AlignRight().Text($"+{importo:0.00} EUR").SemiBold();
+
+                        table.Cell().Element(CellValue).Text("Saldo successivo");
+                        table.Cell().Element(CellValue).AlignRight().Text($"{saldoSuccessivo:0.00} EUR").SemiBold();
+                    });
+
+                    col.Item().Background("#fff7ed").Border(1).BorderColor("#fed7aa").Padding(10).Text(t =>
+                    {
+                        t.Span("Documento informativo: ").SemiBold();
+                        t.Span("questa ricevuta conferma l'accredito del credito utente sulla piattaforma.");
+                    });
+                });
+
+                page.Footer().AlignCenter().Text(text =>
+                {
+                    text.Span($"Documento generato automaticamente da {brandName}").FontSize(9).FontColor(Colors.Grey.Darken1);
+                });
+            });
         }).GeneratePdf();
     }
 

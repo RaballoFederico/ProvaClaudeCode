@@ -8,6 +8,13 @@ public class RicaricaCreditoDTO
     public int? CinemaId { get; set; }
 }
 
+public class ConfermaRicaricaCheckoutDTO
+{
+    public string CheckoutSessionId { get; set; } = string.Empty;
+    public decimal Importo { get; set; }
+    public string? Descrizione { get; set; }
+}
+
 public class TransazioneCreditoDTO
 {
     public int Id { get; set; }

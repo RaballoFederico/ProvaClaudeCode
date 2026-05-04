@@ -76,6 +76,9 @@ public class BigliettoDTO
     public DateTime? DataValidazione { get; set; }
     public int CinemaId { get; set; }
     public string QRCodeUrl { get; set; } = string.Empty;
+    public string StatoAcquisto { get; set; } = string.Empty;
+    public bool Rimborsato { get; set; }
+    public bool RimborsoDisponibile { get; set; }
 }
 
 public class BigliettoValidazioneDTO

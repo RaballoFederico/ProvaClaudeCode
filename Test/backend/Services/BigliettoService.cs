@@ -87,10 +87,12 @@ public class BigliettoService(
         }
     }
 
-    public async Task<bool> RinnovaLockAsync(string codiceTemporaneo)
+    public async Task<bool> RinnovaLockAsync(int utenteId, string codiceTemporaneo)
     {
         var locks = await context.PrenotazioniTemporanee
-            .Where(p => p.CodiceTemporaneo == codiceTemporaneo && p.Stato == StatoPrenotazioneTemp.ATTIVA)
+            .Where(p => p.CodiceTemporaneo == codiceTemporaneo
+                        && p.UtenteId == utenteId
+                        && p.Stato == StatoPrenotazioneTemp.ATTIVA)
             .ToListAsync();
         if (locks.Count == 0) return false;
 
@@ -124,10 +126,12 @@ public class BigliettoService(
         };
     }
 
-    public async Task<bool> RilasciaLockAsync(string codiceTemporaneo)
+    public async Task<bool> RilasciaLockAsync(int utenteId, string codiceTemporaneo)
     {
         var locks = await context.PrenotazioniTemporanee
-            .Where(p => p.CodiceTemporaneo == codiceTemporaneo && p.Stato == StatoPrenotazioneTemp.ATTIVA)
+            .Where(p => p.CodiceTemporaneo == codiceTemporaneo
+                        && p.UtenteId == utenteId
+                        && p.Stato == StatoPrenotazioneTemp.ATTIVA)
             .ToListAsync();
         if (locks.Count == 0) return false;
 
@@ -296,6 +300,150 @@ public class BigliettoService(
         };
     }
 
+    public async Task<(bool success, string message)> RichiediRimborsoAsync(int utenteId, int acquistoId)
+    {
+        var acquisto = await context.Acquisti
+            .Include(a => a.Show)
+            .Include(a => a.Biglietti)
+            .FirstOrDefaultAsync(a => a.Id == acquistoId && a.UtenteId == utenteId);
+
+        if (acquisto is null)
+        {
+            return (false, "Acquisto non trovato");
+        }
+
+        if (acquisto.Stato != StatoAcquisto.PAGATO)
+        {
+            return (false, "Rimborso non disponibile per questo acquisto");
+        }
+
+        if (acquisto.Biglietti.Any(b => b.Validato))
+        {
+            return (false, "Rimborso non disponibile: uno o piu biglietti risultano gia validati");
+        }
+
+        if (acquisto.Show is null)
+        {
+            return (false, "Show associato non valido");
+        }
+
+        var showStart = acquisto.Show.Data.ToDateTime(acquisto.Show.OraInizio);
+        if (showStart <= DateTime.Now)
+        {
+            return (false, "Rimborso disponibile solo prima dell'inizio proiezione");
+        }
+
+        var descrizione = $"Rimborso acquisto #{acquisto.Id} (virtuale su credito)";
+        await creditoService.RicaricaAsync(utenteId, new RicaricaCreditoDTO
+        {
+            UtenteId = utenteId,
+            Importo = acquisto.ImportoTotale,
+            Descrizione = descrizione,
+            CinemaId = null
+        });
+
+        acquisto.Stato = StatoAcquisto.REFUNDED;
+        await context.SaveChangesAsync();
+        return (true, "Rimborso completato: importo accreditato sul credito sito");
+    }
+
+    public async Task<(bool success, string message)> RichiediRimborsoBigliettoAsync(int utenteId, int bigliettoId)
+    {
+        var biglietto = await context.Biglietti
+            .Include(b => b.Acquisto)
+            .ThenInclude(a => a.Show)
+            .Include(b => b.Acquisto)
+            .ThenInclude(a => a.Biglietti)
+            .FirstOrDefaultAsync(b => b.Id == bigliettoId && b.Acquisto.UtenteId == utenteId);
+
+        if (biglietto is null)
+        {
+            return (false, "Biglietto non trovato");
+        }
+
+        if (biglietto.Acquisto.Stato != StatoAcquisto.PAGATO)
+        {
+            return (false, "Rimborso non disponibile per questo acquisto");
+        }
+
+        if (biglietto.Validato)
+        {
+            return (false, "Rimborso non disponibile: biglietto gia validato");
+        }
+
+        if (biglietto.Acquisto.Show is null)
+        {
+            return (false, "Show associato non valido");
+        }
+
+        var showStart = biglietto.Acquisto.Show.Data.ToDateTime(biglietto.Acquisto.Show.OraInizio);
+        if (showStart <= DateTime.Now)
+        {
+            return (false, "Rimborso disponibile solo prima dell'inizio proiezione");
+        }
+
+        var marker = $"[rimborso_biglietto:{biglietto.Id}]";
+        var alreadyRefunded = await context.TransazioniCredito.AnyAsync(t =>
+            t.UtenteId == utenteId &&
+            t.AcquistoId == biglietto.AcquistoId &&
+            t.Tipo == TipoTransazione.RIMBORSO &&
+            t.Descrizione != null &&
+            t.Descrizione.Contains(marker));
+
+        if (alreadyRefunded)
+        {
+            return (false, "Biglietto gia rimborsato");
+        }
+
+        var credito = await context.CreditiUtente.FirstOrDefaultAsync(c => c.UtenteId == utenteId);
+        if (credito is null)
+        {
+            credito = new CreditoUtente
+            {
+                UtenteId = utenteId,
+                Saldo = 0m,
+                DataUltimoAggiornamento = DateTime.UtcNow
+            };
+            context.CreditiUtente.Add(credito);
+            await context.SaveChangesAsync();
+        }
+
+        var saldoPre = credito.Saldo;
+        credito.Saldo += biglietto.Prezzo;
+        credito.DataUltimoAggiornamento = DateTime.UtcNow;
+
+        context.TransazioniCredito.Add(new TransazioneCredito
+        {
+            UtenteId = utenteId,
+            Tipo = TipoTransazione.RIMBORSO,
+            Importo = biglietto.Prezzo,
+            SaldoPrecedente = saldoPre,
+            SaldoSuccessivo = credito.Saldo,
+            DataTransazione = DateTime.UtcNow,
+            OperatoreId = utenteId,
+            CinemaId = biglietto.CinemaId,
+            AcquistoId = biglietto.AcquistoId,
+            Descrizione = $"Rimborso biglietto #{biglietto.Id} acquisto #{biglietto.AcquistoId} {marker}"
+        });
+
+        var rimborsoDescrizioni = await context.TransazioniCredito
+            .Where(t => t.AcquistoId == biglietto.AcquistoId && t.Tipo == TipoTransazione.RIMBORSO && t.Descrizione != null)
+            .Select(t => t.Descrizione!)
+            .ToListAsync();
+        rimborsoDescrizioni.Add($"new {marker}");
+
+        var allRefunded = biglietto.Acquisto.Biglietti.All(b =>
+            rimborsoDescrizioni.Any(d => d.Contains($"[rimborso_biglietto:{b.Id}]")));
+
+        if (allRefunded)
+        {
+            biglietto.Acquisto.Stato = StatoAcquisto.REFUNDED;
+        }
+
+        await context.SaveChangesAsync();
+        return (true, "Rimborso ticket completato: importo accreditato sul credito sito");
+    }
+
     public async Task<BigliettoDTO?> GetBigliettoAsync(int id)
     {
         var b = await context.Biglietti.FirstOrDefaultAsync(x => x.Id == id);
@@ -304,8 +452,9 @@ public class BigliettoService(
 
     public async Task<IEnumerable<BigliettoDTO>> GetBigliettiUtenteAsync(int utenteId)
     {
-        return await context.Biglietti
+        var list = await context.Biglietti
             .Include(b => b.Acquisto)
+            .Include(b => b.Show)
             .Where(b => b.Acquisto.UtenteId == utenteId)
             .OrderByDescending(b => b.Id)
             .Select(b => new BigliettoDTO
@@ -322,9 +471,54 @@ public class BigliettoService(
                 Validato = b.Validato,
                 DataValidazione = b.DataValidazione,
                 CinemaId = b.CinemaId,
-                QRCodeUrl = b.QRCodeUrl
+                QRCodeUrl = b.QRCodeUrl,
+                StatoAcquisto = b.Acquisto.Stato.ToString()
             })
             .ToListAsync();
+
+        var acquistoIds = list.Select(x => x.AcquistoId).Distinct().ToList();
+        var txRimborsi = await context.TransazioniCredito
+            .Where(t => t.UtenteId == utenteId &&
+                        t.Tipo == TipoTransazione.RIMBORSO &&
+                        t.AcquistoId != null &&
+                        acquistoIds.Contains(t.AcquistoId.Value) &&
+                        t.Descrizione != null)
+            .Select(t => new { t.AcquistoId, t.Descrizione })
+            .ToListAsync();
+
+        var now = DateTime.Now;
+        var ticketIds = list.Select(x => x.Id).ToList();
+        var showTimes = await context.Biglietti
+            .Where(b => ticketIds.Contains(b.Id))
+            .Select(b => new
+            {
+                b.Id,
+                Data = b.Show.Data,
+                Ora = b.Show.OraInizio
+            })
+            .ToListAsync();
+        var showMap = showTimes.ToDictionary(x => x.Id, x => x);
+
+        foreach (var ticket in list)
+        {
+            var marker = $"[rimborso_biglietto:{ticket.Id}]";
+            var refunded = txRimborsi.Any(t =>
+                t.AcquistoId == ticket.AcquistoId &&
+                t.Descrizione != null &&
+                t.Descrizione.Contains(marker));
+
+            ticket.Rimborsato = refunded;
+
+            var canRefundByTime = showMap.TryGetValue(ticket.Id, out var st)
+                && st.Data.ToDateTime(st.Ora) > now;
+
+            ticket.RimborsoDisponibile = !ticket.Validato
+                                         && !ticket.Rimborsato
+                                         && string.Equals(ticket.StatoAcquisto, StatoAcquisto.PAGATO.ToString(), StringComparison.OrdinalIgnoreCase)
+                                         && canRefundByTime;
+        }
+
+        return list;
     }
 
     public async Task<BigliettoValidazioneDTO?> GetBigliettoPerValidazioneAsync(string codiceHash)

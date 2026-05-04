@@ -430,6 +430,7 @@
                 });
                 
                 if (result.success) {
+                    localStorage.setItem('filmhub_tour_pending_email', String(email || '').trim().toLowerCase());
                     successText.textContent = 'Registrazione completata! Verrai reindirizzato al login...';
                     successDiv.classList.remove('hidden');
                     

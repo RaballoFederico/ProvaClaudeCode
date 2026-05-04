@@ -24,6 +24,7 @@ public static class FilmsEndpoints
             .Select(f => new FilmDTO
             {
                 Id = f.Id,
+                TmdbId = f.TmdbId,
                 Titolo = f.Titolo,
                 DataProduzione = f.DataProduzione,
                 RegistaId = f.RegistaId,
@@ -58,6 +59,7 @@ public static class FilmsEndpoints
             return Results.Ok(new FilmDTO
             {
                 Id = film.Id,
+                TmdbId = film.TmdbId,
                 Titolo = film.Titolo,
                 DataProduzione = film.DataProduzione,
                 RegistaId = film.RegistaId,
@@ -77,6 +79,211 @@ public static class FilmsEndpoints
                     Nome = fc.Categoria.Nome,
                     Descrizione = fc.Categoria.Descrizione
                 }).ToList()
+            });
+        });
+
+        // GET /films/{id}/cast-tmdb - Visibile a tutti
+        group.MapGet("/{id}/cast-tmdb", async (int id, FilmDbContext db, ITMDBService tmdbService) =>
+        {
+            var film = await db.Films.AsNoTracking().FirstOrDefaultAsync(f => f.Id == id);
+            if (film is null) return Results.NotFound("Film non trovato");
+
+            var tmdbId = await ResolveTmdbIdForFilmAsync(film, tmdbService);
+            if (tmdbId is null)
+                return Results.Ok(Array.Empty<object>());
+
+            var creditsJson = await tmdbService.GetMovieCreditsAsync(tmdbId.Value);
+            if (string.IsNullOrWhiteSpace(creditsJson))
+                return Results.Ok(Array.Empty<object>());
+
+            using var creditsDoc = JsonDocument.Parse(creditsJson);
+            if (!creditsDoc.RootElement.TryGetProperty("cast", out var castArr))
+                return Results.Ok(Array.Empty<object>());
+
+            var cast = castArr.EnumerateArray()
+                .Select(member => new
+                {
+                    id = member.TryGetProperty("id", out var idProp) && idProp.TryGetInt32(out var actorId) ? actorId : 0,
+                    nome = member.TryGetProperty("name", out var n) ? n.GetString() : null,
+                    personaggio = member.TryGetProperty("character", out var ch) ? ch.GetString() : null,
+                    ordine = member.TryGetProperty("order", out var o) && o.TryGetInt32(out var order) ? order : int.MaxValue,
+                    profile = tmdbService.GetProfileUrl(member.TryGetProperty("profile_path", out var pp) ? pp.GetString() : null)
+                })
+                .Where(x => x.id > 0 && !string.IsNullOrWhiteSpace(x.nome))
+                .OrderBy(x => x.ordine)
+                .Take(12)
+                .ToList();
+
+            return Results.Ok(cast);
+        });
+
+        // GET /films/{id}/meta-tmdb - Visibile a tutti (fallback descrizione/regista/cast)
+        group.MapGet("/{id}/meta-tmdb", async (int id, FilmDbContext db, ITMDBService tmdbService) =>
+        {
+            var film = await db.Films.AsNoTracking().FirstOrDefaultAsync(f => f.Id == id);
+            if (film is null) return Results.NotFound("Film non trovato");
+
+            var tmdbId = await ResolveTmdbIdForFilmAsync(film, tmdbService);
+            if (tmdbId is null)
+            {
+                return Results.Ok(new
+                {
+                    descrizione = (string?)null,
+                    regista = (string?)null,
+                    cast = Array.Empty<string>()
+                });
+            }
+
+            string? descrizione = null;
+            string? regista = null;
+            var cast = Array.Empty<string>();
+
+            var detailJson = await tmdbService.GetMovieDetailAsync(tmdbId.Value);
+            if (!string.IsNullOrWhiteSpace(detailJson))
+            {
+                using var detailDoc = JsonDocument.Parse(detailJson);
+                if (detailDoc.RootElement.TryGetProperty("overview", out var overview))
+                {
+                    descrizione = overview.GetString();
+                }
+            }
+
+            var creditsJson = await tmdbService.GetMovieCreditsAsync(tmdbId.Value);
+            if (!string.IsNullOrWhiteSpace(creditsJson))
+            {
+                using var creditsDoc = JsonDocument.Parse(creditsJson);
+                if (creditsDoc.RootElement.TryGetProperty("crew", out var crewArr))
+                {
+                    regista = crewArr.EnumerateArray()
+                        .Where(c =>
+                            c.TryGetProperty("job", out var job) &&
+                            string.Equals(job.GetString(), "Director", StringComparison.OrdinalIgnoreCase))
+                        .Select(c => c.TryGetProperty("name", out var n) ? n.GetString() : null)
+                        .FirstOrDefault(n => !string.IsNullOrWhiteSpace(n));
+                }
+
+                if (creditsDoc.RootElement.TryGetProperty("cast", out var castArr))
+                {
+                    cast = ExtractCastNames(castArr);
+                }
+            }
+
+            // Fallback: se cast vuoto, prova corrispondenze alternative per titolo (stesso anno prioritario)
+            if (cast.Length == 0)
+            {
+                var searchJson = await tmdbService.SearchMovieAsync(film.Titolo);
+                if (!string.IsNullOrWhiteSpace(searchJson))
+                {
+                    using var searchDoc = JsonDocument.Parse(searchJson);
+                    if (searchDoc.RootElement.TryGetProperty("results", out var results))
+                    {
+                        var filmYear = film.DataProduzione.Year;
+                        var candidates = results.EnumerateArray()
+                            .Select(r => new
+                            {
+                                Id = r.TryGetProperty("id", out var idEl) && idEl.TryGetInt32(out var rid) ? rid : 0,
+                                Title = r.TryGetProperty("title", out var tEl) ? tEl.GetString() : string.Empty,
+                                Year = r.TryGetProperty("release_date", out var rdEl) && DateTime.TryParse(rdEl.GetString(), out var rd)
+                                    ? rd.Year
+                                    : 0
+                            })
+                            .Where(x => x.Id > 0 && string.Equals(x.Title?.Trim(), film.Titolo.Trim(), StringComparison.OrdinalIgnoreCase))
+                            .OrderByDescending(x => x.Year == filmYear)
+                            .ThenBy(x => x.Year == 0 ? int.MaxValue : Math.Abs(x.Year - filmYear))
+                            .Take(5)
+                            .ToList();
+
+                        foreach (var candidate in candidates)
+                        {
+                            var cj = await tmdbService.GetMovieCreditsAsync(candidate.Id);
+                            if (string.IsNullOrWhiteSpace(cj)) continue;
+                            using var cd = JsonDocument.Parse(cj);
+                            if (!cd.RootElement.TryGetProperty("cast", out var ca)) continue;
+                            var altCast = ExtractCastNames(ca);
+                            if (altCast.Length > 0)
+                            {
+                                cast = altCast;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return Results.Ok(new
+            {
+                descrizione,
+                regista,
+                cast
+            });
+        });
+
+        // GET /films/actors/{actorId}/tmdb - Visibile a tutti
+        group.MapGet("/actors/{actorId}/tmdb", async (int actorId, ITMDBService tmdbService, FilmDbContext db) =>
+        {
+            if (actorId <= 0) return Results.BadRequest("ActorId non valido");
+
+            var personJson = await tmdbService.GetPersonDetailAsync(actorId);
+            if (string.IsNullOrWhiteSpace(personJson))
+                return Results.NotFound("Attore non trovato su TMDB");
+
+            using var doc = JsonDocument.Parse(personJson);
+            var root = doc.RootElement;
+
+            var creditsJson = await tmdbService.GetPersonMovieCreditsAsync(actorId);
+            var filmografia = new List<object>();
+            if (!string.IsNullOrWhiteSpace(creditsJson))
+            {
+                using var creditsDoc = JsonDocument.Parse(creditsJson);
+                if (creditsDoc.RootElement.TryGetProperty("cast", out var castCredits))
+                {
+                    var tmdbIds = castCredits.EnumerateArray()
+                        .Select(x => x.TryGetProperty("id", out var id) && id.TryGetInt32(out var value) ? value : 0)
+                        .Where(id => id > 0)
+                        .Distinct()
+                        .ToList();
+
+                    var localFilmsMap = await db.Films.AsNoTracking()
+                        .Where(f => f.TmdbId.HasValue && tmdbIds.Contains(f.TmdbId.Value))
+                        .Select(f => new { TmdbId = f.TmdbId!.Value, LocalFilmId = f.Id })
+                        .ToDictionaryAsync(x => x.TmdbId, x => x.LocalFilmId);
+
+                    filmografia = castCredits.EnumerateArray()
+                        .Select(movie => new
+                        {
+                            tmdbId = movie.TryGetProperty("id", out var idEl) && idEl.TryGetInt32(out var tmdbMovieId) ? tmdbMovieId : 0,
+                            titolo = movie.TryGetProperty("title", out var titleEl) ? titleEl.GetString() : null,
+                            personaggio = movie.TryGetProperty("character", out var charEl) ? charEl.GetString() : null,
+                            dataRilascio = movie.TryGetProperty("release_date", out var releaseEl) ? releaseEl.GetString() : null,
+                            poster = tmdbService.GetPosterUrl(movie.TryGetProperty("poster_path", out var pp) ? pp.GetString() : null, "w342"),
+                            popolarita = movie.TryGetProperty("popularity", out var popEl) ? popEl.GetDouble() : 0
+                        })
+                        .Where(x => x.tmdbId > 0 && !string.IsNullOrWhiteSpace(x.titolo))
+                        .OrderByDescending(x => x.popolarita)
+                        .Take(12)
+                        .Select(x => (object)new
+                        {
+                            x.tmdbId,
+                            x.titolo,
+                            x.personaggio,
+                            x.dataRilascio,
+                            x.poster,
+                            localFilmId = localFilmsMap.TryGetValue(x.tmdbId, out var localId) ? localId : (int?)null
+                        })
+                        .ToList();
+                }
+            }
+
+            return Results.Ok(new
+            {
+                id = actorId,
+                nome = root.TryGetProperty("name", out var name) ? name.GetString() : null,
+                biography = root.TryGetProperty("biography", out var bio) ? bio.GetString() : null,
+                compleanno = root.TryGetProperty("birthday", out var birthday) ? birthday.GetString() : null,
+                luogoNascita = root.TryGetProperty("place_of_birth", out var pob) ? pob.GetString() : null,
+                popolarita = root.TryGetProperty("popularity", out var popularity) ? popularity.GetDouble() : 0,
+                profile = tmdbService.GetProfileUrl(root.TryGetProperty("profile_path", out var pp) ? pp.GetString() : null, "h632"),
+                filmografia
             });
         });
 
@@ -129,6 +336,7 @@ public static class FilmsEndpoints
             return Results.Created($"/films/{film.Id}", new FilmDTO
             {
                 Id = film.Id,
+                TmdbId = film.TmdbId,
                 Titolo = film.Titolo,
                 DataProduzione = film.DataProduzione,
                 RegistaId = film.RegistaId,
@@ -149,6 +357,36 @@ public static class FilmsEndpoints
                     Descrizione = fc.Categoria.Descrizione
                 }).ToList()
             });
+        });
+
+        // GET /films/tmdb-search?q=... - Admin e PowerUser
+        group.MapGet("/tmdb-search", [Authorize(Roles = "Admin,PowerUser")] async (string q, ITMDBService tmdbService) =>
+        {
+            if (string.IsNullOrWhiteSpace(q))
+                return Results.BadRequest("Query richiesta");
+
+            var searchJson = await tmdbService.SearchMovieAsync(q.Trim());
+            if (string.IsNullOrWhiteSpace(searchJson))
+                return Results.Ok(Array.Empty<object>());
+
+            using var doc = JsonDocument.Parse(searchJson);
+            if (!doc.RootElement.TryGetProperty("results", out var results))
+                return Results.Ok(Array.Empty<object>());
+
+            var payload = results.EnumerateArray()
+                .Take(10)
+                .Select(item => new
+                {
+                    id = item.TryGetProperty("id", out var id) ? id.GetInt32() : 0,
+                    titolo = item.TryGetProperty("title", out var t) ? t.GetString() : null,
+                    dataRilascio = item.TryGetProperty("release_date", out var rd) ? rd.GetString() : null,
+                    poster = tmdbService.GetPosterUrl(item.TryGetProperty("poster_path", out var pp) ? pp.GetString() : null),
+                    voto = item.TryGetProperty("vote_average", out var va) ? va.GetDouble() : 0
+                })
+                .Where(x => x.id > 0 && !string.IsNullOrWhiteSpace(x.titolo))
+                .ToList();
+
+            return Results.Ok(payload);
         });
 
         // POST /films/import-tmdb - Admin e PowerUser
@@ -238,6 +476,7 @@ public static class FilmsEndpoints
                 existing.Durata = runtime > 0 ? runtime : existing.Durata;
                 existing.Genere = genere ?? existing.Genere;
                 existing.Cast = cast ?? existing.Cast;
+                existing.TmdbId = dto.TmdbMovieId;
                 existing.RegistaId = regista.Id;
                 existing.RegistaNome = string.IsNullOrWhiteSpace(registaNome) ? existing.RegistaNome : registaNome;
                 existing.DataRilascio = dataProduzione;
@@ -263,7 +502,8 @@ public static class FilmsEndpoints
                 Cast = cast,
                 Featured = false,
                 DataRilascio = dataProduzione,
-                Genere = genere
+                Genere = genere,
+                TmdbId = dto.TmdbMovieId
             };
 
             db.Films.Add(film);
@@ -275,6 +515,79 @@ public static class FilmsEndpoints
                 Message = "Film importato da TMDB",
                 FilmId = film.Id,
                 ExistingOrNew = "created"
+            });
+        });
+
+        // POST /films/{id}/sync-cast-tmdb - Admin e PowerUser
+        group.MapPost("/{id}/sync-cast-tmdb", [Authorize(Roles = "Admin,PowerUser")] async (int id, FilmDbContext db, ITMDBService tmdbService) =>
+        {
+            var film = await db.Films.FirstOrDefaultAsync(f => f.Id == id);
+            if (film is null) return Results.NotFound("Film non trovato");
+
+            var tmdbId = film.TmdbId;
+            if (tmdbId is null)
+            {
+                var searchJson = await tmdbService.SearchMovieAsync(film.Titolo);
+                if (string.IsNullOrWhiteSpace(searchJson))
+                    return Results.BadRequest("TMDB non configurato o risultato non trovato");
+
+                using var searchDoc = JsonDocument.Parse(searchJson);
+                if (!searchDoc.RootElement.TryGetProperty("results", out var results))
+                    return Results.BadRequest("Risultati TMDB non disponibili");
+
+                int? matchedId = null;
+                var filmYear = film.DataProduzione.Year;
+
+                foreach (var result in results.EnumerateArray().Take(10))
+                {
+                    if (!result.TryGetProperty("id", out var idProp) || !idProp.TryGetInt32(out var resultId))
+                        continue;
+
+                    var resultTitle = result.TryGetProperty("title", out var t) ? t.GetString() : string.Empty;
+                    if (!string.Equals(resultTitle?.Trim(), film.Titolo.Trim(), StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    var release = result.TryGetProperty("release_date", out var rd) ? rd.GetString() : null;
+                    if (!string.IsNullOrWhiteSpace(release) && DateTime.TryParse(release, out var rdParsed))
+                    {
+                        if (rdParsed.Year == filmYear)
+                        {
+                            matchedId = resultId;
+                            break;
+                        }
+                    }
+
+                    matchedId ??= resultId;
+                }
+
+                tmdbId = matchedId;
+                if (tmdbId is null)
+                    return Results.BadRequest("Nessuna corrispondenza TMDB trovata per sincronizzare il cast");
+            }
+
+            var creditsJson = await tmdbService.GetMovieCreditsAsync(tmdbId.Value);
+            if (string.IsNullOrWhiteSpace(creditsJson))
+                return Results.BadRequest("Crediti TMDB non disponibili");
+
+            using var creditsDoc = JsonDocument.Parse(creditsJson);
+            if (!creditsDoc.RootElement.TryGetProperty("cast", out var castArr))
+                return Results.BadRequest("Cast TMDB non disponibile");
+
+            var cast = BuildCastTextFromTmdb(castArr);
+            if (string.IsNullOrWhiteSpace(cast))
+                return Results.BadRequest("Cast TMDB vuoto");
+
+            film.Cast = cast;
+            film.TmdbId = tmdbId;
+            await db.SaveChangesAsync();
+
+            return Results.Ok(new
+            {
+                success = true,
+                message = "Cast aggiornato da TMDB",
+                filmId = film.Id,
+                tmdbId = film.TmdbId,
+                cast = film.Cast
             });
         });
 
@@ -335,6 +648,7 @@ public static class FilmsEndpoints
             return Results.Ok(new FilmDTO
             {
                 Id = film.Id,
+                TmdbId = film.TmdbId,
                 Titolo = film.Titolo,
                 DataProduzione = film.DataProduzione,
                 RegistaId = film.RegistaId,
@@ -541,5 +855,90 @@ public static class FilmsEndpoints
         }
 
         return (nome, cognome);
+    }
+
+    private static string? BuildCastTextFromTmdb(JsonElement castArr)
+    {
+        var castList = castArr.EnumerateArray()
+            .Select(member => new
+            {
+                Name = member.TryGetProperty("name", out var n) ? n.GetString() : null,
+                Order = member.TryGetProperty("order", out var o) && o.TryGetInt32(out var order) ? order : int.MaxValue
+            })
+            .Where(x => !string.IsNullOrWhiteSpace(x.Name) && !string.Equals(x.Name, "Unknown", StringComparison.OrdinalIgnoreCase))
+            .OrderBy(x => x.Order)
+            .Select(x => x.Name!.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(10)
+            .ToList();
+
+        if (castList.Count == 0)
+            return null;
+
+        var cast = string.Join(", ", castList);
+        return cast.Length > 1000 ? cast[..1000] : cast;
+    }
+
+    private static string[] ExtractCastNames(JsonElement castArr)
+    {
+        return castArr.EnumerateArray()
+            .Select(member => new
+            {
+                Name = member.TryGetProperty("name", out var n) ? n.GetString() : null,
+                Order = member.TryGetProperty("order", out var o) && o.TryGetInt32(out var order) ? order : int.MaxValue
+            })
+            .Where(x => !string.IsNullOrWhiteSpace(x.Name))
+            .OrderBy(x => x.Order)
+            .Select(x => x.Name!.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(10)
+            .ToArray();
+    }
+
+    private static async Task<int?> ResolveTmdbIdForFilmAsync(Film film, ITMDBService tmdbService)
+    {
+        if (film.TmdbId.HasValue)
+        {
+            return film.TmdbId.Value;
+        }
+
+        var searchJson = await tmdbService.SearchMovieAsync(film.Titolo);
+        if (string.IsNullOrWhiteSpace(searchJson))
+        {
+            return null;
+        }
+
+        using var searchDoc = JsonDocument.Parse(searchJson);
+        if (!searchDoc.RootElement.TryGetProperty("results", out var results))
+        {
+            return null;
+        }
+
+        int? matchedId = null;
+        var filmYear = film.DataProduzione.Year;
+
+        foreach (var result in results.EnumerateArray().Take(10))
+        {
+            if (!result.TryGetProperty("id", out var idProp) || !idProp.TryGetInt32(out var resultId))
+                continue;
+
+            var resultTitle = result.TryGetProperty("title", out var t) ? t.GetString() : string.Empty;
+            if (!string.Equals(resultTitle?.Trim(), film.Titolo.Trim(), StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            var release = result.TryGetProperty("release_date", out var rd) ? rd.GetString() : null;
+            if (!string.IsNullOrWhiteSpace(release) && DateTime.TryParse(release, out var rdParsed))
+            {
+                if (rdParsed.Year == filmYear)
+                {
+                    matchedId = resultId;
+                    break;
+                }
+            }
+
+            matchedId ??= resultId;
+        }
+
+        return matchedId;
     }
 }

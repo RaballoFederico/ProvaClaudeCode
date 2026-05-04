@@ -3,11 +3,17 @@ using FilmAPI.DTO;
 using FilmAPI.Model;
 using FilmAPI.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 namespace FilmAPI.Services;
 
 public class AuthService : IAuthService
 {
+    private static readonly Regex UsernameRegex = new("^[a-zA-Z0-9_.-]{3,40}$", RegexOptions.Compiled);
+    private static readonly Regex EmailRegex = new(
+        "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$",
+        RegexOptions.IgnoreCase | RegexOptions.Compiled);
+
     private readonly FilmDbContext _db;
     private readonly JwtService _jwtService;
 
@@ -19,10 +25,20 @@ public class AuthService : IAuthService
 
     public async Task<(LoginResponseDTO? response, string? error)> LoginAsync(LoginRequestDTO request)
     {
+        var loginValue = (request.Username ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(loginValue) || string.IsNullOrWhiteSpace(request.Password))
+        {
+            return (null, "INVALID_CREDENTIALS");
+        }
+
+        var normalizedLogin = loginValue.ToLowerInvariant();
+
         var utente = await _db.Utenti
             .Include(u => u.UtentiRuoli)
             .ThenInclude(ur => ur.Ruolo)
-            .FirstOrDefaultAsync(u => (u.Username == request.Username || u.Email == request.Username) && u.Attivo);
+            .FirstOrDefaultAsync(u =>
+                (u.Username.ToLower() == normalizedLogin || u.Email.ToLower() == normalizedLogin) &&
+                u.Attivo);
 
         if (utente == null || string.IsNullOrEmpty(utente.PasswordHash) || !BCrypt.Net.BCrypt.Verify(request.Password, utente.PasswordHash))
         {
@@ -47,6 +63,7 @@ public class AuthService : IAuthService
         }
 
         refreshToken.RevokedAt = DateTime.UtcNow;
+        await RevokeActiveRefreshTokensAsync(refreshToken.UtenteId);
 
         var utente = refreshToken.Utente;
         var ruoli = utente.UtentiRuoli.Select(ur => ur.Ruolo.Nome).ToList();
@@ -85,27 +102,30 @@ public class AuthService : IAuthService
 
     public async Task<(int? utenteId, string? error)> RegisterAsync(RegistrazioneRequestDTO request)
     {
-        if (string.IsNullOrWhiteSpace(request.Username) || request.Username.Length < 3)
+        var username = (request.Username ?? string.Empty).Trim();
+        var email = (request.Email ?? string.Empty).Trim().ToLowerInvariant();
+
+        if (string.IsNullOrWhiteSpace(username) || !UsernameRegex.IsMatch(username))
         {
-            return (null, "Username deve essere di almeno 3 caratteri");
+            return (null, "Username non valido: usa 3-40 caratteri (lettere, numeri, _, ., -)");
         }
 
-        if (string.IsNullOrWhiteSpace(request.Email) || !request.Email.Contains('@'))
+        if (string.IsNullOrWhiteSpace(email) || !EmailRegex.IsMatch(email))
         {
             return (null, "Email non valida");
         }
 
-        if (string.IsNullOrWhiteSpace(request.Password) || request.Password.Length < 8)
+        if (!IsStrongPassword(request.Password))
         {
-            return (null, "Password deve essere di almeno 8 caratteri");
+            return (null, "Password non valida: minimo 8 caratteri con almeno una maiuscola, una minuscola, un numero e un simbolo");
         }
 
-        if (await _db.Utenti.AnyAsync(u => u.Username == request.Username))
+        if (await _db.Utenti.AnyAsync(u => u.Username.ToLower() == username.ToLower()))
         {
             return (null, "Username gia' in uso");
         }
 
-        if (await _db.Utenti.AnyAsync(u => u.Email == request.Email))
+        if (await _db.Utenti.AnyAsync(u => u.Email.ToLower() == email))
         {
             return (null, "Email gia' in uso");
         }
@@ -118,8 +138,8 @@ public class AuthService : IAuthService
 
         var utente = new Utente
         {
-            Username = request.Username,
-            Email = request.Email,
+            Username = username,
+            Email = email,
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
             Nome = request.Nome,
             Cognome = request.Cognome,
@@ -153,7 +173,7 @@ public class AuthService : IAuthService
             .ThenInclude(ur => ur.Ruolo)
             .FirstOrDefaultAsync(u =>
                 u.ExternalProvider == normalizedProvider &&
-                u.ExternalProviderUserId == providerUserId &&
+                u.ExternalProviderUserId == providerUserId.Trim() &&
                 u.Attivo);
 
         if (utente == null)
@@ -161,7 +181,7 @@ public class AuthService : IAuthService
             utente = await _db.Utenti
                 .Include(u => u.UtentiRuoli)
                 .ThenInclude(ur => ur.Ruolo)
-                .FirstOrDefaultAsync(u => u.Email == normalizedEmail && u.Attivo);
+                .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail && u.Attivo);
 
             if (utente != null)
             {
@@ -185,7 +205,7 @@ public class AuthService : IAuthService
                     Email = normalizedEmail,
                     PasswordHash = null,
                     ExternalProvider = normalizedProvider,
-                    ExternalProviderUserId = providerUserId,
+                    ExternalProviderUserId = providerUserId.Trim(),
                     Nome = nome,
                     Cognome = cognome,
                     DataRegistrazione = DateTime.UtcNow,
@@ -198,6 +218,18 @@ public class AuthService : IAuthService
 
                 _db.Utenti.Add(utente);
             }
+        }
+
+        // Per utenti esterni appena creati serve prima persistere l'utente
+        // così l'ID esiste prima di creare il refresh token.
+        if (utente.Id == 0)
+        {
+            await _db.SaveChangesAsync();
+
+            utente = await _db.Utenti
+                .Include(u => u.UtentiRuoli)
+                .ThenInclude(ur => ur.Ruolo)
+                .FirstAsync(u => u.Id == utente.Id);
         }
 
         var response = await BuildLoginResponseAsync(utente);
@@ -254,6 +286,7 @@ public class AuthService : IAuthService
     private async Task<LoginResponseDTO> BuildLoginResponseAsync(Utente utente)
     {
         utente.DataUltimoAccesso = DateTime.UtcNow;
+        await RevokeActiveRefreshTokensAsync(utente.Id);
         var ruoli = utente.UtentiRuoli.Select(ur => ur.Ruolo.Nome).ToList();
         var (accessToken, accessTokenExpiry) = _jwtService.GenerateAccessTokenWithExpiry(utente, ruoli);
         var refreshTokenValue = _jwtService.GenerateRefreshToken();
@@ -286,6 +319,24 @@ public class AuthService : IAuthService
                 Ruoli = ruoli
             }
         };
+    }
+
+    private async Task RevokeActiveRefreshTokensAsync(int userId)
+    {
+        var activeTokens = await _db.RefreshTokens
+            .Where(rt => rt.UtenteId == userId && rt.RevokedAt == null)
+            .ToListAsync();
+
+        if (activeTokens.Count == 0)
+        {
+            return;
+        }
+
+        var now = DateTime.UtcNow;
+        foreach (var token in activeTokens)
+        {
+            token.RevokedAt = now;
+        }
     }
 
     private async Task<string> GenerateUniqueUsernameAsync(string? suggestedUsername, string email)
@@ -341,5 +392,20 @@ public class AuthService : IAuthService
         }
 
         return (parts[0], string.Join(' ', parts.Skip(1)));
+    }
+
+    private static bool IsStrongPassword(string? password)
+    {
+        if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
+        {
+            return false;
+        }
+
+        var hasUpper = password.Any(char.IsUpper);
+        var hasLower = password.Any(char.IsLower);
+        var hasDigit = password.Any(char.IsDigit);
+        var hasSymbol = password.Any(ch => !char.IsLetterOrDigit(ch));
+
+        return hasUpper && hasLower && hasDigit && hasSymbol;
     }
 }

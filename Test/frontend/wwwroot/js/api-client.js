@@ -1,8 +1,7 @@
 function getPreferredApiBaseUrls() {
     const urls = [
         'http://localhost:5001',
-        'http://127.0.0.1:5001',
-        'https://localhost:7217'
+        'http://127.0.0.1:5001'
     ];
 
     return [...new Set(urls)];
@@ -23,7 +22,7 @@ function resolveInitialApiBaseUrl() {
     }
 
     const isLocalDevHost = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
-    const isWrongLocalPort = isLocalDevHost && parsed.port !== '5001' && parsed.port !== '7217';
+    const isWrongLocalPort = isLocalDevHost && parsed.port !== '5001';
 
     if (isWrongLocalPort) {
         window.localStorage.setItem('apiBaseUrl', DEFAULT_API_BASE_URL);

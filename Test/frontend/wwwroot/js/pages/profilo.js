@@ -4,6 +4,51 @@
 let profiloData = null;
 let proiezioneDaPrenotare = null;
 
+function getProfilePictureStorageKey(userId) {
+    return `profile_picture_user_${userId}`;
+}
+
+function getStoredProfilePicture(userId) {
+    if (!userId) return null;
+    return localStorage.getItem(getProfilePictureStorageKey(userId));
+}
+
+function setStoredProfilePicture(userId, dataUrl) {
+    if (!userId) return;
+    localStorage.setItem(getProfilePictureStorageKey(userId), dataUrl);
+}
+
+function applyProfilePictureToUI() {
+    if (!profiloData?.id) return;
+
+    const profileAvatarImg = document.getElementById('profile-avatar-img');
+    const initialsSpan = document.getElementById('user-initials');
+    if (!profileAvatarImg || !initialsSpan) return;
+
+    const picture = getStoredProfilePicture(profiloData.id);
+    const hasPicture = typeof picture === 'string' && picture.startsWith('data:image/');
+    profileAvatarImg.classList.toggle('hidden', !hasPicture);
+    initialsSpan.classList.toggle('hidden', hasPicture);
+
+    if (hasPicture) {
+        profileAvatarImg.src = picture;
+    } else {
+        profileAvatarImg.removeAttribute('src');
+    }
+
+    const navAvatar = document.getElementById('nav-user-avatar-image');
+    const navInitials = document.getElementById('nav-user-initials');
+    if (navAvatar && navInitials) {
+        navAvatar.classList.toggle('hidden', !hasPicture);
+        navInitials.classList.toggle('hidden', hasPicture);
+        if (hasPicture) {
+            navAvatar.src = picture;
+        } else {
+            navAvatar.removeAttribute('src');
+        }
+    }
+}
+
 // Carica il profilo
 async function loadProfile() {
     try {
@@ -92,6 +137,7 @@ function renderProfile() {
     document.getElementById('edit-nome').value = user.nome || '';
     document.getElementById('edit-cognome').value = user.cognome || '';
     document.getElementById('edit-telefono').value = user.telefono || '';
+    applyProfilePictureToUI();
 }
 
 function renderProiezioni() {
@@ -177,6 +223,116 @@ document.getElementById('close-modal').addEventListener('click', () => {
 document.getElementById('cancel-edit').addEventListener('click', () => {
     document.getElementById('edit-modal').classList.add('hidden');
     document.getElementById('edit-error').classList.add('hidden');
+});
+
+document.getElementById('change-picture-btn').addEventListener('click', () => {
+    const input = document.getElementById('profile-picture-input');
+    if (input) {
+        input.value = '';
+        input.click();
+    }
+});
+
+document.getElementById('profile-picture-input').addEventListener('change', async (event) => {
+    const file = event.target.files?.[0];
+    if (!file || !profiloData?.id) return;
+
+    if (!file.type.startsWith('image/')) {
+        if (typeof Utils !== 'undefined') {
+            Utils.showNotification('Seleziona un file immagine valido', 'error');
+        }
+        return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+        if (typeof Utils !== 'undefined') {
+            Utils.showNotification('Immagine troppo grande (max 2MB)', 'error');
+        }
+        return;
+    }
+
+    const dataUrl = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Lettura immagine non riuscita'));
+        reader.readAsDataURL(file);
+    });
+
+    if (typeof dataUrl !== 'string') return;
+    setStoredProfilePicture(profiloData.id, dataUrl);
+    applyProfilePictureToUI();
+    if (typeof updateNavbar === 'function') {
+        updateNavbar();
+    }
+
+    if (typeof Utils !== 'undefined') {
+        Utils.showNotification('Foto profilo aggiornata', 'success');
+    }
+});
+
+document.getElementById('open-security-btn').addEventListener('click', () => {
+    document.getElementById('security-modal').classList.remove('hidden');
+});
+
+document.getElementById('close-security-modal').addEventListener('click', closeSecurityModal);
+document.getElementById('cancel-security').addEventListener('click', closeSecurityModal);
+
+function closeSecurityModal() {
+    document.getElementById('security-modal').classList.add('hidden');
+    document.getElementById('security-error').classList.add('hidden');
+    document.getElementById('security-form').reset();
+}
+
+document.getElementById('security-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const currentPassword = document.getElementById('current-password').value;
+    const newPassword = document.getElementById('new-password').value;
+    const confirmPassword = document.getElementById('confirm-password').value;
+
+    const errorDiv = document.getElementById('security-error');
+    const saveBtn = document.getElementById('security-save-btn');
+    const saveText = document.getElementById('security-save-text');
+    const saveLoading = document.getElementById('security-save-loading');
+
+    errorDiv.classList.add('hidden');
+
+    if (newPassword.length < 8) {
+        errorDiv.textContent = 'La nuova password deve contenere almeno 8 caratteri';
+        errorDiv.classList.remove('hidden');
+        return;
+    }
+
+    if (newPassword !== confirmPassword) {
+        errorDiv.textContent = 'La conferma password non coincide';
+        errorDiv.classList.remove('hidden');
+        return;
+    }
+
+    if (newPassword === currentPassword) {
+        errorDiv.textContent = 'La nuova password deve essere diversa da quella attuale';
+        errorDiv.classList.remove('hidden');
+        return;
+    }
+
+    saveBtn.disabled = true;
+    saveText.textContent = 'Aggiornamento...';
+    saveLoading.classList.remove('hidden');
+
+    try {
+        await ApiClient.put('/user/change-password', { currentPassword, newPassword });
+        closeSecurityModal();
+        if (typeof Utils !== 'undefined') {
+            Utils.showNotification('Password aggiornata con successo', 'success');
+        }
+    } catch (error) {
+        errorDiv.textContent = error.message;
+        errorDiv.classList.remove('hidden');
+    } finally {
+        saveBtn.disabled = false;
+        saveText.textContent = 'Aggiorna';
+        saveLoading.classList.add('hidden');
+    }
 });
 
 document.getElementById('edit-form').addEventListener('submit', async (e) => {

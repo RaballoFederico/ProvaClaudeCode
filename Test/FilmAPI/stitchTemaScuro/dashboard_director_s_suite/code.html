@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>The Cinematic Director’s Suite - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary-container": "#e50914",
+              "outline-variant": "#5e3f3b",
+              "on-primary": "#690003",
+              "secondary-fixed": "#ffdea5",
+              "surface-container-highest": "#353534",
+              "on-tertiary-container": "#f8f9ff",
+              "on-surface": "#e5e2e1",
+              "surface-bright": "#393939",
+              "on-tertiary": "#003258",
+              "surface-tint": "#ffb4aa",
+              "error-container": "#93000a",
+              "tertiary-fixed-dim": "#9ecaff",
+              "on-background": "#e5e2e1",
+              "surface-container": "#201f1f",
+              "background": "#131313",
+              "on-primary-fixed": "#410001",
+              "on-error-container": "#ffdad6",
+              "on-surface-variant": "#e9bcb6",
+              "tertiary-fixed": "#d1e4ff",
+              "outline": "#af8782",
+              "on-secondary-fixed-variant": "#5d4201",
+              "on-primary-container": "#fff7f6",
+              "on-secondary": "#412d00",
+              "on-tertiary-fixed": "#001d36",
+              "surface-variant": "#353534",
+              "primary-fixed-dim": "#ffb4aa",
+              "inverse-on-surface": "#313030",
+              "surface-container-high": "#2a2a2a",
+              "tertiary-container": "#0076c5",
+              "inverse-primary": "#c0000c",
+              "tertiary": "#9ecaff",
+              "surface-container-lowest": "#0e0e0e",
+              "secondary": "#e9c176",
+              "primary": "#ffb4aa",
+              "on-secondary-container": "#dab36a",
+              "inverse-surface": "#e5e2e1",
+              "secondary-fixed-dim": "#e9c176",
+              "surface-dim": "#131313",
+              "secondary-container": "#604403",
+              "surface-container-low": "#1c1b1b",
+              "error": "#ffb4ab",
+              "on-primary-fixed-variant": "#930007",
+              "on-secondary-fixed": "#261900",
+              "primary-fixed": "#ffdad5",
+              "on-error": "#690005",
+              "surface": "#131313",
+              "on-tertiary-fixed-variant": "#00497d"
+            },
+            fontFamily: {
+              "headline": ["Manrope"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .glass-panel {
+        background: rgba(53, 53, 52, 0.6);
+        backdrop-filter: blur(20px);
+      }
+      .primary-gradient {
+        background: linear-gradient(135deg, #e50914 0%, #c0000c 100%);
+      }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body selection:bg-primary-container selection:text-white">
+<div class="flex min-h-screen">
+<!-- SideNavBar -->
+<aside class="bg-[#201F1F] font-['Manrope'] font-medium text-sm h-screen w-64 left-0 top-0 sticky flex flex-col h-full py-12 gap-y-4 hidden md:flex">
+<div class="px-8 mb-8">
+<h1 class="text-lg font-bold text-[#E9C176]">Director's Suite</h1>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant opacity-60">Backstage Access</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-4 py-3 px-6 bg-[#2A2A2A] text-[#E50914] rounded-lg mx-2 transition-transform duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="movie">movie</span>
+<span>Películas</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="theater_comedy">theater_comedy</span>
+<span>Directores</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="theaters">theaters</span>
+<span>Cines</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="schedule">schedule</span>
+<span>Proyecciones</span>
+</a>
+</nav>
+<div class="mt-auto pt-8 space-y-1">
+<a class="flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+<span>Help</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-6 text-on-surface-variant hover:bg-[#2A2A2A]/50 mx-2 transition-transform duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span>Logout</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col min-w-0 bg-surface overflow-hidden">
+<!-- TopNavBar -->
+<header class="bg-[#1C1B1B] text-['Manrope'] text-sm tracking-wide uppercase docked full-width top-0 z-50 flex justify-between items-center w-full px-8 py-4">
+<div class="flex items-center gap-4">
+<span class="text-2xl font-black text-[#E50914] tracking-tighter md:hidden">CDS</span>
+<div class="hidden md:flex items-center gap-8">
+<span class="text-[#E50914] font-bold border-b-2 border-[#E50914] pb-1">Overview</span>
+<span class="text-on-surface-variant hover:text-white transition-colors cursor-pointer">Analytics</span>
+<span class="text-on-surface-variant hover:text-white transition-colors cursor-pointer">Reports</span>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="hidden lg:flex items-center bg-surface-container-high rounded-full px-4 py-1.5 gap-2 border border-outline-variant/10">
+<span class="material-symbols-outlined text-sm opacity-50" data-icon="search">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-xs w-64 placeholder:text-on-surface-variant/40" placeholder="Search Cinematic Universe..." type="text"/>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-on-surface-variant hover:text-white transition-all active:scale-95 duration-150" data-icon="notifications">notifications</button>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-white transition-all active:scale-95 duration-150" data-icon="settings">settings</button>
+<img alt="User profile avatar" class="w-8 h-8 rounded-full border border-secondary/20" data-alt="User profile circular avatar photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGtI64anCyySPJJbzLr1-jqcQt1MjnLqlCM2-cac7peFRX5m5EFd5z5WprYDzOrr-VBXjA7DpB2bdDfXPM0x-Tc5wO0lnv36HoivhwUwq1RYwQY21aE2IVf2rzqR2yAsp_E2LaylpuQT34CtddTxaXMS-LX-_Zli4JPr1bcaDO8LcV9PIbixN8AM_NFQhY9GLs-JM0mX33egWoKJ-U4ae2xst7fmeYmHp7wRdY5H3CFBsNjwo4oBj9uze3Oy-OvFDS_xJShsw4n9A"/>
+</div>
+</div>
+</header>
+<div class="p-8 space-y-12 overflow-y-auto">
+<!-- Page Hero Header -->
+<section>
+<h2 class="font-headline text-5xl font-extrabold tracking-tighter text-on-surface mb-2">Director’s Dashboard</h2>
+<p class="text-on-surface-variant font-light max-w-2xl">Manage your cinematic empire from a single interface. Real-time statistics, projection schedules, and global film inventory.</p>
+</section>
+<!-- Statistics Grid (Bento Style) -->
+<section class="grid grid-cols-1 md:grid-cols-4 gap-6">
+<div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/5 hover:bg-surface-container-high transition-colors">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-primary-container" data-icon="movie">movie</span>
+<span class="text-[10px] font-bold text-secondary uppercase tracking-widest">+12% vs LW</span>
+</div>
+<p class="font-headline text-4xl font-light mb-1">1,482</p>
+<p class="text-xs uppercase tracking-widest text-on-surface-variant font-semibold">Total Films</p>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/5 hover:bg-surface-container-high transition-colors">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-secondary" data-icon="person">person</span>
+<span class="text-[10px] font-bold text-tertiary uppercase tracking-widest">Global</span>
+</div>
+<p class="font-headline text-4xl font-light mb-1">342</p>
+<p class="text-xs uppercase tracking-widest text-on-surface-variant font-semibold">Total Directors</p>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/5 hover:bg-surface-container-high transition-colors">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-tertiary" data-icon="theaters">theaters</span>
+<span class="text-[10px] font-bold text-primary-container uppercase tracking-widest">Active</span>
+</div>
+<p class="font-headline text-4xl font-light mb-1">56</p>
+<p class="text-xs uppercase tracking-widest text-on-surface-variant font-semibold">Total Cinemas</p>
+</div>
+<div class="primary-gradient p-6 rounded-xl shadow-2xl">
+<div class="flex justify-between items-start mb-4">
+<span class="material-symbols-outlined text-white" data-icon="confirmation_number">confirmation_number</span>
+<span class="text-[10px] font-bold text-white/80 uppercase tracking-widest">Today</span>
+</div>
+<p class="font-headline text-4xl font-bold text-white mb-1">124</p>
+<p class="text-xs uppercase tracking-widest text-white/80 font-semibold">Today's Projections</p>
+</div>
+</section>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+<!-- Recent Activity: Latest Films Added -->
+<section class="lg:col-span-2 space-y-6">
+<div class="flex justify-between items-end mb-4">
+<div>
+<h3 class="font-headline text-2xl font-bold">Recent Additions</h3>
+<p class="text-sm text-on-surface-variant">The latest entries to your catalog</p>
+</div>
+<button class="text-secondary text-xs font-bold uppercase tracking-widest hover:underline">View Catalog</button>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<!-- Film Card 1 -->
+<div class="group relative overflow-hidden rounded-xl bg-surface-container-low border border-outline-variant/10 hover:border-primary-container/30 transition-all duration-300">
+<div class="h-48 w-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Cinematic neon city street movie scene" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDnU9EiFs1F9SqgwsiPfLf6F2tVzlyZ9gY0XTxE_2wgrZSA5PjG1qcgLWSsY9AdMbObnfQfTp84AyCnMAVPGq2CyXtX_KmffS9U8M8MPttvrLYM4_FJiDu7dru6tEc7ZuG3KbJwnbSvWCPvUo3XNQBnk13_NF_xUYF6RnqODDiocPyplP8zbp1BJmkC7UeE4_F-Yva-QvUB1UtY-OO6VXG0gZYiy_GHtmtHJaIPNtF_tVd1w78f76PrCJB3iNnFBowt_L1wSvhl-q4')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-4 w-full">
+<div class="flex items-center gap-2 mb-1">
+<span class="bg-primary-container text-[10px] font-bold px-2 py-0.5 rounded text-white uppercase">Sci-Fi</span>
+<span class="text-[10px] text-on-surface-variant">2h 14m</span>
+</div>
+<h4 class="font-headline text-lg font-bold text-white">Neon Retribution</h4>
+<p class="text-xs text-on-surface-variant/80">Dir. Marcus Thorne</p>
+</div>
+</div>
+<!-- Film Card 2 -->
+<div class="group relative overflow-hidden rounded-xl bg-surface-container-low border border-outline-variant/10 hover:border-primary-container/30 transition-all duration-300">
+<div class="h-48 w-full bg-cover bg-center transition-transform duration-500 group-hover:scale-105" data-alt="Classic film projector beam in dark room" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuALDAr51Txo_qX6AalVomzYRoukgFiQF2jrWmz1pILLVLU8pTXRBC-g4UeCeqYEf730nmby-abs-dJoz1fY_dQqneLTK0dTyn6p0LvBc3N9-oYQtFo0AyB6xnSZpIu7qs9RmSi6j_nzc572Uo4JgX5TvOS9wQwgKL9tLcXLSXHiwndhOz2c2kfymydVfdUjiiv7vHm0AWu3j91psW3VD-K-pSGpPD-d0oei2FzCiuq-9pGZ47l9aZGoERDWOdwyD7g9_6m0hGwCm08')"></div>
+<div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-4 w-full">
+<div class="flex items-center gap-2 mb-1">
+<span class="bg-secondary-container text-[10px] font-bold px-2 py-0.5 rounded text-on-secondary-container uppercase">Noir</span>
+<span class="text-[10px] text-on-surface-variant">1h 52m</span>
+</div>
+<h4 class="font-headline text-lg font-bold text-white">The Last Frame</h4>
+<p class="text-xs text-on-surface-variant/80">Dir. Elena Rossi</p>
+</div>
+</div>
+</div>
+<!-- Schedule Table -->
+<div class="bg-surface-container-low rounded-xl p-6 mt-8">
+<h4 class="font-headline text-lg font-bold mb-6">Upcoming Projections</h4>
+<div class="space-y-4">
+<!-- Row 1 -->
+<div class="flex items-center justify-between py-2 border-b border-outline-variant/10 last:border-0 hover:bg-surface-container-high transition-colors rounded px-2">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded bg-surface-container-highest flex items-center justify-center font-headline font-bold text-primary-container">19:30</div>
+<div>
+<p class="text-sm font-bold">Midnight in Paris</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Grand Cinema 04</p>
+</div>
+</div>
+<div class="text-right">
+<span class="bg-tertiary-container/20 text-tertiary text-[10px] font-bold px-3 py-1 rounded-full uppercase">Scheduled</span>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="flex items-center justify-between py-2 border-b border-outline-variant/10 last:border-0 hover:bg-surface-container-high transition-colors rounded px-2">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded bg-surface-container-highest flex items-center justify-center font-headline font-bold text-primary-container">21:00</div>
+<div>
+<p class="text-sm font-bold">Inception: Redux</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest">IMAX Premiere Suite</p>
+</div>
+</div>
+<div class="text-right">
+<span class="bg-error-container/20 text-error text-[10px] font-bold px-3 py-1 rounded-full uppercase">Sold Out</span>
+</div>
+</div>
+<!-- Row 3 -->
+<div class="flex items-center justify-between py-2 border-b border-outline-variant/10 last:border-0 hover:bg-surface-container-high transition-colors rounded px-2">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded bg-surface-container-highest flex items-center justify-center font-headline font-bold text-primary-container">23:45</div>
+<div>
+<p class="text-sm font-bold">Stellar Odyssey</p>
+<p class="text-[10px] text-on-surface-variant uppercase tracking-widest">Orion Cinema 12</p>
+</div>
+</div>
+<div class="text-right">
+<span class="bg-tertiary-container/20 text-tertiary text-[10px] font-bold px-3 py-1 rounded-full uppercase">Scheduled</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Quick Actions & Side Panel -->
+<aside class="space-y-8">
+<div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/10">
+<h3 class="font-headline text-xl font-bold mb-6">Quick Actions</h3>
+<div class="space-y-3">
+<button class="w-full flex items-center justify-between p-4 rounded-lg bg-surface-container-high border border-outline-variant/20 hover:border-primary-container/50 transition-all group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-container" data-icon="add_circle">add_circle</span>
+<span class="text-sm font-medium">Add new Film</span>
+</div>
+<span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-4 rounded-lg bg-surface-container-high border border-outline-variant/20 hover:border-primary-container/50 transition-all group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary" data-icon="calendar_today">calendar_today</span>
+<span class="text-sm font-medium">Schedule Projection</span>
+</div>
+<span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity" data-icon="chevron_right">chevron_right</span>
+</button>
+<button class="w-full flex items-center justify-between p-4 rounded-lg bg-surface-container-high border border-outline-variant/20 hover:border-primary-container/50 transition-all group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary" data-icon="person_add">person_add</span>
+<span class="text-sm font-medium">Register Director</span>
+</div>
+<span class="material-symbols-outlined opacity-0 group-hover:opacity-100 transition-opacity" data-icon="chevron_right">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="bg-surface-container-low p-6 rounded-xl border border-outline-variant/10">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-secondary" data-icon="stars" style="font-variation-settings: 'FILL' 1;">stars</span>
+<h3 class="font-headline text-xl font-bold">Premium Stats</h3>
+</div>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between text-xs mb-1">
+<span class="text-on-surface-variant">Occupancy Rate</span>
+<span class="text-secondary">84%</span>
+</div>
+<div class="h-1 w-full bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-[84%]"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-xs mb-1">
+<span class="text-on-surface-variant">Revenue Target</span>
+<span class="text-primary-container">$124k / $150k</span>
+</div>
+<div class="h-1 w-full bg-surface-variant rounded-full overflow-hidden">
+<div class="h-full bg-primary-container w-[72%]"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Mini Map / Location Context -->
+<div class="rounded-xl overflow-hidden h-40 relative group grayscale hover:grayscale-0 transition-all duration-700">
+<img class="w-full h-full object-cover" data-alt="Dark stylized city map with glowing route markers" data-location="Cannes, France" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhx_NEVQOvsLqMkFPDB3WgM0DqakuLhebJ_mrA4RuX6MKeUNABwmGnXdddubJnO59D71CXWC5BBj46sKSBT3oDmugZqDbJrFbzn-7jW2UrcUACw6kScWrP9Pw0LVLg7j5AE6CAj6E-KkoLGbOZOQqQy5OvVPLHn6biEY-DV60nEizkRt9KiaUpdsmJlRXd7GfpFEDEciHZKnLZeQy2aIGBdD2iKWwMkRHcK85evLCZl-NJrfeghZ1R8jGVE4FZhPEMTtt6ybfOLUU"/>
+<div class="absolute inset-0 bg-black/40 flex flex-col justify-end p-4">
+<p class="text-[10px] uppercase font-bold text-white/60">Primary Hub</p>
+<p class="text-white font-bold">Cannes District Headquarters</p>
+</div>
+</div>
+</aside>
+</div>
+</div>
+<!-- Footer -->
+<footer class="bg-[#131313] font-['Inter'] text-[10px] uppercase tracking-widest w-full py-6 mt-auto flex justify-between items-center px-12 border-t border-[#5E3F3B]/15">
+<div class="text-gray-500">
+                    © 2024 Cinematic Director’s Suite. All rights reserved.
+                </div>
+<div class="flex gap-8">
+<a class="text-gray-500 hover:text-white transition-colors" href="#">Support</a>
+<a class="text-gray-500 hover:text-white transition-colors" href="#">Privacy Policy</a>
+<a class="text-gray-500 hover:text-white transition-colors" href="#">Terms of Service</a>
+</div>
+</footer>
+</main>
+</div>
+<!-- Mobile Bottom NavBar (Visible on small screens only) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 glass-panel border-t border-outline-variant/10 z-50 flex justify-around items-center h-16 px-4">
+<a class="flex flex-col items-center gap-1 text-[#E50914]" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="dashboard">dashboard</span>
+<span class="text-[8px] uppercase font-bold">Dashboard</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="movie">movie</span>
+<span class="text-[8px] uppercase">Films</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="schedule">schedule</span>
+<span class="text-[8px] uppercase">Agenda</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-on-surface-variant" href="#">
+<span class="material-symbols-outlined text-2xl" data-icon="person">person</span>
+<span class="text-[8px] uppercase">Profile</span>
+</a>
+</nav>
+</body></html>

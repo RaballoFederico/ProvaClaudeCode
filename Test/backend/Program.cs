@@ -35,7 +35,7 @@ var startupValidation = ValidateStartupConfiguration(builder.Configuration, buil
 // Configurazione JWT
 var jwtSecretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") ??
     builder.Configuration["Jwt:SecretKey"] ??
-    "your-super-secret-key-min-32-characters-for-jwt";
+    string.Empty;
 
 builder.Services.AddSingleton(new JwtService(builder.Configuration));
 builder.Services.AddScoped<ICategoriaService, CategoriaService>();
@@ -290,8 +290,7 @@ static (List<string> Errors, List<string> Warnings) ValidateStartupConfiguration
 
     if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32 || IsPlaceholder(jwtSecret))
     {
-        var message = "JWT_SECRET_KEY non configurata correttamente (minimo 32 caratteri, no placeholder).";
-        if (environment.IsProduction()) errors.Add(message); else warnings.Add(message);
+        errors.Add("JWT_SECRET_KEY non configurata correttamente (minimo 32 caratteri, no placeholder).");
     }
 
     var stripeSecret = Environment.GetEnvironmentVariable("STRIPE_SECRET_KEY")

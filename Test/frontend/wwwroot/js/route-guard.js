@@ -1,8 +1,9 @@
-const RouteGuard = {
+const AccessControl = {
     roleMap: {
         admin: ['Admin'],
         manager: ['Admin', 'PowerUser'],
-        auth: ['Admin', 'PowerUser', 'User']
+        auth: ['Admin', 'PowerUser', 'User'],
+        user: ['User']
     },
 
     pageRules: {
@@ -22,14 +23,41 @@ const RouteGuard = {
         'conferma-acquisto.html': 'auth',
         'validazione.html': 'manager',
         'ricarica-credito.html': 'manager',
+        'ricarica-credito-utente.html': 'user',
         'acquista.html': 'auth',
         'pagamento.html': 'auth',
         'user-biglietti.html': 'auth',
         'check-in.html': 'auth',
-        'proiezioni-pubblico.html': 'auth',
+        'proiezioni-pubblico.html': null,
+        'supporto.html': null,
+        'privacy.html': null,
+        'termini.html': null,
         '404.html': null,
         'login.html': 'guest',
         'register.html': 'guest'
+    },
+
+    getUser() {
+        if (typeof Auth === 'undefined' || !Auth.isAuthenticated()) {
+            return null;
+        }
+
+        return Auth.getUser() || null;
+    },
+
+    getRoles(user) {
+        if (!user || !Array.isArray(user.ruoli)) {
+            return [];
+        }
+
+        return user.ruoli
+            .map(r => String(r || '').trim())
+            .filter(Boolean);
+    },
+
+    hasAnyRole(user, rolesToMatch) {
+        const roles = this.getRoles(user).map(r => r.toLowerCase());
+        return rolesToMatch.some(role => roles.includes(String(role || '').toLowerCase()));
     },
 
     canAccess(rule) {
@@ -37,16 +65,33 @@ const RouteGuard = {
             return true;
         }
 
+        const user = this.getUser();
         if (rule === 'guest') {
-            return !Auth.isAuthenticated();
+            return !user;
         }
 
-        if (!Auth.isAuthenticated()) {
+        if (!user) {
             return false;
         }
 
         const allowedRoles = this.roleMap[rule] || [];
-        return allowedRoles.some(role => Auth.hasRole(role));
+        return this.hasAnyRole(user, allowedRoles);
+    },
+
+    canAccessByRule(rule, user) {
+        if (rule === 'public' || rule === null) return true;
+        if (rule === 'guest') return !user;
+        if (!user) return false;
+
+        if (rule === 'auth') return true;
+        if (rule === 'manager') return this.hasAnyRole(user, ['Admin', 'PowerUser']);
+        if (rule === 'admin') return this.hasAnyRole(user, ['Admin']);
+        if (rule === 'user') {
+            const isManager = this.hasAnyRole(user, ['Admin', 'PowerUser']);
+            return !isManager && this.hasAnyRole(user, ['User']);
+        }
+
+        return false;
     },
 
     getDefaultRoute() {
@@ -85,9 +130,11 @@ const RouteGuard = {
     }
 };
 
+window.AccessControl = AccessControl;
+
 document.addEventListener('DOMContentLoaded', async () => {
     if (typeof Auth !== 'undefined') {
         await Auth.ensureInitialized();
-        RouteGuard.enforceCurrentPage();
+        AccessControl.enforceCurrentPage();
     }
 });

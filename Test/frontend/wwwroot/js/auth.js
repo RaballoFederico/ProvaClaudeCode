@@ -63,9 +63,9 @@ async function fetchWithApiFallback(path, options = {}) {
 }
 
 const Auth = {
-    accessToken: null,
+    accessToken: localStorage.getItem('accessToken'),
     refreshToken: null,
-    tokenExpiry: null,
+    tokenExpiry: localStorage.getItem('tokenExpiry') ? new Date(localStorage.getItem('tokenExpiry')) : null,
     user: JSON.parse(localStorage.getItem('user') || 'null'),
     initPromise: null,
     autoRefreshTimeoutId: null,
@@ -81,8 +81,8 @@ const Auth = {
 
         localStorage.setItem('user', JSON.stringify(data.utente));
         localStorage.removeItem('refreshToken');
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('tokenExpiry');
+        localStorage.setItem('accessToken', data.accessToken || '');
+        localStorage.setItem('tokenExpiry', data.expiresAt || '');
 
         this.scheduleAutoRefresh();
     },
@@ -295,7 +295,12 @@ const Auth = {
 
     ensureInitialized() {
         if (!this.initPromise) {
-            this.initPromise = this.refresh({ silent: true }).finally(() => {
+            const hasValidToken = this.isAuthenticated() && !!this.user;
+            const initAction = hasValidToken
+                ? Promise.resolve(true)
+                : this.refresh({ silent: true });
+
+            this.initPromise = initAction.finally(() => {
                 window.dispatchEvent(new CustomEvent('auth:ready', {
                     detail: {
                         authenticated: this.isAuthenticated()
@@ -371,6 +376,10 @@ const Auth = {
 
 // Inizializza controllo token all'avvio
 document.addEventListener('DOMContentLoaded', () => {
+    if (Auth.tokenExpiry && new Date(Auth.tokenExpiry) <= new Date()) {
+        Auth.clearSession();
+    }
+
     // Aggiungi event listener per logout
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {

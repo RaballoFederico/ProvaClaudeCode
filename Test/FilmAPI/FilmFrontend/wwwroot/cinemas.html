@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html class="dark" lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cinema | FilmAPI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#e50914",
+                        "secondary": "#e9c176",
+                        "background": "#131313",
+                        "surface": "#131313",
+                        "surface-container": "#201f1f",
+                        "surface-container-low": "#1c1b1b",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-container-highest": "#353534",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-surface": "#e5e2e1",
+                        "on-surface-variant": "#e9bcb6",
+                        "outline-variant": "#5e3f3b",
+                        "tertiary-container": "#0076c5",
+                        "tertiary": "#9ecaff",
+                        "error-container": "#93000a",
+                        "error": "#ffb4ab",
+                        "on-primary-container": "#fff7f6",
+                        "on-tertiary-container": "#f8f9ff",
+                        "inverse-primary": "#c0000c"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Inter"],
+                    }
+                },
+            },
+        }
+    </script>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-background text-on-background font-body min-h-screen flex flex-col">
+    <div id="navbar-container"></div>
+    
+    <div class="flex flex-1">
+        <div id="sidebar-container"></div>
+        
+        <main class="flex-1 p-4 md:p-8 lg:p-12 overflow-x-hidden pb-20 md:pb-0">
+            <section class="space-y-2 mb-8 md:mb-12">
+                <h2 class="text-3xl md:text-5xl font-extralight font-headline tracking-tight text-white">Controllo Operazioni</h2>
+                <p class="text-secondary tracking-widest uppercase text-xs font-label opacity-80">Gestione Infrastruttura e Programmazione</p>
+            </section>
+
+            <section class="space-y-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                    <div class="space-y-1">
+                        <h3 class="text-xl md:text-2xl font-headline text-white">Inventario Cinema</h3>
+                        <p class="text-on-surface-variant text-sm font-body">Gestione della rete cinematografica e localizzazione.</p>
+                    </div>
+                    <button id="new-cinema-btn" onclick="openCreateModal()" class="bg-primary-container text-on-primary-container px-4 md:px-6 py-2 md:py-3 rounded-xl font-headline font-bold text-sm flex items-center gap-2 hover:scale-95 transition-all duration-150 shadow-lg shadow-primary-container/20">
+                        <span class="material-symbols-outlined">add_location</span>
+                        Nuovo Cinema
+                    </button>
+                </div>
+
+                <div id="cinemas-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                </div>
+                <div id="empty-state" class="hidden bg-surface-container-low rounded-xl p-12 text-center">
+                    <span class="material-symbols-outlined text-5xl text-on-surface-variant opacity-50">theaters</span>
+                    <p class="mt-4 text-on-surface-variant text-lg">Nessun cinema trovato.</p>
+                    <button id="empty-add-cinema-btn" onclick="openCreateModal()" class="mt-4 px-6 py-3 bg-primary-container text-white rounded-xl font-bold">Aggiungi Cinema</button>
+                </div>
+                <div id="pagination-info" class="mt-4 text-center text-xs text-on-surface-variant uppercase tracking-widest"></div>
+            </section>
+        </main>
+    </div>
+
+    <div id="footer-container"></div>
+
+    <div id="modal-container"></div>
+
+    <script src="/js/theme.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/route-guard.js"></script>
+    <script src="/js/template-loader.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        let currentCinemas = [];
+        const isManager = () => typeof Auth !== 'undefined' && Auth.canManageCatalog();
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllComponents();
+            applyRoleUI();
+            await loadCinemas();
+        });
+
+        function applyRoleUI() {
+            const canManage = isManager();
+            const newCinemaBtn = document.getElementById('new-cinema-btn');
+            const emptyAddCinemaBtn = document.getElementById('empty-add-cinema-btn');
+            if (newCinemaBtn) newCinemaBtn.classList.toggle('hidden', !canManage);
+            if (emptyAddCinemaBtn) emptyAddCinemaBtn.classList.toggle('hidden', !canManage);
+        }
+
+        async function loadCinemas() {
+            try {
+                Utils.showLoading();
+                currentCinemas = await ApiClient.get('/cinemas');
+                renderCinemas();
+            } catch (error) {
+                console.error('Error loading cinemas:', error);
+                Utils.showNotification('Errore nel caricamento dei cinema', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        function renderCinemas() {
+            const grid = document.getElementById('cinemas-grid');
+            const emptyState = document.getElementById('empty-state');
+            const paginationInfo = document.getElementById('pagination-info');
+
+            if (currentCinemas.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                grid.classList.add('hidden');
+                paginationInfo.textContent = '';
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+            grid.classList.remove('hidden');
+            paginationInfo.textContent = `${currentCinemas.length} cinema trovati`;
+
+            const icons = ['local_movies', 'movie', 'theaters', 'tv', 'live_tv', 'videocam', 'movie_filter', 'personal_video'];
+            
+            grid.innerHTML = currentCinemas.map((cinema, index) => {
+                const icon = icons[index % icons.length];
+                return `
+                    <div class="group relative bg-surface-container-low rounded-xl overflow-hidden border border-outline-variant/10 hover:border-primary-container/30 transition-all duration-300">
+                        <div class="h-24 bg-gradient-to-br from-surface-container-high to-surface-container flex items-center justify-center">
+                            <span class="material-symbols-outlined text-6xl md:text-7xl text-primary-container/40">${icon}</span>
+                        </div>
+                        <div class="p-4">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="min-w-0 flex-1">
+                                    <h4 class="font-headline text-base md:text-lg font-bold text-on-surface truncate">${escapeHtml(cinema.nome)}</h4>
+                                    <p class="text-xs text-on-surface-variant mt-1 flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">location_on</span>
+                                        ${escapeHtml(cinema.indirizzo)}
+                                    </p>
+                                    <p class="text-xs text-secondary mt-1 flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">place</span>
+                                        ${escapeHtml(cinema.citta)}
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="mt-4 flex justify-between items-center">
+                                <span class="text-[10px] font-mono text-on-surface-variant/50">#C-${String(cinema.id).padStart(3, '0')}</span>
+                                <div class="flex gap-2 ${isManager() ? '' : 'hidden'}">
+                                    <button onclick="openEditModal(${cinema.id})" class="p-2 bg-surface-container-high hover:bg-secondary/20 rounded-lg transition-colors">
+                                        <span class="material-symbols-outlined text-sm text-secondary">edit</span>
+                                    </button>
+                                    <button onclick="deleteCinema(${cinema.id})" class="p-2 bg-surface-container-high hover:bg-error-container/20 rounded-lg transition-colors">
+                                        <span class="material-symbols-outlined text-sm text-error">delete</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openCreateModal() {
+            if (!isManager()) {
+                Utils.showNotification('Non hai i permessi per creare cinema', 'error');
+                return;
+            }
+            showModal('Nuovo Cinema', `
+                <form id="cinema-form" onsubmit="handleSubmit(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Nome *</label>
+                            <input type="text" name="nome" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Indirizzo *</label>
+                            <input type="text" name="indirizzo" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Città *</label>
+                            <input type="text" name="citta" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Annulla</button>
+                        <button type="submit" class="bg-primary-container text-on-primary-container px-6 py-2 rounded-lg font-bold hover:opacity-90 transition-opacity">Crea</button>
+                    </div>
+                </form>
+            `);
+        }
+
+        function openEditModal(id) {
+            if (!isManager()) {
+                Utils.showNotification('Non hai i permessi per modificare cinema', 'error');
+                return;
+            }
+            const cinema = currentCinemas.find(c => c.id === id);
+            if (!cinema) return;
+
+            showModal('Modifica Cinema', `
+                <form id="cinema-form" onsubmit="handleSubmit(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Nome *</label>
+                            <input type="text" name="nome" value="${escapeHtml(cinema.nome)}" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Indirizzo *</label>
+                            <input type="text" name="indirizzo" value="${escapeHtml(cinema.indirizzo)}" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Città *</label>
+                            <input type="text" name="citta" value="${escapeHtml(cinema.citta)}" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
+                    </div>
+                    <input type="hidden" name="id" value="${id}">
+                    <div class="flex justify-end gap-3 mt-6">
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Annulla</button>
+                        <button type="submit" class="bg-primary-container text-on-primary-container px-6 py-2 rounded-lg font-bold hover:opacity-90 transition-opacity">Salva</button>
+                    </div>
+                </form>
+            `);
+        }
+
+        async function handleSubmit(event) {
+            event.preventDefault();
+            if (!isManager()) {
+                Utils.showNotification('Non hai i permessi per salvare cinema', 'error');
+                return;
+            }
+            const form = event.target;
+            const id = form.id?.value;
+            const data = {
+                nome: form.nome.value,
+                indirizzo: form.indirizzo.value,
+                citta: form.citta.value
+            };
+
+            try {
+                Utils.showLoading();
+                if (id) {
+                    await ApiClient.put(`/cinemas/${id}`, data);
+                    Utils.showNotification('Cinema aggiornato con successo', 'success');
+                } else {
+                    await ApiClient.post('/cinemas', data);
+                    Utils.showNotification('Cinema creato con successo', 'success');
+                }
+                closeModal();
+                await loadCinemas();
+            } catch (error) {
+                Utils.showNotification(error.message || 'Errore durante il salvataggio', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        async function deleteCinema(id) {
+            if (!isManager()) {
+                Utils.showNotification('Non hai i permessi per eliminare cinema', 'error');
+                return;
+            }
+            if (!Utils.confirmDialog('Sei sicuro di voler eliminare questo cinema? Questo potrebbe influenzare le proiezioni associate.')) return;
+
+            try {
+                Utils.showLoading();
+                await ApiClient.delete(`/cinemas/${id}`);
+                Utils.showNotification('Cinema eliminato con successo', 'success');
+                await loadCinemas();
+            } catch (error) {
+                Utils.showNotification(error.message || 'Errore durante l\'eliminazione. Potrebbe avere proiezioni associate.', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        function showModal(title, content) {
+            const container = document.getElementById('modal-container');
+            container.innerHTML = `
+                <div class="modal-backdrop" onclick="if(event.target === this) closeModal()">
+                    <div class="modal-content">
+                        <h3 class="font-headline text-xl font-bold mb-6">${title}</h3>
+                        ${content}
+                    </div>
+                </div>
+            `;
+        }
+
+        function closeModal() {
+            document.getElementById('modal-container').innerHTML = '';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>
