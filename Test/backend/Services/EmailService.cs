@@ -144,7 +144,7 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
                 throw lastException ?? new InvalidOperationException("Connessione SMTP non riuscita");
             }
 
-            await client.AuthenticateAsync(user, pass);
+            await client.AuthenticateAsync(user, pass!);
             await client.SendAsync(message);
             await client.DisconnectAsync(true);
             logger.LogInformation("Email inviata con successo verso {Email} (oggetto: {Subject})", toEmail, soggetto);

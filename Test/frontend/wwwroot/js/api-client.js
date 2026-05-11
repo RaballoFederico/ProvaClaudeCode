@@ -1,59 +1,44 @@
-function getPreferredApiBaseUrls() {
-    const urls = [
-        'http://localhost:5001',
-        'http://127.0.0.1:5001'
-    ];
-
-    return [...new Set(urls)];
-}
-
-const DEFAULT_API_BASE_URL = getPreferredApiBaseUrls()[0];
-
-function resolveInitialApiBaseUrl() {
-    const stored = (window.localStorage.getItem('apiBaseUrl') || '').trim();
-    if (!stored) return DEFAULT_API_BASE_URL;
-
-    let parsed = null;
-    try {
-        parsed = new URL(stored);
-    } catch {
-        window.localStorage.setItem('apiBaseUrl', DEFAULT_API_BASE_URL);
-        return DEFAULT_API_BASE_URL;
+const ApiConfigAdapter = window.ApiConfig || {
+    getCandidates() {
+        return ['http://localhost:5001', 'http://127.0.0.1:5001', 'https://localhost:7217'];
+    },
+    persistBaseUrl(value) {
+        if (!value) return;
+        window.localStorage.setItem('apiBaseUrl', value);
+    },
+    get defaultBaseUrl() {
+        return this.getCandidates()[0];
     }
-
-    const isLocalDevHost = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
-    const isWrongLocalPort = isLocalDevHost && parsed.port !== '5001';
-
-    if (isWrongLocalPort) {
-        window.localStorage.setItem('apiBaseUrl', DEFAULT_API_BASE_URL);
-        return DEFAULT_API_BASE_URL;
-    }
-
-    return stored;
-}
+};
 
 const ApiClient = {
-    baseUrl: resolveInitialApiBaseUrl(),
+    baseUrl: ApiConfigAdapter.defaultBaseUrl,
 
     getFallbackBaseUrls() {
-        const fallbacks = getPreferredApiBaseUrls();
+        const fallbacks = ApiConfigAdapter.getCandidates();
         return [this.baseUrl, ...fallbacks.filter(url => url !== this.baseUrl)];
     },
 
     async request(endpoint, options = {}) {
-        const url = `${this.baseUrl}${endpoint}`;
-        
+        const auth = typeof window !== 'undefined' ? window.Auth : undefined;
+
+        const isAuthEndpoint = endpoint.startsWith('/auth/');
+        if (!isAuthEndpoint && auth && typeof auth.ensureToken === 'function') {
+            await auth.ensureToken();
+        }
+
         // Aggiungi header Authorization se l'utente è autenticato
         const headers = {
             'Content-Type': 'application/json',
             ...options.headers
         };
         
-        if (Auth.accessToken) {
-            headers['Authorization'] = `Bearer ${Auth.accessToken}`;
+        if (auth && auth.accessToken) {
+            headers['Authorization'] = `Bearer ${auth.accessToken}`;
         }
         
         const config = {
+            credentials: 'include',
             headers,
             ...options
         };
@@ -73,7 +58,7 @@ const ApiClient = {
                     activeBaseUrl = candidate;
                     if (this.baseUrl !== candidate) {
                         this.baseUrl = candidate;
-                        localStorage.setItem('apiBaseUrl', candidate);
+                        ApiConfigAdapter.persistBaseUrl(candidate);
                     }
                     break;
                 } catch (err) {
@@ -86,12 +71,11 @@ const ApiClient = {
             }
 
             // Se token scaduto, prova a fare refresh (refresh token in cookie HttpOnly)
-            const isAuthEndpoint = endpoint.startsWith('/auth/');
-            if (response.status === 401 && !isAuthEndpoint) {
-                const refreshed = await Auth.refresh({ silent: true });
+            if (response.status === 401 && !isAuthEndpoint && auth && typeof auth.refresh === 'function') {
+                const refreshed = await auth.refresh({ silent: true });
                 if (refreshed) {
                     // Riprova la richiesta con il nuovo token
-                    headers['Authorization'] = `Bearer ${Auth.accessToken}`;
+                    headers['Authorization'] = auth.accessToken ? `Bearer ${auth.accessToken}` : headers['Authorization'];
                     response = await fetch(`${activeBaseUrl}${endpoint}`, config);
                 } else {
                     // Refresh fallito, redirect a login
@@ -152,3 +136,7 @@ const ApiClient = {
         return this.request(endpoint, { method: 'DELETE' });
     }
 };
+
+window.ApiClient = ApiClient;
+window.APIClient = ApiClient;
+window.dispatchEvent(new CustomEvent('apiclient:ready'));

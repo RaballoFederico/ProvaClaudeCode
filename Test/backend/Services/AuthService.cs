@@ -25,19 +25,19 @@ public class AuthService : IAuthService
 
     public async Task<(LoginResponseDTO? response, string? error)> LoginAsync(LoginRequestDTO request, string? ipAddress = null, string? userAgent = null)
     {
-        var loginValue = (request.Username ?? string.Empty).Trim();
-        if (string.IsNullOrWhiteSpace(loginValue) || string.IsNullOrWhiteSpace(request.Password))
+        var username = (request.Username ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(request.Password))
         {
             return (null, "INVALID_CREDENTIALS");
         }
 
-        var normalizedLogin = loginValue.ToLowerInvariant();
+        var normalizedUsername = username.ToLowerInvariant();
 
         var utente = await _db.Utenti
             .Include(u => u.UtentiRuoli)
             .ThenInclude(ur => ur.Ruolo)
             .FirstOrDefaultAsync(u =>
-                (u.Username.ToLower() == normalizedLogin || u.Email.ToLower() == normalizedLogin) &&
+                u.Username.ToLower() == normalizedUsername &&
                 u.Attivo);
 
         if (utente == null || string.IsNullOrEmpty(utente.PasswordHash) || !BCrypt.Net.BCrypt.Verify(request.Password, utente.PasswordHash))

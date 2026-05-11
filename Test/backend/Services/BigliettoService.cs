@@ -333,18 +333,74 @@ public class BigliettoService(
             return (false, "Rimborso disponibile solo prima dell'inizio proiezione");
         }
 
-        var descrizione = $"Rimborso acquisto #{acquisto.Id} (virtuale su credito)";
-        await creditoService.RicaricaAsync(utenteId, new RicaricaCreditoDTO
+        var (alreadyCredited, alreadyCardRefunded) = await GetRefundedAmountsAsync(acquisto.Id, utenteId);
+        var creditoDaRimborsare = Math.Max(0m, acquisto.CreditoUsato - alreadyCredited);
+        var cartaTotale = Math.Max(0m, acquisto.ImportoTotale - acquisto.CreditoUsato);
+        var cartaDaRimborsare = Math.Max(0m, cartaTotale - alreadyCardRefunded);
+
+        if (cartaDaRimborsare > 0m)
         {
-            UtenteId = utenteId,
-            Importo = acquisto.ImportoTotale,
-            Descrizione = descrizione,
-            CinemaId = null
-        });
+            if (string.IsNullOrWhiteSpace(acquisto.StripeChargeId))
+            {
+                return (false, "Impossibile rimborsare la quota carta: PaymentIntent mancante");
+            }
+
+            var stripeRefund = await pagamentoService.RimborsaPagamentoStripeAsync(
+                acquisto.StripeChargeId,
+                cartaDaRimborsare,
+                $"Rimborso acquisto #{acquisto.Id}");
+
+            if (!stripeRefund.Success)
+            {
+                return (false, stripeRefund.Message);
+            }
+        }
+
+        if (creditoDaRimborsare > 0m)
+        {
+            var descrizioneCredito = $"Rimborso acquisto #{acquisto.Id} [rimborso_credito:{creditoDaRimborsare:F2}]";
+            await creditoService.RicaricaAsync(utenteId, new RicaricaCreditoDTO
+            {
+                UtenteId = utenteId,
+                Importo = creditoDaRimborsare,
+                Descrizione = descrizioneCredito,
+                CinemaId = null
+            });
+        }
+
+        if (cartaDaRimborsare > 0m)
+        {
+            var credito = await context.CreditiUtente.FirstOrDefaultAsync(c => c.UtenteId == utenteId);
+            if (credito is null)
+            {
+                credito = new CreditoUtente
+                {
+                    UtenteId = utenteId,
+                    Saldo = 0m,
+                    DataUltimoAggiornamento = DateTime.UtcNow
+                };
+                context.CreditiUtente.Add(credito);
+                await context.SaveChangesAsync();
+            }
+
+            context.TransazioniCredito.Add(new TransazioneCredito
+            {
+                UtenteId = utenteId,
+                Tipo = TipoTransazione.RIMBORSO,
+                Importo = 0m,
+                SaldoPrecedente = credito.Saldo,
+                SaldoSuccessivo = credito.Saldo,
+                DataTransazione = DateTime.UtcNow,
+                OperatoreId = utenteId,
+                CinemaId = null,
+                AcquistoId = acquisto.Id,
+                Descrizione = $"Rimborso acquisto #{acquisto.Id} [rimborso_carta:{cartaDaRimborsare:F2}]"
+            });
+        }
 
         acquisto.Stato = StatoAcquisto.REFUNDED;
         await context.SaveChangesAsync();
-        return (true, "Rimborso completato: importo accreditato sul credito sito");
+        return (true, "Rimborso completato: quota carta su Stripe e quota credito sul saldo sito");
     }
 
     public async Task<(bool success, string message)> RichiediRimborsoBigliettoAsync(int utenteId, int bigliettoId)
@@ -395,36 +451,74 @@ public class BigliettoService(
             return (false, "Biglietto gia rimborsato");
         }
 
-        var credito = await context.CreditiUtente.FirstOrDefaultAsync(c => c.UtenteId == utenteId);
-        if (credito is null)
+        var acquisto = biglietto.Acquisto;
+        var (alreadyCredited, alreadyCardRefunded) = await GetRefundedAmountsAsync(acquisto.Id, utenteId);
+        var cartaTotale = Math.Max(0m, acquisto.ImportoTotale - acquisto.CreditoUsato);
+        var creditoTotale = acquisto.CreditoUsato;
+        var cartaResidua = Math.Max(0m, cartaTotale - alreadyCardRefunded);
+        var creditoResiduo = Math.Max(0m, creditoTotale - alreadyCredited);
+
+        var rimborsoCarta = Math.Min(biglietto.Prezzo, cartaResidua);
+        var rimborsoCredito = Math.Min(biglietto.Prezzo - rimborsoCarta, creditoResiduo);
+
+        if (rimborsoCarta > 0m)
         {
-            credito = new CreditoUtente
+            if (string.IsNullOrWhiteSpace(acquisto.StripeChargeId))
             {
-                UtenteId = utenteId,
-                Saldo = 0m,
-                DataUltimoAggiornamento = DateTime.UtcNow
-            };
-            context.CreditiUtente.Add(credito);
-            await context.SaveChangesAsync();
+                return (false, "Impossibile rimborsare la quota carta: PaymentIntent mancante");
+            }
+
+            var stripeRefund = await pagamentoService.RimborsaPagamentoStripeAsync(
+                acquisto.StripeChargeId,
+                rimborsoCarta,
+                $"Rimborso biglietto #{biglietto.Id} acquisto #{acquisto.Id}");
+
+            if (!stripeRefund.Success)
+            {
+                return (false, stripeRefund.Message);
+            }
         }
 
-        var saldoPre = credito.Saldo;
-        credito.Saldo += biglietto.Prezzo;
-        credito.DataUltimoAggiornamento = DateTime.UtcNow;
-
-        context.TransazioniCredito.Add(new TransazioneCredito
+        if (rimborsoCredito > 0m)
         {
-            UtenteId = utenteId,
-            Tipo = TipoTransazione.RIMBORSO,
-            Importo = biglietto.Prezzo,
-            SaldoPrecedente = saldoPre,
-            SaldoSuccessivo = credito.Saldo,
-            DataTransazione = DateTime.UtcNow,
-            OperatoreId = utenteId,
-            CinemaId = biglietto.CinemaId,
-            AcquistoId = biglietto.AcquistoId,
-            Descrizione = $"Rimborso biglietto #{biglietto.Id} acquisto #{biglietto.AcquistoId} {marker}"
-        });
+            await creditoService.RicaricaAsync(utenteId, new RicaricaCreditoDTO
+            {
+                UtenteId = utenteId,
+                Importo = rimborsoCredito,
+                Descrizione = $"Rimborso credito biglietto #{biglietto.Id} acquisto #{acquisto.Id} [rimborso_credito:{rimborsoCredito:F2}] {marker}",
+                CinemaId = biglietto.CinemaId
+            });
+        }
+
+        if (rimborsoCarta > 0m)
+        {
+            var credito = await context.CreditiUtente.FirstOrDefaultAsync(c => c.UtenteId == utenteId);
+            if (credito is null)
+            {
+                credito = new CreditoUtente
+                {
+                    UtenteId = utenteId,
+                    Saldo = 0m,
+                    DataUltimoAggiornamento = DateTime.UtcNow
+                };
+                context.CreditiUtente.Add(credito);
+                await context.SaveChangesAsync();
+            }
+
+            context.TransazioniCredito.Add(new TransazioneCredito
+            {
+                UtenteId = utenteId,
+                Tipo = TipoTransazione.RIMBORSO,
+                Importo = 0m,
+                SaldoPrecedente = credito.Saldo,
+                SaldoSuccessivo = credito.Saldo,
+                DataTransazione = DateTime.UtcNow,
+                OperatoreId = utenteId,
+                CinemaId = biglietto.CinemaId,
+                AcquistoId = biglietto.AcquistoId,
+                Descrizione = $"Rimborso carta biglietto #{biglietto.Id} acquisto #{biglietto.AcquistoId} [rimborso_carta:{rimborsoCarta:F2}] {marker}"
+            });
+        }
 
         var rimborsoDescrizioni = await context.TransazioniCredito
             .Where(t => t.AcquistoId == biglietto.AcquistoId && t.Tipo == TipoTransazione.RIMBORSO && t.Descrizione != null)
@@ -441,7 +535,7 @@ public class BigliettoService(
         }
 
         await context.SaveChangesAsync();
-        return (true, "Rimborso ticket completato: importo accreditato sul credito sito");
+        return (true, "Rimborso ticket completato: quota carta su Stripe e quota credito sul saldo sito");
     }
 
     public async Task<BigliettoDTO?> GetBigliettoAsync(int id)
@@ -629,5 +723,41 @@ public class BigliettoService(
         var trimmed = value.Trim();
         if (trimmed.Length <= maxLength) return trimmed;
         return trimmed[..maxLength];
+    }
+
+    private async Task<(decimal credito, decimal carta)> GetRefundedAmountsAsync(int acquistoId, int utenteId)
+    {
+        var descrizioni = await context.TransazioniCredito
+            .Where(t => t.UtenteId == utenteId
+                        && t.AcquistoId == acquistoId
+                        && t.Tipo == TipoTransazione.RIMBORSO
+                        && t.Descrizione != null)
+            .Select(t => t.Descrizione!)
+            .ToListAsync();
+
+        decimal credito = 0m;
+        decimal carta = 0m;
+        foreach (var descrizione in descrizioni)
+        {
+            credito += ExtractTaggedAmount(descrizione, "[rimborso_credito:", "]");
+            carta += ExtractTaggedAmount(descrizione, "[rimborso_carta:", "]");
+        }
+
+        return (credito, carta);
+    }
+
+    private static decimal ExtractTaggedAmount(string text, string prefix, string suffix)
+    {
+        var start = text.IndexOf(prefix, StringComparison.OrdinalIgnoreCase);
+        if (start < 0) return 0m;
+        start += prefix.Length;
+
+        var end = text.IndexOf(suffix, start, StringComparison.OrdinalIgnoreCase);
+        if (end <= start) return 0m;
+
+        var amountRaw = text[start..end].Trim();
+        return decimal.TryParse(amountRaw, System.Globalization.NumberStyles.Number, System.Globalization.CultureInfo.InvariantCulture, out var parsed)
+            ? Math.Max(0m, parsed)
+            : 0m;
     }
 }

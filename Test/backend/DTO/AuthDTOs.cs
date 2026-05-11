@@ -127,8 +127,35 @@ public class ForgotPasswordRequestDTO
     public string? ReturnUrl { get; set; }
 }
 
+public class RecoverAccountRequestDTO
+{
+    public string Email { get; set; } = string.Empty;
+    public string? ReturnUrl { get; set; }
+}
+
+public class CompleteRecoverAccountRequestDTO
+{
+    public string Token { get; set; } = string.Empty;
+    public string NewPassword { get; set; } = string.Empty;
+}
+
 public class ResetPasswordRequestDTO
 {
     public string Token { get; set; } = string.Empty;
     public string NewPassword { get; set; } = string.Empty;
+}
+
+public class CreateInviteRequestDTO
+{
+    public string Email { get; set; } = string.Empty;
+    public string Ruolo { get; set; } = "PowerUser";
+    public string? ReturnUrl { get; set; }
+}
+
+public class CompleteInviteRequestDTO
+{
+    public string Token { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
+    public string Password { get; set; } = string.Empty;
 }

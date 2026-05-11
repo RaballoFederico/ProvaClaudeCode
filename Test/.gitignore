@@ -14,3 +14,5 @@ nul
 *.user
 *.suo
 *.pdb
+**/bin_temp_verify/
+**/run_backend_unblocked/

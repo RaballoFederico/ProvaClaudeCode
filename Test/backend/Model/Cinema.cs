@@ -34,6 +34,9 @@ public class Cinema
     [MaxLength(20)]
     public string? CodiceLocale { get; set; }
 
+    [MaxLength(1000)]
+    public string? ImageUrl { get; set; }
+
     public ICollection<Proiezione> Proiezioni { get; set; } = new List<Proiezione>();
 
     public ICollection<Sala> Sale { get; set; } = new List<Sala>();

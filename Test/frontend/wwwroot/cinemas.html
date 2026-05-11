@@ -88,6 +88,7 @@
     <div id="modal-container"></div>
 
     <script src="/js/theme.js"></script>
+    <script src="/js/api-config.js"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/route-guard.js"></script>
     <script src="/js/template-loader.js"></script>
@@ -145,12 +146,20 @@
             
             grid.innerHTML = currentCinemas.map((cinema, index) => {
                 const icon = icons[index % icons.length];
+                const imageUrl = getCinemaImageUrl(cinema);
                 return `
                     <article class="group relative bg-surface-container-low rounded-xl overflow-hidden border border-outline-variant/10 hover:border-primary-container/30 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer hover-lift reveal-up"
                              style="animation-delay:${(index % 8) * 0.04}s"
                              onclick="openDetailModal(${cinema.id})">
-                        <div class="relative h-24 bg-gradient-to-br from-surface-container-high to-surface-container flex items-center justify-center">
-                            <span class="material-symbols-outlined text-6xl md:text-7xl text-primary-container/40">${icon}</span>
+                        <div class="relative h-32 bg-gradient-to-br from-surface-container-high to-surface-container flex items-center justify-center">
+                            <img
+                                src="${imageUrl}"
+                                alt="Cinema ${escapeHtml(cinema.nome)}"
+                                loading="lazy"
+                                class="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-85 transition-opacity duration-300"
+                                onerror="this.style.display='none'; this.parentElement.classList.add('bg-gradient-to-br','from-surface-container-high','to-surface-container')"
+                            >
+                            <span class="material-symbols-outlined text-6xl md:text-7xl text-white/35 drop-shadow">${icon}</span>
                             <div class="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         </div>
                         <div class="p-4">
@@ -195,14 +204,19 @@
 
             const initials = (cinema.nome || 'C').split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase();
             const canManage = isManager();
+            const imageUrl = getCinemaImageUrl(cinema);
 
             showModal('', `
                 <div class="space-y-5">
-                    <div class="flex items-start gap-4">
-                        <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-container to-[#c0000c] flex items-center justify-center text-white font-bold text-lg flex-shrink-0">${initials}</div>
-                        <div class="min-w-0">
-                            <h2 class="font-headline text-2xl font-bold text-white break-words">${escapeHtml(cinema.nome)}</h2>
-                            <p class="text-on-surface-variant text-sm mt-1">Cinema della rete FilmAPI</p>
+                    <div class="relative h-44 rounded-2xl overflow-hidden border border-outline-variant/20">
+                        <img src="${imageUrl}" alt="Foto ${escapeHtml(cinema.nome)}" class="w-full h-full object-cover" onerror="this.style.display='none'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/45 to-black/10"></div>
+                        <div class="absolute bottom-3 left-3 right-3 flex items-end gap-3">
+                            <div class="w-12 h-12 rounded-xl bg-black/45 backdrop-blur-sm flex items-center justify-center text-white font-bold text-base flex-shrink-0">${initials}</div>
+                            <div class="min-w-0">
+                                <h2 class="font-headline text-xl font-bold text-white break-words">${escapeHtml(cinema.nome)}</h2>
+                                <p class="text-white/80 text-xs mt-0.5">Cinema della rete FilmAPI</p>
+                            </div>
                         </div>
                     </div>
 
@@ -266,6 +280,10 @@
                             <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Posti Massimi *</label>
                             <input type="number" name="postiMassimi" min="1" value="120" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
                         </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">URL Foto Cinema</label>
+                            <input type="url" name="imageUrl" placeholder="https://..." class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
                     </div>
                     <div class="flex justify-end gap-3 mt-6">
                         <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Annulla</button>
@@ -302,6 +320,10 @@
                             <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Posti Massimi *</label>
                             <input type="number" name="postiMassimi" min="1" value="${cinema.postiMassimi || 120}" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
                         </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">URL Foto Cinema</label>
+                            <input type="url" name="imageUrl" value="${escapeHtml(cinema.imageUrl || '')}" placeholder="https://..." class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                        </div>
                     </div>
                     <input type="hidden" name="id" value="${id}">
                     <div class="flex justify-end gap-3 mt-6">
@@ -324,7 +346,8 @@
                 nome: form.nome.value,
                 indirizzo: form.indirizzo.value,
                 citta: form.citta.value,
-                postiMassimi: parseInt(form.postiMassimi.value, 10) || 0
+                postiMassimi: parseInt(form.postiMassimi.value, 10) || 0,
+                imageUrl: (form.imageUrl?.value || '').trim() || null
             };
 
             try {
@@ -386,6 +409,17 @@
             div.textContent = text;
             return div.innerHTML;
         }
+
+        function getCinemaImageUrl(cinema) {
+            const explicitImageUrl = (cinema?.imageUrl || '').trim();
+            if (explicitImageUrl) {
+                return explicitImageUrl;
+            }
+            const seedBase = `${cinema?.nome || 'cinema'}-${cinema?.citta || 'italia'}`.toLowerCase();
+            const safeSeed = seedBase.replace(/[^a-z0-9-]/g, '-');
+            return `https://picsum.photos/seed/${safeSeed}/1200/800`;
+        }
     </script>
 </body>
 </html>
+

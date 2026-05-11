@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestione Utenti - FilmHub</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <main style="max-width:1000px;margin:32px auto;padding:16px;">
+        <h1>Gestione utenti</h1>
+        <p>Pagina riservata ad amministratori.</p>
+        <table id="users-table" border="1" cellpadding="8" cellspacing="0" style="width:100%;margin-top:16px;">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Ruoli</th>
+                    <th>Azione</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <p id="message" style="margin-top:12px;"></p>
+    </main>
+    <script src="/js/api-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/route-guard.js"></script>
+    <script src="js/api-client.js"></script>
+    <script src="js/pages/utenti.js"></script>
+</body>
+</html>

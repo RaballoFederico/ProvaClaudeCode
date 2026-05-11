@@ -10,6 +10,7 @@ public class CinemaDTO
     public decimal? Latitudine { get; set; }
     public decimal? Longitudine { get; set; }
     public string? CodiceLocale { get; set; }
+    public string? ImageUrl { get; set; }
 }
 
 public class CinemaCreateDTO
@@ -21,6 +22,7 @@ public class CinemaCreateDTO
     public decimal? Latitudine { get; set; }
     public decimal? Longitudine { get; set; }
     public string? CodiceLocale { get; set; }
+    public string? ImageUrl { get; set; }
 }
 
 public class CinemaUpdateDTO
@@ -32,4 +34,5 @@ public class CinemaUpdateDTO
     public decimal? Latitudine { get; set; }
     public decimal? Longitudine { get; set; }
     public string? CodiceLocale { get; set; }
+    public string? ImageUrl { get; set; }
 }

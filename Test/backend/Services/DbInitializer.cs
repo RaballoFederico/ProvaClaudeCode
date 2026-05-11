@@ -12,6 +12,23 @@ public static class DbInitializer
     {
         await context.Database.MigrateAsync();
 
+        var alreadySeeded =
+            await context.Ruoli.AnyAsync() &&
+            await context.Categorie.AnyAsync() &&
+            await context.Utenti.AnyAsync() &&
+            await context.Registi.AnyAsync() &&
+            await context.Cinemas.AnyAsync() &&
+            await context.Sale.AnyAsync() &&
+            await context.Films.AnyAsync() &&
+            await context.Shows.AnyAsync();
+
+        if (alreadySeeded)
+        {
+            // Mantiene allineata la vista legacy "Proiezioni" senza rieseguire tutto il seed.
+            await EnsureProiezioniFromShowsAsync(context);
+            return;
+        }
+
         var roleMap = await EnsureRuoliAsync(context);
         var categoryMap = await EnsureCategorieAsync(context);
         var userMap = await EnsureUtentiAsync(context, roleMap);

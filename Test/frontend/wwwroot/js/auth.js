@@ -1,44 +1,19 @@
-function getAuthApiDefaults() {
-    const defaults = [
-        'http://localhost:5001',
-        'http://127.0.0.1:5001',
-        'https://localhost:7217'
-    ];
-
-    return [...new Set(defaults)];
-}
-
-function normalizeStoredApiBaseUrl() {
-    const stored = (window.localStorage.getItem('apiBaseUrl') || '').trim();
-    if (!stored || stored === 'undefined' || stored === 'null') {
-        return null;
+const ApiConfigAdapter = window.ApiConfig || {
+    getCandidates() {
+        return ['http://localhost:5001', 'http://127.0.0.1:5001', 'https://localhost:7217'];
+    },
+    persistBaseUrl(value) {
+        if (!value) return;
+        window.localStorage.setItem('apiBaseUrl', value);
     }
+};
 
-    try {
-        const parsed = new URL(stored);
-        const isLocalDevHost = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
-        const isWrongLocalPort = isLocalDevHost && parsed.port !== '5001' && parsed.port !== '7217';
-        if (isWrongLocalPort) {
-            return null;
-        }
-
-        return parsed.origin;
-    } catch {
-        return null;
-    }
-}
+let API_URL = ApiConfigAdapter.getCandidates()[0];
 
 function getApiCandidates() {
-    const defaults = getAuthApiDefaults();
-    const stored = normalizeStoredApiBaseUrl();
-    if (!stored) {
-        return defaults;
-    }
-
-    return [stored, ...defaults.filter(url => url !== stored)];
+    const all = ApiConfigAdapter.getCandidates();
+    return [API_URL, ...all.filter(x => x !== API_URL)];
 }
-
-let API_URL = getApiCandidates()[0];
 
 async function fetchWithApiFallback(path, options = {}) {
     let response = null;
@@ -48,7 +23,7 @@ async function fetchWithApiFallback(path, options = {}) {
         try {
             response = await fetch(`${candidate}${path}`, options);
             API_URL = candidate;
-            localStorage.setItem('apiBaseUrl', candidate);
+            ApiConfigAdapter.persistBaseUrl(candidate);
             break;
         } catch (err) {
             lastError = err;
@@ -63,10 +38,12 @@ async function fetchWithApiFallback(path, options = {}) {
 }
 
 const Auth = {
-    accessToken: localStorage.getItem('accessToken'),
+    sessionUserKey: 'authUserState',
+    sessionAuthKey: 'authSessionState',
+    accessToken: null,
     refreshToken: null,
-    tokenExpiry: localStorage.getItem('tokenExpiry') ? new Date(localStorage.getItem('tokenExpiry')) : null,
-    user: JSON.parse(localStorage.getItem('user') || 'null'),
+    tokenExpiry: null,
+    user: null,
     initPromise: null,
     autoRefreshTimeoutId: null,
     refreshPromise: null,
@@ -78,11 +55,8 @@ const Auth = {
         this.refreshToken = null;
         this.tokenExpiry = new Date(data.expiresAt);
         this.user = data.utente;
-
-        localStorage.setItem('user', JSON.stringify(data.utente));
-        localStorage.removeItem('refreshToken');
-        localStorage.setItem('accessToken', data.accessToken || '');
-        localStorage.setItem('tokenExpiry', data.expiresAt || '');
+        this.persistAuthSession();
+        this.persistUserSession();
 
         this.scheduleAutoRefresh();
     },
@@ -93,16 +67,79 @@ const Auth = {
         this.refreshToken = null;
         this.tokenExpiry = null;
         this.user = null;
+        this.clearAuthSession();
+        this.clearUserSession();
 
         if (this.autoRefreshTimeoutId) {
             clearTimeout(this.autoRefreshTimeoutId);
             this.autoRefreshTimeoutId = null;
         }
 
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('tokenExpiry');
-        localStorage.removeItem('user');
+    },
+
+    hydrateUserSession() {
+        if (this.user) return;
+
+        try {
+            const raw = window.localStorage.getItem(this.sessionUserKey) || window.sessionStorage.getItem(this.sessionUserKey);
+            if (!raw) return;
+
+            const parsed = JSON.parse(raw);
+            if (parsed && typeof parsed === 'object') {
+                this.user = parsed;
+            }
+        } catch {
+            this.clearUserSession();
+        }
+    },
+
+    hydrateAuthSession() {
+        if (this.accessToken && this.tokenExpiry) return;
+
+        try {
+            const raw = window.localStorage.getItem(this.sessionAuthKey) || window.sessionStorage.getItem(this.sessionAuthKey);
+            if (!raw) return;
+            const parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed !== 'object') return;
+
+            if (typeof parsed.accessToken === 'string' && parsed.accessToken.trim()) {
+                this.accessToken = parsed.accessToken;
+            }
+            if (typeof parsed.tokenExpiry === 'string' && parsed.tokenExpiry.trim()) {
+                this.tokenExpiry = new Date(parsed.tokenExpiry);
+            }
+        } catch {
+            this.clearAuthSession();
+        }
+    },
+
+    persistUserSession() {
+        if (!this.user) {
+            this.clearUserSession();
+            return;
+        }
+
+        window.localStorage.setItem(this.sessionUserKey, JSON.stringify(this.user));
+    },
+
+    persistAuthSession() {
+        if (!this.accessToken || !this.tokenExpiry) {
+            this.clearAuthSession();
+            return;
+        }
+
+        window.localStorage.setItem(this.sessionAuthKey, JSON.stringify({
+            accessToken: this.accessToken,
+            tokenExpiry: this.tokenExpiry instanceof Date ? this.tokenExpiry.toISOString() : this.tokenExpiry
+        }));
+    },
+
+    clearUserSession() {
+        window.localStorage.removeItem(this.sessionUserKey);
+    },
+
+    clearAuthSession() {
+        window.localStorage.removeItem(this.sessionAuthKey);
     },
 
     scheduleAutoRefresh() {
@@ -203,6 +240,47 @@ const Auth = {
         }
     },
 
+    async recoverAccount(email, returnUrl) {
+        try {
+            const response = await fetchWithApiFallback('/auth/recover-account', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, returnUrl })
+            });
+
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('Funzione recupero account non disponibile sul server attuale: riavvia il backend aggiornato.');
+                }
+                throw new Error(payload.message || 'Errore durante la richiesta recupero account');
+            }
+
+            return { success: true, message: payload.message || 'Controlla la tua email per recuperare l\'account.' };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    },
+
+    async completeAccountRecovery(token, newPassword) {
+        try {
+            const response = await fetchWithApiFallback('/auth/recover-account/complete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token, newPassword })
+            });
+
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(payload.message || 'Errore durante il recupero account');
+            }
+
+            return { success: true, message: payload.message, username: payload.username };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    },
+
     async resetPassword(token, newPassword) {
         try {
             const response = await fetchWithApiFallback('/auth/reset-password', {
@@ -214,6 +292,26 @@ const Auth = {
             const payload = await response.json().catch(() => ({}));
             if (!response.ok) {
                 throw new Error(payload.message || 'Errore durante il reset password');
+            }
+
+            return { success: true, message: payload.message || 'Password aggiornata con successo' };
+        } catch (error) {
+            return { success: false, error: error.message };
+        }
+    },
+
+    async changePassword(currentPassword, newPassword) {
+        try {
+            const response = await fetchWithApiFallback('/auth/change-password', {
+                method: 'POST',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify({ currentPassword, newPassword }),
+                credentials: 'include'
+            });
+
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(payload.message || 'Errore durante il cambio password');
             }
 
             return { success: true, message: payload.message || 'Password aggiornata con successo' };
@@ -336,6 +434,8 @@ const Auth = {
 
     ensureInitialized() {
         if (!this.initPromise) {
+            this.hydrateAuthSession();
+            this.hydrateUserSession();
             const hasValidToken = this.isAuthenticated() && !!this.user;
             const initAction = hasValidToken
                 ? Promise.resolve(true)
@@ -414,6 +514,8 @@ const Auth = {
         return this.user;
     }
 };
+
+window.Auth = Auth;
 
 // Inizializza controllo token all'avvio
 document.addEventListener('DOMContentLoaded', () => {

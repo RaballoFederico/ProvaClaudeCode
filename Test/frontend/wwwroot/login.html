@@ -76,7 +76,7 @@
             <form id="login-form" class="space-y-6">
                 <div>
                     <label for="username" class="block text-sm font-medium text-on-surface-variant mb-2">
-                        Username o Email
+                        Username
                     </label>
                     <div class="relative">
                         <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
@@ -88,7 +88,7 @@
                             name="username" 
                             required
                             class="w-full pl-10 pr-4 py-3 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all duration-200"
-                            placeholder="Inserisci username o email"
+                            placeholder="Inserisci username"
                         >
                     </div>
                 </div>
@@ -116,8 +116,37 @@
                 </div>
 
                 <div class="space-y-2">
+                    <button id="toggle-forgot-username" type="button" class="block mx-auto text-center text-sm text-primary-container hover:opacity-80 font-medium transition-opacity">
+                        Recupera account
+                    </button>
                     <button id="toggle-forgot-password" type="button" class="block mx-auto text-center text-sm text-primary-container hover:opacity-80 font-medium transition-opacity">
                         Password dimenticata?
+                    </button>
+                </div>
+
+                <div id="recovery-email-panel" class="hidden space-y-3 p-3 rounded-xl bg-surface-container-high/70 border border-outline-variant/20">
+                    <div class="text-sm text-on-surface-variant">Inserisci la tua email per recuperare credenziali</div>
+                    <input
+                        type="email"
+                        id="recovery-email"
+                        class="w-full px-3 py-2.5 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all duration-200"
+                        placeholder="La tua email"
+                    >
+                    <button type="button" id="recover-account-send-btn" class="w-full py-2.5 px-4 bg-primary-container text-white rounded-xl hover:opacity-90 transition-opacity">
+                        Invia email recupero account
+                    </button>
+                </div>
+
+                <div id="forgot-password-panel" class="hidden space-y-3 p-3 rounded-xl bg-surface-container-high/70 border border-outline-variant/20">
+                    <div class="text-sm text-on-surface-variant">Inserisci la tua email per ricevere il link di reset password</div>
+                    <input
+                        type="email"
+                        id="forgot-password-email"
+                        class="w-full px-3 py-2.5 bg-surface-container-high border border-outline-variant/30 rounded-xl text-on-surface placeholder-on-surface-variant/50 focus:border-primary-container focus:ring-1 focus:ring-primary-container transition-all duration-200"
+                        placeholder="La tua email"
+                    >
+                    <button type="button" id="forgot-password-send-btn" class="w-full py-2.5 px-4 bg-primary-container text-white rounded-xl hover:opacity-90 transition-opacity">
+                        Invia email reset
                     </button>
                 </div>
 
@@ -184,8 +213,10 @@
     </div>
 
     <script src="js/theme.js"></script>
+    <script src="/js/api-config.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/route-guard.js"></script>
+    <script src="/js/api-client.js"></script>
     <script src="js/utils.js"></script>
     <script>
         // Toggle password visibility
@@ -378,29 +409,79 @@
         });
 
         const toggleForgotBtn = document.getElementById('toggle-forgot-password');
-        const usernameInput = document.getElementById('username');
+        const toggleForgotUsernameBtn = document.getElementById('toggle-forgot-username');
+        const recoveryEmailPanel = document.getElementById('recovery-email-panel');
+        const recoveryEmailInput = document.getElementById('recovery-email');
+        const recoverAccountSendBtn = document.getElementById('recover-account-send-btn');
+        const forgotPasswordPanel = document.getElementById('forgot-password-panel');
+        const forgotPasswordEmailInput = document.getElementById('forgot-password-email');
+        const forgotPasswordSendBtn = document.getElementById('forgot-password-send-btn');
         const resetPanel = document.getElementById('reset-password-panel');
         const resetPasswordBtn = document.getElementById('reset-password-btn');
         const resetNewPasswordInput = document.getElementById('reset-new-password');
         const resetConfirmPasswordInput = document.getElementById('reset-confirm-password');
+        const recoveryToken = new URLSearchParams(window.location.search).get('recoverToken');
 
-        toggleForgotBtn.addEventListener('click', async () => {
+        toggleForgotUsernameBtn.addEventListener('click', () => {
             hideError();
-            const email = (usernameInput.value || '').trim();
+            recoveryEmailPanel.classList.toggle('hidden');
+            forgotPasswordPanel.classList.add('hidden');
+            if (!recoveryEmailPanel.classList.contains('hidden')) {
+                recoveryEmailInput.focus();
+            }
+        });
+
+        recoverAccountSendBtn.addEventListener('click', async () => {
+            hideError();
+            const email = (recoveryEmailInput.value || '').trim();
             if (!email) {
-                showError('Inserisci la tua email nel campo "Username o Email" qui sopra.');
-                usernameInput.focus();
+                showError('Inserisci la tua email nel campo di recupero.');
+                recoveryEmailInput.focus();
+                return;
+            }
+
+            recoverAccountSendBtn.disabled = true;
+            recoverAccountSendBtn.textContent = 'Invio in corso...';
+            try {
+                const result = await Auth.recoverAccount(email, window.location.origin + '/login.html');
+                if (!result.success) {
+                    throw new Error(result.error || 'Errore invio email recupero account');
+                }
+                showSuccess(result.message || 'Controlla la tua email per il recupero account.');
+            } catch (error) {
+                showError(error.message || 'Errore invio email recupero account');
+            } finally {
+                recoverAccountSendBtn.disabled = false;
+                recoverAccountSendBtn.textContent = 'Invia email recupero account';
+            }
+        });
+
+        toggleForgotBtn.addEventListener('click', () => {
+            hideError();
+            forgotPasswordPanel.classList.toggle('hidden');
+            recoveryEmailPanel.classList.add('hidden');
+            if (!forgotPasswordPanel.classList.contains('hidden')) {
+                forgotPasswordEmailInput.focus();
+            }
+        });
+
+        forgotPasswordSendBtn.addEventListener('click', async () => {
+            hideError();
+            const email = (forgotPasswordEmailInput.value || '').trim();
+            if (!email) {
+                showError('Inserisci la tua email nel campo recupero password.');
+                forgotPasswordEmailInput.focus();
                 return;
             }
 
             if (!email.includes('@')) {
-                showError('Per il recupero password inserisci un indirizzo email valido nel campo sopra.');
-                usernameInput.focus();
+                showError('Inserisci un indirizzo email valido per il recupero password.');
+                forgotPasswordEmailInput.focus();
                 return;
             }
 
-            toggleForgotBtn.disabled = true;
-            toggleForgotBtn.textContent = 'Invio in corso...';
+            forgotPasswordSendBtn.disabled = true;
+            forgotPasswordSendBtn.textContent = 'Invio in corso...';
             try {
                 const result = await Auth.forgotPassword(email, window.location.origin + '/login.html');
                 if (!result.success) {
@@ -410,8 +491,8 @@
             } catch (error) {
                 showError(error.message || 'Errore invio email reset');
             } finally {
-                toggleForgotBtn.disabled = false;
-                toggleForgotBtn.textContent = 'Password dimenticata?';
+                forgotPasswordSendBtn.disabled = false;
+                forgotPasswordSendBtn.textContent = 'Invia email reset';
             }
         });
 
@@ -430,27 +511,35 @@
                 return;
             }
 
-            const token = new URLSearchParams(window.location.search).get('resetToken');
+            const resetToken = new URLSearchParams(window.location.search).get('resetToken');
+            const token = resetToken || recoveryToken;
             if (!token) {
-                showError('Token reset non presente.');
+                showError('Token di recupero non presente.');
                 return;
             }
 
             resetPasswordBtn.disabled = true;
             resetPasswordBtn.textContent = 'Aggiornamento...';
             try {
-                const result = await Auth.resetPassword(token, newPassword);
+                const result = resetToken
+                    ? await Auth.resetPassword(token, newPassword)
+                    : await Auth.completeAccountRecovery(token, newPassword);
                 if (!result.success) {
-                    throw new Error(result.error || 'Reset password non riuscito');
+                    throw new Error(result.error || 'Recupero account non riuscito');
                 }
 
-                showSuccess('Password aggiornata. Ora puoi fare login.');
+                if (resetToken) {
+                    showSuccess('Password aggiornata. Ora puoi fare login.');
+                } else {
+                    showSuccess('Recupero completato. Ti abbiamo inviato username e nuova password via email.');
+                }
                 const url = new URL(window.location.href);
                 url.searchParams.delete('resetToken');
+                url.searchParams.delete('recoverToken');
                 window.history.replaceState({}, document.title, url.pathname + (url.searchParams.toString() ? `?${url.searchParams}` : ''));
                 resetPanel.classList.add('hidden');
             } catch (error) {
-                showError(error.message || 'Reset password non riuscito');
+                showError(error.message || 'Recupero account non riuscito');
             } finally {
                 resetPasswordBtn.disabled = false;
                 resetPasswordBtn.textContent = 'Aggiorna password';
@@ -496,8 +585,12 @@
         (async () => {
             const urlParams = new URLSearchParams(window.location.search);
             const resetToken = urlParams.get('resetToken');
-            if (resetToken) {
+            const recoverToken = urlParams.get('recoverToken');
+            if (resetToken || recoverToken) {
                 resetPanel.classList.remove('hidden');
+            }
+            if (recoverToken) {
+                resetPasswordBtn.textContent = 'Completa recupero account';
             }
 
             await Auth.ensureInitialized();
@@ -511,3 +604,4 @@
     </script>
 </body>
 </html>
+

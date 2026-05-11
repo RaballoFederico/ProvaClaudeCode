@@ -90,6 +90,49 @@ public sealed class CustomWebApplicationFactory : WebApplicationFactory<Program>
         return client;
     }
 
+    public async Task<HttpClient> CreateUserClientAsync(string username = "user", string password = "User123!", string email = "user@test.local")
+    {
+        using (var scope = Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<FilmDbContext>();
+            if (!await db.Utenti.AnyAsync(u => u.Username == username))
+            {
+                var userRole = await db.Ruoli.FirstAsync(r => r.Nome == "User");
+                var user = new Utente
+                {
+                    Username = username,
+                    Email = email,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+                    Attivo = true,
+                    DataRegistrazione = DateTime.UtcNow,
+                    UtentiRuoli = new List<UtenteRuolo> { new UtenteRuolo { RuoloId = userRole.Id } }
+                };
+                db.Utenti.Add(user);
+                await db.SaveChangesAsync();
+            }
+        }
+
+        var client = CreateClient();
+        var login = await client.PostAsJsonAsync("/auth/login", new LoginRequestDTO
+        {
+            Username = username,
+            Password = password
+        });
+        var data = await login.Content.ReadFromJsonAsync<LoginResponseDTO>();
+        if (data?.AccessToken != null)
+        {
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", data.AccessToken);
+        }
+        return client;
+    }
+
+    public async Task<T> WithDbContextAsync<T>(Func<FilmDbContext, Task<T>> action)
+    {
+        using var scope = Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<FilmDbContext>();
+        return await action(db);
+    }
+
     private static async Task SeedAuthDataAsync(FilmDbContext db)
     {
         if (!await db.Ruoli.AnyAsync())

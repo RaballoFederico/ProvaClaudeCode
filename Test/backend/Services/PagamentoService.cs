@@ -60,6 +60,52 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
         return new RimborsoResultDTO { Success = true, Message = "Rimborso registrato" };
     }
 
+    public async Task<RimborsoResultDTO> RimborsaPagamentoStripeAsync(string paymentIntentId, decimal importo, string? motivo = null)
+    {
+        if (string.IsNullOrWhiteSpace(paymentIntentId))
+        {
+            return new RimborsoResultDTO { Success = false, Message = "PaymentIntent non valido" };
+        }
+
+        if (importo <= 0m)
+        {
+            return new RimborsoResultDTO { Success = false, Message = "Importo rimborso non valido" };
+        }
+
+        if (!StripeConfigurato)
+        {
+            if (paymentIntentId.StartsWith("pi_mock_", StringComparison.OrdinalIgnoreCase))
+            {
+                return new RimborsoResultDTO { Success = true, Message = "Rimborso Stripe simulato completato" };
+            }
+
+            return new RimborsoResultDTO { Success = false, Message = "Stripe non configurato" };
+        }
+
+        try
+        {
+            var refundService = new RefundService();
+            var options = new RefundCreateOptions
+            {
+                PaymentIntent = paymentIntentId,
+                Amount = (long)Math.Round(importo * 100m, 0, MidpointRounding.AwayFromZero),
+                Reason = "requested_by_customer",
+                Metadata = new Dictionary<string, string>
+                {
+                    { "source", "filmapi_refund" },
+                    { "motivo", string.IsNullOrWhiteSpace(motivo) ? "rimborso utente" : motivo.Trim() }
+                }
+            };
+
+            await refundService.CreateAsync(options);
+            return new RimborsoResultDTO { Success = true, Message = "Rimborso Stripe completato" };
+        }
+        catch (Exception ex)
+        {
+            return new RimborsoResultDTO { Success = false, Message = $"Errore rimborso Stripe: {ex.Message}" };
+        }
+    }
+
     public async Task<StripeCheckoutSessionDTO> CreaCheckoutSessionAsync(decimal importo, int utenteId, string successUrl, string cancelUrl, string? productName = null, string integration = "filmapi_checkout", Dictionary<string, string>? extraMetadata = null)
     {
         if (importo <= 0)

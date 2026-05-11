@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\ProgettoFilmAPI\\ProvaClaudeCode\\Test\\FilmAPI\\FilmAPI.csproj": {}
+    "D:\\Scuola\\5IA\\INFO\\ClaudeCode\\Test\\FilmAPI\\FilmAPI.csproj": {}
   },
   "projects": {
-    "C:\\ProgettoFilmAPI\\ProvaClaudeCode\\Test\\FilmAPI\\FilmAPI.csproj": {
+    "D:\\Scuola\\5IA\\INFO\\ClaudeCode\\Test\\FilmAPI\\FilmAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\ProgettoFilmAPI\\ProvaClaudeCode\\Test\\FilmAPI\\FilmAPI.csproj",
+        "projectUniqueName": "D:\\Scuola\\5IA\\INFO\\ClaudeCode\\Test\\FilmAPI\\FilmAPI.csproj",
         "projectName": "FilmAPI",
-        "projectPath": "C:\\ProgettoFilmAPI\\ProvaClaudeCode\\Test\\FilmAPI\\FilmAPI.csproj",
+        "projectPath": "D:\\Scuola\\5IA\\INFO\\ClaudeCode\\Test\\FilmAPI\\FilmAPI.csproj",
         "packagesPath": "C:\\Users\\feder\\.nuget\\packages\\",
-        "outputPath": "C:\\ProgettoFilmAPI\\ProvaClaudeCode\\Test\\FilmAPI\\obj\\",
+        "outputPath": "D:\\Scuola\\5IA\\INFO\\ClaudeCode\\Test\\FilmAPI\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\feder\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -38,15 +38,23 @@
           "auditLevel": "low",
           "auditMode": "all"
         },
-        "SdkAnalysisLevel": "10.0.200"
+        "SdkAnalysisLevel": "10.0.100"
       },
       "frameworks": {
         "net10.0": {
           "targetAlias": "net10.0",
           "dependencies": {
+            "BCrypt.Net-Next": {
+              "target": "Package",
+              "version": "[4.0.3, )"
+            },
             "DotNetEnv": {
               "target": "Package",
               "version": "[3.1.1, )"
+            },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[9.0.0, )"
             },
             "Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore": {
               "target": "Package",
@@ -90,7 +98,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.202/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\10.0.107/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",

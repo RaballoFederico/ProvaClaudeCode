@@ -1,6 +1,7 @@
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
+using FilmAPI.Services.Interfaces;
 using FilmAPI.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -189,8 +190,9 @@ public static class AdminEndpoints
             return Results.Ok(utenti);
         });
 
-        utentiGroup.MapPut("/{id}/ruoli", [Authorize(Roles = "Admin")] async (int id, UpdateRuoliRequestDTO request, FilmDbContext db) =>
+        utentiGroup.MapPut("/{id}/ruoli", [Authorize(Roles = "Admin")] async (int id, UpdateRuoliRequestDTO request, HttpContext context, FilmDbContext db, IUserSecurityAuditService auditService) =>
         {
+            var actorUserId = GetUserId(context);
             var utente = await db.Utenti
                 .Include(u => u.UtentiRuoli)
                 .FirstOrDefaultAsync(u => u.Id == id);
@@ -228,7 +230,47 @@ public static class AdminEndpoints
             }
 
             await db.SaveChangesAsync();
+            await auditService.LogAsync("admin_role_change", "success", actorUserId, id, utente.Email, context.Connection.RemoteIpAddress?.ToString(), $"roleIds={string.Join(',', request.RuoloIds)}");
             return Results.Ok(new { message = "Ruoli aggiornati con successo" });
+        });
+
+        utentiGroup.MapPost("/invito", [Authorize(Roles = "Admin")] async (
+            CreateInviteRequestDTO request,
+            HttpContext context,
+            IAccountActionTokenService tokenService,
+            IEmailService emailService,
+            IUserSecurityAuditService auditService) =>
+        {
+            var actorUserId = GetUserId(context);
+            var email = (request.Email ?? string.Empty).Trim().ToLowerInvariant();
+            var ruolo = (request.Ruolo ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(email) || !email.Contains('@'))
+            {
+                return Results.BadRequest(new { message = "Email non valida" });
+            }
+
+            if (!string.Equals(ruolo, "PowerUser", StringComparison.OrdinalIgnoreCase)
+                && !string.Equals(ruolo, "Admin", StringComparison.OrdinalIgnoreCase))
+            {
+                return Results.BadRequest(new { message = "Ruolo invito consentito: PowerUser o Admin" });
+            }
+
+            var token = await tokenService.CreateAsync(email, AccountActionTokenPurpose.AccountInvite, TimeSpan.FromHours(24), null, ruolo);
+            var frontendBase = ResolveFrontendBaseUrl(request.ReturnUrl);
+            var inviteUrl = $"{frontendBase.TrimEnd('/')}/reimposta-password.html?inviteToken={Uri.EscapeDataString(token)}&email={Uri.EscapeDataString(email)}";
+
+            var html = $@"
+                <div style='font-family:Segoe UI,Arial,sans-serif;line-height:1.45;color:#1f2937'>
+                    <h2>Invito ruolo {System.Net.WebUtility.HtmlEncode(ruolo)}</h2>
+                    <p>Hai ricevuto un invito per completare il tuo account.</p>
+                    <p><a href='{inviteUrl}'>Completa invito</a></p>
+                    <p>Link valido 24 ore, monouso.</p>
+                </div>";
+
+            await emailService.InviaConfermaAcquistoAsync(email, $"FilmHub - Invito {ruolo}", html);
+            await auditService.LogAsync("admin_invite_created", "success", actorUserId, null, email, context.Connection.RemoteIpAddress?.ToString(), $"role={ruolo}");
+
+            return Results.Ok(new { message = "Invito creato", email, ruolo });
         });
 
         return app;
@@ -238,5 +280,15 @@ public static class AdminEndpoints
     {
         var userIdClaim = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         return int.Parse(userIdClaim!);
+    }
+
+    private static string ResolveFrontendBaseUrl(string? returnUrl)
+    {
+        if (!string.IsNullOrWhiteSpace(returnUrl) && Uri.TryCreate(returnUrl, UriKind.Absolute, out var parsed))
+        {
+            return $"{parsed.Scheme}://{parsed.Authority}";
+        }
+
+        return "http://localhost:5002";
     }
 }

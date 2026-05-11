@@ -67,6 +67,7 @@
     <div id="footer-container"></div>
 
     <script src="/js/theme.js"></script>
+    <script src="/js/api-config.js"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/route-guard.js"></script>
     <script src="/js/template-loader.js"></script>
@@ -106,7 +107,16 @@
 
             grid.innerHTML = cinemas.map((c, index) => `
                 <article class="app-card border ${selectedCinemaId === c.id ? 'border-primary-container/60' : 'border-outline-variant/20'} overflow-hidden hover-lift reveal-up" style="animation-delay:${(index % 8) * 0.04}s">
-                    <div class="h-24 bg-gradient-to-r from-primary-container/30 via-surface-container-high to-transparent"></div>
+                    <div class="h-28 relative overflow-hidden">
+                        <img
+                            src="${getCinemaImageUrl(c)}"
+                            alt="Cinema ${escapeHtml(c.nome)}"
+                            loading="lazy"
+                            class="absolute inset-0 w-full h-full object-cover opacity-75"
+                            onerror="this.style.display='none'; this.parentElement.classList.add('bg-gradient-to-r','from-primary-container/30','via-surface-container-high','to-transparent')"
+                        >
+                        <div class="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/10"></div>
+                    </div>
                     <div class="p-4 -mt-6">
                         <div class="app-chip text-[11px] ${selectedCinemaId === c.id ? 'border-primary-container/40 text-primary-container bg-primary-container/10' : ''}">${selectedCinemaId === c.id ? 'Cinema attivo' : 'Disponibile'}</div>
                         <h3 class="font-headline text-lg font-bold mt-2">${escapeHtml(c.nome)}</h3>
@@ -170,6 +180,18 @@
             div.textContent = text || '';
             return div.innerHTML;
         }
+
+        function getCinemaImageUrl(cinema) {
+            const explicitImageUrl = (cinema?.imageUrl || '').trim();
+            if (explicitImageUrl) {
+                return explicitImageUrl;
+            }
+
+            const seedBase = `${cinema?.nome || 'cinema'}-${cinema?.citta || 'italia'}`.toLowerCase();
+            const safeSeed = seedBase.replace(/[^a-z0-9-]/g, '-');
+            return `https://picsum.photos/seed/${safeSeed}/1200/800`;
+        }
     </script>
 </body>
 </html>
+

@@ -29,6 +29,8 @@ public class FilmDbContext : DbContext
     public DbSet<FilmCategoria> FilmsCategorie { get; set; } = null!;
     public DbSet<ProiezioneSalvata> ProiezioniSalvate { get; set; } = null!;
     public DbSet<NotificaUtente> NotificheUtente { get; set; } = null!;
+    public DbSet<AccountActionToken> AccountActionTokens { get; set; } = null!;
+    public DbSet<UserSecurityAuditLog> UserSecurityAuditLogs { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -72,6 +74,7 @@ public class FilmDbContext : DbContext
             entity.Property(e => e.Latitudine).HasColumnType("decimal(10,8)");
             entity.Property(e => e.Longitudine).HasColumnType("decimal(11,8)");
             entity.Property(e => e.CodiceLocale).HasMaxLength(20);
+            entity.Property(e => e.ImageUrl).HasMaxLength(1000);
         });
 
         modelBuilder.Entity<Sala>(entity =>
@@ -339,6 +342,32 @@ public class FilmDbContext : DbContext
                 .WithMany(u => u.Notifiche)
                 .HasForeignKey(e => e.UtenteId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AccountActionToken>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Email).IsRequired().HasMaxLength(120);
+            entity.Property(e => e.TokenHash).IsRequired().HasMaxLength(128);
+            entity.Property(e => e.MetadataJson).HasMaxLength(512);
+            entity.HasIndex(e => e.TokenHash).IsUnique();
+            entity.HasIndex(e => new { e.Email, e.Purpose, e.ExpiresAt });
+
+            entity.HasOne(e => e.Utente)
+                .WithMany()
+                .HasForeignKey(e => e.UtenteId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<UserSecurityAuditLog>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.EventType).IsRequired().HasMaxLength(80);
+            entity.Property(e => e.Outcome).IsRequired().HasMaxLength(80);
+            entity.Property(e => e.Email).HasMaxLength(120);
+            entity.Property(e => e.IpAddress).HasMaxLength(64);
+            entity.Property(e => e.Details).HasMaxLength(500);
+            entity.HasIndex(e => new { e.CreatedAt, e.EventType });
         });
     }
 }

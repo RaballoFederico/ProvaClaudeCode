@@ -22,6 +22,55 @@ namespace FilmAPI.Data.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
+            modelBuilder.Entity("FilmAPI.Model.AccountActionToken", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("MetadataJson")
+                        .HasMaxLength(512)
+                        .HasColumnType("varchar(512)");
+
+                    b.Property<int>("Purpose")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("varchar(128)");
+
+                    b.Property<DateTime?>("UsedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("UtenteId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("UtenteId");
+
+                    b.HasIndex("Email", "Purpose", "ExpiresAt");
+
+                    b.ToTable("account_action_tokens");
+                });
+
             modelBuilder.Entity("FilmAPI.Model.Acquisto", b =>
                 {
                     b.Property<int>("Id")
@@ -189,6 +238,10 @@ namespace FilmAPI.Data.Migrations
                     b.Property<string>("CodiceLocale")
                         .HasMaxLength(20)
                         .HasColumnType("varchar(20)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("varchar(1000)");
 
                     b.Property<string>("Indirizzo")
                         .IsRequired()
@@ -782,6 +835,52 @@ namespace FilmAPI.Data.Migrations
                     b.ToTable("transazioni_credito");
                 });
 
+            modelBuilder.Entity("FilmAPI.Model.UserSecurityAuditLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int?>("ActorUserId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Details")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(120)
+                        .HasColumnType("varchar(120)");
+
+                    b.Property<string>("EventType")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<string>("IpAddress")
+                        .HasMaxLength(64)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<string>("Outcome")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("varchar(80)");
+
+                    b.Property<int?>("TargetUserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt", "EventType");
+
+                    b.ToTable("user_security_audit_logs");
+                });
+
             modelBuilder.Entity("FilmAPI.Model.Utente", b =>
                 {
                     b.Property<int>("Id")
@@ -872,6 +971,16 @@ namespace FilmAPI.Data.Migrations
                     b.HasIndex("RuoloId");
 
                     b.ToTable("utenti_ruoli");
+                });
+
+            modelBuilder.Entity("FilmAPI.Model.AccountActionToken", b =>
+                {
+                    b.HasOne("FilmAPI.Model.Utente", "Utente")
+                        .WithMany()
+                        .HasForeignKey("UtenteId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Utente");
                 });
 
             modelBuilder.Entity("FilmAPI.Model.Acquisto", b =>

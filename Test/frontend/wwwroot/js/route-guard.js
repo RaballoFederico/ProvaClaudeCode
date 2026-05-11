@@ -34,7 +34,11 @@ const AccessControl = {
         'termini.html': null,
         '404.html': null,
         'login.html': 'guest',
-        'register.html': 'guest'
+        'register.html': 'guest',
+        'recupera-password.html': 'guest',
+        'reimposta-password.html': 'guest',
+        'social-login-complete.html': 'guest',
+        'utenti.html': 'admin'
     },
 
     getUser() {

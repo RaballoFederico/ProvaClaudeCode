@@ -1,23 +1,20 @@
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowBackendApi", policy =>
-    {
-        policy.WithOrigins("http://localhost:5000")
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
-});
-
 var app = builder.Build();
 
-app.UseCors("AllowBackendApi");
-
 app.UseDefaultFiles();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    OnPrepareResponse = context =>
+    {
+        // Evita che browser mantenga versioni obsolete degli script durante sviluppo.
+        context.Context.Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
+        context.Context.Response.Headers.Pragma = "no-cache";
+        context.Context.Response.Headers.Expires = "0";
+    }
+});
 
 app.MapGet("/", () => Results.Redirect("/home.html"));
-app.MapFallbackToFile("home.html");
+app.MapFallback(() => Results.NotFound(new { message = "Pagina non trovata" }));
 
 app.Run();
