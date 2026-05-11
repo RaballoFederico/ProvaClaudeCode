@@ -80,6 +80,7 @@
     </div>
 
     <script src="/js/theme.js"></script>
+    <script src="/js/api-config.js"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/route-guard.js"></script>
     <script src="/js/template-loader.js"></script>
@@ -108,10 +109,11 @@
         }
 
         async function loadData() {
+            const windowRange = getDefaultShowWindow();
             [cinemas, films, shows] = await Promise.all([
                 ApiClient.get('/cinemas'),
-                ApiClient.get('/films'),
-                ApiClient.get('/admin/shows')
+                ApiClient.get('/films?summary=true&limit=500'),
+                ApiClient.get(`/admin/shows?fromDate=${windowRange.fromDate}&toDate=${windowRange.toDate}&take=600`)
             ]);
 
             const cinemaSel = document.getElementById('filter-cinema');
@@ -155,15 +157,42 @@
             const salaId = document.getElementById('filter-sala').value;
             const filmId = document.getElementById('filter-film').value;
             const data = document.getElementById('filter-data').value;
+            const windowRange = getDefaultShowWindow();
 
             const query = new URLSearchParams();
             if (cinemaId) query.set('cinemaId', cinemaId);
             if (salaId) query.set('salaId', salaId);
             if (filmId) query.set('filmId', filmId);
-            if (data) query.set('data', data);
+            if (data) {
+                query.set('data', data);
+            } else {
+                query.set('fromDate', windowRange.fromDate);
+                query.set('toDate', windowRange.toDate);
+                query.set('take', '600');
+            }
 
             shows = await ApiClient.get(`/admin/shows${query.toString() ? '?' + query.toString() : ''}`);
             renderTable(shows);
+        }
+
+        function getDefaultShowWindow() {
+            const now = new Date();
+            const from = new Date(now);
+            from.setDate(from.getDate() - 7);
+            const to = new Date(now);
+            to.setDate(to.getDate() + 60);
+
+            return {
+                fromDate: formatDateToIso(from),
+                toDate: formatDateToIso(to)
+            };
+        }
+
+        function formatDateToIso(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
         }
 
         function renderTable(rows) {
@@ -262,3 +291,4 @@
     </script>
 </body>
 </html>
+

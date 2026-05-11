@@ -2,15 +2,24 @@ using System.Text;
 using System.Threading.RateLimiting;
 using DotNetEnv;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Net;
 using FilmAPI.Data;
 using FilmAPI.Endpoints;
 using FilmAPI.Services;
 using FilmAPI.Services.Interfaces;
 using Stripe;
 
-Env.Load();
+var aspnetEnvironment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+if (string.Equals(aspnetEnvironment, "Development", StringComparison.OrdinalIgnoreCase)
+    || string.Equals(aspnetEnvironment, "Staging", StringComparison.OrdinalIgnoreCase)
+    || string.IsNullOrWhiteSpace(aspnetEnvironment))
+{
+    Env.Load();
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,6 +56,8 @@ builder.Services.AddScoped<IBigliettoService, BigliettoService>();
 builder.Services.AddScoped<ICreditoService, CreditoService>();
 builder.Services.AddScoped<IPagamentoService, PagamentoService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IAccountActionTokenService, AccountActionTokenService>();
+builder.Services.AddScoped<IUserSecurityAuditService, UserSecurityAuditService>();
 builder.Services.AddScoped<IPdfService, PdfService>();
 builder.Services.AddScoped<ITMDBService, TMDBService>();
 builder.Services.AddSingleton<TMDBFilmSyncService>();
@@ -89,6 +100,18 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddOpenApi();
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient();
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+    options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(new[]
+    {
+        "application/json"
+    });
+});
+builder.Services.Configure<BrotliCompressionProviderOptions>(options => options.Level = System.IO.Compression.CompressionLevel.Fastest);
+builder.Services.Configure<GzipCompressionProviderOptions>(options => options.Level = System.IO.Compression.CompressionLevel.Fastest);
 
 builder.Services.AddRateLimiter(options =>
 {
@@ -110,7 +133,18 @@ builder.Services.AddRateLimiter(options =>
             context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
             _ => new FixedWindowRateLimiterOptions
             {
-                PermitLimit = 20,
+                PermitLimit = 12,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
+    options.AddPolicy("auth-sensitive", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 4,
                 Window = TimeSpan.FromMinutes(1),
                 QueueLimit = 0,
                 AutoReplenishment = true
@@ -132,11 +166,36 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
+        var configuredOrigins = (Environment.GetEnvironmentVariable("CORS_ALLOWED_ORIGINS") ?? string.Empty)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(o => o.TrimEnd('/'))
+            .Where(o => Uri.TryCreate(o, UriKind.Absolute, out _))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        var isProduction = builder.Environment.IsProduction();
         policy.SetIsOriginAllowed(origin =>
-            Uri.TryCreate(origin, UriKind.Absolute, out var uri)
-            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
-            && (uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
-                || uri.Host.Equals("127.0.0.1")))
+        {
+            if (!Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+            {
+                return false;
+            }
+
+            if (configuredOrigins.Length > 0)
+            {
+                var normalizedOrigin = uri.GetLeftPart(UriPartial.Authority).TrimEnd('/');
+                return configuredOrigins.Any(o => string.Equals(o, normalizedOrigin, StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (isProduction)
+            {
+                return false;
+            }
+
+            return (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
+                && (uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+                    || uri.Host.Equals("127.0.0.1"));
+        })
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();
@@ -144,8 +203,28 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddSwaggerDocument();
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+
+    var trustedProxies = (Environment.GetEnvironmentVariable("TRUSTED_PROXIES") ?? string.Empty)
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    foreach (var proxy in trustedProxies)
+    {
+        if (IPAddress.TryParse(proxy, out var ip))
+        {
+            options.KnownProxies.Add(ip);
+        }
+    }
+});
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
+app.UseResponseCompression();
 
 if (startupValidation.Errors.Count > 0)
 {
@@ -163,6 +242,26 @@ foreach (var warning in startupValidation.Warnings)
 }
 
 app.UseCors("AllowFrontend");
+
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+    app.UseHttpsRedirection();
+}
+
+app.Use(async (context, next) =>
+{
+    var cspConnectSources = BuildConnectSrcDirective(builder.Environment);
+
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    context.Response.Headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()";
+    context.Response.Headers["Content-Security-Policy"] =
+        $"default-src 'self'; img-src 'self' data: https:; script-src 'self' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src {cspConnectSources}; frame-ancestors 'none'; base-uri 'self'; form-action 'self';";
+
+    await next();
+});
 
 app.Use(async (context, next) =>
 {
@@ -261,6 +360,7 @@ app.MapCategorieEndpoints();
 app.MapSaleEndpoints();
 app.MapShowsEndpoints();
 app.MapProgrammazioneEndpoints();
+app.MapDashboardEndpoints();
 app.MapAcquistoEndpoints();
 app.MapCreditoEndpoints();
 app.MapValidazioneEndpoints();
@@ -331,6 +431,13 @@ static (List<string> Errors, List<string> Warnings) ValidateStartupConfiguration
 
     if (environment.IsProduction())
     {
+        var corsOrigins = (Environment.GetEnvironmentVariable("CORS_ALLOWED_ORIGINS") ?? string.Empty)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+        if (corsOrigins.Length == 0)
+        {
+            errors.Add("CORS_ALLOWED_ORIGINS non impostata in produzione.");
+        }
+
         var allowedReturnUrls = configuration.GetSection("ExternalAuth:AllowedReturnUrls").Get<string[]>() ?? Array.Empty<string>();
         if (allowedReturnUrls.Any(url => url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)))
         {
@@ -350,6 +457,41 @@ static bool IsPlaceholder(string value)
            || trimmed.Contains("example", StringComparison.OrdinalIgnoreCase)
            || trimmed.Contains("placeholder", StringComparison.OrdinalIgnoreCase)
            || trimmed.Contains("...", StringComparison.OrdinalIgnoreCase);
+}
+
+static string BuildConnectSrcDirective(IWebHostEnvironment environment)
+{
+    var configured = Environment.GetEnvironmentVariable("CSP_CONNECT_SRC");
+    if (!string.IsNullOrWhiteSpace(configured))
+    {
+        return configured.Trim();
+    }
+
+    var origins = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "'self'",
+        "https://api.stripe.com"
+    };
+
+    var corsOrigins = (Environment.GetEnvironmentVariable("CORS_ALLOWED_ORIGINS") ?? string.Empty)
+        .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
+    foreach (var origin in corsOrigins)
+    {
+        if (Uri.TryCreate(origin, UriKind.Absolute, out var uri))
+        {
+            origins.Add(uri.GetLeftPart(UriPartial.Authority));
+        }
+    }
+
+    if (!environment.IsProduction())
+    {
+        origins.Add("http://localhost:5001");
+        origins.Add("http://127.0.0.1:5001");
+        origins.Add("https://localhost:7217");
+    }
+
+    return string.Join(' ', origins);
 }
 
 public partial class Program { }

@@ -10,22 +10,48 @@ public static class ProiezioniEndpoints
 {
     public static RouteGroupBuilder MapProiezioniEndpoints(this RouteGroupBuilder group)
     {
-        // GET /proiezioni - Visibile a tutti (proiezioni in corso)
-        group.MapGet("/", async (FilmDbContext db) =>
-        await db.Proiezioni.Select(p => new ProiezioneDTO
+        // GET /proiezioni - Visibile a tutti (supporta filtro intervallo per carichi veloci)
+        group.MapGet("/", async (DateTime? fromDate, DateTime? toDate, int? take, FilmDbContext db) =>
         {
-            Id = p.Id,
-            ShowId = p.ShowId,
-            CinemaId = p.CinemaId,
-            FilmId = p.FilmId,
-            Data = p.Data,
-            Ora = p.Ora
-        }).ToListAsync());
+            var query = db.Proiezioni
+                .AsNoTracking()
+                .AsQueryable();
+
+            if (fromDate.HasValue)
+            {
+                var start = fromDate.Value.Date;
+                query = query.Where(p => p.Data >= start);
+            }
+
+            if (toDate.HasValue)
+            {
+                var endExclusive = toDate.Value.Date.AddDays(1);
+                query = query.Where(p => p.Data < endExclusive);
+            }
+
+            query = query.OrderBy(p => p.Data).ThenBy(p => p.Ora);
+            if (take is > 0)
+            {
+                query = query.Take(Math.Clamp(take.Value, 1, 1500));
+            }
+
+            var items = await query.Select(p => new ProiezioneDTO
+            {
+                Id = p.Id,
+                ShowId = p.ShowId,
+                CinemaId = p.CinemaId,
+                FilmId = p.FilmId,
+                Data = p.Data,
+                Ora = p.Ora
+            }).ToListAsync();
+
+            return Results.Ok(items);
+        });
 
         // GET /proiezioni/{id} - Visibile a tutti
         group.MapGet("/{id}", async (int id, FilmDbContext db) =>
         {
-            var proiezione = await db.Proiezioni.FindAsync(id);
+            var proiezione = await db.Proiezioni.AsNoTracking().FirstOrDefaultAsync(p => p.Id == id);
             return proiezione is null ? Results.NotFound() : Results.Ok(new ProiezioneDTO
             {
                 Id = proiezione.Id,

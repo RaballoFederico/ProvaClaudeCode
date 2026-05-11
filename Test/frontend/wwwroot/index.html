@@ -287,6 +287,7 @@
     <div id="footer-container"></div>
 
     <script src="/js/theme.js"></script>
+    <script src="/js/api-config.js"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/route-guard.js"></script>
     <script src="/js/api-client.js"></script>
@@ -294,10 +295,8 @@
     <script src="/js/template-loader.js"></script>
     <script>
         let filmsData = [];
-        let registiData = [];
-        let cinemasData = [];
         let proiezioniData = [];
-        let categorieData = [];
+        let statsData = { films: 0, registi: 0, cinemas: 0, proiezioni: 0 };
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (typeof Auth !== 'undefined' && !Auth.canManageCatalog()) {
@@ -310,34 +309,32 @@
 
         async function loadDashboardData() {
             try {
-                const [films, registi, cinemas, proiezioni, categorie] = await Promise.all([
-                    ApiClient.get('/films'),
-                    ApiClient.get('/registi'),
-                    ApiClient.get('/cinemas'),
-                    ApiClient.get('/proiezioni'),
-                    ApiClient.get('/categorie')
-                ]);
-
-                filmsData = films || [];
-                registiData = registi || [];
-                cinemasData = cinemas || [];
-                proiezioniData = proiezioni || [];
-                categorieData = categorie || [];
-
-                updateStats();
-                renderFilmCards();
-                renderProjections();
+                const overview = await ApiClient.get('/dashboard/overview');
+                statsData = overview?.stats || statsData;
+                filmsData = overview?.featuredFilms || [];
+                proiezioniData = overview?.upcomingProjections || [];
             } catch (error) {
-                console.error('Error loading dashboard data:', error);
+                console.error('Errore caricamento dashboard:', error);
+                filmsData = [];
+                proiezioniData = [];
+                statsData = { films: 0, registi: 0, cinemas: 0, proiezioni: 0 };
+            }
+
+            const hasAnyData = filmsData.length > 0 || proiezioniData.length > 0 || statsData.films > 0;
+            if (!hasAnyData) {
                 Utils.showNotification('Errore nel caricamento dei dati', 'error');
             }
+
+            updateStats();
+            renderFilmCards();
+            renderProjections();
         }
 
         function updateStats() {
-            document.getElementById('stats-films').textContent = filmsData.length;
-            document.getElementById('stats-registi').textContent = registiData.length;
-            document.getElementById('stats-cinemas').textContent = cinemasData.length;
-            document.getElementById('stats-proiezioni').textContent = proiezioniData.length;
+            document.getElementById('stats-films').textContent = statsData.films ?? 0;
+            document.getElementById('stats-registi').textContent = statsData.registi ?? 0;
+            document.getElementById('stats-cinemas').textContent = statsData.cinemas ?? 0;
+            document.getElementById('stats-proiezioni').textContent = statsData.proiezioni ?? 0;
         }
 
         function renderFilmCards() {
@@ -356,7 +353,6 @@
 
             const featuredFilms = filmsData.slice(0, 6);
             featuredFilms.forEach((film, index) => {
-                const regista = registiData.find(r => r.id === film.registaId);
                 const imageUrl = film.copertinaPath || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300&h=450&fit=crop';
                 
                 const card = document.createElement('div');
@@ -370,7 +366,7 @@
                         <div class="absolute bottom-0 left-0 right-0 p-3">
                             <span class="inline-block px-2 py-0.5 bg-primary-container text-white text-[10px] font-bold rounded mb-1">${film.durata || '-'} min</span>
                             <h4 class="font-headline text-sm font-bold text-on-surface line-clamp-2">${escapeHtml(film.titolo)}</h4>
-                            <p class="text-[10px] text-white/70 truncate">${regista ? escapeHtml(`${regista.nome} ${regista.cognome}`) : ''}</p>
+                            <p class="text-[10px] text-white/70 truncate">${escapeHtml(film.registaNome || '')}</p>
                             <div class="flex flex-wrap gap-1 mt-1">
                                 ${(film.categorie || []).slice(0, 2).map(c => `<span class="px-1 py-0.5 rounded bg-black/60 text-secondary text-[9px]">${escapeHtml(c.nome)}</span>`).join('')}
                             </div>
@@ -408,8 +404,6 @@
             today.setHours(0, 0, 0, 0);
 
             sorted.forEach((proj, index) => {
-                const film = filmsData.find(f => f.id === proj.filmId);
-                const cinema = cinemasData.find(c => c.id === proj.cinemaId);
                 const projDate = new Date(proj.data);
                 projDate.setHours(0, 0, 0, 0);
                 const isToday = projDate.getTime() === today.getTime();
@@ -425,10 +419,10 @@
                         <span class="text-[10px] ${isToday ? 'text-white/70' : 'text-on-surface-variant'}">${Utils.formatDateShort(proj.data).split(' ')[0]}</span>
                     </div>
                     <div class="flex-1 min-w-0">
-                        <p class="font-medium text-on-surface truncate">${film ? escapeHtml(film.titolo) : 'Film sconosciuto'}</p>
+                        <p class="font-medium text-on-surface truncate">${escapeHtml(proj.filmTitolo || 'Film sconosciuto')}</p>
                         <p class="text-xs text-on-surface-variant flex items-center gap-1">
                             <span class="material-symbols-outlined text-sm">place</span>
-                            ${cinema ? escapeHtml(cinema.nome) : 'Cinema sconosciuto'}
+                            ${escapeHtml(proj.cinemaNome || 'Cinema sconosciuto')}
                         </p>
                     </div>
                     ${isToday ? '<span class="px-2 py-1 bg-primary-container/20 text-primary-container text-[10px] font-bold rounded-full">OGGI</span>' : ''}
@@ -447,3 +441,4 @@
     </script>
 </body>
 </html>
+

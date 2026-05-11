@@ -19,6 +19,7 @@ public class ShowService(FilmDbContext context) : IShowService
     public async Task<IEnumerable<ShowDTO>> GetShowsAsync(ShowFilterDTO? filter = null)
     {
         var query = context.Shows
+            .AsNoTracking()
             .Include(s => s.Film)
             .Include(s => s.Sala)
             .AsQueryable();
@@ -28,11 +29,26 @@ public class ShowService(FilmDbContext context) : IShowService
             if (filter.SalaId.HasValue) query = query.Where(s => s.SalaId == filter.SalaId.Value);
             if (filter.CinemaId.HasValue) query = query.Where(s => s.Sala != null && s.Sala.CinemaId == filter.CinemaId.Value);
             if (filter.FilmId.HasValue) query = query.Where(s => s.FilmId == filter.FilmId.Value);
-            if (filter.Data.HasValue) query = query.Where(s => s.Data == filter.Data.Value);
+            if (filter.Data.HasValue)
+            {
+                query = query.Where(s => s.Data == filter.Data.Value);
+            }
+            else
+            {
+                if (filter.FromDate.HasValue) query = query.Where(s => s.Data >= filter.FromDate.Value);
+                if (filter.ToDate.HasValue) query = query.Where(s => s.Data <= filter.ToDate.Value);
+            }
             if (filter.Stato.HasValue) query = query.Where(s => (int)s.Stato == filter.Stato.Value);
         }
 
-        return await query.OrderBy(s => s.Data).ThenBy(s => s.OraInizio).Select(s => new ShowDTO
+        query = query.OrderBy(s => s.Data).ThenBy(s => s.OraInizio);
+
+        if (filter?.Take is > 0)
+        {
+            query = query.Take(Math.Clamp(filter.Take.Value, 1, 1000));
+        }
+
+        return await query.Select(s => new ShowDTO
         {
             Id = s.Id,
             SalaId = s.SalaId,
@@ -51,7 +67,12 @@ public class ShowService(FilmDbContext context) : IShowService
 
     public async Task<ShowDTO?> GetShowAsync(int id)
     {
-        return await context.Shows.Include(s => s.Film).Include(s => s.Sala).Where(s => s.Id == id).Select(s => new ShowDTO
+        return await context.Shows
+            .AsNoTracking()
+            .Include(s => s.Film)
+            .Include(s => s.Sala)
+            .Where(s => s.Id == id)
+            .Select(s => new ShowDTO
         {
             Id = s.Id,
             SalaId = s.SalaId,
@@ -153,7 +174,11 @@ public class ShowService(FilmDbContext context) : IShowService
 
     public async Task<IEnumerable<ShowDTO>> GetShowsByFilmAsync(int filmId, int? cinemaId = null, DateOnly? data = null)
     {
-        var query = context.Shows.Include(s => s.Film).Include(s => s.Sala).Where(s => s.FilmId == filmId);
+        var query = context.Shows
+            .AsNoTracking()
+            .Include(s => s.Film)
+            .Include(s => s.Sala)
+            .Where(s => s.FilmId == filmId);
         if (cinemaId.HasValue) query = query.Where(s => s.Sala != null && s.Sala.CinemaId == cinemaId.Value);
         if (data.HasValue) query = query.Where(s => s.Data == data.Value);
 
@@ -176,7 +201,10 @@ public class ShowService(FilmDbContext context) : IShowService
 
     public async Task<IEnumerable<ShowDTO>> GetShowsByCinemaAsync(int cinemaId, DateOnly data)
     {
-        return await context.Shows.Include(s => s.Film).Include(s => s.Sala)
+        return await context.Shows
+            .AsNoTracking()
+            .Include(s => s.Film)
+            .Include(s => s.Sala)
             .Where(s => s.Sala != null && s.Sala.CinemaId == cinemaId && s.Data == data)
             .OrderBy(s => s.OraInizio)
             .Select(s => new ShowDTO
@@ -205,7 +233,10 @@ public class ShowService(FilmDbContext context) : IShowService
 
     public async Task<DisponibilitaPostiDTO?> GetDisponibilitaPostiAsync(int showId)
     {
-        var show = await context.Shows.Include(s => s.Sala).FirstOrDefaultAsync(s => s.Id == showId);
+        var show = await context.Shows
+            .AsNoTracking()
+            .Include(s => s.Sala)
+            .FirstOrDefaultAsync(s => s.Id == showId);
         if (show?.Sala is null) return null;
 
         var occupati = await context.Biglietti.CountAsync(b => b.ShowId == showId);

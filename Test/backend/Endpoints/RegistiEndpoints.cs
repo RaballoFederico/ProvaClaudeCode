@@ -12,7 +12,9 @@ public static class RegistiEndpoints
     {
         // GET /registi - Visibile a tutti
         group.MapGet("/", async (FilmDbContext db) =>
-        await db.Registi.Select(r => new RegistaDTO
+        await db.Registi
+            .AsNoTracking()
+            .Select(r => new RegistaDTO
         {
             Id = r.Id,
             Nome = r.Nome,
@@ -23,7 +25,7 @@ public static class RegistiEndpoints
         // GET /registi/{id} - Visibile a tutti
         group.MapGet("/{id}", async (int id, FilmDbContext db) =>
         {
-            var regista = await db.Registi.FindAsync(id);
+            var regista = await db.Registi.AsNoTracking().FirstOrDefaultAsync(r => r.Id == id);
             return regista is null ? Results.NotFound() : Results.Ok(new RegistaDTO
             {
                 Id = regista.Id,

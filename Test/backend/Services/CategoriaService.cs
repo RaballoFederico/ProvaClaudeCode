@@ -18,6 +18,7 @@ public class CategoriaService : ICategoriaService
     public async Task<List<CategoriaDTO>> GetAllAsync()
     {
         return await _db.Categorie
+            .AsNoTracking()
             .OrderBy(c => c.Nome)
             .Select(c => new CategoriaDTO
             {
@@ -31,6 +32,7 @@ public class CategoriaService : ICategoriaService
     public async Task<CategoriaDTO?> GetByIdAsync(int id)
     {
         return await _db.Categorie
+            .AsNoTracking()
             .Where(c => c.Id == id)
             .Select(c => new CategoriaDTO
             {
@@ -44,6 +46,7 @@ public class CategoriaService : ICategoriaService
     public async Task<List<FilmDTO>> GetFilmsByCategoriaAsync(int categoriaId)
     {
         return await _db.FilmsCategorie
+            .AsNoTracking()
             .Where(fc => fc.CategoriaId == categoriaId)
             .Include(fc => fc.Film)
             .ThenInclude(f => f.FilmsCategorie)

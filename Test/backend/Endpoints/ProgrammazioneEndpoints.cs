@@ -10,7 +10,11 @@ public static class ProgrammazioneEndpoints
     {
         app.MapGet("/programmazione", async (int? cinemaId, string? search, string? genere, string? tipologia, string? fascia, FilmDbContext db) =>
         {
-            var query = db.Films.Include(f => f.Shows).ThenInclude(s => s.Sala).AsQueryable();
+            var query = db.Films
+                .AsNoTracking()
+                .Include(f => f.Shows)
+                .ThenInclude(s => s.Sala)
+                .AsQueryable();
 
             if (!string.IsNullOrWhiteSpace(search)) query = query.Where(f => f.Titolo.Contains(search));
             if (!string.IsNullOrWhiteSpace(genere)) query = query.Where(f => f.Genere != null && f.Genere == genere);
@@ -159,6 +163,7 @@ public static class ProgrammazioneEndpoints
         {
             var limitDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7));
             var items = await db.Films
+                .AsNoTracking()
                 .Include(f => f.Shows)
                 .Where(f => f.Featured || f.Shows.Count(s => s.Data <= limitDate) >= 5)
                 .Select(f => new { f.Id, f.Titolo, f.CopertinaPath, f.Durata, f.Genere })
@@ -171,6 +176,7 @@ public static class ProgrammazioneEndpoints
             var now = DateTime.UtcNow.Date;
             var max = now.AddDays(14);
             var items = await db.Films
+                .AsNoTracking()
                 .Where(f => f.DataRilascio.HasValue && f.DataRilascio.Value.Date >= now && f.DataRilascio.Value.Date <= max)
                 .Select(f => new { f.Id, f.Titolo, f.CopertinaPath, f.DataRilascio, f.Genere })
                 .ToListAsync();
@@ -184,7 +190,11 @@ public static class ProgrammazioneEndpoints
             var nowTime = TimeOnly.FromDateTime(nowLocal);
             var next15 = today.AddDays(14);
 
-            var query = db.Shows.Include(s => s.Sala).ThenInclude(s => s!.Cinema).Where(s => s.FilmId == id);
+            var query = db.Shows
+                .AsNoTracking()
+                .Include(s => s.Sala)
+                .ThenInclude(s => s!.Cinema)
+                .Where(s => s.FilmId == id);
             if (cinemaId.HasValue) query = query.Where(s => s.Sala != null && s.Sala.CinemaId == cinemaId.Value);
             if (data.HasValue)
             {
@@ -220,6 +230,7 @@ public static class ProgrammazioneEndpoints
         app.MapGet("/shows/{id:int}", async (int id, FilmDbContext db) =>
         {
             var show = await db.Shows
+                .AsNoTracking()
                 .Include(s => s.Sala)
                 .ThenInclude(s => s!.Cinema)
                 .Include(s => s.Film)
@@ -250,6 +261,7 @@ public static class ProgrammazioneEndpoints
         {
             var day = data ?? DateOnly.FromDateTime(DateTime.UtcNow);
             var items = await db.Shows
+                .AsNoTracking()
                 .Include(s => s.Film)
                 .Include(s => s.Sala)
                 .Where(s => s.Sala != null && s.Sala.CinemaId == id && s.Data == day)
@@ -272,6 +284,7 @@ public static class ProgrammazioneEndpoints
         app.MapGet("/cinemas/nearby", async (decimal lat, decimal lng, FilmDbContext db) =>
         {
             var cinemas = await db.Cinemas
+                .AsNoTracking()
                 .Where(c => c.Latitudine.HasValue && c.Longitudine.HasValue)
                 .Select(c => new
                 {

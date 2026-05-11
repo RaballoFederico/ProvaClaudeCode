@@ -9,12 +9,15 @@ public static class ShowsEndpoints
 {
     public static IEndpointRouteBuilder MapShowsEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/admin/shows", [Authorize(Roles = "Admin,PowerUser")] async (
+        app.MapGet("/shows", [AllowAnonymous] async (
             int? cinemaId,
             int? salaId,
             int? filmId,
             DateOnly? data,
             int? stato,
+            DateOnly? fromDate,
+            DateOnly? toDate,
+            int? take,
             IShowService showService) =>
         {
             var items = await showService.GetShowsAsync(new ShowFilterDTO
@@ -23,7 +26,35 @@ public static class ShowsEndpoints
                 SalaId = salaId,
                 FilmId = filmId,
                 Data = data,
-                Stato = stato
+                Stato = stato,
+                FromDate = fromDate,
+                ToDate = toDate,
+                Take = take
+            });
+            return Results.Ok(items);
+        });
+
+        app.MapGet("/admin/shows", [Authorize(Roles = "Admin,PowerUser")] async (
+            int? cinemaId,
+            int? salaId,
+            int? filmId,
+            DateOnly? data,
+            int? stato,
+            DateOnly? fromDate,
+            DateOnly? toDate,
+            int? take,
+            IShowService showService) =>
+        {
+            var items = await showService.GetShowsAsync(new ShowFilterDTO
+            {
+                CinemaId = cinemaId,
+                SalaId = salaId,
+                FilmId = filmId,
+                Data = data,
+                Stato = stato,
+                FromDate = fromDate,
+                ToDate = toDate,
+                Take = take
             });
             return Results.Ok(items);
         });

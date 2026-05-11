@@ -42,6 +42,9 @@ public class ShowFilterDTO
     public int? FilmId { get; set; }
     public DateOnly? Data { get; set; }
     public int? Stato { get; set; }
+    public DateOnly? FromDate { get; set; }
+    public DateOnly? ToDate { get; set; }
+    public int? Take { get; set; }
 }
 
 public class DisponibilitaPostiDTO

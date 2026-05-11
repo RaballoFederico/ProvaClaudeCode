@@ -16,40 +16,121 @@ public static class FilmsEndpoints
 
     public static RouteGroupBuilder MapFilmsEndpoints(this RouteGroupBuilder group)
     {
-        // GET /films - Visibile a tutti (include categorie)
-        group.MapGet("/", async (FilmDbContext db) =>
-        await db.Films
-            .Include(f => f.FilmsCategorie)
-            .ThenInclude(fc => fc.Categoria)
-            .Select(f => new FilmDTO
+        // GET /films - Visibile a tutti (supporta versione compatta per liste rapide)
+        group.MapGet("/", async (FilmDbContext db, bool? summary, int? limit, bool? includeCategories) =>
+        {
+            var normalizedLimit = limit.HasValue
+                ? Math.Clamp(limit.Value, 1, 500)
+                : (int?)null;
+
+            if (summary.GetValueOrDefault())
             {
-                Id = f.Id,
-                TmdbId = f.TmdbId,
-                Titolo = f.Titolo,
-                DataProduzione = f.DataProduzione,
-                RegistaId = f.RegistaId,
-                Durata = f.Durata,
-                CopertinaPath = f.CopertinaPath,
-                FilmatoPath = f.FilmatoPath,
-                Descrizione = f.Descrizione,
-                RegistaNome = f.RegistaNome,
-                Cast = f.Cast,
-                Featured = f.Featured,
-                DataRilascio = f.DataRilascio,
-                Genere = f.Genere,
-                CategorieIds = f.FilmsCategorie.Select(fc => fc.CategoriaId).ToList(),
-                Categorie = f.FilmsCategorie.Select(fc => new CategoriaDTO
+                var summaryQuery = db.Films
+                    .AsNoTracking()
+                    .OrderByDescending(f => f.DataRilascio ?? f.DataProduzione)
+                    .ThenByDescending(f => f.Id)
+                    .Select(f => new
+                    {
+                        f.Id,
+                        f.TmdbId,
+                        f.Titolo,
+                        f.DataProduzione,
+                        f.DataRilascio,
+                        f.RegistaId,
+                        RegistaNome = !string.IsNullOrWhiteSpace(f.RegistaNome)
+                            ? f.RegistaNome
+                            : (f.Regista != null ? $"{f.Regista.Nome} {f.Regista.Cognome}" : null),
+                        f.Durata,
+                        f.CopertinaPath,
+                        f.Featured,
+                        f.Genere
+                    });
+
+                if (normalizedLimit.HasValue)
                 {
-                    Id = fc.Categoria.Id,
-                    Nome = fc.Categoria.Nome,
-                    Descrizione = fc.Categoria.Descrizione
-                }).ToList()
-            }).ToListAsync());
+                    summaryQuery = summaryQuery.Take(normalizedLimit.Value);
+                }
+
+                return Results.Ok(await summaryQuery.ToListAsync());
+            }
+
+            var withCategories = includeCategories.GetValueOrDefault(true);
+            if (withCategories)
+            {
+                var fullQuery = db.Films
+                    .AsNoTracking()
+                    .Include(f => f.FilmsCategorie)
+                    .ThenInclude(fc => fc.Categoria)
+                    .OrderBy(f => f.Titolo)
+                    .Select(f => new FilmDTO
+                    {
+                        Id = f.Id,
+                        TmdbId = f.TmdbId,
+                        Titolo = f.Titolo,
+                        DataProduzione = f.DataProduzione,
+                        RegistaId = f.RegistaId,
+                        Durata = f.Durata,
+                        CopertinaPath = f.CopertinaPath,
+                        FilmatoPath = f.FilmatoPath,
+                        Descrizione = f.Descrizione,
+                        RegistaNome = f.RegistaNome,
+                        Cast = f.Cast,
+                        Featured = f.Featured,
+                        DataRilascio = f.DataRilascio,
+                        Genere = f.Genere,
+                        CategorieIds = f.FilmsCategorie.Select(fc => fc.CategoriaId).ToList(),
+                        Categorie = f.FilmsCategorie.Select(fc => new CategoriaDTO
+                        {
+                            Id = fc.Categoria.Id,
+                            Nome = fc.Categoria.Nome,
+                            Descrizione = fc.Categoria.Descrizione
+                        }).ToList()
+                    });
+
+                if (normalizedLimit.HasValue)
+                {
+                    fullQuery = fullQuery.Take(normalizedLimit.Value);
+                }
+
+                return Results.Ok(await fullQuery.ToListAsync());
+            }
+
+            var leanQuery = db.Films
+                .AsNoTracking()
+                .OrderBy(f => f.Titolo)
+                .Select(f => new FilmDTO
+                {
+                    Id = f.Id,
+                    TmdbId = f.TmdbId,
+                    Titolo = f.Titolo,
+                    DataProduzione = f.DataProduzione,
+                    RegistaId = f.RegistaId,
+                    Durata = f.Durata,
+                    CopertinaPath = f.CopertinaPath,
+                    FilmatoPath = f.FilmatoPath,
+                    Descrizione = f.Descrizione,
+                    RegistaNome = f.RegistaNome,
+                    Cast = f.Cast,
+                    Featured = f.Featured,
+                    DataRilascio = f.DataRilascio,
+                    Genere = f.Genere,
+                    CategorieIds = new List<int>(),
+                    Categorie = new List<CategoriaDTO>()
+                });
+
+            if (normalizedLimit.HasValue)
+            {
+                leanQuery = leanQuery.Take(normalizedLimit.Value);
+            }
+
+            return Results.Ok(await leanQuery.ToListAsync());
+        });
 
         // GET /films/{id} - Visibile a tutti (include categorie)
         group.MapGet("/{id}", async (int id, FilmDbContext db) =>
         {
             var film = await db.Films
+                .AsNoTracking()
                 .Include(f => f.FilmsCategorie)
                 .ThenInclude(fc => fc.Categoria)
                 .FirstOrDefaultAsync(f => f.Id == id);
