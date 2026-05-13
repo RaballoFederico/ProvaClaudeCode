@@ -33,6 +33,9 @@
                     <h2 class="font-headline text-xl font-semibold">Storico campagne</h2>
                     <button id="refresh-campaigns-btn" class="app-btn app-btn-secondary">Aggiorna</button>
                 </div>
+                <div class="mb-3">
+                    <input id="campaign-search" type="text" placeholder="Cerca per oggetto..." class="w-full rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm">
+                </div>
                 <div id="campaigns-list" class="space-y-2 text-sm text-on-surface-variant">Caricamento...</div>
             </section>
         </main>
@@ -47,25 +50,37 @@
     <script src="/js/api-client.js"></script>
     <script src="/js/utils.js"></script>
     <script>
+        let allCampaigns = [];
+
         async function loadCampaigns() {
             const box = document.getElementById('campaigns-list');
             try {
                 const list = await ApiClient.get('/admin/newsletter/campagne');
-                const rows = Array.isArray(list) ? list : [];
-                if (!rows.length) {
-                    box.innerHTML = 'Nessuna campagna inviata.';
-                    return;
-                }
-                box.innerHTML = rows.map((c) => `
-                    <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high p-3">
-                        <div class="font-medium text-on-surface">${c.oggetto}</div>
-                        <div class="text-xs mt-1">Data invio: ${new Date(c.dataInvio).toLocaleString('it-IT')}</div>
-                        <div class="text-xs">Destinatari: ${c.destinatariCount}</div>
-                    </div>
-                `).join('');
+                allCampaigns = Array.isArray(list) ? list : [];
+                renderCampaigns();
             } catch (error) {
                 box.textContent = error.message || 'Errore caricamento campagne';
             }
+        }
+
+        function renderCampaigns() {
+            const box = document.getElementById('campaigns-list');
+            const q = String(document.getElementById('campaign-search')?.value || '').trim().toLowerCase();
+            const rows = !q
+                ? [...allCampaigns]
+                : allCampaigns.filter((c) => String(c.oggetto || '').toLowerCase().includes(q));
+
+            if (!rows.length) {
+                box.innerHTML = q ? 'Nessuna campagna trovata con questa ricerca.' : 'Nessuna campagna inviata.';
+                return;
+            }
+            box.innerHTML = rows.map((c) => `
+                <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high p-3">
+                    <div class="font-medium text-on-surface">${c.oggetto}</div>
+                    <div class="text-xs mt-1">Data invio: ${new Date(c.dataInvio).toLocaleString('it-IT')}</div>
+                    <div class="text-xs">Destinatari: ${c.destinatariCount}</div>
+                </div>
+            `).join('');
         }
 
         async function sendCampaign(event) {
@@ -90,6 +105,7 @@
             await loadAllComponents();
             document.getElementById('campaign-form')?.addEventListener('submit', sendCampaign);
             document.getElementById('refresh-campaigns-btn')?.addEventListener('click', loadCampaigns);
+            document.getElementById('campaign-search')?.addEventListener('input', () => renderCampaigns());
             await loadCampaigns();
         });
     </script>

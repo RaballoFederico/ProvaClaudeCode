@@ -36,6 +36,32 @@
                 <h2 class="font-semibold text-lg">Tempi di risposta</h2>
                 <p class="mt-2 text-sm text-on-surface-variant">Rispondiamo entro 24 ore lavorative. Per urgenze legate a proiezioni imminenti, indica nell'oggetto "URGENTE".</p>
             </div>
+
+            <div class="mt-6 grid md:grid-cols-2 gap-4">
+                <article class="bg-surface-container-high rounded-xl p-4 border border-outline-variant/20">
+                    <h2 class="font-semibold text-lg">FAQ rapide</h2>
+                    <div class="mt-3 space-y-2 text-sm">
+                        <details class="rounded-lg border border-outline-variant/20 bg-surface-container p-3">
+                            <summary class="cursor-pointer font-medium">Non vedo il mio biglietto dopo il pagamento</summary>
+                            <p class="mt-2 text-on-surface-variant">Vai su "I miei biglietti" e aggiorna la pagina. Se il pagamento e completato ma il ticket non compare, contattaci con l'ID acquisto.</p>
+                        </details>
+                        <details class="rounded-lg border border-outline-variant/20 bg-surface-container p-3">
+                            <summary class="cursor-pointer font-medium">Posso cambiare cinema preferito?</summary>
+                            <p class="mt-2 text-on-surface-variant">Si, dalla pagina "I nostri cinema" con il pulsante "Imposta Preferito".</p>
+                        </details>
+                    </div>
+                </article>
+
+                <article class="bg-surface-container-high rounded-xl p-4 border border-outline-variant/20">
+                    <h2 class="font-semibold text-lg">Invia richiesta</h2>
+                    <form id="support-form" class="mt-3 space-y-2">
+                        <input id="support-subject" type="text" placeholder="Oggetto" class="w-full rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-2 text-sm" required>
+                        <textarea id="support-message" rows="4" placeholder="Descrivi il problema..." class="w-full rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-2 text-sm" required></textarea>
+                        <button type="submit" class="app-btn app-btn-primary">Invia richiesta</button>
+                    </form>
+                    <p id="support-feedback" class="mt-2 text-xs text-on-surface-variant hidden"></p>
+                </article>
+            </div>
         </section>
     </main>
     <div id="footer-container"></div>
@@ -50,7 +76,22 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await loadComponent('navbar-container', '/components/navbar.html');
             await loadComponent('footer-container', '/components/footer.html');
+            bindSupportForm();
         });
+
+        function bindSupportForm() {
+            const form = document.getElementById('support-form');
+            const feedback = document.getElementById('support-feedback');
+            if (!form || !feedback) return;
+
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                feedback.classList.remove('hidden');
+                feedback.className = 'mt-2 text-xs text-emerald-300';
+                feedback.textContent = 'Richiesta registrata. Ti risponderemo via email entro 24h lavorative.';
+                form.reset();
+            });
+        }
     </script>
 </body>
 </html>

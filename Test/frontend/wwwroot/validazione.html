@@ -40,6 +40,14 @@
                 <h2 class="font-headline text-lg font-bold mb-3">Risultato</h2>
                 <div id="result-box" class="text-on-surface-variant">Nessuna verifica eseguita.</div>
             </section>
+
+            <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 mt-5 reveal-up delay-3">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                    <h2 class="font-headline text-lg font-bold">Ultime verifiche</h2>
+                    <button id="clear-history-btn" class="app-btn app-btn-secondary">Svuota</button>
+                </div>
+                <div id="history-list" class="space-y-2 text-sm text-on-surface-variant">Nessuna verifica recente.</div>
+            </section>
         </main>
     </div>
     <div id="footer-container"></div>
@@ -56,17 +64,20 @@
         let scanner = null;
         let scannerRunning = false;
         let currentInfo = null;
+        const validationHistoryKey = 'validationHistory';
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();
             bindEvents();
             await initData();
             applyQueryParams();
+            renderHistory();
         });
 
         function bindEvents() {
             document.getElementById('verify-btn').addEventListener('click', verifyManual);
             document.getElementById('scan-toggle').addEventListener('click', toggleScan);
+            document.getElementById('clear-history-btn').addEventListener('click', clearHistory);
         }
 
         async function initData() {
@@ -115,6 +126,13 @@
 
         function renderResult(info) {
             const already = info.giaValidato;
+            pushHistoryItem({
+                codiceHash: info.codiceHash,
+                filmTitolo: info.filmTitolo,
+                cinemaNome: info.cinemaNome,
+                data: Date.now(),
+                esito: already ? 'Gia validato' : 'Valido'
+            });
             const box = document.getElementById('result-box');
             box.innerHTML = `
                 <div class="p-4 rounded-xl ${already ? 'bg-amber-500/10 border border-amber-500/30' : 'bg-emerald-500/10 border border-emerald-500/30'}">
@@ -191,6 +209,58 @@
         function formatDate(iso) {
             if (!iso) return '-';
             return new Date(iso).toLocaleDateString('it-IT');
+        }
+
+        function readHistory() {
+            try {
+                const raw = localStorage.getItem(validationHistoryKey);
+                if (!raw) return [];
+                const parsed = JSON.parse(raw);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function writeHistory(items) {
+            localStorage.setItem(validationHistoryKey, JSON.stringify(items.slice(0, 15)));
+        }
+
+        function pushHistoryItem(item) {
+            const list = readHistory();
+            const next = [item, ...list.filter((x) => x.codiceHash !== item.codiceHash)];
+            writeHistory(next);
+            renderHistory();
+        }
+
+        function clearHistory() {
+            localStorage.removeItem(validationHistoryKey);
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const box = document.getElementById('history-list');
+            const items = readHistory();
+            if (!items.length) {
+                box.textContent = 'Nessuna verifica recente.';
+                return;
+            }
+            box.innerHTML = items.map((x) => `
+                <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high p-3 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                    <div>
+                        <div class="text-on-surface font-medium">${escapeHtml(x.filmTitolo || 'Ticket')}</div>
+                        <div class="text-xs">${escapeHtml(x.cinemaNome || '')} - ${new Date(x.data).toLocaleString('it-IT')}</div>
+                        <div class="text-xs">Esito: ${escapeHtml(x.esito || '-')}</div>
+                    </div>
+                    <button class="app-btn app-btn-secondary" onclick="reuseCode('${String(x.codiceHash || '').replace(/'/g, "\\'")}')">Riusa codice</button>
+                </div>
+            `).join('');
+        }
+
+        function reuseCode(code) {
+            if (!code) return;
+            document.getElementById('code-input').value = code;
+            verifyCode(code);
         }
 
         function escapeHtml(text) {
