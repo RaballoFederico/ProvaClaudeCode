@@ -46,7 +46,27 @@
                 </div>
             </section>
 
-            <section id="tickets-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 reveal-up delay-2"></section>
+            <section class="mb-6 reveal-up delay-2">
+                <div class="app-card p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="md:col-span-2">
+                            <label for="ticket-search" class="text-xs text-on-surface-variant uppercase tracking-[0.16em]">Cerca ticket</label>
+                            <input id="ticket-search" type="text" placeholder="ID ticket, show, posto..." class="mt-1 w-full rounded-xl border border-outline-variant/30 bg-surface-container-high px-3 py-2.5 text-sm">
+                        </div>
+                        <div>
+                            <label for="ticket-state-filter" class="text-xs text-on-surface-variant uppercase tracking-[0.16em]">Stato</label>
+                            <select id="ticket-state-filter" class="mt-1 w-full rounded-xl border border-outline-variant/30 bg-surface-container-high px-3 py-2.5 text-sm">
+                                <option value="all">Tutti</option>
+                                <option value="active">Attivi</option>
+                                <option value="validated">Validati</option>
+                                <option value="refunded">Rimborsati</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tickets-grid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 reveal-up delay-3"></section>
             <div id="empty" class="hidden text-on-surface-variant">Nessun biglietto disponibile.</div>
         </main>
     </div>
@@ -60,12 +80,34 @@
     <script src="/js/api-client.js"></script>
     <script src="/js/utils.js"></script>
     <script>
+        let allTickets = [];
+        let ticketSearch = '';
+        let ticketState = 'all';
+
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();
+            bindTicketFilters();
             renderSuccessBanner();
             await loadAcquisti();
             await loadTickets();
         });
+
+        function bindTicketFilters() {
+            const searchInput = document.getElementById('ticket-search');
+            const stateSelect = document.getElementById('ticket-state-filter');
+            if (searchInput) {
+                searchInput.addEventListener('input', () => {
+                    ticketSearch = String(searchInput.value || '').trim().toLowerCase();
+                    renderTickets();
+                });
+            }
+            if (stateSelect) {
+                stateSelect.addEventListener('change', () => {
+                    ticketState = stateSelect.value || 'all';
+                    renderTickets();
+                });
+            }
+        }
 
         function renderSuccessBanner() {
             const params = new URLSearchParams(window.location.search);
@@ -138,25 +180,46 @@
             try {
                 Utils.showLoading();
                 const tickets = await ApiClient.get('/user/biglietti');
-                const grid = document.getElementById('tickets-grid');
-                const empty = document.getElementById('empty');
                 const targetShowId = parseInt(new URLSearchParams(window.location.search).get('showId') || '0');
-
-                const sorted = [...tickets].sort((a, b) => {
+                allTickets = [...(Array.isArray(tickets) ? tickets : [])].sort((a, b) => {
                     if (!targetShowId) return 0;
                     if (a.showId === targetShowId && b.showId !== targetShowId) return -1;
                     if (a.showId !== targetShowId && b.showId === targetShowId) return 1;
                     return 0;
                 });
+                renderTickets();
+            } catch (e) {
+                Utils.showNotification(e.message || 'Errore caricamento biglietti', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
 
-                if (!sorted.length) {
-                    grid.innerHTML = '';
-                    empty.classList.remove('hidden');
-                    return;
-                }
+        function renderTickets() {
+            const grid = document.getElementById('tickets-grid');
+            const empty = document.getElementById('empty');
+            const targetShowId = parseInt(new URLSearchParams(window.location.search).get('showId') || '0');
+            let filtered = [...allTickets];
 
-                empty.classList.add('hidden');
-                grid.innerHTML = sorted.map((t, index) => {
+            if (ticketState === 'active') filtered = filtered.filter((x) => !x.validato && !x.rimborsato);
+            if (ticketState === 'validated') filtered = filtered.filter((x) => !!x.validato);
+            if (ticketState === 'refunded') filtered = filtered.filter((x) => !!x.rimborsato);
+
+            if (ticketSearch) {
+                filtered = filtered.filter((x) => {
+                    const hay = `${x.id} ${x.showId} ${x.posto || ''} ${x.codiceHash || ''}`.toLowerCase();
+                    return hay.includes(ticketSearch);
+                });
+            }
+
+            if (!filtered.length) {
+                grid.innerHTML = '';
+                empty.classList.remove('hidden');
+                return;
+            }
+
+            empty.classList.add('hidden');
+            grid.innerHTML = filtered.map((t, index) => {
                     const qrValue = getQrValue(t);
                     const highlighted = targetShowId && t.showId === targetShowId;
                     const canValidate = Auth.hasRole('Admin') || Auth.hasRole('PowerUser');
@@ -186,18 +249,13 @@
                         </div>
                     </article>
                 `;
-                }).join('');
+            }).join('');
 
-                const pending = sorted.filter((x) => !x.validato).length;
+            const pending = filtered.filter((x) => !x.validato).length;
                 const totalChip = document.getElementById('wallet-total-chip');
                 const pendingChip = document.getElementById('wallet-pending-chip');
-                if (totalChip) totalChip.innerHTML = `<span class="material-symbols-outlined text-sm">local_activity</span>${sorted.length} ticket`;
+            if (totalChip) totalChip.innerHTML = `<span class="material-symbols-outlined text-sm">local_activity</span>${filtered.length} ticket`;
                 if (pendingChip) pendingChip.innerHTML = `<span class="material-symbols-outlined text-sm">schedule</span>${pending} da validare`;
-            } catch (e) {
-                Utils.showNotification(e.message || 'Errore caricamento biglietti', 'error');
-            } finally {
-                Utils.hideLoading();
-            }
         }
 
         function getQrValue(ticket) {
