@@ -43,13 +43,29 @@
     <main class="page-shell flex-1 py-8 px-4 md:px-8 lg:px-12 pb-20 md:pb-8">
         <div class="max-w-7xl mx-auto">
             <div class="hero-banner p-6 md:p-8 mb-8 text-center reveal-up">
-                <span class="badge-soft mb-3">
+                <span class="section-eyebrow mb-3 inline-flex items-center gap-2">
                     <span class="material-symbols-outlined text-sm">movie</span>
                     Programmazione pubblica
                 </span>
                 <h1 class="text-3xl md:text-5xl font-semibold text-on-surface font-headline">Proiezioni in Programma</h1>
                 <p class="text-on-surface-variant mt-2">Scopri i film in programmazione nelle nostre sale</p>
             </div>
+
+            <section class="app-card p-4 md:p-5 mb-6 reveal-up delay-1">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="md:col-span-2">
+                        <label class="text-xs text-on-surface-variant uppercase tracking-[0.16em]" for="film-search">Cerca film</label>
+                        <input id="film-search" type="text" placeholder="Titolo o genere..." class="mt-1 w-full rounded-xl border border-outline-variant/30 bg-surface-container-high px-3 py-2.5 text-sm">
+                    </div>
+                    <div>
+                        <label class="text-xs text-on-surface-variant uppercase tracking-[0.16em]" for="film-sort">Ordinamento</label>
+                        <select id="film-sort" class="mt-1 w-full rounded-xl border border-outline-variant/30 bg-surface-container-high px-3 py-2.5 text-sm">
+                            <option value="recent">Più recenti</option>
+                            <option value="title">Titolo A-Z</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
 
             <!-- Loading -->
             <div id="loading" class="flex items-center justify-center py-20">
@@ -83,6 +99,9 @@
     <script src="js/utils.js"></script>
     <script>
         let selectedFilmId = null;
+        let allFilms = [];
+        let currentSearch = '';
+        let currentSort = 'recent';
 
         // Carica proiezioni
         async function loadProiezioni() {
@@ -93,9 +112,10 @@
                 selectedFilmId = params.get('filmId') ? parseInt(params.get('filmId')) : null;
                 
                 const films = await ApiClient.get('/films?summary=true&limit=240');
+                allFilms = Array.isArray(films) ? films : [];
 
                 showLoading(false);
-                renderProiezioni(films || []);
+                renderProiezioni(allFilms);
             } catch (error) {
                 showLoading(false);
                 showError(error.message);
@@ -115,6 +135,32 @@
             document.getElementById('error-text').textContent = message;
         }
 
+        function applyClientFilters(films) {
+            let filtered = Array.isArray(films) ? [...films] : [];
+
+            if (currentSearch) {
+                const q = currentSearch.toLowerCase();
+                filtered = filtered.filter((f) => {
+                    const title = String(f?.titolo || '').toLowerCase();
+                    const genre = String(f?.genere || '').toLowerCase();
+                    return title.includes(q) || genre.includes(q);
+                });
+            }
+
+            if (currentSort === 'title') {
+                filtered.sort((a, b) => String(a?.titolo || '').localeCompare(String(b?.titolo || ''), 'it'));
+            } else {
+                filtered.sort((a, b) => {
+                    const aDate = a?.dataRilascio ? new Date(a.dataRilascio).getTime() : 0;
+                    const bDate = b?.dataRilascio ? new Date(b.dataRilascio).getTime() : 0;
+                    if (aDate !== bDate) return bDate - aDate;
+                    return (b.id || 0) - (a.id || 0);
+                });
+            }
+
+            return filtered;
+        }
+
         function renderProiezioni(films) {
             const grid = document.getElementById('proiezioni-grid');
 
@@ -122,12 +168,7 @@
             if (selectedFilmId) {
                 filmsToRender = films.filter(f => f.id === selectedFilmId);
             } else {
-                filmsToRender = [...films].sort((a, b) => {
-                    const aDate = a?.dataRilascio ? new Date(a.dataRilascio).getTime() : 0;
-                    const bDate = b?.dataRilascio ? new Date(b.dataRilascio).getTime() : 0;
-                    if (aDate !== bDate) return bDate - aDate;
-                    return (b.id || 0) - (a.id || 0);
-                });
+                filmsToRender = applyClientFilters(films);
             }
             
             if (filmsToRender.length === 0) {
@@ -150,8 +191,9 @@
                         <div class="aspect-[2/3] bg-surface-container-high relative">
                             <img src="${imageUrl}" alt="${escapeHtml(film.titolo)}" class="w-full h-full object-cover" loading="lazy" />
                             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                            <div class="absolute left-2 right-2 bottom-2 text-xs text-white font-semibold truncate">
-                                ${escapeHtml(film.titolo)}
+                            <div class="absolute left-2 right-2 bottom-2">
+                                <p class="text-xs text-white font-semibold truncate">${escapeHtml(film.titolo)}</p>
+                                <p class="text-[10px] text-white/70 truncate">${escapeHtml(film.genere || '')}</p>
                             </div>
                         </div>
                     </article>
@@ -165,8 +207,28 @@
             window.location.href = `/scheda-film.html?id=${id}`;
         }
 
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();
+            const searchInput = document.getElementById('film-search');
+            const sortSelect = document.getElementById('film-sort');
+            if (searchInput) {
+                searchInput.addEventListener('input', () => {
+                    currentSearch = String(searchInput.value || '').trim();
+                    renderProiezioni(allFilms);
+                });
+            }
+            if (sortSelect) {
+                sortSelect.addEventListener('change', () => {
+                    currentSort = sortSelect.value === 'title' ? 'title' : 'recent';
+                    renderProiezioni(allFilms);
+                });
+            }
             loadProiezioni();
         });
     </script>
