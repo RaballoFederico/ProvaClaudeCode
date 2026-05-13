@@ -40,7 +40,7 @@
         <main class="page-shell flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
             <section class="hero-banner mb-6 reveal-up">
                 <div class="relative p-6 md:p-8">
-                    <span class="badge-soft mb-3">
+                    <span class="section-eyebrow mb-3 inline-flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">event</span>
                         Programmazione settimanale
                     </span>
@@ -110,6 +110,9 @@
                     <div class="md:col-span-2">
                         <label class="text-xs uppercase tracking-widest text-on-surface-variant">Ricerca</label>
                         <input id="search-input" type="text" placeholder="Titolo film..." class="w-full mt-1 bg-surface-container-high border-none rounded-lg text-sm" />
+                    </div>
+                    <div class="md:col-span-1 flex items-end">
+                        <button id="quick-clear-btn" class="app-btn app-btn-secondary hover-lift w-full">Reset filtri</button>
                     </div>
                 </div>
             </section>
@@ -195,6 +198,7 @@
             document.getElementById('sort-filter').addEventListener('change', () => applyFilters());
             document.getElementById('search-input').addEventListener('input', Utils.debounce(() => applyFilters(), 250));
             document.getElementById('clear-filters-btn').addEventListener('click', clearFilters);
+            document.getElementById('quick-clear-btn').addEventListener('click', clearFilters);
 
             window.addEventListener('cinema:changed', async (event) => {
                 const cinemaId = parseInt(event?.detail?.cinemaId || '0');

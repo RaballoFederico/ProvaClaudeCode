@@ -37,7 +37,7 @@
         <div id="sidebar-container"></div>
         <main class="page-shell flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
             <section class="hero-banner p-6 md:p-8 mb-6 reveal-up">
-                <span class="badge-soft mb-3">
+                <span class="section-eyebrow mb-3 inline-flex items-center gap-2">
                     <span class="material-symbols-outlined text-sm">location_city</span>
                     Le nostre strutture
                 </span>
@@ -61,7 +61,23 @@
                 </div>
             </section>
 
-            <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6 reveal-up delay-1" id="cinemas-grid"></section>
+            <section class="app-card p-4 mb-6 reveal-up delay-1">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="md:col-span-2">
+                        <label for="cinema-search" class="text-xs text-on-surface-variant uppercase tracking-[0.16em]">Cerca cinema</label>
+                        <input id="cinema-search" type="text" placeholder="Nome o citta..." class="mt-1 w-full rounded-xl border border-outline-variant/30 bg-surface-container-high px-3 py-2.5 text-sm">
+                    </div>
+                    <div>
+                        <label for="cinema-sort" class="text-xs text-on-surface-variant uppercase tracking-[0.16em]">Ordina</label>
+                        <select id="cinema-sort" class="mt-1 w-full rounded-xl border border-outline-variant/30 bg-surface-container-high px-3 py-2.5 text-sm">
+                            <option value="name">Nome A-Z</option>
+                            <option value="city">Citta A-Z</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6 reveal-up delay-2" id="cinemas-grid"></section>
         </main>
     </div>
     <div id="footer-container"></div>
@@ -75,8 +91,11 @@
     <script src="/js/utils.js"></script>
     <script>
         let cinemas = [];
+        let cinemaSearchQuery = '';
+        let cinemaSortMode = 'name';
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();
+            bindFilters();
             await loadCinemas();
         });
 
@@ -98,6 +117,25 @@
             }
         }
 
+        function bindFilters() {
+            const searchInput = document.getElementById('cinema-search');
+            const sortSelect = document.getElementById('cinema-sort');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', () => {
+                    cinemaSearchQuery = String(searchInput.value || '').trim().toLowerCase();
+                    renderCinemas();
+                });
+            }
+
+            if (sortSelect) {
+                sortSelect.addEventListener('change', () => {
+                    cinemaSortMode = sortSelect.value === 'city' ? 'city' : 'name';
+                    renderCinemas();
+                });
+            }
+        }
+
         function renderCinemas() {
             const grid = document.getElementById('cinemas-grid');
             const selectedCinemaId = parseInt(localStorage.getItem('selectedCinema') || '0');
@@ -105,7 +143,28 @@
             document.getElementById('cinema-count-chip').innerHTML = `<span class="material-symbols-outlined text-sm">theaters</span>${cinemas.length} cinema disponibili`;
             document.getElementById('preferred-cinema-chip').innerHTML = `<span class="material-symbols-outlined text-sm">favorite</span>${preferred ? `${escapeHtml(preferred.nome)} (${escapeHtml(preferred.citta)})` : 'Nessun preferito'}`;
 
-            grid.innerHTML = cinemas.map((c, index) => `
+            let filtered = [...cinemas];
+            if (cinemaSearchQuery) {
+                filtered = filtered.filter((c) => {
+                    const hay = `${c.nome || ''} ${c.citta || ''}`.toLowerCase();
+                    return hay.includes(cinemaSearchQuery);
+                });
+            }
+
+            filtered.sort((a, b) => {
+                if (cinemaSortMode === 'city') {
+                    const cmp = String(a.citta || '').localeCompare(String(b.citta || ''), 'it');
+                    if (cmp !== 0) return cmp;
+                }
+                return String(a.nome || '').localeCompare(String(b.nome || ''), 'it');
+            });
+
+            if (!filtered.length) {
+                grid.innerHTML = `<div class="col-span-full text-sm text-on-surface-variant">Nessun cinema trovato con i filtri attivi.</div>`;
+                return;
+            }
+
+            grid.innerHTML = filtered.map((c, index) => `
                 <article class="app-card border ${selectedCinemaId === c.id ? 'border-primary-container/60' : 'border-outline-variant/20'} overflow-hidden hover-lift reveal-up" style="animation-delay:${(index % 8) * 0.04}s">
                     <div class="h-28 relative overflow-hidden">
                         <img
