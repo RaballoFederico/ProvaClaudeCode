@@ -37,8 +37,8 @@
     <div id="navbar-container"></div>
     <div class="flex flex-1">
         <main class="page-shell flex-1 pb-20 md:pb-0">
-            <section class="relative min-h-[560px] sm:min-h-[520px] lg:h-[66vh] flex items-center overflow-hidden">
-                <div class="absolute inset-0">
+            <section class="relative min-h-[560px] sm:min-h-[520px] lg:h-[66vh] flex items-center overflow-hidden home-hero">
+                <div class="absolute inset-0 home-hero-media">
                     <div class="absolute inset-0 bg-gradient-to-r from-black/85 via-black/70 to-black/20 z-10"></div>
                     <img src="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&h=1080&fit=crop" alt="Cinema hero" class="w-full h-full object-cover" />
                 </div>
@@ -61,7 +61,7 @@
                     <div class="h-[2px] flex-1 bg-secondary/50 rounded"></div>
                 </div>
                 <p class="text-on-surface-variant mb-6">Una selezione dei titoli più recenti e rilevanti, aggiornata automaticamente dal catalogo.</p>
-                <div id="featured-grid" class="card-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4"></div>
+                <div id="featured-grid" class="card-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4 home-featured-grid"></div>
                 <div id="featured-empty" class="hidden text-sm text-on-surface-variant">Nessun film disponibile al momento.</div>
             </section>
 
@@ -134,7 +134,7 @@
             grid.innerHTML = items.map((film, index) => {
                 const imageUrl = film.copertinaPath || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=600&h=900&fit=crop';
                 return `
-                    <article class="rounded-xl overflow-hidden border border-outline-variant/20 bg-surface-container reveal-up hover-lift" style="animation-delay:${(index % 8) * 0.04}s">
+                    <article class="rounded-xl overflow-hidden border border-outline-variant/20 bg-surface-container reveal-up hover-lift home-featured-card" style="animation-delay:${(index % 8) * 0.04}s">
                         <div class="aspect-[2/3] bg-surface-container-high relative">
                             <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(film.titolo)}" class="w-full h-full object-cover" loading="lazy" />
                             <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
@@ -153,6 +153,13 @@
             div.textContent = text || '';
             return div.innerHTML;
         }
+
+        window.addEventListener('scroll', () => {
+            const media = document.querySelector('.home-hero-media');
+            if (!media) return;
+            const y = Math.min(window.scrollY * 0.14, 42);
+            media.style.transform = `translateY(${y}px) scale(1.03)`;
+        }, { passive: true });
     </script>
 </body>
 </html>

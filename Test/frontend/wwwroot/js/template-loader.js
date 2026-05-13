@@ -92,6 +92,9 @@ async function loadAllComponents() {
     initNavigation();
     applyPageAccessControl();
     renderCookieBanner();
+    if (window.Theme && typeof window.Theme.refreshMotion === 'function') {
+        window.Theme.refreshMotion();
+    }
 }
 
 function getCurrentUser() {

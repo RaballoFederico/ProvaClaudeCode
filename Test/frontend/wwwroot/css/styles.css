@@ -837,6 +837,80 @@ textarea:focus {
     }
 }
 
+.motion-inview {
+    opacity: 0;
+    transform: translateY(18px) scale(0.992);
+    transition: opacity 0.58s ease, transform 0.58s cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition-delay: var(--motion-delay, 0ms);
+    will-change: opacity, transform;
+}
+
+.motion-inview.motion-show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+}
+
+.motion-pop {
+    transition: transform 0.24s ease, box-shadow 0.24s ease, filter 0.24s ease;
+    will-change: transform;
+}
+
+.motion-pop:hover {
+    transform: translateY(-3px) scale(1.01);
+    filter: saturate(1.05);
+}
+
+.motion-glow {
+    position: relative;
+}
+
+.motion-glow::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.26s ease;
+    background: radial-gradient(circle at 20% 0%, color-mix(in srgb, var(--primary) 18%, transparent), transparent 62%);
+}
+
+.motion-glow:hover::before {
+    opacity: 1;
+}
+
+html[data-motion-profile="cinematic"] .motion-inview {
+    transform: translateY(24px) scale(0.985);
+    transition-duration: 0.68s;
+}
+
+html[data-motion-profile="cinematic"] .motion-pop:hover {
+    transform: translateY(-5px) scale(1.015);
+}
+
+html[data-motion-profile="cinematic"] .hero-banner::before {
+    animation: heroPulse 5.8s ease-in-out infinite;
+}
+
+html[data-motion-profile="balanced"] .motion-inview {
+    transform: translateY(18px) scale(0.992);
+}
+
+html[data-motion-profile="focused"] .motion-inview {
+    transform: translateY(10px) scale(0.997);
+    transition-duration: 0.42s;
+}
+
+html[data-motion-profile="focused"] .motion-pop:hover {
+    transform: translateY(-2px) scale(1.005);
+    filter: none;
+}
+
+@keyframes heroPulse {
+    0%, 100% { opacity: 0.65; transform: scale(1); }
+    50% { opacity: 0.9; transform: scale(1.04); }
+}
+
 .hover-lift {
     transition: transform 0.24s ease, box-shadow 0.24s ease, border-color 0.24s ease;
 }
@@ -891,6 +965,24 @@ tbody tr:hover {
 
 .hero-banner p {
     max-width: 70ch;
+}
+
+.home-hero .home-hero-media {
+    transform: translateY(0) scale(1.02);
+    transition: transform 0.28s ease-out;
+    will-change: transform;
+}
+
+.home-featured-card {
+    transform-origin: center bottom;
+}
+
+.home-featured-card img {
+    transition: transform 0.42s ease;
+}
+
+.home-featured-card:hover img {
+    transform: scale(1.06);
 }
 
 .badge-soft {
@@ -1234,7 +1326,19 @@ a:focus-visible {
 
     .app-card,
     .app-btn,
-    .hover-lift {
+    .hover-lift,
+    .motion-inview,
+    .motion-pop {
+        transition: none !important;
+    }
+
+    html[data-motion-profile="cinematic"] .hero-banner::before {
+        animation: none !important;
+    }
+
+    .home-hero .home-hero-media,
+    .home-featured-card:hover img {
+        transform: none !important;
         transition: none !important;
     }
 }

@@ -186,7 +186,7 @@
                 <div class="max-w-7xl mx-auto space-y-10">
                     
                     <!-- Featured Films Section -->
-                    <section>
+                    <section class="reveal-up delay-2">
                         <div class="flex items-center justify-between mb-6">
                             <div>
                                 <h2 class="font-headline text-2xl md:text-3xl font-bold text-on-surface">Film in Evidenza</h2>
@@ -207,7 +207,7 @@
                     </section>
 
                     <!-- Bottom Grid: Projections + Quick Actions -->
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 reveal-up delay-3">
                         
                         <!-- Upcoming Projections -->
                         <div class="lg:col-span-2">
@@ -356,10 +356,29 @@
         }
 
         function updateStats() {
-            document.getElementById('stats-films').textContent = statsData.films ?? 0;
-            document.getElementById('stats-registi').textContent = statsData.registi ?? 0;
-            document.getElementById('stats-cinemas').textContent = statsData.cinemas ?? 0;
-            document.getElementById('stats-proiezioni').textContent = statsData.proiezioni ?? 0;
+            animateCounter('stats-films', statsData.films ?? 0);
+            animateCounter('stats-registi', statsData.registi ?? 0);
+            animateCounter('stats-cinemas', statsData.cinemas ?? 0);
+            animateCounter('stats-proiezioni', statsData.proiezioni ?? 0);
+        }
+
+        function animateCounter(id, target) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const end = Number(target) || 0;
+            const start = Number(el.textContent) || 0;
+            const duration = 680;
+            const startTime = performance.now();
+
+            function step(now) {
+                const progress = Math.min((now - startTime) / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const value = Math.round(start + (end - start) * eased);
+                el.textContent = value;
+                if (progress < 1) requestAnimationFrame(step);
+            }
+
+            requestAnimationFrame(step);
         }
 
         function renderFilmCards() {
