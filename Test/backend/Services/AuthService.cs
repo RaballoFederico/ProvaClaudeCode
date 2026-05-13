@@ -149,6 +149,7 @@ public class AuthService : IAuthService
             Nome = request.Nome,
             Cognome = request.Cognome,
             Telefono = request.Telefono,
+            ConsensoNewsletter = request.ConsensoNewsletter,
             DataRegistrazione = DateTime.UtcNow,
             Attivo = true,
             UtentiRuoli = new List<UtenteRuolo>

@@ -208,6 +208,21 @@
                     </div>
                 </div>
 
+                <div class="rounded-xl border border-outline-variant/30 bg-surface-container-high/60 p-4">
+                    <label for="consenso-newsletter" class="flex items-start gap-3 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            id="consenso-newsletter"
+                            name="consenso-newsletter"
+                            class="mt-1 h-4 w-4 rounded border-outline-variant/40 bg-surface-container-high text-primary-container focus:ring-primary-container"
+                        >
+                        <span class="text-sm text-on-surface-variant">
+                            Voglio iscrivermi alla newsletter per ricevere novita' e promozioni.
+                            <span class="block text-xs text-on-surface-variant/70 mt-1">Potrai modificare questa scelta in qualsiasi momento dal profilo.</span>
+                        </span>
+                    </label>
+                </div>
+
                 <div id="error-message" class="hidden text-sm text-red-400 bg-red-400/10 p-3 rounded-lg">
                     <span class="material-symbols-outlined text-sm align-middle mr-1">error</span>
                     <span id="error-text"></span>
@@ -372,6 +387,7 @@
             const nome = document.getElementById('nome').value;
             const cognome = document.getElementById('cognome').value;
             const telefono = document.getElementById('telefono').value;
+            const consensoNewsletter = document.getElementById('consenso-newsletter').checked;
             
             const errorDiv = document.getElementById('error-message');
             const errorText = document.getElementById('error-text');
@@ -428,7 +444,8 @@
                     password,
                     nome,
                     cognome,
-                    telefono
+                    telefono,
+                    consensoNewsletter
                 });
                 
                 if (result.success) {
