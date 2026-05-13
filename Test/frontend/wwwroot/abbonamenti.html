@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abbonamenti | FilmHub</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col">
+    <div id="navbar-container"></div>
+    <div class="flex flex-1">
+        <div id="sidebar-container"></div>
+        <main class="flex-1 p-4 md:p-8 lg:p-10">
+            <section class="mb-8 text-center">
+                <h1 class="font-headline text-3xl md:text-5xl font-semibold tracking-tight">Upgrade your plan</h1>
+                <p class="text-on-surface-variant mt-2 text-base">Confronta i piani e scegli il livello di accesso perfetto per te.</p>
+                <div class="mt-4 inline-flex items-center rounded-full border border-outline-variant/30 bg-surface-container-high p-1">
+                    <button id="billing-monthly-btn" type="button" class="px-4 py-1.5 rounded-full text-xs font-semibold bg-white text-zinc-900">Mensile</button>
+                    <button id="billing-yearly-btn" type="button" class="px-4 py-1.5 rounded-full text-xs font-semibold text-on-surface-variant">Annuale</button>
+                </div>
+            </section>
+
+            <section class="app-card p-4 mb-8">
+                <div class="flex items-center justify-between gap-3">
+                    <h2 class="font-headline text-xl font-semibold">Il mio abbonamento</h2>
+                    <button id="refresh-sub-btn" class="app-btn app-btn-secondary">Aggiorna</button>
+                </div>
+                <div id="my-subscription" class="mt-3 text-sm text-on-surface-variant">Caricamento...</div>
+            </section>
+
+            <section class="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-4 items-stretch" id="plans-grid"></section>
+        </main>
+    </div>
+    <div id="footer-container"></div>
+
+    <script src="/js/theme.js"></script>
+    <script src="/js/api-config.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/route-guard.js"></script>
+    <script src="/js/template-loader.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        const subscriptionEndpointBases = ['/abbonamenti', '/abbonamento'];
+        let billingCycle = 'monthly';
+        let cachedPlans = [];
+        const LOCAL_PLANS_FALLBACK = [
+            { codice: 'Free', nome: 'Free', prezzoMensile: 0, ingressiSettimanali: 0, include3D: false, includeScontoSnack: false },
+            { codice: 'Base', nome: 'Base', prezzoMensile: 14.90, ingressiSettimanali: 1, include3D: false, includeScontoSnack: false },
+            { codice: 'Plus', nome: 'Plus', prezzoMensile: 29.90, ingressiSettimanali: 3, include3D: true, includeScontoSnack: false },
+            { codice: 'Premium', nome: 'Premium', prezzoMensile: 49.90, ingressiSettimanali: 7, include3D: true, includeScontoSnack: true }
+        ];
+
+        function getPlanVisual(codice) {
+            const key = String(codice || '').toLowerCase();
+            if (key === 'free') {
+                return {
+                    theme: 'from-surface-container-high via-surface-container to-surface',
+                    ring: 'ring-1 ring-outline-variant/25',
+                    badge: 'Starter',
+                    cta: 'Piano attuale',
+                    accent: 'slate'
+                };
+            }
+            if (key === 'base') {
+                return {
+                    theme: 'from-surface-container-high via-surface-container to-surface',
+                    ring: 'ring-1 ring-secondary/35',
+                    badge: 'Bronze',
+                    cta: 'Passa a Base',
+                    accent: 'bronze'
+                };
+            }
+            if (key === 'plus') {
+                return {
+                    theme: 'from-surface-container-high via-surface-container to-surface',
+                    ring: 'ring-1 ring-primary-container/35',
+                    badge: 'Silver',
+                    cta: 'Passa a Plus',
+                    accent: 'silver'
+                };
+            }
+            if (key === 'premium') {
+                return {
+                    theme: 'from-surface-container-high via-surface-container to-surface',
+                    ring: 'ring-2 ring-primary-container/55',
+                    badge: 'Gold',
+                    cta: 'Passa a Premium',
+                    accent: 'gold'
+                };
+            }
+            return {
+                theme: 'from-zinc-900 via-neutral-900 to-zinc-800',
+                ring: 'ring-1 ring-white/10',
+                badge: 'Entry',
+                cta: `Attiva ${codice}`,
+                accent: 'default'
+            };
+        }
+
+        function getPlanFeatures(p) {
+            const features = [];
+            if (String(p.codice || '').toLowerCase() === 'free') {
+                features.push('Accesso alla piattaforma e al profilo personale');
+                features.push('Storico acquisti e rimborsi disponibile');
+                features.push('Upgrade a piani premium in ogni momento');
+                return features;
+            }
+            features.push(`${p.ingressiSettimanali} ingress${p.ingressiSettimanali === 1 ? 'o' : 'i'} a settimana`);
+            features.push(p.include3D ? 'Accesso anche a proiezioni 3D' : 'Proiezioni 2D incluse');
+            features.push(p.includeScontoSnack ? 'Sconto snack incluso' : 'Snack a prezzo standard');
+            if (String(p.codice || '').toLowerCase() === 'premium') {
+                features.push('Priorita promozioni e offerte dedicate');
+            }
+            if (String(p.codice || '').toLowerCase() === 'plus') {
+                features.push('Ideale per uso frequente durante la settimana');
+            }
+            return features;
+        }
+
+        async function subscriptionRequest(path, method = 'GET', body = null) {
+            let lastError = null;
+            for (const base of subscriptionEndpointBases) {
+                try {
+                    const endpoint = `${base}${path}`;
+                    if (method === 'GET') return await ApiClient.get(endpoint);
+                    if (method === 'POST') return await ApiClient.post(endpoint, body || {});
+                    if (method === 'PUT') return await ApiClient.put(endpoint, body || {});
+                    throw new Error(`Metodo non supportato: ${method}`);
+                } catch (error) {
+                    lastError = error;
+                    const msg = String(error?.message || '');
+                    if (path === '/mio' && msg.includes('HTTP 500')) {
+                        // Fallback robusto: mai bloccare la UI del profilo abbonamento
+                        return { hasSubscription: false, fallback: true };
+                    }
+                    if (!String(error?.message || '').includes('HTTP 404')) {
+                        throw error;
+                    }
+                }
+            }
+            throw lastError || new Error('Endpoint abbonamenti non trovato');
+        }
+
+        function getPlanPrice(p) {
+            const monthly = Number(p.prezzoMensile || 0);
+            if (billingCycle === 'yearly') {
+                // 20% sconto annuale
+                return monthly * 12 * 0.8;
+            }
+            return monthly;
+        }
+
+        function getPriceLabel() {
+            return billingCycle === 'yearly' ? 'EUR / year' : 'EUR / month';
+        }
+
+        function formatPriceValue(value) {
+            return Number(value).toFixed(0);
+        }
+
+        function updateBillingToggleUI() {
+            const monthlyBtn = document.getElementById('billing-monthly-btn');
+            const yearlyBtn = document.getElementById('billing-yearly-btn');
+            if (!monthlyBtn || !yearlyBtn) return;
+
+            const activeClasses = ['bg-white', 'text-zinc-900'];
+            const inactiveClasses = ['text-on-surface-variant'];
+
+            monthlyBtn.classList.toggle(activeClasses[0], billingCycle === 'monthly');
+            monthlyBtn.classList.toggle(activeClasses[1], billingCycle === 'monthly');
+            monthlyBtn.classList.toggle(inactiveClasses[0], billingCycle !== 'monthly');
+
+            yearlyBtn.classList.toggle(activeClasses[0], billingCycle === 'yearly');
+            yearlyBtn.classList.toggle(activeClasses[1], billingCycle === 'yearly');
+            yearlyBtn.classList.toggle(inactiveClasses[0], billingCycle !== 'yearly');
+        }
+
+        function renderPlans(piani) {
+            const container = document.getElementById('plans-grid');
+            container.innerHTML = (Array.isArray(piani) ? piani : []).map((p) => {
+                const visual = getPlanVisual(p.codice);
+                const features = getPlanFeatures(p);
+                const price = getPlanPrice(p);
+                const isFreePlan = String(p.codice || '').toLowerCase() === 'free';
+                const planKey = String(p.codice || '').toLowerCase();
+                const yearlyBadge = billingCycle === 'yearly'
+                    ? `<span class="inline-block mt-2 text-[11px] uppercase tracking-[0.16em] text-emerald-300">-20% con piano annuale</span>`
+                    : '';
+                const accentStripClass =
+                    visual.accent === 'gold' ? 'from-yellow-300/70 via-amber-400/60 to-orange-400/70' :
+                    visual.accent === 'silver' ? 'from-slate-200/60 via-slate-300/50 to-slate-400/60' :
+                    visual.accent === 'bronze' ? 'from-amber-500/60 via-orange-500/50 to-amber-700/60' :
+                    visual.accent === 'slate' ? 'from-slate-500/45 via-slate-600/35 to-slate-700/45' :
+                    'from-primary-container/50 via-primary-container/40 to-secondary/50';
+                const ctaClass = planKey === 'base'
+                    ? 'bg-primary-container text-white hover:brightness-110'
+                    : planKey === 'premium'
+                        ? 'bg-primary-container text-white hover:brightness-110'
+                        : 'bg-primary-container text-white hover:brightness-110';
+                return `
+                    <article class="relative rounded-2xl overflow-hidden bg-gradient-to-b ${visual.theme} ${visual.ring} border border-outline-variant/30 p-5 md:p-6 text-on-surface shadow-[0_14px_36px_rgba(0,0,0,0.28)] hover:shadow-[0_20px_44px_rgba(0,0,0,0.34)] transition-all duration-300">
+                        <div class="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r ${accentStripClass}"></div>
+                        <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(229,226,225,0.11),transparent_45%)] pointer-events-none"></div>
+                        <div class="absolute -top-10 -right-8 w-36 h-36 ${String(p.codice || '').toLowerCase() === 'premium' ? 'bg-primary-container/20' : String(p.codice || '').toLowerCase() === 'plus' ? 'bg-secondary/18' : 'bg-white/8'} blur-3xl rounded-full pointer-events-none"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center justify-between gap-3">
+                                <h3 class="font-headline text-3xl md:text-4xl leading-none font-semibold tracking-tight">${p.nome}</h3>
+                                <span class="text-[11px] uppercase tracking-[0.18em] px-2.5 py-1 rounded-full bg-surface-container-high border border-outline-variant/40 text-on-surface-variant">${visual.badge}</span>
+                            </div>
+
+                            <div class="mt-4 flex items-end gap-2">
+                                <span class="text-on-surface-variant/75 text-xl leading-none mb-1">€</span>
+                                <span class="text-5xl md:text-6xl font-semibold leading-[0.9]">${formatPriceValue(price)}</span>
+                                <span class="text-sm md:text-base text-on-surface-variant mb-1.5">${getPriceLabel()}</span>
+                            </div>
+                            ${isFreePlan ? '' : yearlyBadge}
+                            <p class="mt-2 text-sm text-on-surface-variant">Attivazione immediata, modifica o disdetta quando vuoi.</p>
+
+                            ${isFreePlan
+                                ? `<button class="mt-5 w-full rounded-full px-3.5 py-2.5 font-semibold text-sm bg-surface-container-high text-on-surface-variant border border-outline-variant/30 cursor-not-allowed" disabled>${visual.cta}</button>`
+                                : `<button class="mt-5 w-full rounded-full px-3.5 py-2.5 font-semibold text-sm ${ctaClass} transition-colors" onclick="attivaPiano('${p.codice}')">${visual.cta}</button>`
+                            }
+
+                            <div class="mt-5 border-t border-outline-variant/30 pt-4">
+                                <p class="text-sm font-medium text-on-surface mb-3">Cosa include:</p>
+                                <ul class="space-y-2.5 text-sm text-on-surface-variant">
+                                    ${features.map((f) => `
+                                        <li class="flex items-start gap-2">
+                                            <span class="material-symbols-outlined text-[18px] leading-5 text-primary-container mt-0.5">check_circle</span>
+                                            <span>${f}</span>
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        </div>
+                    </article>
+                `;
+            }).join('');
+        }
+
+        async function loadPiani() {
+            try {
+                const piani = await subscriptionRequest('/piani');
+                const apiPlans = Array.isArray(piani) ? piani : [];
+                const hasFree = apiPlans.some((x) => String(x.codice || '').toLowerCase() === 'free');
+                const mergedPlans = hasFree ? apiPlans : [LOCAL_PLANS_FALLBACK[0], ...apiPlans];
+                cachedPlans = mergedPlans;
+                renderPlans(mergedPlans);
+            } catch (error) {
+                if (String(error?.message || '').includes('HTTP 404')) {
+                    cachedPlans = [...LOCAL_PLANS_FALLBACK];
+                    renderPlans(LOCAL_PLANS_FALLBACK);
+                    Utils.showNotification('Catalogo piani caricato in modalita compatibile', 'info');
+                    return;
+                }
+                throw error;
+            }
+        }
+
+        async function loadMioAbbonamento() {
+            const box = document.getElementById('my-subscription');
+            try {
+                const res = await subscriptionRequest('/mio');
+                if (!res?.hasSubscription) {
+                    box.innerHTML = `
+                        <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high p-3">
+                            <div>Piano: <strong>Free</strong></div>
+                            <div>Stato: <strong>Attivo</strong></div>
+                            <div class="text-xs text-on-surface-variant mt-1">
+                                Nessun costo mensile. Seleziona uno dei piani qui sotto per sbloccare piu vantaggi.
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+                box.innerHTML = `
+                    <div>Piano: <strong>${res.piano}</strong></div>
+                    <div>Stato: <strong>${res.stato}</strong></div>
+                    <div>Rinnovo: <strong>${new Date(res.prossimoRinnovo).toLocaleDateString('it-IT')}</strong></div>
+                    <div>Ingressi settimana: <strong>${res.utilizziSettimana}/${res.ingressiSettimanali}</strong></div>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                        <button class="app-btn app-btn-secondary" onclick="usaIngresso()">Registra ingresso</button>
+                        <button class="app-btn app-btn-secondary" onclick="disdiciAbbonamento()">Disdici</button>
+                    </div>
+                `;
+            } catch (error) {
+                const is404 = String(error?.message || '').includes('HTTP 404');
+                if (is404) {
+                    box.innerHTML = `
+                        <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high p-3">
+                            <div class="font-medium text-on-surface">Piano: <strong>Free</strong></div>
+                            <div class="mt-1">Stato: <strong>Attivo</strong></div>
+                            <div class="text-xs text-on-surface-variant mt-1">Piano gratuito attivo. Puoi passare a un piano premium quando vuoi.</div>
+                        </div>
+                    `;
+                    return;
+                }
+                box.textContent = error.message || 'Errore caricamento abbonamento';
+            }
+        }
+
+        async function attivaPiano(piano) {
+            try {
+                const successUrl = `${window.location.origin}/abbonamenti.html?checkout=success&piano=${encodeURIComponent(piano)}&session_id={CHECKOUT_SESSION_ID}`;
+                const cancelUrl = `${window.location.origin}/abbonamenti.html?checkout=cancel`;
+                let session = null;
+
+                try {
+                    session = await subscriptionRequest('/checkout-session', 'POST', {
+                        piano,
+                        successUrl,
+                        cancelUrl
+                    });
+                } catch (error) {
+                    // Fallback per backend che non espone ancora /abbonamenti/checkout-session
+                    if (!String(error?.message || '').includes('HTTP 404')) {
+                        throw error;
+                    }
+
+                    let piani = [];
+                    try {
+                        piani = cachedPlans.length ? cachedPlans : await subscriptionRequest('/piani');
+                    } catch {
+                        piani = LOCAL_PLANS_FALLBACK;
+                    }
+                    const selected = (Array.isArray(piani) ? piani : []).find((x) => String(x.codice || '').toLowerCase() === String(piano || '').toLowerCase());
+                    if (!selected) {
+                        throw new Error('Piano non trovato');
+                    }
+
+                    session = await ApiClient.post('/acquisto/checkout-session', {
+                        importo: Number(selected.prezzoMensile || 0),
+                        successUrl,
+                        cancelUrl
+                    });
+                }
+
+                if (!session?.url) {
+                    throw new Error('Checkout Stripe non disponibile');
+                }
+
+                window.location.href = session.url;
+            } catch (error) {
+                const message = String(error?.message || '');
+                if (message.includes('HTTP 500')) {
+                    Utils.showNotification('Pagamento non avviato: backend temporaneamente non disponibile (errore 500). Verifica che API e database siano attivi.', 'error');
+                    return;
+                }
+                Utils.showNotification(message || 'Errore avvio checkout', 'error');
+            }
+        }
+
+        async function disdiciAbbonamento() {
+            if (!confirm('Confermi disdetta abbonamento?')) return;
+            try {
+                const res = await subscriptionRequest('/disdici', 'POST', {});
+                Utils.showNotification(res.message || 'Abbonamento disdetto', 'info');
+                await loadMioAbbonamento();
+            } catch (error) {
+                Utils.showNotification(error.message || 'Errore disdetta', 'error');
+            }
+        }
+
+        async function usaIngresso() {
+            try {
+                const res = await subscriptionRequest('/usa', 'POST', { note: 'Utilizzo da area abbonamenti' });
+                Utils.showNotification(res.message || 'Ingresso registrato', 'success');
+                await loadMioAbbonamento();
+            } catch (error) {
+                Utils.showNotification(error.message || 'Errore registrazione ingresso', 'error');
+            }
+        }
+
+        async function handleCheckoutReturn() {
+            const params = new URLSearchParams(window.location.search);
+            const status = params.get('checkout');
+            if (!status) return;
+
+            if (status === 'cancel') {
+                Utils.showNotification('Pagamento annullato', 'info');
+            }
+
+            if (status === 'success') {
+                const sessionId = params.get('session_id');
+                const piano = params.get('piano');
+                if (sessionId && piano) {
+                    try {
+                        let res = null;
+                        try {
+                            res = await subscriptionRequest('/conferma-checkout', 'POST', { sessionId, piano });
+                        } catch (error) {
+                            // Fallback per backend che non espone ancora /abbonamenti/conferma-checkout
+                            if (!String(error?.message || '').includes('HTTP 404')) {
+                                throw error;
+                            }
+                            res = await subscriptionRequest('/attiva', 'POST', { piano });
+                        }
+
+                        Utils.showNotification(res.message || 'Abbonamento attivato con successo', 'success');
+                    } catch (error) {
+                        Utils.showNotification(error.message || 'Pagamento effettuato ma attivazione non confermata', 'error');
+                    }
+                }
+            }
+
+            params.delete('checkout');
+            params.delete('session_id');
+            params.delete('piano');
+            const nextQuery = params.toString();
+            const nextUrl = nextQuery ? `${window.location.pathname}?${nextQuery}` : window.location.pathname;
+            window.history.replaceState({}, '', nextUrl);
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllComponents();
+            await handleCheckoutReturn();
+
+            const monthlyBtn = document.getElementById('billing-monthly-btn');
+            const yearlyBtn = document.getElementById('billing-yearly-btn');
+            monthlyBtn?.addEventListener('click', () => {
+                billingCycle = 'monthly';
+                updateBillingToggleUI();
+                renderPlans(cachedPlans.length ? cachedPlans : LOCAL_PLANS_FALLBACK);
+            });
+            yearlyBtn?.addEventListener('click', () => {
+                billingCycle = 'yearly';
+                updateBillingToggleUI();
+                renderPlans(cachedPlans.length ? cachedPlans : LOCAL_PLANS_FALLBACK);
+            });
+
+            updateBillingToggleUI();
+            document.getElementById('refresh-sub-btn')?.addEventListener('click', loadMioAbbonamento);
+            await loadPiani();
+            await loadMioAbbonamento();
+        });
+    </script>
+</body>
+</html>
