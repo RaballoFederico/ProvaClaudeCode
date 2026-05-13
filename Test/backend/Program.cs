@@ -348,6 +348,7 @@ if (!isTesting)
     using (var scope = app.Services.CreateScope())
     {
         var db = scope.ServiceProvider.GetRequiredService<FilmDbContext>();
+        await db.Database.MigrateAsync();
         await DbInitializer.InitializeAsync(db);
     }
 }
