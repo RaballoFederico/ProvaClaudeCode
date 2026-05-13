@@ -91,6 +91,16 @@ body::after {
     background: rgba(145, 162, 186, 0.16);
 }
 
+body::selection {
+    background: color-mix(in srgb, var(--primary) 36%, transparent);
+    color: #fff;
+}
+
+body::-moz-selection {
+    background: color-mix(in srgb, var(--primary) 36%, transparent);
+    color: #fff;
+}
+
 html[data-theme="light"] body::before {
     background: rgba(201, 122, 100, 0.12);
 }
@@ -171,10 +181,56 @@ footer {
     z-index: 2;
 }
 
+.page-shell {
+    position: relative;
+}
+
+.page-shell::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--outline) 88%, transparent), transparent);
+    opacity: 0.55;
+    pointer-events: none;
+}
+
 #navbar {
     backdrop-filter: blur(calc(var(--glass-blur) + 2px)) saturate(140%);
     background: color-mix(in srgb, var(--surface) 84%, transparent) !important;
     box-shadow: 0 8px 22px -16px rgba(0, 0, 0, 0.58), var(--neo-raised);
+}
+
+.navbar-shell {
+    position: relative;
+}
+
+.nav-brand-link {
+    position: relative;
+}
+
+.nav-brand-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -4px;
+    width: 0;
+    height: 2px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, color-mix(in srgb, var(--primary) 88%, white 12%), color-mix(in srgb, var(--accent) 88%, white 12%));
+    transition: width 0.26s ease;
+}
+
+.nav-brand-link:hover::after {
+    width: 100%;
+}
+
+.nav-icon-btn {
+    border: 1px solid transparent;
+}
+
+.nav-icon-btn:hover {
+    border-color: color-mix(in srgb, var(--outline) 88%, transparent);
 }
 
 #navbar::after,
@@ -264,6 +320,10 @@ footer {
     backdrop-filter: blur(calc(var(--glass-blur) + 2px)) saturate(136%);
     box-shadow: 16px 0 42px -28px rgba(0, 0, 0, 0.7), var(--neo-raised);
     will-change: transform;
+}
+
+.sidebar-shell {
+    background-image: linear-gradient(180deg, color-mix(in srgb, var(--surface-high) 34%, transparent) 0%, transparent 30%);
 }
 
 #sidebar .sidebar-group-toggle,
@@ -741,6 +801,7 @@ textarea {
     border: 1px solid color-mix(in srgb, var(--outline) 80%, transparent) !important;
     color: var(--text);
     box-shadow: var(--neo-pressed);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 input:focus,
@@ -794,6 +855,24 @@ textarea:focus {
     box-shadow: var(--neo-raised);
 }
 
+table {
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+thead th {
+    font-weight: 600;
+    letter-spacing: 0.01em;
+}
+
+tbody tr {
+    transition: background-color 0.18s ease;
+}
+
+tbody tr:hover {
+    background: color-mix(in srgb, var(--surface-high) 74%, transparent);
+}
+
 .hero-banner::before {
     content: "";
     position: absolute;
@@ -803,6 +882,15 @@ textarea:focus {
     border-radius: 999px;
     background: radial-gradient(circle, color-mix(in srgb, var(--primary) 42%, transparent), transparent 70%);
     pointer-events: none;
+}
+
+.hero-banner h1,
+.hero-banner h2 {
+    text-wrap: balance;
+}
+
+.hero-banner p {
+    max-width: 70ch;
 }
 
 .badge-soft {
@@ -826,6 +914,13 @@ textarea:focus {
     background: color-mix(in srgb, var(--surface) 90%, transparent);
     box-shadow: var(--ring), var(--neo-raised);
     backdrop-filter: blur(var(--glass-blur)) saturate(126%);
+    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.app-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--outline) 92%, transparent);
+    box-shadow: 0 22px 38px -26px rgba(0, 0, 0, 0.65), var(--neo-raised);
 }
 
 .app-card-soft {
@@ -833,6 +928,47 @@ textarea:focus {
     border-radius: 0.9rem;
     background: color-mix(in srgb, var(--surface-high) 90%, transparent);
     box-shadow: var(--neo-pressed);
+}
+
+.footer-shell {
+    overflow: hidden;
+    position: relative;
+}
+
+.footer-shell::before {
+    content: "";
+    position: absolute;
+    inset: auto -4% -45% -4%;
+    height: 220px;
+    pointer-events: none;
+    background: radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--primary) 22%, transparent), transparent 46%),
+                radial-gradient(circle at 72% 10%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 42%);
+}
+
+.footer-newsletter {
+    position: relative;
+    z-index: 1;
+}
+
+.pill,
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    border: 1px solid color-mix(in srgb, var(--outline) 82%, transparent);
+    border-radius: 999px;
+    padding: 0.22rem 0.6rem;
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    background: color-mix(in srgb, var(--surface-high) 88%, transparent);
+}
+
+.section-eyebrow {
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-soft);
 }
 
 .app-chip {
@@ -859,11 +995,19 @@ textarea:focus {
     font-weight: 600;
     transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease, background-position 0.35s ease;
     background-size: 130% 130%;
+    letter-spacing: 0.01em;
 }
 
 .app-btn:hover {
     transform: translateY(-1px);
     filter: saturate(1.04);
+}
+
+.app-btn:focus-visible,
+button:focus-visible,
+a:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--primary) 72%, white 28%);
+    outline-offset: 2px;
 }
 
 .app-btn-primary {
@@ -879,6 +1023,11 @@ textarea:focus {
     background: color-mix(in srgb, var(--surface-high) 92%, transparent);
     color: var(--text);
     box-shadow: var(--neo-pressed);
+}
+
+.app-btn-danger {
+    background: linear-gradient(132deg, #cc3f39, #922b28);
+    color: #fff4f2;
 }
 
 .auth-shell {
@@ -914,6 +1063,15 @@ textarea:focus {
     background: color-mix(in srgb, var(--surface) 92%, transparent);
     box-shadow: var(--ring), var(--neo-raised);
     backdrop-filter: blur(var(--glass-blur));
+}
+
+.auth-card h1,
+.auth-card h2 {
+    letter-spacing: -0.012em;
+}
+
+.auth-card form label {
+    letter-spacing: 0.01em;
 }
 
 .auth-card-compact {
@@ -1014,6 +1172,25 @@ textarea:focus {
     background: linear-gradient(to top, rgba(5, 8, 14, 0.96), rgba(10, 14, 22, 0.34), transparent);
 }
 
+.legal-content article,
+.legal-content .bg-surface-container-high {
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.legal-content article:hover,
+.legal-content .bg-surface-container-high:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--outline) 94%, transparent);
+    box-shadow: 0 16px 34px -24px rgba(0, 0, 0, 0.64), var(--neo-raised);
+}
+
+.card-grid > *,
+#plans-grid > *,
+#proiezioni-grid > *,
+#films-grid > * {
+    animation: revealUp 0.5s ease forwards;
+}
+
 #projections-list > div {
     border: 1px solid transparent;
 }
@@ -1052,6 +1229,12 @@ textarea:focus {
     .glass-panel::after,
     .app-card::after,
     .bg-surface-container::after {
+        transition: none !important;
+    }
+
+    .app-card,
+    .app-btn,
+    .hover-lift {
         transition: none !important;
     }
 }

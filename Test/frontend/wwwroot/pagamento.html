@@ -37,10 +37,46 @@
     </script>
 </head>
 <body class="bg-background text-on-surface font-body min-h-screen flex flex-col">
+    <style>
+        .payment-checkbox {
+            width: 1.25rem;
+            height: 1.25rem;
+            appearance: none;
+            -webkit-appearance: none;
+            border: 2px solid #5f6b85;
+            border-radius: 0.35rem;
+            background-color: transparent;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.16s ease;
+        }
+
+        .payment-checkbox:checked {
+            border-color: #e97b7b;
+        }
+
+        .payment-checkbox:checked::before {
+            content: "✓";
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            color: #ffffff;
+            font-size: 0.8rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .payment-checkbox:focus,
+        .payment-checkbox:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(95, 107, 133, 0.35);
+        }
+    </style>
     <div id="navbar-container"></div>
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
-        <main class="flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
+        <main class="page-shell flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
             <div class="max-w-7xl mx-auto">
             <section class="hero-banner p-5 md:p-8 mb-5 md:mb-6 reveal-up shadow-panel">
                 <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
@@ -102,7 +138,7 @@
 
                         <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high p-4 mb-4">
                             <label class="flex items-start gap-3 text-sm cursor-pointer select-none">
-                                <input id="use-credit" type="checkbox" class="rounded mt-0.5" checked>
+                                <input id="use-credit" type="checkbox" class="payment-checkbox rounded mt-0.5" checked>
                                 <span>
                                     <span class="font-medium text-on-surface">Usa il mio credito prima dei metodi esterni</span>
                                     <span class="block text-on-surface-variant text-xs mt-1">Se il credito copre tutto, non verra addebitato nessun metodo esterno.</span>
@@ -114,7 +150,7 @@
 
                         <div class="mt-5 rounded-xl border border-outline-variant/20 bg-surface-container-high p-4">
                             <label class="flex items-start gap-3 text-sm cursor-pointer select-none">
-                                <input id="save-payment-method" type="checkbox" class="rounded mt-0.5">
+                                <input id="save-payment-method" type="checkbox" class="payment-checkbox rounded mt-0.5">
                                 <span>
                                     <span class="font-medium text-on-surface">Salva preferenza pagamento per i prossimi ordini</span>
                                     <span class="block text-on-surface-variant text-xs mt-1">Salviamo solo metadati non sensibili (tipo metodo e preferenza), mai CVV o numero completo carta.</span>
@@ -150,10 +186,19 @@
         const PAYMENT_METHODS = [
             {
                 id: 'stripe_checkout',
-                label: 'Stripe Checkout',
+                label: 'Carta / Apple Pay / Google Pay',
                 icon: 'lock',
-                subtitle: 'Pagina sicura ospitata da Stripe',
+                subtitle: 'Scegli in Stripe tra carta o wallet disponibili',
+                stripeType: 'card',
                 cta: 'Vai a Stripe Checkout'
+            },
+            {
+                id: 'revolut_pay',
+                label: 'Revolut Pay (QR)',
+                icon: 'qr_code_2',
+                subtitle: 'Apri Checkout con opzione scansione QR Revolut',
+                stripeType: 'revolut_pay',
+                cta: 'Paga con Revolut'
             }
         ];
 
@@ -382,7 +427,8 @@
                 const session = await ApiClient.post('/acquisto/checkout-session', {
                     importo: remaining,
                     successUrl,
-                    cancelUrl
+                    cancelUrl,
+                    paymentMethodType: getSelectedMethod().stripeType || 'card'
                 });
 
                 if (!session?.url) {

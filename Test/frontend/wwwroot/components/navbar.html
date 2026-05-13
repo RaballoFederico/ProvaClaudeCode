@@ -1,5 +1,5 @@
 <header id="navbar" class="sticky top-0 z-50 px-3 md:px-6 py-3 bg-surface-container border-b border-outline-variant/20 backdrop-blur-lg">
-    <div class="max-w-[1500px] mx-auto flex items-center justify-between gap-3 md:gap-6">
+    <div class="max-w-[1500px] mx-auto flex items-center justify-between gap-3 md:gap-6 navbar-shell">
         <div class="flex items-center gap-2 md:gap-3 min-w-0">
             <button id="mobile-menu-toggle" class="md:hidden p-2 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-colors" aria-label="Apri menu">
                 <span class="material-symbols-outlined">menu</span>
@@ -7,7 +7,7 @@
             <button id="nav-back-btn" onclick="if (window.history.length > 1) { window.history.back(); } else { window.location.href = 'home.html'; }" class="p-2 rounded-xl text-on-surface-variant hover:bg-surface-container-high transition-colors" title="Torna indietro">
                 <span class="material-symbols-outlined">arrow_back</span>
             </button>
-            <a href="home.html" class="font-headline text-2xl md:text-3xl font-semibold tracking-tight text-on-surface truncate">
+            <a href="home.html" class="font-headline text-2xl md:text-3xl font-semibold tracking-tight text-on-surface truncate nav-brand-link">
                 Film<span class="text-primary-container">Hub</span>
             </a>
         </div>
@@ -23,7 +23,7 @@
         </div>
 
         <div class="flex items-center gap-2 md:gap-3 shrink-0">
-            <button onclick="window.Theme && Theme.toggle()" class="p-2.5 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors" title="Cambia tema">
+            <button onclick="window.Theme && Theme.toggle()" class="p-2.5 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors nav-icon-btn" title="Cambia tema">
                 <span id="theme-toggle-icon" data-theme-toggle-icon class="material-symbols-outlined">light_mode</span>
             </button>
             <div id="nav-auth-section" class="flex items-center gap-2 md:gap-3"></div>
