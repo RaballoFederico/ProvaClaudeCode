@@ -42,6 +42,8 @@ public class Utente
 
     public bool Attivo { get; set; } = true;
 
+    public bool ConsensoNewsletter { get; set; } = false;
+
     public ICollection<RefreshToken> RefreshTokens { get; set; } = new List<RefreshToken>();
 
     public ICollection<Prenotazione> Prenotazioni { get; set; } = new List<Prenotazione>();
@@ -66,4 +68,6 @@ public class Utente
     public ICollection<Acquisto> Acquisti { get; set; } = new List<Acquisto>();
 
     public ICollection<NotificaUtente> Notifiche { get; set; } = new List<NotificaUtente>();
+
+    public ICollection<AbbonamentoUtente> Abbonamenti { get; set; } = new List<AbbonamentoUtente>();
 }

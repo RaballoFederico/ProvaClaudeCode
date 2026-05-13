@@ -98,6 +98,10 @@
                             <h1 class="font-headline text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-on-surface mb-4">
                                 Film<span class="text-primary-container">Hub</span>
                             </h1>
+                            <div id="dashboard-sync-badge" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant text-xs border border-outline-variant/30 mb-3">
+                                <span class="material-symbols-outlined text-sm">sync</span>
+                                <span id="dashboard-sync-text">Aggiornamento dati...</span>
+                            </div>
                             <p class="text-on-surface-variant text-lg max-w-xl">Visuale completa sul tuo ecosistema cinema: dati, catalogo e operazioni rapide in un unico flusso.</p>
                         </div>
                         <div class="relative z-10 flex gap-4">
@@ -299,25 +303,25 @@
         let statsData = { films: 0, registi: 0, cinemas: 0, proiezioni: 0 };
 
         document.addEventListener('DOMContentLoaded', async () => {
-            if (typeof Auth !== 'undefined' && !Auth.canManageCatalog()) {
-                window.location.href = '/profilo.html';
-                return;
-            }
-            await loadAllComponents();
-            await loadDashboardData();
+            const componentsPromise = loadAllComponents();
+            const dashboardPromise = loadDashboardData();
+            await Promise.allSettled([componentsPromise, dashboardPromise]);
         });
 
         async function loadDashboardData() {
+            setDashboardSyncState('loading');
             try {
                 const overview = await ApiClient.get('/dashboard/overview');
                 statsData = overview?.stats || statsData;
                 filmsData = overview?.featuredFilms || [];
                 proiezioniData = overview?.upcomingProjections || [];
+                setDashboardSyncState('ok');
             } catch (error) {
                 console.error('Errore caricamento dashboard:', error);
                 filmsData = [];
                 proiezioniData = [];
                 statsData = { films: 0, registi: 0, cinemas: 0, proiezioni: 0 };
+                setDashboardSyncState('error');
             }
 
             const hasAnyData = filmsData.length > 0 || proiezioniData.length > 0 || statsData.films > 0;
@@ -328,6 +332,27 @@
             updateStats();
             renderFilmCards();
             renderProjections();
+        }
+
+        function setDashboardSyncState(state) {
+            const badge = document.getElementById('dashboard-sync-badge');
+            const text = document.getElementById('dashboard-sync-text');
+            if (!badge || !text) return;
+
+            if (state === 'loading') {
+                badge.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-high text-on-surface-variant text-xs border border-outline-variant/30 mb-3';
+                text.textContent = 'Aggiornamento dati...';
+                return;
+            }
+
+            if (state === 'ok') {
+                badge.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-900/30 text-emerald-200 text-xs border border-emerald-500/30 mb-3';
+                text.textContent = `Aggiornato alle ${new Date().toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })}`;
+                return;
+            }
+
+            badge.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-900/30 text-amber-200 text-xs border border-amber-500/30 mb-3';
+            text.textContent = 'Dati in cache (offline/rete lenta)';
         }
 
         function updateStats() {

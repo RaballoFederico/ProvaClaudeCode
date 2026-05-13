@@ -177,6 +177,33 @@ public static class ProiezioniEndpoints
             return Results.NoContent();
         });
 
+        // DELETE /proiezioni/bulk/past - Admin e PowerUser
+        group.MapDelete("/bulk/past", [Authorize(Roles = "Admin,PowerUser")] async (DateTime? beforeDate, bool? dryRun, FilmDbContext db) =>
+        {
+            var cutoff = (beforeDate ?? DateTime.Today).Date;
+            var query = db.Proiezioni.Where(p => p.Data < cutoff);
+            var matched = await query.CountAsync();
+
+            if (dryRun.GetValueOrDefault(true))
+            {
+                return Results.Ok(new
+                {
+                    dryRun = true,
+                    beforeDate = cutoff,
+                    matched
+                });
+            }
+
+            var deleted = await query.ExecuteDeleteAsync();
+            return Results.Ok(new
+            {
+                dryRun = false,
+                beforeDate = cutoff,
+                matched,
+                deleted
+            });
+        });
+
         return group;
     }
 }

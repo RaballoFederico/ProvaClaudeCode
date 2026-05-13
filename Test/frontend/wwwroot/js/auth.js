@@ -49,12 +49,24 @@ const Auth = {
     refreshPromise: null,
     sessionVersion: 0,
 
+    hasStoredSessionHint() {
+        return !!(
+            window.localStorage.getItem(this.sessionAuthKey) ||
+            window.localStorage.getItem(this.sessionUserKey) ||
+            window.sessionStorage.getItem(this.sessionAuthKey) ||
+            window.sessionStorage.getItem(this.sessionUserKey)
+        );
+    },
+
     saveSession(data) {
         this.sessionVersion += 1;
         this.accessToken = data.accessToken;
         this.refreshToken = null;
         this.tokenExpiry = new Date(data.expiresAt);
         this.user = data.utente;
+        if (typeof window !== 'undefined' && window.ApiClient && typeof window.ApiClient.clearCache === 'function') {
+            window.ApiClient.clearCache();
+        }
         this.persistAuthSession();
         this.persistUserSession();
 
@@ -67,6 +79,9 @@ const Auth = {
         this.refreshToken = null;
         this.tokenExpiry = null;
         this.user = null;
+        if (typeof window !== 'undefined' && window.ApiClient && typeof window.ApiClient.clearCache === 'function') {
+            window.ApiClient.clearCache();
+        }
         this.clearAuthSession();
         this.clearUserSession();
 
@@ -437,9 +452,13 @@ const Auth = {
             this.hydrateAuthSession();
             this.hydrateUserSession();
             const hasValidToken = this.isAuthenticated() && !!this.user;
+            const hasStoredSessionHint = this.hasStoredSessionHint();
+
+            // Evita un refresh di rete all'avvio per utenti anonimi:
+            // riduce attese percepite su pagine pubbliche.
             const initAction = hasValidToken
                 ? Promise.resolve(true)
-                : this.refresh({ silent: true });
+                : (hasStoredSessionHint ? this.refresh({ silent: true }) : Promise.resolve(false));
 
             this.initPromise = initAction.finally(() => {
                 window.dispatchEvent(new CustomEvent('auth:ready', {
@@ -477,7 +496,11 @@ const Auth = {
     },
 
     async ensureToken() {
+        this.hydrateAuthSession();
         if (!this.isAuthenticated()) {
+            if (!this.hasStoredSessionHint()) {
+                return false;
+            }
             return await this.refresh({ silent: true });
         }
         return this.isAuthenticated();

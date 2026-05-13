@@ -644,12 +644,19 @@ public static class DbInitializer
             .Where(s => s.CinemaId > 0)
             .ToListAsync();
 
+        var showIds = showRows.Select(s => s.Id).ToList();
+        var existingShowIds = await context.Proiezioni
+            .Where(p => p.ShowId.HasValue && showIds.Contains(p.ShowId.Value))
+            .Select(p => p.ShowId!.Value)
+            .ToListAsync();
+        var existingSet = existingShowIds.ToHashSet();
+
+        var projectionsToAdd = new List<Proiezione>();
         foreach (var s in showRows)
         {
-            var exists = await context.Proiezioni.AnyAsync(p => p.ShowId == s.Id);
-            if (exists) continue;
+            if (existingSet.Contains(s.Id)) continue;
 
-            context.Proiezioni.Add(new Proiezione
+            projectionsToAdd.Add(new Proiezione
             {
                 ShowId = s.Id,
                 CinemaId = s.CinemaId,
@@ -659,6 +666,12 @@ public static class DbInitializer
             });
         }
 
+        if (projectionsToAdd.Count == 0)
+        {
+            return;
+        }
+
+        context.Proiezioni.AddRange(projectionsToAdd);
         await context.SaveChangesAsync();
     }
 

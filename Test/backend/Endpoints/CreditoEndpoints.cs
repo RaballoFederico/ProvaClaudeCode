@@ -71,7 +71,8 @@ public static class CreditoEndpoints
                 dto.SuccessUrl,
                 dto.CancelUrl,
                 "Ricarica credito FilmAPI",
-                "filmapi_credit_topup");
+                "filmapi_credit_topup",
+                preferredPaymentMethodType: dto.PaymentMethodType);
 
             return Results.Ok(session);
         });

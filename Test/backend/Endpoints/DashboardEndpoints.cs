@@ -1,4 +1,5 @@
 using FilmAPI.Data;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.EntityFrameworkCore;
 
 namespace FilmAPI.Endpoints;
@@ -7,8 +8,14 @@ public static class DashboardEndpoints
 {
     public static IEndpointRouteBuilder MapDashboardEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/dashboard/overview", async (FilmDbContext db) =>
+        app.MapGet("/dashboard/overview", async (FilmDbContext db, IMemoryCache cache) =>
         {
+            const string cacheKey = "dashboard:overview:v1";
+            if (cache.TryGetValue(cacheKey, out object? cached) && cached is not null)
+            {
+                return Results.Ok(cached);
+            }
+
             var nowLocal = DateTime.Now;
             var today = nowLocal.Date;
             var nowTime = nowLocal.TimeOfDay;
@@ -18,40 +25,36 @@ public static class DashboardEndpoints
             var cinemasCount = await db.Cinemas.AsNoTracking().CountAsync();
             var proiezioniCount = await db.Proiezioni.AsNoTracking().CountAsync();
 
-            var featuredFilmsRaw = await db.Films
+            var featuredFilms = await db.Films
                 .AsNoTracking()
-                .Include(f => f.Regista)
-                .Include(f => f.FilmsCategorie)
-                .ThenInclude(fc => fc.Categoria)
                 .OrderByDescending(f => f.Featured)
                 .ThenByDescending(f => f.DataRilascio ?? f.DataProduzione)
                 .ThenByDescending(f => f.Id)
                 .Take(6)
+                .Select(f => new
+                {
+                    f.Id,
+                    f.Titolo,
+                    f.RegistaId,
+                    RegistaNome = !string.IsNullOrWhiteSpace(f.RegistaNome)
+                        ? f.RegistaNome
+                        : (f.Regista != null ? $"{f.Regista.Nome} {f.Regista.Cognome}" : string.Empty),
+                    f.Durata,
+                    f.CopertinaPath,
+                    f.Featured,
+                    f.DataRilascio,
+                    f.Genere,
+                    Categorie = f.FilmsCategorie
+                        .OrderBy(fc => fc.Categoria.Nome)
+                        .Take(2)
+                        .Select(fc => new
+                        {
+                            fc.CategoriaId,
+                            Nome = fc.Categoria.Nome
+                        })
+                        .ToList()
+                })
                 .ToListAsync();
-
-            var featuredFilms = featuredFilmsRaw.Select(f => new
-            {
-                f.Id,
-                f.Titolo,
-                f.RegistaId,
-                RegistaNome = !string.IsNullOrWhiteSpace(f.RegistaNome)
-                    ? f.RegistaNome
-                    : (f.Regista != null ? $"{f.Regista.Nome} {f.Regista.Cognome}" : string.Empty),
-                f.Durata,
-                f.CopertinaPath,
-                f.Featured,
-                f.DataRilascio,
-                f.Genere,
-                Categorie = f.FilmsCategorie
-                    .OrderBy(fc => fc.Categoria.Nome)
-                    .Take(2)
-                    .Select(fc => new
-                    {
-                        fc.CategoriaId,
-                        Nome = fc.Categoria.Nome
-                    })
-                    .ToList()
-            }).ToList();
 
             var upcomingProjections = await db.Proiezioni
                 .AsNoTracking()
@@ -75,7 +78,7 @@ public static class DashboardEndpoints
                 })
                 .ToListAsync();
 
-            return Results.Ok(new
+            var payload = new
             {
                 stats = new
                 {
@@ -86,7 +89,20 @@ public static class DashboardEndpoints
                 },
                 featuredFilms,
                 upcomingProjections
+            };
+
+            cache.Set(cacheKey, payload, new MemoryCacheEntryOptions
+            {
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(20)
             });
+
+            return Results.Ok(payload);
+        });
+
+        app.MapPost("/dashboard/cache/invalidate", [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,PowerUser")] (IMemoryCache cache) =>
+        {
+            cache.Remove("dashboard:overview:v1");
+            return Results.Ok(new { message = "Dashboard cache invalidata" });
         });
 
         return app;

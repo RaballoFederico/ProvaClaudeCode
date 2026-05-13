@@ -89,9 +89,13 @@
         let films = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
-            await loadComponent('navbar-container', '/components/navbar.html');
-            await loadComponent('footer-container', '/components/footer.html');
-            await loadData();
+            const componentsPromise = Promise.all([
+                loadComponent('navbar-container', '/components/navbar.html'),
+                loadComponent('footer-container', '/components/footer.html')
+            ]);
+            const dataPromise = loadData();
+
+            await Promise.allSettled([componentsPromise, dataPromise]);
         });
 
         async function loadData() {
