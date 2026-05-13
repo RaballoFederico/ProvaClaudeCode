@@ -49,6 +49,7 @@ public class CreateCheckoutSessionRequestDTO
     public decimal Importo { get; set; }
     public string SuccessUrl { get; set; } = string.Empty;
     public string CancelUrl { get; set; } = string.Empty;
+    public string? PaymentMethodType { get; set; }
 }
 
 public class StripeCheckoutVerificationDTO

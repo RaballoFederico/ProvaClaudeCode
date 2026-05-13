@@ -56,8 +56,20 @@ public static class AcquistoEndpoints
             var userId = GetUserId(ctx);
             if (userId is null) return Results.Unauthorized();
 
-            var session = await pagamentoService.CreaCheckoutSessionAsync(dto.Importo, userId.Value, dto.SuccessUrl, dto.CancelUrl);
-            return Results.Ok(session);
+            try
+            {
+                var session = await pagamentoService.CreaCheckoutSessionAsync(
+                    dto.Importo,
+                    userId.Value,
+                    dto.SuccessUrl,
+                    dto.CancelUrl,
+                    preferredPaymentMethodType: dto.PaymentMethodType);
+                return Results.Ok(session);
+            }
+            catch (Exception ex)
+            {
+                return Results.BadRequest(new { message = $"Checkout non disponibile: {ex.Message}" });
+            }
         });
 
         group.MapGet("/lock/{codice}", async (string codice, HttpContext ctx, IBigliettoService bigliettoService) =>

@@ -106,7 +106,7 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
         }
     }
 
-    public async Task<StripeCheckoutSessionDTO> CreaCheckoutSessionAsync(decimal importo, int utenteId, string successUrl, string cancelUrl, string? productName = null, string integration = "filmapi_checkout", Dictionary<string, string>? extraMetadata = null)
+    public async Task<StripeCheckoutSessionDTO> CreaCheckoutSessionAsync(decimal importo, int utenteId, string successUrl, string cancelUrl, string? productName = null, string integration = "filmapi_checkout", Dictionary<string, string>? extraMetadata = null, string? preferredPaymentMethodType = null)
     {
         if (importo <= 0)
         {
@@ -138,6 +138,18 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
             { "utenteId", utenteId.ToString() }
         };
 
+        var normalizedMethod = (preferredPaymentMethodType ?? "card").Trim().ToLowerInvariant();
+        var allowed = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "card",
+            "revolut_pay"
+        };
+        if (!allowed.Contains(normalizedMethod))
+        {
+            normalizedMethod = "card";
+        }
+        metadata["payment_method_type"] = normalizedMethod;
+
         if (extraMetadata is not null)
         {
             foreach (var item in extraMetadata)
@@ -156,7 +168,7 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
             Mode = "payment",
             SuccessUrl = successUrl,
             CancelUrl = cancelUrl,
-            PaymentMethodTypes = new List<string> { "card" },
+            PaymentMethodTypes = new List<string> { normalizedMethod },
             LineItems = new List<SessionLineItemOptions>
             {
                 new()

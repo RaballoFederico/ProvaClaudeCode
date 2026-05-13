@@ -4,27 +4,39 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FilmAPI.Services;
 
-public class PrenotazioneTempCleanupService(IServiceScopeFactory scopeFactory) : BackgroundService
+public class PrenotazioneTempCleanupService(IServiceScopeFactory scopeFactory, ILogger<PrenotazioneTempCleanupService> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            using var scope = scopeFactory.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<FilmDbContext>();
-
-            var scaduti = await context.PrenotazioniTemporanee
-                .Where(p => p.Stato == StatoPrenotazioneTemp.ATTIVA && p.DataScadenza < DateTime.UtcNow)
-                .ToListAsync(stoppingToken);
-
-            if (scaduti.Count > 0)
+            try
             {
-                foreach (var p in scaduti)
-                {
-                    p.Stato = StatoPrenotazioneTemp.SCADUTA;
-                }
+                using var scope = scopeFactory.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<FilmDbContext>();
 
-                await context.SaveChangesAsync(stoppingToken);
+                var scaduti = await context.PrenotazioniTemporanee
+                    .Where(p => p.Stato == StatoPrenotazioneTemp.ATTIVA && p.DataScadenza < DateTime.UtcNow)
+                    .ToListAsync(stoppingToken);
+
+                if (scaduti.Count > 0)
+                {
+                    foreach (var p in scaduti)
+                    {
+                        p.Stato = StatoPrenotazioneTemp.SCADUTA;
+                    }
+
+                    await context.SaveChangesAsync(stoppingToken);
+                }
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                // Non bloccare l'intera API se il DB e temporaneamente non raggiungibile.
+                logger.LogWarning(ex, "Cleanup prenotazioni temporanee fallito: nuovo tentativo al prossimo ciclo.");
             }
 
             await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
