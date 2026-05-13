@@ -44,7 +44,7 @@
         <div id="navbar-container"></div>
 
         <!-- Content -->
-        <main class="flex-1 p-4 md:p-8 pb-24 md:pb-8">
+        <main class="page-shell flex-1 p-4 md:p-8 pb-24 md:pb-8">
             <div class="max-w-6xl mx-auto">
                 <button
                     onclick="if (window.history.length > 1) { window.history.back(); } else { window.location.href = (typeof RouteGuard !== 'undefined' ? RouteGuard.getDefaultRoute() : '/home.html'); }"
@@ -57,12 +57,12 @@
 
                 <!-- Header -->
                 <div class="hero-banner p-6 md:p-8 mb-8 reveal-up">
-                    <span class="badge-soft mb-3">
+                    <span class="section-eyebrow mb-3 inline-flex items-center gap-2">
                         <span class="material-symbols-outlined text-sm">person</span>
                         Account personale
                     </span>
-                    <h1 class="text-3xl md:text-5xl font-semibold text-on-surface font-headline">Area Personale</h1>
-                    <p class="text-on-surface-variant mt-2">Gestisci profilo, proiezioni salvate e prenotazioni in un'unica dashboard.</p>
+                    <h1 class="text-3xl md:text-5xl lg:text-6xl font-semibold text-on-surface font-headline leading-[0.98]">Area Personale</h1>
+                    <p class="text-on-surface-variant mt-3 max-w-3xl">Gestisci profilo, proiezioni salvate, acquisti e rimborsi in un’unica dashboard personale.</p>
                 </div>
 
                 <!-- Loading State -->
@@ -101,7 +101,7 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="card-grid grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label class="text-xs text-on-surface-variant uppercase tracking-wider">Email</label>
                                 <p id="profile-email" class="text-white mt-1"></p>
@@ -118,6 +118,38 @@
                                 <label class="text-xs text-on-surface-variant uppercase tracking-wider">Metodo Pagamento Preferito</label>
                                 <p id="profile-payment-method" class="text-white mt-1">-</p>
                             </div>
+                            <div>
+                                <label class="text-xs text-on-surface-variant uppercase tracking-wider">Newsletter</label>
+                                <div class="mt-2 flex items-center gap-3">
+                                    <input id="newsletter-consent" type="checkbox" class="rounded border-outline-variant/40 bg-surface-container-high">
+                                    <span class="text-sm text-on-surface-variant">Ricevi novita, promozioni e uscite film</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Storico acquisti e rimborsi -->
+                    <div class="reveal-up delay-2">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-xl font-bold text-on-surface font-headline">Storico Acquisti e Rimborsi</h3>
+                            <a href="/user-biglietti.html" class="text-primary-container hover:opacity-80 text-sm flex items-center gap-1">
+                                <span class="material-symbols-outlined text-sm">confirmation_number</span>
+                                Vai ai biglietti
+                            </a>
+                        </div>
+
+                        <div class="card-grid grid grid-cols-1 xl:grid-cols-2 gap-4">
+                            <article class="bg-surface-container rounded-2xl p-4 border border-outline-variant/20">
+                                <h4 class="text-base font-semibold text-on-surface">Acquisti</h4>
+                                <div id="acquisti-list" class="mt-3 space-y-2"></div>
+                                <p id="acquisti-empty" class="hidden text-sm text-on-surface-variant mt-2">Nessun acquisto registrato.</p>
+                            </article>
+
+                            <article class="bg-surface-container rounded-2xl p-4 border border-outline-variant/20">
+                                <h4 class="text-base font-semibold text-on-surface">Rimborsi e movimenti credito</h4>
+                                <div id="rimborsi-list" class="mt-3 space-y-2"></div>
+                                <p id="rimborsi-empty" class="hidden text-sm text-on-surface-variant mt-2">Nessun rimborso o movimento credito disponibile.</p>
+                            </article>
                         </div>
                     </div>
 
@@ -131,7 +163,7 @@
                             </a>
                         </div>
 
-                        <div id="proiezioni-list" class="space-y-4">
+                        <div id="proiezioni-list" class="space-y-4 card-grid">
                             <!-- Proiezioni verranno caricate qui -->
                         </div>
 

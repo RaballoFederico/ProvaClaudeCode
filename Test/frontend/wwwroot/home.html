@@ -36,32 +36,32 @@
 <body class="bg-background text-on-surface font-body min-h-screen flex flex-col">
     <div id="navbar-container"></div>
     <div class="flex flex-1">
-        <main class="flex-1 pb-20 md:pb-0">
-            <section class="relative min-h-[560px] sm:min-h-[520px] lg:h-[60vh] flex items-center overflow-hidden">
+        <main class="page-shell flex-1 pb-20 md:pb-0">
+            <section class="relative min-h-[560px] sm:min-h-[520px] lg:h-[66vh] flex items-center overflow-hidden">
                 <div class="absolute inset-0">
                     <div class="absolute inset-0 bg-gradient-to-r from-black/85 via-black/70 to-black/20 z-10"></div>
                     <img src="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&h=1080&fit=crop" alt="Cinema hero" class="w-full h-full object-cover" />
                 </div>
                 <div class="relative z-20 max-w-7xl mx-auto px-4 md:px-8 lg:px-12 w-full">
-                    <div class="max-w-3xl">
-                        <span class="badge-soft">Piattaforma Cinema</span>
-                        <h1 class="font-headline text-4xl md:text-6xl font-semibold text-white mt-4">CineBase, la tua rete cinematografica in un unico flusso</h1>
-                        <p class="text-white/80 mt-3 max-w-2xl">Scopri nuove uscite, catalogo aggiornato e una gestione moderna di film e programmazione.</p>
-                        <div class="mt-5 flex flex-wrap gap-3">
-                            <a href="/register.html" class="px-5 py-2.5 rounded-lg bg-primary-container text-white text-sm font-semibold hover-lift">Inizia ora</a>
-                            <a href="/login.html" class="px-5 py-2.5 rounded-lg bg-white/10 text-white text-sm font-semibold border border-white/20 hover-lift">Accedi</a>
+                    <div class="max-w-3xl reveal-up">
+                        <span class="section-eyebrow text-white/70">Piattaforma Cinema</span>
+                        <h1 class="font-headline text-4xl md:text-6xl lg:text-7xl font-semibold text-white mt-3 leading-[0.96]">CineBase, la tua rete cinematografica in un unico flusso</h1>
+                        <p class="text-white/80 mt-4 max-w-2xl text-base md:text-lg">Scopri nuove uscite, catalogo aggiornato e una gestione moderna di film e programmazione.</p>
+                        <div class="mt-6 flex flex-wrap gap-3">
+                            <a href="/register.html" class="app-btn app-btn-primary px-5 py-2.5 rounded-lg text-sm font-semibold hover-lift">Inizia ora</a>
+                            <a href="/login.html" class="app-btn px-5 py-2.5 rounded-lg text-sm font-semibold bg-white/10 text-white border border-white/20 hover-lift">Accedi</a>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section class="py-10 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto">
+            <section class="py-12 px-4 md:px-8 lg:px-12 max-w-7xl mx-auto">
                 <div class="flex items-center gap-4 mb-6">
                     <h2 class="font-headline text-3xl font-semibold">In Evidenza Questa Settimana</h2>
                     <div class="h-[2px] flex-1 bg-secondary/50 rounded"></div>
                 </div>
                 <p class="text-on-surface-variant mb-6">Una selezione dei titoli più recenti e rilevanti, aggiornata automaticamente dal catalogo.</p>
-                <div id="featured-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4"></div>
+                <div id="featured-grid" class="card-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-4"></div>
                 <div id="featured-empty" class="hidden text-sm text-on-surface-variant">Nessun film disponibile al momento.</div>
             </section>
 

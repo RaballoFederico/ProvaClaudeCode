@@ -87,14 +87,14 @@
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
         
-        <main class="flex-1 overflow-y-auto pb-24 md:pb-12">
+        <main class="page-shell flex-1 overflow-y-auto pb-24 md:pb-12">
             <!-- Hero Section -->
             <div class="hero-gradient px-4 md:px-8 lg:px-12 pt-8 pb-12 reveal-up">
                 <div class="max-w-7xl mx-auto">
                     <div class="hero-banner p-6 md:p-8 relative overflow-hidden flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
                         <span class="hero-streak"></span>
                         <div class="relative z-10">
-                            <p class="badge-soft mb-3">Dashboard manager</p>
+                            <p class="section-eyebrow mb-3">Dashboard manager</p>
                             <h1 class="font-headline text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight text-on-surface mb-4">
                                 Film<span class="text-primary-container">Hub</span>
                             </h1>
@@ -104,12 +104,12 @@
                             </div>
                             <p class="text-on-surface-variant text-lg max-w-xl">Visuale completa sul tuo ecosistema cinema: dati, catalogo e operazioni rapide in un unico flusso.</p>
                         </div>
-                        <div class="relative z-10 flex gap-4">
-                            <a href="films.html?action=create" class="px-6 py-3 bg-primary-container text-white rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-lg shadow-primary-container/30 hover-lift">
+                        <div class="relative z-10 flex gap-4 flex-wrap">
+                            <a href="films.html?action=create" class="app-btn app-btn-primary px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-lg shadow-primary-container/30 hover-lift">
                                 <span class="material-symbols-outlined">add</span>
                                 Nuovo Film
                             </a>
-                            <a href="proiezioni.html?action=create" class="px-6 py-3 bg-surface-container-high text-on-surface rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-transform border border-outline-variant/20 hover-lift">
+                            <a href="proiezioni.html?action=create" class="app-btn app-btn-secondary px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:scale-105 transition-transform border border-outline-variant/20 hover-lift">
                                 <span class="material-symbols-outlined">schedule</span>
                                 Proiezione
                             </a>
@@ -121,7 +121,7 @@
             <!-- Stats Cards -->
             <div class="px-4 md:px-8 lg:px-12 -mt-6 reveal-up delay-1">
                 <div class="max-w-7xl mx-auto">
-                    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="card-grid grid grid-cols-2 lg:grid-cols-4 gap-4">
                         <div class="bg-surface-container-low p-5 rounded-2xl border border-outline-variant/10 hover:border-primary-container/30 transition-all card-glow cursor-pointer hover-lift" onclick="location.href='films.html'">
                             <div class="flex items-center justify-between mb-3">
                                 <div class="w-12 h-12 rounded-xl bg-primary-container/20 flex items-center justify-center">
@@ -197,7 +197,7 @@
                                 <span class="material-symbols-outlined text-lg">chevron_right</span>
                             </a>
                         </div>
-                        <div id="films-carousel" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                        <div id="films-carousel" class="card-grid grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                         </div>
                         <div id="films-empty" class="hidden bg-surface-container-low rounded-2xl p-12 text-center">
                             <span class="material-symbols-outlined text-6xl text-on-surface-variant opacity-30">movie_filter</span>
