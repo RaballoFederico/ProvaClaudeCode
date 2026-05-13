@@ -31,6 +31,9 @@ public class FilmDbContext : DbContext
     public DbSet<NotificaUtente> NotificheUtente { get; set; } = null!;
     public DbSet<AccountActionToken> AccountActionTokens { get; set; } = null!;
     public DbSet<UserSecurityAuditLog> UserSecurityAuditLogs { get; set; } = null!;
+    public DbSet<AbbonamentoUtente> AbbonamentiUtente { get; set; } = null!;
+    public DbSet<UtilizzoAbbonamento> UtilizziAbbonamento { get; set; } = null!;
+    public DbSet<NewsletterCampagna> NewsletterCampagne { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -144,6 +147,7 @@ public class FilmDbContext : DbContext
             entity.Property(e => e.Attivo).IsRequired();
             entity.Property(e => e.PreferredPaymentMethod).HasMaxLength(50);
             entity.Property(e => e.PreferredPaymentMethodLabel).HasMaxLength(120);
+            entity.Property(e => e.ConsensoNewsletter).HasDefaultValue(false);
 
             entity.HasIndex(e => e.Username).IsUnique();
             entity.HasIndex(e => e.Email).IsUnique();
@@ -368,6 +372,48 @@ public class FilmDbContext : DbContext
             entity.Property(e => e.IpAddress).HasMaxLength(64);
             entity.Property(e => e.Details).HasMaxLength(500);
             entity.HasIndex(e => new { e.CreatedAt, e.EventType });
+        });
+
+        modelBuilder.Entity<AbbonamentoUtente>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.UtenteId, e.Stato });
+            entity.Property(e => e.Piano).IsRequired();
+            entity.Property(e => e.Stato).IsRequired();
+            entity.Property(e => e.DataInizio).IsRequired();
+            entity.Property(e => e.ProssimoRinnovo).IsRequired();
+
+            entity.HasOne(e => e.Utente)
+                .WithMany(u => u.Abbonamenti)
+                .HasForeignKey(e => e.UtenteId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<UtilizzoAbbonamento>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => new { e.AbbonamentoUtenteId, e.DataUtilizzo });
+            entity.Property(e => e.Note).HasMaxLength(250);
+
+            entity.HasOne(e => e.AbbonamentoUtente)
+                .WithMany(a => a.Utilizzi)
+                .HasForeignKey(e => e.AbbonamentoUtenteId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<NewsletterCampagna>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Oggetto).IsRequired().HasMaxLength(160);
+            entity.Property(e => e.HtmlBody).IsRequired();
+            entity.Property(e => e.DataInvio).IsRequired();
+            entity.Property(e => e.DestinatariCount).IsRequired();
+            entity.HasIndex(e => e.DataInvio);
+
+            entity.HasOne(e => e.CreatoDaUtente)
+                .WithMany()
+                .HasForeignKey(e => e.CreatoDaUtenteId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

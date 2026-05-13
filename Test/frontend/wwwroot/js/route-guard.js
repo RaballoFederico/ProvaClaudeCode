@@ -39,6 +39,9 @@ const AccessControl = {
         'reimposta-password.html': 'guest',
         'social-login-complete.html': 'guest',
         'utenti.html': 'admin'
+        ,
+        'abbonamenti.html': 'auth',
+        'newsletter-admin.html': 'admin'
     },
 
     getUser() {

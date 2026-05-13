@@ -54,6 +54,10 @@
                     <span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
                     <span>Ricarica credito</span>
                 </a>
+                <a href="abbonamenti.html" data-access="auth" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">workspace_premium</span>
+                    <span>Abbonamenti</span>
+                </a>
             </div>
         </div>
 
@@ -102,6 +106,14 @@
                 <a href="categorie.html" data-access="admin" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
                     <span class="material-symbols-outlined text-[20px]">category</span>
                     <span>Categorie</span>
+                </a>
+                <a href="utenti.html" data-access="admin" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">group</span>
+                    <span>Gestione utenti</span>
+                </a>
+                <a href="newsletter-admin.html" data-access="admin" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">mail</span>
+                    <span>Newsletter</span>
                 </a>
                 <a href="ricarica-credito.html" data-access="manager" class="nav-link flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-[13px] text-on-surface-variant hover:bg-surface-container-high transition-colors">
                     <span class="material-symbols-outlined text-[20px]">account_balance_wallet</span>
@@ -155,7 +167,17 @@
         if (rule === 'public') return true;
         if (rule === 'guest') return !user;
         if (!user) return false;
-        return rule === 'auth';
+        if (rule === 'auth') return true;
+
+        const roles = Array.isArray(user.ruoli) ? user.ruoli : [];
+        const isAdmin = roles.includes('Admin');
+        const isPowerUser = roles.includes('PowerUser');
+        const isManager = isAdmin || isPowerUser;
+
+        if (rule === 'manager') return isManager;
+        if (rule === 'admin') return isAdmin;
+        if (rule === 'user') return !isManager && roles.includes('User');
+        return false;
     }
 
     function closeSidebarMobile() {

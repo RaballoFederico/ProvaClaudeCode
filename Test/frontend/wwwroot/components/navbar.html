@@ -47,9 +47,12 @@
         { label: 'Gestione registi', href: 'registi.html', access: 'manager', keywords: ['registi', 'gestione registi'] },
         { label: 'Validazione biglietti', href: 'validazione.html', access: 'manager', keywords: ['validazione', 'scanner'] },
         { label: 'Ricarica credito', href: 'ricarica-credito-utente.html', access: 'user', keywords: ['ricarica', 'credito', 'stripe'] },
+        { label: 'Abbonamenti', href: 'abbonamenti.html', access: 'auth', keywords: ['abbonamento', 'piano', 'subscription'] },
         { label: 'Ricarica credito utenti', href: 'ricarica-credito.html', access: 'manager', keywords: ['ricarica', 'credito', 'backoffice'] },
         { label: 'Gestione sale', href: 'sale.html', access: 'admin', keywords: ['sale', 'gestione sale'] },
-        { label: 'Categorie', href: 'categorie.html', access: 'admin', keywords: ['categorie', 'generi'] }
+        { label: 'Categorie', href: 'categorie.html', access: 'admin', keywords: ['categorie', 'generi'] },
+        { label: 'Gestione utenti', href: 'utenti.html', access: 'admin', keywords: ['utenti', 'account', 'admin utenti'] },
+        { label: 'Newsletter admin', href: 'newsletter-admin.html', access: 'admin', keywords: ['newsletter', 'campagne', 'email'] }
     ];
 
     function canAccessNavItem(access, user) {
@@ -356,6 +359,10 @@
                             <span class="material-symbols-outlined text-sm">account_balance_wallet</span>
                             Ricarica credito
                         </a>
+                        <a href="abbonamenti.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                            <span class="material-symbols-outlined text-sm">workspace_premium</span>
+                            Abbonamento
+                        </a>
                         ` : ''}
 
                         ${isManager ? `
@@ -403,6 +410,14 @@
                                         Ricarica credito utenti
                                     </a>
                                     ${isAdmin ? `
+                                        <a href="utenti.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                            <span class="material-symbols-outlined text-sm">group</span>
+                                            Gestione utenti
+                                        </a>
+                                        <a href="newsletter-admin.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                            <span class="material-symbols-outlined text-sm">mail</span>
+                                            Newsletter
+                                        </a>
                                         <a href="sale.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
                                             <span class="material-symbols-outlined text-sm">meeting_room</span>
                                             Gestione sale

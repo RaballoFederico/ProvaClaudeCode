@@ -366,6 +366,8 @@ app.MapCreditoEndpoints();
 app.MapValidazioneEndpoints();
 app.MapNotificheEndpoints();
 app.MapStripeWebhookEndpoints();
+app.MapAbbonamentiEndpoints();
+app.MapNewsletterEndpoints();
 
 app.MapGroup("/registi").MapRegistiEndpoints();
 app.MapGroup("/films").MapFilmsEndpoints();

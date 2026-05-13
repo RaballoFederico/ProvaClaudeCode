@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Newsletter Admin | FilmHub</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col">
+    <div id="navbar-container"></div>
+    <div class="flex flex-1">
+        <div id="sidebar-container"></div>
+        <main class="flex-1 p-4 md:p-8 lg:p-10">
+            <section class="hero-banner p-6 md:p-8 mb-6">
+                <h1 class="font-headline text-3xl md:text-5xl font-semibold">Newsletter Admin</h1>
+                <p class="text-on-surface-variant mt-2">Invia campagne email agli utenti iscritti e consulta lo storico invii.</p>
+            </section>
+
+            <section class="app-card p-4 mb-6">
+                <h2 class="font-headline text-xl font-semibold mb-3">Nuova campagna</h2>
+                <form id="campaign-form" class="space-y-3">
+                    <input id="campaign-subject" type="text" required placeholder="Oggetto newsletter" class="w-full rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm">
+                    <textarea id="campaign-html" required rows="8" placeholder="<h2>Novita FilmHub</h2><p>Contenuto campagna...</p>" class="w-full rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm"></textarea>
+                    <button type="submit" class="app-btn app-btn-primary">Invia campagna</button>
+                </form>
+            </section>
+
+            <section class="app-card p-4">
+                <div class="flex items-center justify-between gap-3 mb-3">
+                    <h2 class="font-headline text-xl font-semibold">Storico campagne</h2>
+                    <button id="refresh-campaigns-btn" class="app-btn app-btn-secondary">Aggiorna</button>
+                </div>
+                <div id="campaigns-list" class="space-y-2 text-sm text-on-surface-variant">Caricamento...</div>
+            </section>
+        </main>
+    </div>
+    <div id="footer-container"></div>
+
+    <script src="/js/theme.js"></script>
+    <script src="/js/api-config.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/route-guard.js"></script>
+    <script src="/js/template-loader.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        async function loadCampaigns() {
+            const box = document.getElementById('campaigns-list');
+            try {
+                const list = await ApiClient.get('/admin/newsletter/campagne');
+                const rows = Array.isArray(list) ? list : [];
+                if (!rows.length) {
+                    box.innerHTML = 'Nessuna campagna inviata.';
+                    return;
+                }
+                box.innerHTML = rows.map((c) => `
+                    <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high p-3">
+                        <div class="font-medium text-on-surface">${c.oggetto}</div>
+                        <div class="text-xs mt-1">Data invio: ${new Date(c.dataInvio).toLocaleString('it-IT')}</div>
+                        <div class="text-xs">Destinatari: ${c.destinatariCount}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                box.textContent = error.message || 'Errore caricamento campagne';
+            }
+        }
+
+        async function sendCampaign(event) {
+            event.preventDefault();
+            const subject = document.getElementById('campaign-subject').value.trim();
+            const htmlBody = document.getElementById('campaign-html').value.trim();
+            if (!subject || !htmlBody) return;
+
+            if (!confirm('Confermi invio newsletter agli utenti iscritti?')) return;
+
+            try {
+                const res = await ApiClient.post('/admin/newsletter/campagne/invia', { oggetto: subject, htmlBody });
+                Utils.showNotification(`${res.message || 'Campagna inviata'} (${res.destinatari || 0} destinatari)`, 'success');
+                event.target.reset();
+                await loadCampaigns();
+            } catch (error) {
+                Utils.showNotification(error.message || 'Errore invio campagna', 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllComponents();
+            document.getElementById('campaign-form')?.addEventListener('submit', sendCampaign);
+            document.getElementById('refresh-campaigns-btn')?.addEventListener('click', loadCampaigns);
+            await loadCampaigns();
+        });
+    </script>
+</body>
+</html>

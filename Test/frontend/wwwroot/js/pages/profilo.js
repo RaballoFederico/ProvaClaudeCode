@@ -58,11 +58,131 @@ async function loadProfile() {
         
         showLoading(false);
         renderProfile();
+        await loadNewsletterPreference();
+        await loadStoricoAcquistiRimborsi();
         renderProiezioni();
         handlePrenotaQueryParam();
     } catch (error) {
         showLoading(false);
         showError(error.message);
+    }
+}
+
+async function loadNewsletterPreference() {
+    const checkbox = document.getElementById('newsletter-consent');
+    if (!checkbox) return;
+    try {
+        const res = await ApiClient.get('/newsletter/preference');
+        checkbox.checked = !!res?.consenso;
+    } catch {
+        checkbox.checked = false;
+    }
+}
+
+function formatMoney(value) {
+    const amount = Number(value ?? 0);
+    return `${amount.toFixed(2)} EUR`;
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
+}
+
+async function loadStoricoAcquistiRimborsi() {
+    const acquistiList = document.getElementById('acquisti-list');
+    const acquistiEmpty = document.getElementById('acquisti-empty');
+    const rimborsiList = document.getElementById('rimborsi-list');
+    const rimborsiEmpty = document.getElementById('rimborsi-empty');
+
+    if (!acquistiList || !acquistiEmpty || !rimborsiList || !rimborsiEmpty) return;
+
+    acquistiList.innerHTML = '';
+    rimborsiList.innerHTML = '';
+    acquistiEmpty.classList.add('hidden');
+    rimborsiEmpty.classList.add('hidden');
+
+    try {
+        const [acquisti, storicoCredito] = await Promise.all([
+            ApiClient.get('/user/acquisti'),
+            ApiClient.get('/user/credito/storico')
+        ]);
+
+        const acquistiSafe = Array.isArray(acquisti) ? acquisti : [];
+        const creditoSafe = Array.isArray(storicoCredito) ? storicoCredito : [];
+
+        if (!acquistiSafe.length) {
+            acquistiEmpty.classList.remove('hidden');
+        } else {
+            acquistiList.innerHTML = acquistiSafe.slice(0, 8).map((a) => {
+                const stato = String(a.stato || '').toUpperCase();
+                const statoClass = stato === 'REFUNDED'
+                    ? 'text-sky-300 bg-sky-500/15 border-sky-500/30'
+                    : stato === 'CANCELLED'
+                        ? 'text-red-300 bg-red-500/15 border-red-500/30'
+                        : 'text-emerald-300 bg-emerald-500/15 border-emerald-500/30';
+
+                const metodo = a.metodoPagamentoEtichetta || a.metodoPagamento || 'N/D';
+
+                return `
+                    <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high px-3 py-2 text-sm">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <span class="font-medium text-on-surface">Acquisto #${a.id}</span>
+                            <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs ${statoClass}">
+                                ${escapeHtml(stato || 'N/D')}
+                            </span>
+                        </div>
+                        <div class="mt-1 text-on-surface-variant text-xs">${new Date(a.dataAcquisto).toLocaleString('it-IT')}</div>
+                        <div class="mt-1 text-on-surface-variant text-xs">Importo: <span class="text-on-surface">${formatMoney(a.importoTotale)}</span></div>
+                        <div class="text-on-surface-variant text-xs">Credito usato: <span class="text-on-surface">${formatMoney(a.creditoUsato)}</span></div>
+                        <div class="text-on-surface-variant text-xs">Metodo: <span class="text-on-surface">${escapeHtml(metodo)}</span></div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        const rimborsiOMovimenti = creditoSafe
+            .filter((t) => {
+                const tipo = String(t.tipo || '').toUpperCase();
+                return tipo === 'RIMBORSO' || tipo === 'RICARICA' || tipo === 'ACQUISTO';
+            })
+            .slice(0, 10);
+
+        if (!rimborsiOMovimenti.length) {
+            rimborsiEmpty.classList.remove('hidden');
+        } else {
+            rimborsiList.innerHTML = rimborsiOMovimenti.map((t) => {
+                const tipo = String(t.tipo || '').toUpperCase();
+                const isRefund = tipo === 'RIMBORSO';
+                const amount = Number(t.importo || 0);
+                const amountClass = amount >= 0 ? 'text-emerald-300' : 'text-red-300';
+                const badgeClass = isRefund
+                    ? 'text-sky-300 bg-sky-500/15 border-sky-500/30'
+                    : (tipo === 'RICARICA'
+                        ? 'text-emerald-300 bg-emerald-500/15 border-emerald-500/30'
+                        : 'text-amber-300 bg-amber-500/15 border-amber-500/30');
+
+                return `
+                    <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high px-3 py-2 text-sm">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
+                            <span class="inline-flex items-center rounded-full border px-2 py-0.5 text-xs ${badgeClass}">
+                                ${escapeHtml(tipo)}
+                            </span>
+                            <span class="font-medium ${amountClass}">${formatMoney(amount)}</span>
+                        </div>
+                        <div class="mt-1 text-on-surface-variant text-xs">${new Date(t.dataTransazione).toLocaleString('it-IT')}</div>
+                        <div class="mt-1 text-on-surface-variant text-xs">Saldo dopo operazione: <span class="text-on-surface">${formatMoney(t.saldoSuccessivo)}</span></div>
+                        ${t.descrizione ? `<div class="mt-1 text-on-surface-variant text-xs">${escapeHtml(t.descrizione)}</div>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+    } catch {
+        acquistiEmpty.textContent = 'Impossibile caricare lo storico acquisti.';
+        rimborsiEmpty.textContent = 'Impossibile caricare lo storico rimborsi.';
+        acquistiEmpty.classList.remove('hidden');
+        rimborsiEmpty.classList.remove('hidden');
     }
 }
 
@@ -536,6 +656,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     await loadProfile();
+
+    document.getElementById('newsletter-consent')?.addEventListener('change', async (event) => {
+        const checked = !!event.target.checked;
+        try {
+            await ApiClient.put('/newsletter/preference', { consenso: checked });
+            if (typeof Utils !== 'undefined') {
+                Utils.showNotification(checked ? 'Newsletter attivata' : 'Newsletter disattivata', 'success');
+            }
+        } catch (error) {
+            event.target.checked = !checked;
+            if (typeof Utils !== 'undefined') {
+                Utils.showNotification(error.message || 'Errore aggiornamento preferenza newsletter', 'error');
+            }
+        }
+    });
 
     const params = new URLSearchParams(window.location.search);
     if (params.get('edit') === '1') {

@@ -1,14 +1,60 @@
 <footer class="mt-10 md:mt-14 px-4 md:px-8 lg:px-12 pb-24 md:pb-8">
-    <div class="max-w-[1500px] mx-auto rounded-2xl bg-surface-container border border-outline-variant/20 px-4 md:px-7 py-5 md:py-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+    <div class="max-w-[1500px] mx-auto rounded-2xl bg-surface-container border border-outline-variant/20 px-4 md:px-7 py-5 md:py-6 flex flex-col gap-4">
         <div>
             <p class="text-xs uppercase tracking-[0.2em] text-on-surface-variant">FilmHub</p>
             <p class="mt-1 text-sm text-on-surface">Esperienza cinema, progettata per il tuo team.</p>
         </div>
-        <div class="flex flex-wrap items-center gap-5 text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">
-            <a class="hover:text-on-surface transition-colors" href="/supporto.html">Supporto</a>
-            <a class="hover:text-on-surface transition-colors" href="/privacy.html">Privacy</a>
-            <a class="hover:text-on-surface transition-colors" href="/termini.html">Termini</a>
-            <span class="text-on-surface-variant/70">© 2026</span>
+
+        <div class="w-full grid gap-4 md:grid-cols-[minmax(280px,1fr)_auto] items-start">
+            <div class="max-w-xl">
+                <p class="text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">Newsletter</p>
+                <form id="footer-newsletter-form" class="mt-2 flex flex-col sm:flex-row gap-2">
+                    <input id="footer-newsletter-email" type="email" required placeholder="La tua email" class="flex-1 rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm text-on-surface">
+                    <button type="submit" class="app-btn app-btn-primary whitespace-nowrap">Iscriviti</button>
+                </form>
+                <p id="footer-newsletter-feedback" class="mt-2 text-xs text-on-surface-variant hidden"></p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-5 text-[11px] uppercase tracking-[0.18em] text-on-surface-variant md:justify-end">
+                <a class="hover:text-on-surface transition-colors" href="/supporto.html">Supporto</a>
+                <a class="hover:text-on-surface transition-colors" href="/termini.html">Termini</a>
+                <a class="hover:text-on-surface transition-colors" href="/condizioni.html">Condizioni</a>
+                <a class="hover:text-on-surface transition-colors" href="/privacy.html">Privacy</a>
+                <span class="text-on-surface-variant/70">© 2026</span>
+            </div>
         </div>
     </div>
 </footer>
+
+<script>
+    (function initFooterNewsletter() {
+        const form = document.getElementById('footer-newsletter-form');
+        const emailInput = document.getElementById('footer-newsletter-email');
+        const feedback = document.getElementById('footer-newsletter-feedback');
+        if (!form || !emailInput || !feedback) return;
+
+        if (typeof Auth !== 'undefined' && Auth.isAuthenticated()) {
+            const user = Auth.getUser();
+            if (user?.email) emailInput.value = user.email;
+        }
+
+        if (form.dataset.bound === '1') return;
+        form.dataset.bound = '1';
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            feedback.classList.add('hidden');
+            const email = String(emailInput.value || '').trim();
+            if (!email) return;
+
+            try {
+                const res = await ApiClient.post('/newsletter/subscribe', { email });
+                feedback.textContent = res?.message || 'Iscrizione completata';
+                feedback.className = 'mt-2 text-xs text-green-400';
+            } catch (error) {
+                feedback.textContent = error.message || 'Errore iscrizione newsletter';
+                feedback.className = 'mt-2 text-xs text-red-400';
+            }
+        });
+    })();
+</script>
