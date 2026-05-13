@@ -349,6 +349,11 @@ if (!isTesting)
     {
         var db = scope.ServiceProvider.GetRequiredService<FilmDbContext>();
         await db.Database.MigrateAsync();
+        // Hotfix compatibilita schema:
+        // una migration storica vuota puo lasciare assente la colonna ConsensoNewsletter,
+        // causando HTTP 500 sul login quando EF prova a selezionarla.
+        await db.Database.ExecuteSqlRawAsync(
+            "ALTER TABLE `utenti` ADD COLUMN IF NOT EXISTS `ConsensoNewsletter` TINYINT(1) NOT NULL DEFAULT 0;");
         await DbInitializer.InitializeAsync(db);
     }
 }
