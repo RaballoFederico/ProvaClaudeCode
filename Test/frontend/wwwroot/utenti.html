@@ -1,33 +1,158 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestione Utenti - FilmHub</title>
-    <link rel="stylesheet" href="css/styles.css">
+    <title>Gestione Utenti | FilmHub</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/styles.css">
 </head>
-<body>
-    <main style="max-width:1000px;margin:32px auto;padding:16px;">
-        <h1>Gestione utenti</h1>
-        <p>Pagina riservata ad amministratori.</p>
-        <table id="users-table" border="1" cellpadding="8" cellspacing="0" style="width:100%;margin-top:16px;">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Ruoli</th>
-                    <th>Azione</th>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col overflow-x-hidden">
+    <div id="navbar-container"></div>
+
+    <main class="flex-1 w-full max-w-[1500px] mx-auto px-4 md:px-8 py-8 md:py-10 space-y-6">
+        <section class="app-card p-6 md:p-8 reveal-up">
+            <div class="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                    <h1 class="font-headline text-3xl md:text-4xl font-bold">Gestione Account Utenti</h1>
+                    <p class="mt-2 text-sm text-on-surface-variant">Area riservata agli amministratori. Puoi gestire ruoli, stato account e storico transazioni.</p>
+                </div>
+                <button id="reload-users-btn" class="inline-flex items-center gap-2 rounded-xl border border-outline-variant/30 px-4 py-2 text-sm hover:bg-surface-container-high transition-colors">
+                    <span class="material-symbols-outlined text-base">refresh</span>
+                    Aggiorna elenco
+                </button>
+            </div>
+
+            <p id="message" class="mt-4 text-sm text-on-surface-variant"></p>
+
+            <div class="mt-5 overflow-x-auto rounded-xl border border-outline-variant/20">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-surface-container-high text-on-surface-variant">
+                        <tr>
+                            <th class="px-3 py-3 text-left">ID</th>
+                            <th class="px-3 py-3 text-left">Utente</th>
+                    <th class="px-3 py-3 text-left">Email</th>
+                    <th class="px-3 py-3 text-left">Ruoli</th>
+                    <th class="px-3 py-3 text-left">Azioni</th>
                 </tr>
             </thead>
-            <tbody></tbody>
-        </table>
-        <p id="message" style="margin-top:12px;"></p>
+            <tbody id="users-tbody" class="divide-y divide-outline-variant/20"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <section id="transactions-panel" class="app-card p-6 md:p-8 hidden">
+            <div class="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                    <h2 class="font-headline text-2xl font-bold">Storico Transazioni Utente</h2>
+                    <p id="transactions-user" class="mt-1 text-sm text-on-surface-variant"></p>
+                </div>
+                <button id="close-transactions-btn" class="rounded-xl border border-outline-variant/30 px-4 py-2 text-sm hover:bg-surface-container-high transition-colors">
+                    Chiudi
+                </button>
+            </div>
+
+            <div class="mt-5 grid lg:grid-cols-2 gap-5">
+                <article class="rounded-xl border border-outline-variant/20 overflow-hidden">
+                    <div class="px-4 py-3 bg-surface-container-high text-sm font-semibold">Movimenti credito</div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead class="text-on-surface-variant">
+                                <tr>
+                                    <th class="px-3 py-2 text-left">Data</th>
+                                    <th class="px-3 py-2 text-left">Tipo</th>
+                                    <th class="px-3 py-2 text-left">Importo</th>
+                                    <th class="px-3 py-2 text-left">Saldo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="credit-history-tbody" class="divide-y divide-outline-variant/20"></tbody>
+                        </table>
+                    </div>
+                </article>
+
+                <article class="rounded-xl border border-outline-variant/20 overflow-hidden">
+                    <div class="px-4 py-3 bg-surface-container-high text-sm font-semibold">Acquisti</div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead class="text-on-surface-variant">
+                                <tr>
+                                    <th class="px-3 py-2 text-left">Data</th>
+                                    <th class="px-3 py-2 text-left">Importo</th>
+                                    <th class="px-3 py-2 text-left">Metodo</th>
+                                    <th class="px-3 py-2 text-left">Stato</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-history-tbody" class="divide-y divide-outline-variant/20"></tbody>
+                        </table>
+                    </div>
+                </article>
+            </div>
+        </section>
     </main>
+
+    <div id="footer-container"></div>
+
+    <div id="edit-user-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-surface-container rounded-2xl p-6 w-full max-w-md border border-outline-variant/20">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-on-surface">Modifica Profilo Utente</h3>
+                <button id="close-edit-user-modal" class="text-on-surface-variant hover:text-on-surface">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+            <form id="edit-user-form" class="space-y-3">
+                <input type="hidden" id="edit-user-id">
+                <div>
+                    <label class="block text-sm text-on-surface-variant mb-1">Email</label>
+                    <input id="edit-user-email" type="email" required class="w-full rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-sm text-on-surface-variant mb-1">Nome</label>
+                        <input id="edit-user-nome" type="text" class="w-full rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-on-surface-variant mb-1">Cognome</label>
+                        <input id="edit-user-cognome" type="text" class="w-full rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm text-on-surface-variant mb-1">Telefono</label>
+                    <input id="edit-user-telefono" type="text" class="w-full rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm">
+                </div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" id="cancel-edit-user-modal" class="flex-1 rounded-lg border border-outline-variant/30 px-4 py-2 text-sm hover:bg-surface-container-high">Annulla</button>
+                    <button type="submit" class="flex-1 rounded-lg bg-primary-container px-4 py-2 text-sm text-white">Salva modifiche</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="confirm-role-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-surface-container rounded-2xl p-6 w-full max-w-md border border-outline-variant/20">
+            <h3 class="text-xl font-bold text-on-surface">Conferma Operazione</h3>
+            <p id="confirm-role-message" class="mt-3 text-sm text-on-surface-variant"></p>
+            <div class="mt-5 flex gap-3">
+                <button id="confirm-role-cancel" type="button" class="flex-1 rounded-lg border border-outline-variant/30 px-4 py-2 text-sm hover:bg-surface-container-high">Annulla</button>
+                <button id="confirm-role-ok" type="button" class="flex-1 rounded-lg bg-primary-container px-4 py-2 text-sm text-white">Conferma</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/theme.js"></script>
     <script src="/js/api-config.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/route-guard.js"></script>
-    <script src="js/api-client.js"></script>
-    <script src="js/pages/utenti.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/route-guard.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/template-loader.js"></script>
+    <script src="/js/pages/utenti.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadComponent('navbar-container', '/components/navbar.html');
+            await loadComponent('footer-container', '/components/footer.html');
+        });
+    </script>
 </body>
 </html>

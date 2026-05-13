@@ -1,59 +1,344 @@
-async function loadUsers() {
+const utentiState = {
+    users: [],
+    rolesByName: {},
+    confirmResolver: null
+};
+
+function setMessage(text, isError = false) {
     const message = document.getElementById('message');
-    const tbody = document.querySelector('#users-table tbody');
-    message.textContent = '';
+    if (!message) return;
+    message.textContent = text || '';
+    message.className = isError ? 'mt-4 text-sm text-red-400' : 'mt-4 text-sm text-on-surface-variant';
+}
+
+function fmtDate(value) {
+    if (!value) return '-';
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return '-';
+    return d.toLocaleString('it-IT');
+}
+
+function fmtMoney(value) {
+    const n = Number(value ?? 0);
+    return `${n.toFixed(2)} EUR`;
+}
+
+function countRole(roleName) {
+    return utentiState.users.filter((u) => Array.isArray(u.ruoli) && u.ruoli.includes(roleName)).length;
+}
+
+function canAssignTargetRole(user, targetRoleName) {
+    const roles = Array.isArray(user.ruoli) ? user.ruoli : [];
+    const isAdmin = roles.includes('Admin');
+    const isPowerUser = roles.includes('PowerUser');
+
+    if (isAdmin && targetRoleName !== 'Admin' && countRole('Admin') <= 1) {
+        return {
+            ok: false,
+            reason: "Operazione bloccata: non puoi modificare il ruolo dell'ultimo Admin."
+        };
+    }
+
+    if (isPowerUser && targetRoleName !== 'PowerUser' && countRole('PowerUser') <= 1) {
+        return {
+            ok: false,
+            reason: "Operazione bloccata: non puoi modificare il ruolo dell'ultimo PowerUser."
+        };
+    }
+
+    return { ok: true, reason: '' };
+}
+
+async function showConfirm(message) {
+    const modal = document.getElementById('confirm-role-modal');
+    const msg = document.getElementById('confirm-role-message');
+    if (!modal || !msg) return window.confirm(message);
+    msg.textContent = message;
+    modal.classList.remove('hidden');
+
+    return await new Promise((resolve) => {
+        utentiState.confirmResolver = resolve;
+    });
+}
+
+function closeConfirm(result) {
+    const modal = document.getElementById('confirm-role-modal');
+    if (modal) modal.classList.add('hidden');
+    const resolver = utentiState.confirmResolver;
+    utentiState.confirmResolver = null;
+    if (resolver) resolver(result);
+}
+
+async function loadRoles() {
+    try {
+        const roles = await ApiClient.get('/admin/ruoli');
+        const map = {};
+        (Array.isArray(roles) ? roles : []).forEach((role) => {
+            if (role?.nome && Number.isFinite(role?.id)) {
+                map[role.nome] = role.id;
+            }
+        });
+        utentiState.rolesByName = map;
+        return;
+    } catch {
+        // Fallback compatibilità con backend precedente
+    }
+
+    utentiState.rolesByName = {
+        Admin: 1,
+        PowerUser: 2,
+        User: 3
+    };
+}
+
+function renderUsersTable(users) {
+    const tbody = document.getElementById('users-tbody');
+    if (!tbody) return;
     tbody.innerHTML = '';
 
+    if (!users.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="px-3 py-4 text-center text-on-surface-variant">Nessun utente registrato.</td></tr>`;
+        return;
+    }
+
+    users.forEach((user) => {
+        const roles = Array.isArray(user.ruoli) ? user.ruoli.join(', ') : '-';
+        const guardToUser = canAssignTargetRole(user, 'User');
+
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="px-3 py-3">${user.id}</td>
+            <td class="px-3 py-3">
+                <div class="font-medium">${user.username || '-'}</div>
+                <div class="text-xs text-on-surface-variant">${(user.nome || '')} ${(user.cognome || '')}</div>
+            </td>
+            <td class="px-3 py-3">${user.email || '-'}</td>
+            <td class="px-3 py-3">${roles}</td>
+            <td class="px-3 py-3">
+                <div class="flex flex-wrap gap-2">
+                    <button data-action="set-user" data-user-id="${user.id}" class="rounded-lg border border-outline-variant/30 px-2 py-1 text-xs hover:bg-surface-container-high ${!guardToUser.ok ? 'opacity-50 cursor-not-allowed' : ''}" ${!guardToUser.ok ? 'disabled' : ''} title="${!guardToUser.ok ? guardToUser.reason : ''}">User</button>
+                    <button data-action="set-poweruser" data-user-id="${user.id}" class="rounded-lg border border-outline-variant/30 px-2 py-1 text-xs hover:bg-surface-container-high">PowerUser</button>
+                    <button data-action="set-admin" data-user-id="${user.id}" class="rounded-lg border border-outline-variant/30 px-2 py-1 text-xs hover:bg-surface-container-high">Admin</button>
+                    <button data-action="edit-profile" data-user-id="${user.id}" class="rounded-lg border border-outline-variant/30 px-2 py-1 text-xs hover:bg-surface-container-high">Modifica profilo</button>
+                    <button data-action="deactivate" data-user-id="${user.id}" class="rounded-lg border border-outline-variant/30 px-2 py-1 text-xs hover:bg-surface-container-high">Elimina account</button>
+                    <button data-action="view-transactions" data-user-id="${user.id}" class="rounded-lg border border-outline-variant/30 px-2 py-1 text-xs hover:bg-surface-container-high">Storico</button>
+                </div>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+async function loadUsers() {
+    setMessage('Caricamento utenti...');
     try {
         const users = await ApiClient.get('/admin/utenti');
-        users.forEach((user) => {
-            const tr = document.createElement('tr');
-            const roles = (user.ruoli || []).join(', ');
-            tr.innerHTML = `
-                <td>${user.id}</td>
-                <td>${user.username}</td>
-                <td>${user.email}</td>
-                <td>${roles}</td>
-                <td>
-                    <button data-user-id="${user.id}" data-promote="power">PowerUser</button>
-                    <button data-user-id="${user.id}" data-promote="admin">Admin</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
+        utentiState.users = (Array.isArray(users) ? users : []).filter((u) => u.attivo !== false);
+        renderUsersTable(utentiState.users);
+        setMessage(`Utenti caricati: ${utentiState.users.length}`);
     } catch (error) {
-        message.textContent = error.message || 'Errore caricamento utenti';
+        setMessage(error.message || 'Errore caricamento utenti', true);
     }
 }
 
-async function promoteUser(userId, targetRole) {
-    const message = document.getElementById('message');
-    message.textContent = '';
+async function updateRole(userId, targetRoleName) {
+    const me = await ApiClient.get('/auth/me');
+    if (!me?.ruoli?.includes('Admin')) {
+        throw new Error('Operazione consentita solo agli Admin.');
+    }
+
+    const user = utentiState.users.find((u) => u.id === userId);
+    if (!user) throw new Error('Utente non trovato');
+
+    const guard = canAssignTargetRole(user, targetRoleName);
+    if (!guard.ok) throw new Error(guard.reason);
+
+    if (!utentiState.rolesByName.Admin || !utentiState.rolesByName.PowerUser || !utentiState.rolesByName.User) {
+        await loadRoles();
+    }
+
+    const roleId = utentiState.rolesByName[targetRoleName];
+    if (!roleId) {
+        throw new Error(`Ruolo ${targetRoleName} non disponibile`);
+    }
 
     try {
-        const rolesResp = await ApiClient.get('/auth/me');
-        const currentUser = rolesResp;
-        if (!currentUser?.ruoli?.includes('Admin')) {
-            message.textContent = 'Operazione consentita solo agli Admin.';
+        await ApiClient.put(`/admin/utenti/${userId}/ruoli`, { ruoloIds: [roleId] });
+    } catch (error) {
+        const msg = String(error?.message || '').toLowerCase();
+        if (msg.includes('http 404') || msg.includes('not found')) {
+            await ApiClient.put(`/admin/users/${userId}/roles`, { ruoloIds: [roleId] });
             return;
         }
-
-        const roleIds = targetRole === 'admin' ? [2] : [1];
-        await ApiClient.put(`/admin/utenti/${userId}/ruoli`, { ruoloIds: roleIds });
-        message.textContent = 'Ruolo aggiornato con successo.';
-        await loadUsers();
-    } catch (error) {
-        message.textContent = error.message || 'Errore aggiornamento ruolo';
+        throw error;
     }
+}
+
+async function setUserActivation(userId, activate) {
+    if (activate) {
+        try {
+            await ApiClient.post(`/admin/users/${userId}/activate`, {});
+        } catch (error) {
+            const msg = String(error?.message || '').toLowerCase();
+            if (msg.includes('http 404') || msg.includes('not found')) {
+                // Compatibilità con backend eventualmente senza route activate legacy
+                throw new Error('Riattivazione non disponibile su questa versione backend.');
+            }
+            throw error;
+        }
+        return;
+    }
+    try {
+        await ApiClient.delete(`/admin/utenti/${userId}`);
+    } catch (error) {
+        const msg = String(error?.message || '').toLowerCase();
+        if (msg.includes('http 404') || msg.includes('not found')) {
+            // Fallback backend legacy: soft delete/disattivazione
+            await ApiClient.delete(`/admin/users/${userId}`);
+            return;
+        }
+        throw error;
+    }
+}
+
+function renderCreditHistory(items) {
+    const tbody = document.getElementById('credit-history-tbody');
+    if (!tbody) return;
+    if (!items.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="px-3 py-3 text-on-surface-variant">Nessun movimento disponibile.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = items.map((item) => `
+        <tr>
+            <td class="px-3 py-2">${fmtDate(item.dataTransazione)}</td>
+            <td class="px-3 py-2">${item.tipo || '-'}</td>
+            <td class="px-3 py-2">${fmtMoney(item.importo)}</td>
+            <td class="px-3 py-2">${fmtMoney(item.saldoSuccessivo)}</td>
+        </tr>
+    `).join('');
+}
+
+function renderOrdersHistory(items) {
+    const tbody = document.getElementById('orders-history-tbody');
+    if (!tbody) return;
+    if (!items.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="px-3 py-3 text-on-surface-variant">Nessun acquisto disponibile.</td></tr>`;
+        return;
+    }
+    tbody.innerHTML = items.map((item) => `
+        <tr>
+            <td class="px-3 py-2">${fmtDate(item.dataAcquisto)}</td>
+            <td class="px-3 py-2">${fmtMoney(item.importoTotale)}</td>
+            <td class="px-3 py-2">${item.metodoPagamentoEtichetta || item.metodoPagamento || '-'}</td>
+            <td class="px-3 py-2">${item.stato || '-'}</td>
+        </tr>
+    `).join('');
+}
+
+async function loadUserTransactions(userId) {
+    const panel = document.getElementById('transactions-panel');
+    const title = document.getElementById('transactions-user');
+    if (!panel || !title) return;
+
+    panel.classList.remove('hidden');
+    title.textContent = 'Caricamento storico transazioni...';
+
+    try {
+        let response;
+        try {
+            response = await ApiClient.get(`/admin/utenti/${userId}/transazioni`);
+        } catch {
+            const fallbackCredito = await ApiClient.get(`/admin/credito/storico/${userId}`);
+            response = {
+                utente: utentiState.users.find((u) => u.id === userId) || null,
+                storicoCredito: Array.isArray(fallbackCredito) ? fallbackCredito : [],
+                storicoAcquisti: []
+            };
+        }
+
+        const user = response.utente || {};
+        const fullName = `${user.nome || ''} ${user.cognome || ''}`.trim();
+        title.textContent = `${fullName || user.username || '-'} (${user.email || '-'})`;
+        renderCreditHistory(Array.isArray(response.storicoCredito) ? response.storicoCredito : []);
+        renderOrdersHistory(Array.isArray(response.storicoAcquisti) ? response.storicoAcquisti : []);
+    } catch (error) {
+        title.textContent = error.message || 'Errore caricamento storico transazioni.';
+        renderCreditHistory([]);
+        renderOrdersHistory([]);
+    }
+}
+
+function openEditUserModal(userId) {
+    const user = utentiState.users.find((u) => u.id === userId);
+    if (!user) return;
+    document.getElementById('edit-user-id').value = String(user.id);
+    document.getElementById('edit-user-email').value = user.email || '';
+    document.getElementById('edit-user-nome').value = user.nome || '';
+    document.getElementById('edit-user-cognome').value = user.cognome || '';
+    document.getElementById('edit-user-telefono').value = user.telefono || '';
+    document.getElementById('edit-user-modal').classList.remove('hidden');
+}
+
+function closeEditUserModal() {
+    document.getElementById('edit-user-modal')?.classList.add('hidden');
 }
 
 document.addEventListener('click', async (event) => {
-    const button = event.target.closest('button[data-user-id]');
+    const button = event.target.closest('button[data-action][data-user-id]');
     if (!button) return;
+
     const userId = Number(button.getAttribute('data-user-id'));
-    const targetRole = button.getAttribute('data-promote');
-    if (!Number.isFinite(userId) || !targetRole) return;
-    await promoteUser(userId, targetRole);
+    const action = button.getAttribute('data-action');
+    if (!Number.isFinite(userId) || !action) return;
+
+    try {
+        if (action === 'set-user') {
+            const ok = await showConfirm('Confermi di riportare questo account al ruolo User?');
+            if (!ok) return;
+            await updateRole(userId, 'User');
+            setMessage('Ruolo aggiornato a User.');
+            await loadUsers();
+            return;
+        }
+
+        if (action === 'set-poweruser') {
+            const ok = await showConfirm('Confermi di impostare questo account come PowerUser?');
+            if (!ok) return;
+            await updateRole(userId, 'PowerUser');
+            setMessage('Ruolo aggiornato a PowerUser.');
+            await loadUsers();
+            return;
+        }
+
+        if (action === 'set-admin') {
+            const ok = await showConfirm('Confermi di impostare questo account come Admin?');
+            if (!ok) return;
+            await updateRole(userId, 'Admin');
+            setMessage('Ruolo aggiornato a Admin.');
+            await loadUsers();
+            return;
+        }
+
+        if (action === 'deactivate') {
+            const ok = await showConfirm('Confermi eliminazione definitiva dell\'account? Questa operazione non e annullabile.');
+            if (!ok) return;
+            await setUserActivation(userId, false);
+            setMessage('Account eliminato.');
+            await loadUsers();
+            return;
+        }
+
+        if (action === 'view-transactions') {
+            await loadUserTransactions(userId);
+            return;
+        }
+
+        if (action === 'edit-profile') {
+            openEditUserModal(userId);
+        }
+    } catch (error) {
+        setMessage(error.message || 'Operazione non riuscita', true);
+    }
 });
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -63,5 +348,34 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    document.getElementById('reload-users-btn')?.addEventListener('click', loadUsers);
+    document.getElementById('close-transactions-btn')?.addEventListener('click', () => {
+        document.getElementById('transactions-panel')?.classList.add('hidden');
+    });
+
+    document.getElementById('close-edit-user-modal')?.addEventListener('click', closeEditUserModal);
+    document.getElementById('cancel-edit-user-modal')?.addEventListener('click', closeEditUserModal);
+    document.getElementById('edit-user-form')?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const id = Number(document.getElementById('edit-user-id').value);
+        const email = document.getElementById('edit-user-email').value.trim();
+        const nome = document.getElementById('edit-user-nome').value.trim();
+        const cognome = document.getElementById('edit-user-cognome').value.trim();
+        const telefono = document.getElementById('edit-user-telefono').value.trim();
+
+        try {
+            await ApiClient.put(`/admin/utenti/${id}/profilo`, { email, nome, cognome, telefono });
+            closeEditUserModal();
+            setMessage('Profilo utente aggiornato.');
+            await loadUsers();
+        } catch (error) {
+            setMessage(error.message || 'Errore aggiornamento profilo', true);
+        }
+    });
+
+    document.getElementById('confirm-role-cancel')?.addEventListener('click', () => closeConfirm(false));
+    document.getElementById('confirm-role-ok')?.addEventListener('click', () => closeConfirm(true));
+
+    await loadRoles();
     await loadUsers();
 });

@@ -167,6 +167,15 @@ public static class AdminEndpoints
             return Results.Ok(new { message = "Sincronizzazione TMDB avviata" });
         });
 
+        group.MapGet("/ruoli", [Authorize(Roles = "Admin")] async (FilmDbContext db) =>
+        {
+            var ruoli = await db.Ruoli
+                .OrderBy(r => r.Id)
+                .Select(r => new { r.Id, r.Nome, r.Descrizione })
+                .ToListAsync();
+            return Results.Ok(ruoli);
+        });
+
         utentiGroup.MapGet("/", [Authorize(Roles = "Admin")] async (FilmDbContext db) =>
         {
             var utenti = await db.Utenti
@@ -223,6 +232,21 @@ public static class AdminEndpoints
                 }
             }
 
+            var powerUserRuolo = await db.Ruoli.FirstOrDefaultAsync(r => r.Nome == "PowerUser");
+            if (powerUserRuolo != null)
+            {
+                var powerUserRichiesto = request.RuoloIds.Contains(powerUserRuolo.Id);
+                var powerUserCorrente = utente.UtentiRuoli.Any(ur => ur.RuoloId == powerUserRuolo.Id);
+                if (powerUserCorrente && !powerUserRichiesto)
+                {
+                    var altriPowerUser = await db.UtentiRuoli.CountAsync(ur => ur.RuoloId == powerUserRuolo.Id && ur.UtenteId != id);
+                    if (altriPowerUser == 0)
+                    {
+                        return Results.BadRequest(new { message = "Impossibile rimuovere il ruolo dall'ultimo PowerUser" });
+                    }
+                }
+            }
+
             utente.UtentiRuoli.Clear();
             foreach (var ruoloId in request.RuoloIds)
             {
@@ -271,6 +295,142 @@ public static class AdminEndpoints
             await auditService.LogAsync("admin_invite_created", "success", actorUserId, null, email, context.Connection.RemoteIpAddress?.ToString(), $"role={ruolo}");
 
             return Results.Ok(new { message = "Invito creato", email, ruolo });
+        });
+
+        utentiGroup.MapPut("/{id:int}/profilo", [Authorize(Roles = "Admin")] async (int id, UpdateProfiloRequestDTO request, HttpContext context, FilmDbContext db) =>
+        {
+            var actorUserId = GetUserId(context);
+            var utente = await db.Utenti.FirstOrDefaultAsync(u => u.Id == id);
+            if (utente == null)
+            {
+                return Results.NotFound(new { message = "Utente non trovato" });
+            }
+
+            var email = (request.Email ?? string.Empty).Trim();
+            if (string.IsNullOrWhiteSpace(email) || !email.Contains('@'))
+            {
+                return Results.BadRequest(new { message = "Email non valida" });
+            }
+
+            var emailExists = await db.Utenti.AnyAsync(u => u.Email == email && u.Id != id);
+            if (emailExists)
+            {
+                return Results.Conflict(new { message = "Email gia in uso" });
+            }
+
+            utente.Email = email;
+            utente.Nome = request.Nome;
+            utente.Cognome = request.Cognome;
+            utente.Telefono = request.Telefono;
+
+            await db.SaveChangesAsync();
+            return Results.Ok(new { message = "Profilo utente aggiornato", actorUserId, userId = id });
+        });
+
+        utentiGroup.MapDelete("/{id:int}", [Authorize(Roles = "Admin")] async (int id, HttpContext context, FilmDbContext db) =>
+        {
+            var currentUserId = GetUserId(context);
+            if (currentUserId == id)
+            {
+                return Results.BadRequest(new { message = "Non puoi eliminare il tuo stesso account" });
+            }
+
+            var utente = await db.Utenti
+                .Include(u => u.UtentiRuoli)
+                .FirstOrDefaultAsync(u => u.Id == id);
+            if (utente == null)
+            {
+                return Results.NotFound(new { message = "Utente non trovato" });
+            }
+
+            var adminRuolo = await db.Ruoli.FirstOrDefaultAsync(r => r.Nome == "Admin");
+            if (adminRuolo != null)
+            {
+                var isAdmin = utente.UtentiRuoli.Any(ur => ur.RuoloId == adminRuolo.Id);
+                if (isAdmin)
+                {
+                    var altriAdmin = await db.UtentiRuoli.CountAsync(ur => ur.RuoloId == adminRuolo.Id && ur.UtenteId != id);
+                    if (altriAdmin == 0)
+                    {
+                        return Results.BadRequest(new { message = "Impossibile eliminare l'ultimo admin" });
+                    }
+                }
+            }
+
+            var powerUserRuolo = await db.Ruoli.FirstOrDefaultAsync(r => r.Nome == "PowerUser");
+            if (powerUserRuolo != null)
+            {
+                var isPowerUser = utente.UtentiRuoli.Any(ur => ur.RuoloId == powerUserRuolo.Id);
+                if (isPowerUser)
+                {
+                    var altriPowerUser = await db.UtentiRuoli.CountAsync(ur => ur.RuoloId == powerUserRuolo.Id && ur.UtenteId != id);
+                    if (altriPowerUser == 0)
+                    {
+                        return Results.BadRequest(new { message = "Impossibile eliminare l'ultimo PowerUser" });
+                    }
+                }
+            }
+
+            db.Utenti.Remove(utente);
+            await db.SaveChangesAsync();
+            return Results.Ok(new { message = "Account eliminato definitivamente" });
+        });
+
+        utentiGroup.MapGet("/{id:int}/transazioni", [Authorize(Roles = "Admin")] async (int id, FilmDbContext db) =>
+        {
+            var utente = await db.Utenti
+                .Where(u => u.Id == id)
+                .Select(u => new { u.Id, u.Username, u.Email, u.Nome, u.Cognome })
+                .FirstOrDefaultAsync();
+
+            if (utente == null)
+            {
+                return Results.NotFound(new { message = "Utente non trovato" });
+            }
+
+            var transazioniCredito = await db.TransazioniCredito
+                .Where(t => t.UtenteId == id)
+                .OrderByDescending(t => t.DataTransazione)
+                .Select(t => new
+                {
+                    t.Id,
+                    Tipo = t.Tipo.ToString(),
+                    t.Importo,
+                    t.SaldoPrecedente,
+                    t.SaldoSuccessivo,
+                    t.DataTransazione,
+                    t.Descrizione,
+                    t.CinemaId,
+                    t.OperatoreId,
+                    t.AcquistoId
+                })
+                .Take(100)
+                .ToListAsync();
+
+            var acquisti = await db.Acquisti
+                .Where(a => a.UtenteId == id)
+                .OrderByDescending(a => a.DataAcquisto)
+                .Select(a => new
+                {
+                    a.Id,
+                    a.DataAcquisto,
+                    a.ImportoTotale,
+                    a.CreditoUsato,
+                    Stato = a.Stato.ToString(),
+                    a.MetodoPagamento,
+                    a.MetodoPagamentoEtichetta,
+                    a.CodiceConferma,
+                    a.ShowId
+                })
+                .Take(100)
+                .ToListAsync();
+
+            return Results.Ok(new
+            {
+                utente,
+                storicoCredito = transazioniCredito,
+                storicoAcquisti = acquisti
+            });
         });
 
         return app;
