@@ -27,12 +27,15 @@ docker push $fullImage
 Write-Host "[4/5] Create or update Container App..."
 $exists = az containerapp show -g $ResourceGroup -n $FrontendAppName --query name -o tsv 2>$null
 if ($exists) {
+  az containerapp registry set `
+    -g $ResourceGroup -n $FrontendAppName `
+    --server $acrLoginServer `
+    --username $acrUser `
+    --password $acrPass | Out-Null
+
   az containerapp update `
     -g $ResourceGroup -n $FrontendAppName `
-    --image $fullImage `
-    --registry-server $acrLoginServer `
-    --registry-username $acrUser `
-    --registry-password $acrPass | Out-Null
+    --image $fullImage | Out-Null
 } else {
   az containerapp create `
     -g $ResourceGroup -n $FrontendAppName --environment $ContainerAppEnv `
