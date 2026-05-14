@@ -1,6 +1,8 @@
+const AZURE_API_BASE_URL = 'https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io';
+
 function getApiCandidates() {
     const stored = window.localStorage.getItem('apiBaseUrl');
-    const defaults = ['http://localhost:5000', 'https://localhost:7217'];
+    const defaults = [AZURE_API_BASE_URL, 'http://localhost:5000', 'https://localhost:7217'];
     if (!stored || stored === 'undefined' || stored === 'null') {
         return defaults;
     }
