@@ -32,7 +32,13 @@
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-5 gap-3 mt-1">
                         <select id="filter-cinema" class="bg-surface-container-high rounded-lg border-none"><option value="">Cinema</option></select>
-                        <select id="filter-sala" class="bg-surface-container-high rounded-lg border-none"><option value="">Sala</option></select>
+                        <select id="filter-tipologia" class="bg-surface-container-high rounded-lg border-none">
+                            <option value="">Tipo sala</option>
+                            <option value="ISENSE">ISENSE</option>
+                            <option value="XL">XL</option>
+                            <option value="TRE_D">3D</option>
+                            <option value="DUE_D">2D</option>
+                        </select>
                         <select id="filter-film" class="bg-surface-container-high rounded-lg border-none"><option value="">Film</option></select>
                         <input id="filter-data" type="date" class="bg-surface-container-high rounded-lg border-none" />
                         <button id="open-create" class="px-4 py-2 bg-primary-container text-white rounded-lg hover-lift">Nuovo Show</button>
@@ -109,7 +115,7 @@
             document.getElementById('open-create').addEventListener('click', () => openCreate());
             document.getElementById('show-form').addEventListener('submit', onSubmit);
 
-            ['filter-cinema', 'filter-sala', 'filter-film', 'filter-data'].forEach(id => {
+            ['filter-cinema', 'filter-tipologia', 'filter-film', 'filter-data'].forEach(id => {
                 document.getElementById(id).addEventListener('change', applyFilters);
             });
         }
@@ -134,15 +140,12 @@
 
         async function refreshSaleFilters() {
             const cinemaId = parseInt(document.getElementById('filter-cinema').value || '0');
-            const salaSel = document.getElementById('filter-sala');
 
             if (cinemaId) {
                 sale = await ApiClient.get(`/admin/cinemas/${cinemaId}/sale`);
             } else {
                 sale = [];
             }
-
-            salaSel.innerHTML = `<option value="">Sala</option>` + sale.map(s => `<option value="${s.id}">#${s.numeroSala} ${escapeHtml(s.nome || '')}</option>`).join('');
             populateFormSale();
             populateFormFilms();
         }
@@ -160,14 +163,13 @@
         async function applyFilters() {
             await refreshSaleFilters();
             const cinemaId = document.getElementById('filter-cinema').value;
-            const salaId = document.getElementById('filter-sala').value;
+            const tipologia = document.getElementById('filter-tipologia').value;
             const filmId = document.getElementById('filter-film').value;
             const data = document.getElementById('filter-data').value;
             const windowRange = getDefaultShowWindow();
 
             const query = new URLSearchParams();
             if (cinemaId) query.set('cinemaId', cinemaId);
-            if (salaId) query.set('salaId', salaId);
             if (filmId) query.set('filmId', filmId);
             if (data) {
                 query.set('data', data);
@@ -178,7 +180,19 @@
             }
 
             shows = await ApiClient.get(`/admin/shows${query.toString() ? '?' + query.toString() : ''}`);
-            renderTable(shows);
+            const normalizedTipologia = normalizeTipologia(tipologia);
+            const visibleShows = normalizedTipologia
+                ? shows.filter(s => normalizeTipologia(s.tipologiaSala) === normalizedTipologia)
+                : shows;
+            renderTable(visibleShows);
+        }
+
+        function normalizeTipologia(value) {
+            const v = String(value || '').trim().toUpperCase();
+            if (!v) return '';
+            if (v === '3D') return 'TRE_D';
+            if (v === '2D') return 'DUE_D';
+            return v;
         }
 
         function getDefaultShowWindow() {

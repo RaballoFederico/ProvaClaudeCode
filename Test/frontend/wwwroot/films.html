@@ -234,6 +234,23 @@
             renderFilms();
         }
 
+        function getFilmCategoryLabels(film) {
+            if (!film || typeof film !== 'object') return [];
+
+            if (Array.isArray(film.categorie) && film.categorie.length > 0) {
+                return film.categorie
+                    .map((c) => (typeof c === 'string' ? c : c?.nome || c?.name || ''))
+                    .map((v) => String(v || '').trim())
+                    .filter(Boolean);
+            }
+
+            const fallback = film.genere || film.genre || film.categoria || film.category || '';
+            return String(fallback)
+                .split(',')
+                .map((v) => v.trim())
+                .filter(Boolean);
+        }
+
         function renderFilms() {
             const grid = document.getElementById('films-grid');
             const emptyState = document.getElementById('empty-state');
@@ -254,6 +271,7 @@
             grid.innerHTML = filteredFilms.map((film, index) => {
                 const regista = allRegisti.find(r => r.id === film.registaId);
                 const imageUrl = film.copertinaPath || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300&h=450&fit=crop';
+                const categoryLabels = getFilmCategoryLabels(film).slice(0, 2);
                 return `
                     <div class="group relative reveal-up" style="animation-delay:${(index % 8) * 0.04}s">
                         <div class="relative aspect-[2/3] rounded-lg overflow-hidden bg-surface-container-high cursor-pointer hover-lift"
@@ -267,7 +285,7 @@
                                 <h4 class="font-headline text-sm font-bold text-white truncate">${escapeHtml(film.titolo)}</h4>
                                 <p class="text-[10px] text-white/70 truncate">${regista ? escapeHtml(`${regista.nome} ${regista.cognome}`) : ''}</p>
                                 <div class="flex flex-wrap gap-1 mt-1">
-                                    ${(film.categorie || []).slice(0, 2).map(c => `<span class="px-1.5 py-0.5 rounded bg-black/60 text-[9px] text-secondary">${escapeHtml(c.nome)}</span>`).join('')}
+                                    ${categoryLabels.map((label) => `<span class="px-1.5 py-0.5 rounded bg-black/60 text-[9px] text-secondary">${escapeHtml(label)}</span>`).join('')}
                                 </div>
                             </div>
                             <div class="absolute top-2 left-2">
@@ -293,6 +311,7 @@
 
             const regista = allRegisti.find(r => r.id === film.registaId);
             const imageUrl = film.copertinaPath || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=600&h=900&fit=crop';
+            const categoryLabels = getFilmCategoryLabels(film);
             const canManage = isManager();
 
             showModal(`
@@ -346,8 +365,8 @@
                             <div class="bg-surface-container-high rounded-xl p-3">
                                 <p class="text-[10px] text-on-surface-variant uppercase tracking-widest mb-2">Categorie</p>
                                 <div class="flex flex-wrap gap-1">
-                                    ${(film.categorie || []).length
-                                        ? (film.categorie || []).map(c => `<span class=\"px-2 py-0.5 rounded-full text-[10px] bg-surface-container-highest text-secondary\">${escapeHtml(c.nome)}</span>`).join('')
+                                    ${categoryLabels.length
+                                        ? categoryLabels.map((label) => `<span class=\"px-2 py-0.5 rounded-full text-[10px] bg-surface-container-highest text-secondary\">${escapeHtml(label)}</span>`).join('')
                                         : '<span class="text-xs text-on-surface-variant">Nessuna</span>'}
                                 </div>
                             </div>

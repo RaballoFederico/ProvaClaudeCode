@@ -103,9 +103,16 @@ public static class NewsletterEndpoints
                 .Select(u => u.Email)
                 .ToListAsync();
 
+            if (recipients.Count == 0)
+            {
+                return Results.BadRequest(new { message = "Nessun destinatario iscritto alla newsletter" });
+            }
+
+            var sent = 0;
             foreach (var email in recipients)
             {
-                await emailService.InviaConfermaAcquistoAsync(email, subject, html);
+                await emailService.InviaEmailStrictAsync(email, subject, html);
+                sent++;
             }
 
             db.NewsletterCampagne.Add(new NewsletterCampagna
@@ -114,11 +121,11 @@ public static class NewsletterEndpoints
                 HtmlBody = html,
                 CreatoDaUtenteId = adminUserId.Value,
                 DataInvio = DateTime.UtcNow,
-                DestinatariCount = recipients.Count
+                DestinatariCount = sent
             });
             await db.SaveChangesAsync();
 
-            return Results.Ok(new { message = "Campagna inviata", destinatari = recipients.Count });
+            return Results.Ok(new { message = "Campagna inviata", destinatari = sent });
         });
 
         return app;

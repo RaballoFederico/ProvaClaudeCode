@@ -31,7 +31,7 @@ public class BigliettoService(
         var result = new List<PostoStatoDTO>();
         foreach (var row in rows)
         {
-            for (var seat = 1; seat <= row.posti; seat++)
+            foreach (var seat in row.posti)
             {
                 var posto = $"Fila {row.fila}, Posto {seat}";
                 var stato = occupied.Contains(posto) ? "occupato" : (locked.Contains(posto) ? "prenotato" : "disponibile");
@@ -47,6 +47,12 @@ public class BigliettoService(
         if (posti.Count == 0) throw new InvalidOperationException("Nessun posto selezionato");
         if (posti.Count > 10) throw new InvalidOperationException("Massimo 10 posti");
 
+        var show = await context.Shows.Include(s => s.Sala).FirstOrDefaultAsync(s => s.Id == showId);
+        if (show?.Sala is null) throw new InvalidOperationException("Show non valido");
+        var validSeats = BuildRows(show.Sala.NumeroFile, show.Sala.PostiPerFila, show.Sala.ConfigurazionePosti)
+            .SelectMany(r => r.posti.Select(p => $"Fila {r.fila}, Posto {p}"))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
         var scadenza = DateTime.UtcNow.AddMinutes(10);
         var codiceTemporaneo = Guid.NewGuid().ToString();
 
@@ -56,6 +62,8 @@ public class BigliettoService(
             foreach (var posto in posti)
             {
                 var postoText = posto.ToString();
+                if (!validSeats.Contains(postoText))
+                    throw new InvalidOperationException($"Posto non valido per questa sala: {postoText}");
 
                 var occupato = await context.Biglietti.AnyAsync(b => b.ShowId == showId && b.Posto == postoText);
                 if (occupato) throw new InvalidOperationException($"Posto occupato: {postoText}");
@@ -679,7 +687,7 @@ public class BigliettoService(
         QRCodeUrl = b.QRCodeUrl
     };
 
-    private static List<(int fila, int posti)> BuildRows(int numeroFile, int? postiPerFila, string? configurazione)
+    private static List<(int fila, List<int> posti)> BuildRows(int numeroFile, int? postiPerFila, string? configurazione)
     {
         if (!string.IsNullOrWhiteSpace(configurazione))
         {
@@ -688,10 +696,29 @@ public class BigliettoService(
                 using var doc = System.Text.Json.JsonDocument.Parse(configurazione);
                 if (doc.RootElement.TryGetProperty("file", out var rows) && rows.ValueKind == System.Text.Json.JsonValueKind.Array)
                 {
-                    var result = new List<(int fila, int posti)>();
+                    var result = new List<(int fila, List<int> posti)>();
                     foreach (var row in rows.EnumerateArray())
                     {
-                        result.Add((row.GetProperty("fila").GetInt32(), row.GetProperty("posti").GetInt32()));
+                        var fila = row.GetProperty("fila").GetInt32();
+                        var postiProp = row.GetProperty("posti");
+                        List<int> seats;
+                        if (postiProp.ValueKind == System.Text.Json.JsonValueKind.Array)
+                        {
+                            seats = postiProp.EnumerateArray()
+                                .Where(x => x.ValueKind == System.Text.Json.JsonValueKind.Number)
+                                .Select(x => x.GetInt32())
+                                .Where(x => x > 0)
+                                .Distinct()
+                                .OrderBy(x => x)
+                                .ToList();
+                        }
+                        else
+                        {
+                            var count = postiProp.GetInt32();
+                            seats = Enumerable.Range(1, Math.Max(0, count)).ToList();
+                        }
+
+                        if (seats.Count > 0) result.Add((fila, seats));
                     }
                     if (result.Count > 0) return result;
                 }
@@ -702,7 +729,9 @@ public class BigliettoService(
         }
 
         var per = postiPerFila ?? 10;
-        return Enumerable.Range(1, numeroFile).Select(i => (i, per)).ToList();
+        return Enumerable.Range(1, numeroFile)
+            .Select(i => (i, Enumerable.Range(1, per).ToList()))
+            .ToList();
     }
 
     private static PostoDTO? ParsePosto(string postoText)

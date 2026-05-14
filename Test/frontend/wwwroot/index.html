@@ -387,6 +387,23 @@
             requestAnimationFrame(step);
         }
 
+        function getFilmGenreLabels(film) {
+            if (!film || typeof film !== 'object') return [];
+
+            if (Array.isArray(film.categorie) && film.categorie.length > 0) {
+                return film.categorie
+                    .map((c) => (typeof c === 'string' ? c : c?.nome || c?.name || ''))
+                    .map((v) => String(v || '').trim())
+                    .filter(Boolean);
+            }
+
+            const fallback = film.genere || film.genre || film.categoria || film.category || '';
+            return String(fallback)
+                .split(',')
+                .map((v) => v.trim())
+                .filter(Boolean);
+        }
+
         function renderFilmCards() {
             const carousel = document.getElementById('films-carousel');
             const emptyState = document.getElementById('films-empty');
@@ -404,6 +421,7 @@
             const featuredFilms = filmsData.slice(0, 6);
             featuredFilms.forEach((film, index) => {
                 const imageUrl = film.copertinaPath || 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=300&h=450&fit=crop';
+                const genreLabels = getFilmGenreLabels(film).slice(0, 2);
                 
                 const card = document.createElement('div');
                 card.className = 'film-card relative rounded-xl overflow-hidden bg-surface-container-low cursor-pointer group';
@@ -418,7 +436,7 @@
                             <h4 class="font-headline text-sm font-bold text-on-surface line-clamp-2">${escapeHtml(film.titolo)}</h4>
                             <p class="text-[10px] text-white/70 truncate">${escapeHtml(film.registaNome || '')}</p>
                             <div class="flex flex-wrap gap-1 mt-1">
-                                ${(film.categorie || []).slice(0, 2).map(c => `<span class="px-1 py-0.5 rounded bg-black/60 text-secondary text-[9px]">${escapeHtml(c.nome)}</span>`).join('')}
+                                ${genreLabels.map((label) => `<span class="px-1 py-0.5 rounded bg-black/60 text-secondary text-[9px]">${escapeHtml(label)}</span>`).join('')}
                             </div>
                         </div>
                         <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">

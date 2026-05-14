@@ -263,9 +263,19 @@
             document.getElementById('search-input').value = search;
         }
 
+        function getPrimaryGenre(rawGenre) {
+            const value = String(rawGenre || '').trim();
+            if (!value) return '';
+            return value
+                .split(/[,\|\/;]+/)
+                .map((g) => g.trim())
+                .filter(Boolean)[0] || '';
+        }
+
         function populateGenres() {
             const select = document.getElementById('genre-filter');
-            const genres = [...new Set(films.map(f => f.genere).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+            const genres = [...new Set(films.map(f => getPrimaryGenre(f.genere)).filter(Boolean))]
+                .sort((a, b) => a.localeCompare(b, 'it'));
             genres.forEach(g => {
                 const o = document.createElement('option');
                 o.value = g;
@@ -331,7 +341,7 @@
                     if (dr < now || dr > twoWeeks) return false;
                 }
 
-                if (genre && f.genere !== genre) return false;
+                if (genre && getPrimaryGenre(f.genere) !== genre) return false;
                 if (search && !((f.titolo || '').toLowerCase().includes(search))) return false;
                 return true;
             });

@@ -39,6 +39,12 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
     }
 
     public async Task InviaConfermaAcquistoAsync(string toEmail, string soggetto, string htmlBody, byte[]? allegatoPdf = null, string? nomeFile = null)
+        => await InviaEmailCoreAsync(toEmail, soggetto, htmlBody, allegatoPdf, nomeFile, strict: false);
+
+    public async Task InviaEmailStrictAsync(string toEmail, string soggetto, string htmlBody, byte[]? allegatoPdf = null, string? nomeFile = null)
+        => await InviaEmailCoreAsync(toEmail, soggetto, htmlBody, allegatoPdf, nomeFile, strict: true);
+
+    private async Task InviaEmailCoreAsync(string toEmail, string soggetto, string htmlBody, byte[]? allegatoPdf, string? nomeFile, bool strict)
     {
         var host = NormalizeSetting(Environment.GetEnvironmentVariable("SMTP_HOST")) ?? NormalizeSetting(configuration["SMTP:Host"]);
         var portRaw = NormalizeSetting(Environment.GetEnvironmentVariable("SMTP_PORT")) ?? NormalizeSetting(configuration["SMTP:Port"]);
@@ -56,12 +62,14 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
                 !string.IsNullOrWhiteSpace(user),
                 !string.IsNullOrWhiteSpace(pass),
                 !string.IsNullOrWhiteSpace(from));
+            if (strict) throw new InvalidOperationException("Configurazione SMTP mancante");
             return;
         }
 
         if (IsPlaceholder(host) || IsPlaceholder(user) || IsPlaceholder(pass) || IsPlaceholder(from))
         {
             logger.LogInformation("Configurazione SMTP placeholder rilevata: invio email saltato per {Email}", toEmail);
+            if (strict) throw new InvalidOperationException("Configurazione SMTP placeholder/non valida");
             return;
         }
 
@@ -76,6 +84,7 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
         if (!int.TryParse(portRaw, out var port))
         {
             logger.LogWarning("SMTP_PORT non valido: {Port}", portRaw);
+            if (strict) throw new InvalidOperationException("SMTP_PORT non valido");
             return;
         }
 
@@ -152,6 +161,7 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
         catch (Exception ex)
         {
             logger.LogError(ex, "Invio email fallito verso {Email}", toEmail);
+            if (strict) throw;
         }
     }
 }

@@ -109,7 +109,7 @@ public class SalaService(FilmDbContext context) : ISalaService
         {
             SalaId = salaId,
             NumeroFile = sala.NumeroFile,
-            File = file.Select(x => new PiantinaFilaDTO { Fila = x.fila, Posti = x.posti }).ToList()
+            File = file.Select(x => new PiantinaFilaDTO { Fila = x.fila, Posti = x.posti.Count }).ToList()
         };
     }
 
@@ -153,7 +153,7 @@ public class SalaService(FilmDbContext context) : ISalaService
         {
             try
             {
-                return BuildRows(numeroFile, postiPerFila, configurazione).Sum(x => x.posti);
+                return BuildRows(numeroFile, postiPerFila, configurazione).Sum(x => x.posti.Count);
             }
             catch
             {
@@ -163,26 +163,45 @@ public class SalaService(FilmDbContext context) : ISalaService
         return numeroFile * (postiPerFila ?? 10);
     }
 
-    private static List<(int fila, int posti)> BuildRows(int numeroFile, int? postiPerFila, string? configurazione)
+    private static List<(int fila, List<int> posti)> BuildRows(int numeroFile, int? postiPerFila, string? configurazione)
     {
         if (!string.IsNullOrWhiteSpace(configurazione))
         {
             using var doc = JsonDocument.Parse(configurazione);
             if (doc.RootElement.TryGetProperty("file", out var rows) && rows.ValueKind == JsonValueKind.Array)
             {
-                var result = new List<(int fila, int posti)>();
+                var result = new List<(int fila, List<int> posti)>();
                 foreach (var row in rows.EnumerateArray())
                 {
                     var fila = row.GetProperty("fila").GetInt32();
-                    var posti = row.GetProperty("posti").GetInt32();
-                    result.Add((fila, posti));
+                    var postiProp = row.GetProperty("posti");
+                    List<int> seats;
+                    if (postiProp.ValueKind == JsonValueKind.Array)
+                    {
+                        seats = postiProp.EnumerateArray()
+                            .Where(x => x.ValueKind == JsonValueKind.Number)
+                            .Select(x => x.GetInt32())
+                            .Where(x => x > 0)
+                            .Distinct()
+                            .OrderBy(x => x)
+                            .ToList();
+                    }
+                    else
+                    {
+                        var count = postiProp.GetInt32();
+                        seats = Enumerable.Range(1, Math.Max(0, count)).ToList();
+                    }
+
+                    if (seats.Count > 0) result.Add((fila, seats));
                 }
                 if (result.Count > 0) return result;
             }
         }
 
         var perFila = postiPerFila ?? 10;
-        return Enumerable.Range(1, numeroFile).Select(i => (i, perFila)).ToList();
+        return Enumerable.Range(1, numeroFile)
+            .Select(i => (i, Enumerable.Range(1, perFila).ToList()))
+            .ToList();
     }
 
     private static readonly Func<Sala, SalaDTO> ToDto = s => new SalaDTO

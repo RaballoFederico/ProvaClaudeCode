@@ -136,23 +136,15 @@
 
             try {
                 const res = await ApiClient.post('/admin/newsletter/campagne/invia', { oggetto: subject, htmlBody });
-                Utils.showNotification(`${res.message || 'Campagna inviata'} (${res.destinatari || 0} destinatari)`, 'success');
+                const sentCount = Number(res?.destinatari || 0);
+                if (sentCount <= 0) {
+                    Utils.showNotification('Nessun destinatario raggiunto: verifica iscrizioni newsletter e backend SMTP', 'error');
+                    return;
+                }
+                Utils.showNotification(`${res.message || 'Campagna inviata'} (${sentCount} destinatari)`, 'success');
                 event.target.reset();
                 await loadCampaigns();
             } catch (error) {
-                const msg = String(error?.message || '');
-                if (msg.includes('HTTP 500') || msg.includes('HTTP 503') || msg.includes('HTTP 404')) {
-                    saveLocalCampaign({
-                        id: `local_${Date.now()}`,
-                        oggetto: subject,
-                        dataInvio: new Date().toISOString(),
-                        destinatariCount: 0
-                    });
-                    Utils.showNotification('Campagna salvata localmente (backend non disponibile)', 'info');
-                    event.target.reset();
-                    await loadCampaigns();
-                    return;
-                }
                 Utils.showNotification(error.message || 'Errore invio campagna', 'error');
             }
         }

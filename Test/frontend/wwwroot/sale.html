@@ -56,15 +56,15 @@
     </div>
     <div id="footer-container"></div>
 
-    <div id="sale-modal" class="hidden fixed inset-0 bg-black/60 z-50 p-4">
-        <div class="max-w-2xl mx-auto bg-surface-container rounded-2xl p-5 border border-outline-variant/20 reveal-up">
+    <div id="sale-modal" class="hidden fixed inset-0 bg-black/60 z-50 p-4 overflow-y-auto">
+        <div class="max-w-2xl mx-auto bg-surface-container rounded-2xl p-5 border border-outline-variant/20 reveal-up max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between mb-4">
                 <h2 id="modal-title" class="font-headline text-xl font-bold">Nuova Sala</h2>
                 <button onclick="toggleModal(false)" class="p-2 rounded-lg hover:bg-surface-container-high"><span class="material-symbols-outlined">close</span></button>
             </div>
             <form id="sala-form" class="space-y-3">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input name="numeroSala" type="number" min="1" placeholder="Numero sala" class="bg-surface-container-high rounded-lg border-none" required />
+                    <input name="numeroSala" type="number" min="1" placeholder="Numero sala (automatico)" class="bg-surface-container-high rounded-lg border-none" required readonly />
                     <input name="nome" type="text" placeholder="Nome" class="bg-surface-container-high rounded-lg border-none" />
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -74,16 +74,21 @@
                         <option value="2">3D</option>
                         <option value="3">2D</option>
                     </select>
-                    <input name="numeroFile" type="number" min="1" placeholder="Numero file" class="bg-surface-container-high rounded-lg border-none" required />
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <input name="postiPerFila" type="number" min="1" placeholder="Posti per fila" class="bg-surface-container-high rounded-lg border-none" />
-                    <select name="manualMode" id="manual-mode" class="bg-surface-container-high rounded-lg border-none">
-                        <option value="auto">Configurazione automatica</option>
-                        <option value="manual">Configurazione manuale JSON</option>
-                    </select>
+                <input type="hidden" name="configurazionePosti" id="configurazione-posti" />
+                <div id="manual-config-panel" class="rounded-xl border border-outline-variant/20 bg-surface-container-high/40 p-3 space-y-3">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <input id="grid-rows" type="number" min="1" max="30" value="8" class="bg-surface-container-high rounded-lg border-none" placeholder="Numero file">
+                        <input id="grid-cols" type="number" min="1" max="40" value="12" class="bg-surface-container-high rounded-lg border-none" placeholder="Posti per fila (max)">
+                        <button type="button" id="apply-grid-size-btn" class="px-3 py-2 text-sm rounded-lg bg-surface-container-high hover-lift">Applica griglia</button>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button type="button" id="fill-grid-btn" class="px-3 py-1.5 text-xs rounded-lg bg-surface-container-high hover-lift">Attiva tutti i posti</button>
+                        <button type="button" id="clear-grid-btn" class="px-3 py-1.5 text-xs rounded-lg bg-surface-container-high hover-lift">Svuota griglia</button>
+                        <span class="text-xs text-on-surface-variant">Clicca sui posti per attivarli/disattivarli.</span>
+                    </div>
+                    <div id="seat-grid" class="overflow-auto rounded-lg border border-outline-variant/20 bg-surface-container-high/30 p-3"></div>
                 </div>
-                <textarea name="configurazionePosti" id="configurazione-posti" rows="6" placeholder='{"file":[{"fila":1,"posti":12}]}' class="hidden w-full bg-surface-container-high rounded-lg border-none"></textarea>
                 <div class="flex justify-end gap-2 pt-2">
                     <button type="button" onclick="toggleModal(false)" class="px-4 py-2 rounded-lg bg-surface-container-high">Annulla</button>
                     <button type="submit" class="px-4 py-2 rounded-lg bg-primary-container text-white">Salva</button>
@@ -103,6 +108,8 @@
         let cinemas = [];
         let currentCinemaId = null;
         let editingSalaId = null;
+        let manualSeatMatrix = [];
+        let saleRows = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();
@@ -120,12 +127,25 @@
                 editingSalaId = null;
                 document.getElementById('modal-title').textContent = 'Nuova Sala';
                 document.getElementById('sala-form').reset();
-                toggleJson(false);
+                initSeatMatrix(8, 12, false);
+                document.querySelector('#sala-form [name="numeroSala"]').value = getNextSalaNumber();
                 toggleModal(true);
             });
 
-            document.getElementById('manual-mode').addEventListener('change', e => {
-                toggleJson(e.target.value === 'manual');
+            document.getElementById('apply-grid-size-btn').addEventListener('click', () => {
+                const rows = parseInt(document.getElementById('grid-rows').value, 10) || 1;
+                const cols = parseInt(document.getElementById('grid-cols').value, 10) || 1;
+                initSeatMatrix(rows, cols, false);
+            });
+
+            document.getElementById('fill-grid-btn').addEventListener('click', () => {
+                fillSeatMatrix(true);
+                renderSeatGrid();
+            });
+
+            document.getElementById('clear-grid-btn').addEventListener('click', () => {
+                fillSeatMatrix(false);
+                renderSeatGrid();
             });
 
             document.getElementById('sala-form').addEventListener('submit', submitSala);
@@ -141,6 +161,7 @@
 
         async function loadSale() {
             const rows = await ApiClient.get(`/admin/cinemas/${currentCinemaId}/sale`);
+            saleRows = Array.isArray(rows) ? rows : [];
             const tb = document.getElementById('sale-tbody');
 
             if (!rows.length) {
@@ -163,24 +184,137 @@
             `).join('');
         }
 
+        function getNextSalaNumber() {
+            if (!Array.isArray(saleRows) || !saleRows.length) return 1;
+            const max = saleRows.reduce((acc, s) => Math.max(acc, parseInt(s?.numeroSala, 10) || 0), 0);
+            return max + 1;
+        }
+
         function toggleModal(show) {
             document.getElementById('sale-modal').classList.toggle('hidden', !show);
         }
 
-        function toggleJson(show) {
-            document.getElementById('configurazione-posti').classList.toggle('hidden', !show);
+        function initSeatMatrix(rows, cols, fillActive) {
+            const safeRows = Math.max(1, Math.min(30, rows || 1));
+            const safeCols = Math.max(1, Math.min(40, cols || 1));
+            manualSeatMatrix = Array.from({ length: safeRows }, () =>
+                Array.from({ length: safeCols }, () => !!fillActive)
+            );
+            document.getElementById('grid-rows').value = safeRows;
+            document.getElementById('grid-cols').value = safeCols;
+            renderSeatGrid();
+        }
+
+        function fillSeatMatrix(active) {
+            manualSeatMatrix = manualSeatMatrix.map((row) => row.map(() => !!active));
+        }
+
+        function renderSeatGrid() {
+            const grid = document.getElementById('seat-grid');
+            if (!grid) return;
+            if (!manualSeatMatrix.length) {
+                grid.innerHTML = '';
+                return;
+            }
+
+            const cols = manualSeatMatrix[0].length || 1;
+            grid.innerHTML = `
+                <div class="inline-grid gap-1.5" style="grid-template-columns: auto repeat(${cols}, minmax(24px, 24px));">
+                    ${manualSeatMatrix.map((row, rowIndex) => `
+                        <div class="pr-2 text-[10px] text-on-surface-variant flex items-center justify-end">F${rowIndex + 1}</div>
+                        ${row.map((isActive, colIndex) => `
+                            <button
+                                type="button"
+                                class="seat-cell w-6 h-6 rounded ${isActive ? 'bg-primary-container text-white' : 'bg-surface-container-high text-on-surface-variant'} text-[10px] border border-outline-variant/40 hover-lift"
+                                data-row="${rowIndex}"
+                                data-col="${colIndex}"
+                                title="Fila ${rowIndex + 1}, Posto ${colIndex + 1}">
+                                ${colIndex + 1}
+                            </button>
+                        `).join('')}
+                    `).join('')}
+                </div>
+            `;
+
+            grid.querySelectorAll('.seat-cell').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const row = parseInt(btn.dataset.row, 10);
+                    const col = parseInt(btn.dataset.col, 10);
+                    if (!Number.isFinite(row) || !Number.isFinite(col)) return;
+                    manualSeatMatrix[row][col] = !manualSeatMatrix[row][col];
+                    renderSeatGrid();
+                });
+            });
+        }
+
+        function collectManualConfig() {
+            const rows = manualSeatMatrix
+                .map((row, idx) => ({
+                    fila: idx + 1,
+                    posti: row
+                        .map((active, seatIndex) => (active ? seatIndex + 1 : null))
+                        .filter((x) => Number.isFinite(x))
+                }))
+                .filter((r) => r.posti.length > 0);
+
+            if (!rows.length) return null;
+            return JSON.stringify({ file: rows });
+        }
+
+        function loadManualConfig(configText) {
+            let parsedRows = [];
+            try {
+                const parsed = typeof configText === 'string' ? JSON.parse(configText) : configText;
+                parsedRows = Array.isArray(parsed?.file) ? parsed.file : [];
+            } catch {
+                parsedRows = [];
+            }
+
+            if (!parsedRows.length) {
+                initSeatMatrix(8, 12, false);
+                return;
+            }
+
+            const maxFila = Math.max(...parsedRows.map((r) => parseInt(r?.fila, 10) || 0), 1);
+            const maxPosti = Math.max(...parsedRows.map((r) => {
+                if (Array.isArray(r?.posti)) return r.posti.length ? Math.max(...r.posti.map((p) => parseInt(p, 10) || 0)) : 0;
+                return parseInt(r?.posti, 10) || 0;
+            }), 1);
+            initSeatMatrix(maxFila, maxPosti, false);
+
+            parsedRows.forEach((r) => {
+                const rowIndex = (parseInt(r?.fila, 10) || 1) - 1;
+                if (rowIndex < 0 || rowIndex >= manualSeatMatrix.length) return;
+                if (Array.isArray(r?.posti)) {
+                    r.posti.forEach((seat) => {
+                        const seatIndex = (parseInt(seat, 10) || 1) - 1;
+                        if (seatIndex >= 0 && seatIndex < maxPosti) manualSeatMatrix[rowIndex][seatIndex] = true;
+                    });
+                } else {
+                    const count = Math.max(0, Math.min(maxPosti, parseInt(r?.posti, 10) || 0));
+                    for (let i = 0; i < count; i += 1) manualSeatMatrix[rowIndex][i] = true;
+                }
+            });
+
+            renderSeatGrid();
         }
 
         async function submitSala(e) {
             e.preventDefault();
             const f = e.target;
+            const manualConfig = collectManualConfig();
+            if (!manualConfig) {
+                Utils.showNotification('Inserisci almeno una fila valida (fila + posti)', 'error');
+                return;
+            }
+
             const payload = {
                 numeroSala: parseInt(f.numeroSala.value),
                 nome: f.nome.value || null,
                 tipologia: parseInt(f.tipologia.value),
-                numeroFile: parseInt(f.numeroFile.value),
-                postiPerFila: f.postiPerFila.value ? parseInt(f.postiPerFila.value) : null,
-                configurazionePosti: f.configurazionePosti.value || null
+                numeroFile: manualSeatMatrix.length,
+                postiPerFila: null,
+                configurazionePosti: manualConfig
             };
 
             if (editingSalaId) {
@@ -207,12 +341,13 @@
             f.numeroSala.value = sala.numeroSala;
             f.nome.value = sala.nome || '';
             f.tipologia.value = tipologiaToValue(sala.tipologia);
-            f.numeroFile.value = sala.numeroFile;
-            f.postiPerFila.value = sala.postiPerFila || '';
             f.configurazionePosti.value = sala.configurazionePosti || '';
-            const manual = !!sala.configurazionePosti;
-            document.getElementById('manual-mode').value = manual ? 'manual' : 'auto';
-            toggleJson(manual);
+            loadManualConfig(sala.configurazionePosti || JSON.stringify({
+                file: Array.from({ length: sala.numeroFile || 8 }, (_, i) => ({
+                    fila: i + 1,
+                    posti: Array.from({ length: sala.postiPerFila || 10 }, (__ , p) => p + 1)
+                }))
+            }));
         }
 
         async function deleteSala(id) {
