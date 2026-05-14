@@ -354,6 +354,23 @@ if (!isTesting)
         // causando HTTP 500 sul login quando EF prova a selezionarla.
         await db.Database.ExecuteSqlRawAsync(
             "ALTER TABLE `utenti` ADD COLUMN IF NOT EXISTS `ConsensoNewsletter` TINYINT(1) NOT NULL DEFAULT 0;");
+        // Hotfix compatibilita schema newsletter:
+        // la migration AddSubscriptionsAndNewsletter risulta vuota in alcuni ambienti
+        // e puo lasciare assente la tabella newsletter_campagne (HTTP 500 su storico campagne).
+        await db.Database.ExecuteSqlRawAsync(
+            @"CREATE TABLE IF NOT EXISTS `newsletter_campagne` (
+                `Id` INT NOT NULL AUTO_INCREMENT,
+                `Oggetto` VARCHAR(160) NOT NULL,
+                `HtmlBody` LONGTEXT NOT NULL,
+                `CreatoDaUtenteId` INT NOT NULL,
+                `DataInvio` DATETIME(6) NOT NULL,
+                `DestinatariCount` INT NOT NULL,
+                CONSTRAINT `PK_newsletter_campagne` PRIMARY KEY (`Id`),
+                INDEX `IX_newsletter_campagne_DataInvio` (`DataInvio`),
+                INDEX `IX_newsletter_campagne_CreatoDaUtenteId` (`CreatoDaUtenteId`),
+                CONSTRAINT `FK_newsletter_campagne_utenti_CreatoDaUtenteId`
+                    FOREIGN KEY (`CreatoDaUtenteId`) REFERENCES `utenti` (`Id`) ON DELETE RESTRICT
+            );");
         await DbInitializer.InitializeAsync(db);
     }
 }

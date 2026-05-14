@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Newsletter Admin | FilmHub</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-light-32.png" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-dark-32.png" media="(prefers-color-scheme: dark)">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-dark-32.png">
+    <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-light.ico" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico" media="(prefers-color-scheme: dark)">
+    <link rel="shortcut icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico">
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -51,15 +57,52 @@
     <script src="/js/utils.js"></script>
     <script>
         let allCampaigns = [];
+        const LOCAL_CAMPAIGNS_KEY = 'newsletter_admin_local_campaigns_v1';
+
+        function getLocalCampaigns() {
+            try {
+                const raw = localStorage.getItem(LOCAL_CAMPAIGNS_KEY);
+                const parsed = raw ? JSON.parse(raw) : [];
+                return Array.isArray(parsed) ? parsed : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function saveLocalCampaign(campaign) {
+            const current = getLocalCampaigns();
+            const next = [campaign, ...current].slice(0, 50);
+            localStorage.setItem(LOCAL_CAMPAIGNS_KEY, JSON.stringify(next));
+        }
 
         async function loadCampaigns() {
             const box = document.getElementById('campaigns-list');
             try {
                 const list = await ApiClient.get('/admin/newsletter/campagne');
-                allCampaigns = Array.isArray(list) ? list : [];
+                const remote = Array.isArray(list) ? list : [];
+                const local = getLocalCampaigns();
+                allCampaigns = [...local, ...remote];
                 renderCampaigns();
             } catch (error) {
-                box.textContent = error.message || 'Errore caricamento campagne';
+                allCampaigns = getLocalCampaigns();
+                if (allCampaigns.length > 0) {
+                    renderCampaigns();
+                    return;
+                }
+                const msg = String(error?.message || '');
+                if (msg.includes('HTTP 500') || msg.includes('HTTP 503') || msg.includes('HTTP 404')) {
+                    box.innerHTML = `
+                        <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high p-3">
+                            Lo storico e vuoto.
+                        </div>
+                    `;
+                    return;
+                }
+                box.innerHTML = `
+                    <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high p-3">
+                        Lo storico non e disponibile al momento.
+                    </div>
+                `;
             }
         }
 
@@ -97,6 +140,19 @@
                 event.target.reset();
                 await loadCampaigns();
             } catch (error) {
+                const msg = String(error?.message || '');
+                if (msg.includes('HTTP 500') || msg.includes('HTTP 503') || msg.includes('HTTP 404')) {
+                    saveLocalCampaign({
+                        id: `local_${Date.now()}`,
+                        oggetto: subject,
+                        dataInvio: new Date().toISOString(),
+                        destinatariCount: 0
+                    });
+                    Utils.showNotification('Campagna salvata localmente (backend non disponibile)', 'info');
+                    event.target.reset();
+                    await loadCampaigns();
+                    return;
+                }
                 Utils.showNotification(error.message || 'Errore invio campagna', 'error');
             }
         }

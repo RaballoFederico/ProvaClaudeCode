@@ -1033,8 +1033,8 @@ tbody tr:hover {
     inset: auto -4% -45% -4%;
     height: 220px;
     pointer-events: none;
-    background: radial-gradient(circle at 30% 20%, color-mix(in srgb, var(--primary) 22%, transparent), transparent 46%),
-                radial-gradient(circle at 72% 10%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 42%);
+    background: radial-gradient(circle at 26% 24%, color-mix(in srgb, var(--accent) 24%, transparent), transparent 48%),
+                radial-gradient(circle at 74% 14%, color-mix(in srgb, #7da0c4 18%, transparent), transparent 44%);
 }
 
 .footer-newsletter {

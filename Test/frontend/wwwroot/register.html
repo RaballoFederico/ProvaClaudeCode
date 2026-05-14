@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registrazione - FilmAPI</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-light-32.png" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-dark-32.png" media="(prefers-color-scheme: dark)">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-dark-32.png">
+    <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-light.ico" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico" media="(prefers-color-scheme: dark)">
+    <link rel="shortcut icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -34,6 +40,42 @@
     </script>
 </head>
 <body class="auth-page bg-background">
+    <style>
+        .newsletter-checkbox {
+            width: 1.25rem;
+            height: 1.25rem;
+            appearance: none;
+            -webkit-appearance: none;
+            border: 2px solid #5f6b85;
+            border-radius: 0.35rem;
+            background-color: transparent;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.16s ease;
+        }
+
+        .newsletter-checkbox:checked {
+            border-color: #e97b7b;
+        }
+
+        .newsletter-checkbox:checked::before {
+            content: "✓";
+            position: absolute;
+            inset: 0;
+            display: grid;
+            place-items: center;
+            color: #ffffff;
+            font-size: 0.8rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .newsletter-checkbox:focus,
+        .newsletter-checkbox:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(95, 107, 133, 0.35);
+        }
+    </style>
     <button onclick="Theme.toggle()" class="fixed top-4 right-4 p-2.5 rounded-full bg-surface-container-high text-on-surface-variant border border-outline-variant/20 z-30">
         <span id="theme-toggle-icon" data-theme-toggle-icon class="material-symbols-outlined">light_mode</span>
     </button>
@@ -214,7 +256,7 @@
                             type="checkbox"
                             id="consenso-newsletter"
                             name="consenso-newsletter"
-                            class="mt-1 h-4 w-4 rounded border-outline-variant/40 bg-surface-container-high text-primary-container focus:ring-primary-container"
+                            class="newsletter-checkbox mt-0.5"
                         >
                         <span class="text-sm text-on-surface-variant">
                             Voglio iscrivermi alla newsletter per ricevere novita' e promozioni.

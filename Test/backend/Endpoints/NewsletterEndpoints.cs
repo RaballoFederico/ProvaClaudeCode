@@ -60,21 +60,30 @@ public static class NewsletterEndpoints
             return Results.Ok(new { message = request.Consenso ? "Iscrizione newsletter attivata" : "Iscrizione newsletter disattivata" });
         });
 
-        adminGroup.MapGet("/campagne", async (FilmDbContext db) =>
+        adminGroup.MapGet("/campagne", async (FilmDbContext db, ILoggerFactory loggerFactory) =>
         {
-            var list = await db.NewsletterCampagne
-                .OrderByDescending(c => c.DataInvio)
-                .Take(50)
-                .Select(c => new
-                {
-                    c.Id,
-                    c.Oggetto,
-                    c.DataInvio,
-                    c.DestinatariCount,
-                    c.CreatoDaUtenteId
-                })
-                .ToListAsync();
-            return Results.Ok(list);
+            var logger = loggerFactory.CreateLogger("NewsletterEndpoints");
+            try
+            {
+                var list = await db.NewsletterCampagne
+                    .OrderByDescending(c => c.DataInvio)
+                    .Take(50)
+                    .Select(c => new
+                    {
+                        c.Id,
+                        c.Oggetto,
+                        c.DataInvio,
+                        c.DestinatariCount,
+                        c.CreatoDaUtenteId
+                    })
+                    .ToListAsync();
+                return Results.Ok(list);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Errore caricamento storico campagne newsletter");
+                return Results.Problem("Storico campagne temporaneamente non disponibile", statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
         });
 
         adminGroup.MapPost("/campagne/invia", async (HttpContext context, NewsletterCampagnaRequestDTO request, FilmDbContext db, IEmailService emailService) =>
