@@ -4,7 +4,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowBackendApi", policy =>
     {
-        policy.WithOrigins("http://localhost:5000")
+        policy.WithOrigins("https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io")
               .AllowAnyMethod()
               .AllowAnyHeader();
     });

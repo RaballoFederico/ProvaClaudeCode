@@ -449,17 +449,59 @@ public class ExternalAuthService : IExternalAuthService
             return null;
         }
 
-        var allowed = _configuration.GetSection("ExternalAuth:AllowedReturnUrls").Get<string[]>() ?? Array.Empty<string>();
-        if (allowed.Length == 0)
+        if (!Uri.TryCreate(candidate, UriKind.Absolute, out var candidateUri))
         {
-            return candidate;
+            return null;
         }
 
-        foreach (var allowedPrefix in allowed)
+        var normalizedCandidate = candidateUri.ToString();
+
+        var allowed = new List<string>();
+        allowed.AddRange(_configuration.GetSection("ExternalAuth:AllowedReturnUrls").Get<string[]>() ?? Array.Empty<string>());
+
+        var envAllowed = Environment.GetEnvironmentVariable("EXTERNAL_AUTH_ALLOWED_RETURN_URLS");
+        if (!string.IsNullOrWhiteSpace(envAllowed))
         {
-            if (!string.IsNullOrWhiteSpace(allowedPrefix) && candidate.StartsWith(allowedPrefix, StringComparison.OrdinalIgnoreCase))
+            allowed.AddRange(envAllowed.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+        }
+
+        var frontendBase = Environment.GetEnvironmentVariable("EXTERNAL_AUTH_FRONTEND_BASE_URL");
+        if (!string.IsNullOrWhiteSpace(frontendBase))
+        {
+            var trimmed = frontendBase.TrimEnd('/');
+            allowed.Add(trimmed);
+            allowed.Add($"{trimmed}/login.html");
+        }
+
+        var normalizedAllowed = allowed
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Select(s => s.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (normalizedAllowed.Length == 0)
+        {
+            return normalizedCandidate;
+        }
+
+        foreach (var entry in normalizedAllowed)
+        {
+            if (Uri.TryCreate(entry, UriKind.Absolute, out var allowedUri))
             {
-                return candidate;
+                var sameOrigin = string.Equals(
+                    allowedUri.GetLeftPart(UriPartial.Authority).TrimEnd('/'),
+                    candidateUri.GetLeftPart(UriPartial.Authority).TrimEnd('/'),
+                    StringComparison.OrdinalIgnoreCase);
+
+                if (sameOrigin)
+                {
+                    return normalizedCandidate;
+                }
+            }
+
+            if (normalizedCandidate.StartsWith(entry, StringComparison.OrdinalIgnoreCase))
+            {
+                return normalizedCandidate;
             }
         }
 

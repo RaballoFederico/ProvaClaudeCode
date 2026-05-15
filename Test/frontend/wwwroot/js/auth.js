@@ -1,6 +1,8 @@
 const ApiConfigAdapter = window.ApiConfig || {
     getCandidates() {
-        return ['http://localhost:5001', 'http://127.0.0.1:5001', 'https://localhost:7217'];
+        return [
+            'https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io'
+        ];
     },
     persistBaseUrl(value) {
         if (!value) return;

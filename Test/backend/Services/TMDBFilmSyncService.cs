@@ -62,6 +62,7 @@ public class TMDBFilmSyncService : BackgroundService
         try
         {
             await SyncPopularMoviesAsync(stoppingToken);
+            await BackfillLocalMoviesAsync(stoppingToken);
         }
         catch (Exception ex)
         {
@@ -261,6 +262,95 @@ public class TMDBFilmSyncService : BackgroundService
 
         await context.SaveChangesAsync(stoppingToken);
         _logger.LogInformation("Sincronizzazione TMDB completata: {Imported} importati, {Updated} aggiornati", importedCount, updatedCount);
+    }
+
+    private async Task BackfillLocalMoviesAsync(CancellationToken stoppingToken)
+    {
+        using var scope = _scopeFactory.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<FilmDbContext>();
+        var tmdbService = scope.ServiceProvider.GetRequiredService<ITMDBService>();
+
+        var candidates = await context.Films
+            .Where(f =>
+                !f.TmdbId.HasValue ||
+                string.IsNullOrWhiteSpace(f.CopertinaPath) ||
+                f.CopertinaPath!.StartsWith("/media/") ||
+                f.CopertinaPath.StartsWith("media/"))
+            .ToListAsync(stoppingToken);
+
+        var films = candidates
+            .Where(f =>
+                !f.TmdbId.HasValue ||
+                string.IsNullOrWhiteSpace(f.CopertinaPath) ||
+                f.CopertinaPath.StartsWith("/media/", StringComparison.OrdinalIgnoreCase) ||
+                f.CopertinaPath.StartsWith("media/", StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        _logger.LogInformation("Backfill TMDB avviato: {Count} film candidati", films.Count);
+
+        if (films.Count == 0)
+        {
+            _logger.LogInformation("Backfill TMDB: nessun film da aggiornare");
+            return;
+        }
+
+        var updated = 0;
+        foreach (var film in films)
+        {
+            if (stoppingToken.IsCancellationRequested) break;
+
+            var searchJson = await tmdbService.SearchMovieAsync(film.Titolo);
+            if (string.IsNullOrWhiteSpace(searchJson)) continue;
+
+            using var searchDoc = JsonDocument.Parse(searchJson);
+            if (!searchDoc.RootElement.TryGetProperty("results", out var results)) continue;
+
+            var targetYear = film.DataProduzione.Year;
+            var best = results.EnumerateArray()
+                .Select(r => new
+                {
+                    Id = r.TryGetProperty("id", out var idEl) && idEl.TryGetInt32(out var id) ? id : 0,
+                    Title = r.TryGetProperty("title", out var tEl) ? tEl.GetString() : null,
+                    PosterPath = r.TryGetProperty("poster_path", out var pEl) ? pEl.GetString() : null,
+                    Year = r.TryGetProperty("release_date", out var dEl) && DateTime.TryParse(dEl.GetString(), out var d)
+                        ? d.Year
+                        : 0
+                })
+                .Where(x => x.Id > 0 && !string.IsNullOrWhiteSpace(x.Title))
+                .OrderBy(x =>
+                {
+                    if (targetYear <= 1900 || x.Year == 0) return int.MaxValue;
+                    return Math.Abs(x.Year - targetYear);
+                })
+                .ThenByDescending(x => string.Equals(x.Title!.Trim(), film.Titolo.Trim(), StringComparison.OrdinalIgnoreCase))
+                .FirstOrDefault();
+
+            if (best is null) continue;
+
+            var changed = false;
+            if (!film.TmdbId.HasValue || film.TmdbId.Value != best.Id)
+            {
+                film.TmdbId = best.Id;
+                changed = true;
+            }
+
+            var posterUrl = tmdbService.GetPosterUrl(best.PosterPath);
+            if (!string.IsNullOrWhiteSpace(posterUrl) &&
+                !string.Equals(film.CopertinaPath, posterUrl, StringComparison.Ordinal))
+            {
+                film.CopertinaPath = posterUrl;
+                changed = true;
+            }
+
+            if (changed) updated++;
+        }
+
+        if (updated > 0)
+        {
+            await context.SaveChangesAsync(stoppingToken);
+        }
+
+        _logger.LogInformation("Backfill TMDB completato: {Updated} film aggiornati", updated);
     }
 
     private static async Task<Regista> GetOrCreateRegistaAsync(FilmDbContext context, string? fullName, string? nazionalita, CancellationToken stoppingToken)

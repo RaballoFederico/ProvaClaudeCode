@@ -449,6 +449,6 @@ public static class AdminEndpoints
             return $"{parsed.Scheme}://{parsed.Authority}";
         }
 
-        return "http://localhost:5002";
+        return "https://filmhub-frontend.delightfuldune-f7916078.francecentral.azurecontainerapps.io";
     }
 }

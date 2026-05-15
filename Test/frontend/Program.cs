@@ -2,6 +2,22 @@ var builder = WebApplication.CreateBuilder(args);
 
 var app = builder.Build();
 
+var apiBaseUrl =
+    Environment.GetEnvironmentVariable("EXTERNAL_AUTH_BACKEND_BASE_URL")
+    ?? "https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io";
+apiBaseUrl = apiBaseUrl.TrimEnd('/');
+
+app.MapGet("/media/{*assetPath}", (string assetPath) =>
+{
+    if (string.IsNullOrWhiteSpace(assetPath))
+    {
+        return Results.NotFound();
+    }
+
+    var target = $"{apiBaseUrl}/media/{assetPath.TrimStart('/')}";
+    return Results.Redirect(target, permanent: false);
+});
+
 app.UseDefaultFiles();
 app.UseStaticFiles(new StaticFileOptions
 {

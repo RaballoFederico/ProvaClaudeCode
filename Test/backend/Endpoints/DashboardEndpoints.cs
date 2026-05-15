@@ -8,7 +8,7 @@ public static class DashboardEndpoints
 {
     public static IEndpointRouteBuilder MapDashboardEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/dashboard/overview", async (FilmDbContext db, IMemoryCache cache) =>
+        app.MapGet("/dashboard/overview", async (FilmDbContext db, IMemoryCache cache, HttpContext httpContext) =>
         {
             const string cacheKey = "dashboard:overview:v1";
             if (cache.TryGetValue(cacheKey, out object? cached) && cached is not null)
@@ -56,6 +56,20 @@ public static class DashboardEndpoints
                 })
                 .ToListAsync();
 
+            var normalizedFeaturedFilms = featuredFilms.Select(f => new
+            {
+                f.Id,
+                f.Titolo,
+                f.RegistaId,
+                f.RegistaNome,
+                f.Durata,
+                CopertinaPath = NormalizeMediaUrl(f.CopertinaPath, httpContext),
+                f.Featured,
+                f.DataRilascio,
+                f.Genere,
+                f.Categorie
+            }).ToList();
+
             var upcomingProjections = await db.Proiezioni
                 .AsNoTracking()
                 .Where(p =>
@@ -87,7 +101,7 @@ public static class DashboardEndpoints
                     cinemas = cinemasCount,
                     proiezioni = proiezioniCount
                 },
-                featuredFilms,
+                featuredFilms = normalizedFeaturedFilms,
                 upcomingProjections
             };
 
@@ -106,5 +120,24 @@ public static class DashboardEndpoints
         });
 
         return app;
+    }
+
+    private static string NormalizeMediaUrl(string? path, HttpContext httpContext)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return path ?? string.Empty;
+        }
+
+        if (Uri.TryCreate(path, UriKind.Absolute, out _))
+        {
+            return path;
+        }
+
+        var backendBaseUrl =
+            Environment.GetEnvironmentVariable("EXTERNAL_AUTH_BACKEND_BASE_URL") ??
+            $"{httpContext.Request.Scheme}://{httpContext.Request.Host.Value}";
+
+        return $"{backendBaseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
     }
 }

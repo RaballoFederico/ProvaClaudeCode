@@ -4,7 +4,7 @@ const ApiClient = {
     baseUrl: window.localStorage.getItem('apiBaseUrl') || AZURE_API_BASE_URL,
 
     getFallbackBaseUrls() {
-        const fallbacks = [AZURE_API_BASE_URL, 'http://localhost:5000', 'https://localhost:7217'];
+        const fallbacks = [AZURE_API_BASE_URL];
         return [this.baseUrl, ...fallbacks.filter(url => url !== this.baseUrl)];
     },
 

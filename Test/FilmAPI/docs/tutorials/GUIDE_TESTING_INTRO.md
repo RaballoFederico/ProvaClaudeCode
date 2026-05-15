@@ -481,8 +481,8 @@ builder.ConfigureServices(services =>
     services.AddDbContext<FilmDbContext>(options =>
     {
         options.UseMySql(
-            "Server=localhost;Database=FilmAPITest;User=root;Password=...",
-            ServerVersion.AutoDetect("Server=localhost")
+            "Server=filmhub-db.internal.delightfuldune-f7916078.francecentral.azurecontainerapps.io;Database=FilmAPITest;User=root;Password=...",
+            ServerVersion.AutoDetect("Server=filmhub-db.internal.delightfuldune-f7916078.francecentral.azurecontainerapps.io")
         );
     });
 });
@@ -804,3 +804,4 @@ L'introduzione del layer servizi con dependency injection ha migliorato signific
 **Documento creato il:** 16 Marzo 2026
 **Versione:** 1.0
 **Progetto:** FilmAPI - Guida Introduttiva al Testing
+

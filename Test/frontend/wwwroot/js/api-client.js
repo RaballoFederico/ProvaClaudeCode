@@ -6,7 +6,9 @@ window.__apiClientInitialized = true;
 
 const ApiConfigAdapter = window.ApiConfig || {
     getCandidates() {
-        return ['http://localhost:5001', 'http://127.0.0.1:5001', 'https://localhost:7217'];
+        return [
+            'https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io'
+        ];
     },
     persistBaseUrl(value) {
         if (!value) return;
@@ -106,6 +108,85 @@ const ApiClient = {
         }
     },
 
+    absolutizeMediaUrl(value, baseUrl) {
+        if (!value || typeof value !== 'string') return value;
+        if (/^https?:\/\//i.test(value)) return value;
+        const normalizedValue = value.startsWith('/') ? value : `/${value}`;
+        if (!/^\/media\//i.test(normalizedValue)) return value;
+        return `${String(baseUrl || this.baseUrl).replace(/\/+$/, '')}${normalizedValue}`;
+    },
+
+    normalizeMediaUrls(payload, baseUrl) {
+        if (!payload) return payload;
+        if (Array.isArray(payload)) {
+            return payload.map(item => this.normalizeMediaUrls(item, baseUrl));
+        }
+        if (typeof payload !== 'object') return payload;
+
+        const out = { ...payload };
+        for (const key of Object.keys(out)) {
+            const value = out[key];
+            if (value && typeof value === 'object') {
+                out[key] = this.normalizeMediaUrls(value, baseUrl);
+                continue;
+            }
+
+            const normalizedKey = key.toLowerCase();
+            const isMediaField =
+                normalizedKey === 'copertinapath' ||
+                normalizedKey === 'imageurl' ||
+                normalizedKey === 'profile';
+            if (isMediaField) {
+                out[key] = this.absolutizeMediaUrl(value, baseUrl);
+            }
+        }
+        return out;
+    },
+
+    normalizeImageElementSrc(img, baseUrl) {
+        if (!img) return;
+        const rawSrc = img.getAttribute('src');
+        if (!rawSrc) return;
+        const normalized = this.absolutizeMediaUrl(rawSrc, baseUrl);
+        if (normalized && normalized !== rawSrc) {
+            img.setAttribute('src', normalized);
+        }
+    },
+
+    normalizeMediaImagesInDom(baseUrl) {
+        if (typeof document === 'undefined') return;
+        document.querySelectorAll('img[src]').forEach((img) => this.normalizeImageElementSrc(img, baseUrl));
+    },
+
+    installDomMediaNormalizer() {
+        if (typeof document === 'undefined') return;
+        this.normalizeMediaImagesInDom(this.baseUrl);
+
+        const observer = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.type === 'attributes' && mutation.target instanceof HTMLImageElement) {
+                    this.normalizeImageElementSrc(mutation.target, this.baseUrl);
+                    continue;
+                }
+
+                mutation.addedNodes.forEach((node) => {
+                    if (!(node instanceof Element)) return;
+                    if (node instanceof HTMLImageElement) {
+                        this.normalizeImageElementSrc(node, this.baseUrl);
+                    }
+                    node.querySelectorAll?.('img[src]').forEach((img) => this.normalizeImageElementSrc(img, this.baseUrl));
+                });
+            }
+        });
+
+        observer.observe(document.documentElement, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['src']
+        });
+    },
+
     async request(endpoint, options = {}) {
         const auth = typeof window !== 'undefined' ? window.Auth : undefined;
         const method = String(options.method || 'GET').toUpperCase();
@@ -155,7 +236,7 @@ const ApiClient = {
                             this.request(endpoint, { ...requestOptions, method, bypassCache: true }).catch(() => {});
                         }, 0);
                     }
-                    return cached.data;
+                    return this.normalizeMediaUrls(cached.data, this.baseUrl);
                 }
             }
         }
@@ -223,6 +304,7 @@ const ApiClient = {
             const contentType = response.headers.get('content-type') || '';
             if (contentType.includes('application/json')) {
                 data = await response.json();
+                data = this.normalizeMediaUrls(data, activeBaseUrl);
             }
 
             if (!response.ok) {
@@ -264,5 +346,6 @@ const ApiClient = {
 
 window.ApiClient = ApiClient;
 window.APIClient = ApiClient;
+ApiClient.installDomMediaNormalizer();
 window.dispatchEvent(new CustomEvent('apiclient:ready'));
 })();

@@ -668,20 +668,20 @@ AUTH_EXTERNAL_EXCHANGE_TTL_MINUTES=2
 # Google OIDC
 GOOGLE_OAUTH_CLIENT_ID=<google_client_id>
 GOOGLE_OAUTH_CLIENT_SECRET=<google_client_secret>
-GOOGLE_OAUTH_REDIRECT_URI=http://localhost:5000/auth/external/google/callback
+GOOGLE_OAUTH_REDIRECT_URI=https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io/auth/external/google/callback
 GOOGLE_REQUIRE_EMAIL_VERIFIED=true
 
 # Microsoft OIDC / Entra ID
 MICROSOFT_OAUTH_CLIENT_ID=<microsoft_client_id>
 MICROSOFT_OAUTH_CLIENT_SECRET=<microsoft_client_secret>
-MICROSOFT_OAUTH_REDIRECT_URI=http://localhost:5000/auth/external/microsoft/callback
+MICROSOFT_OAUTH_REDIRECT_URI=https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io/auth/external/microsoft/callback
 MICROSOFT_AUTHORITY=common
 MICROSOFT_ACCEPT_PERSONAL_ACCOUNTS=true
 MICROSOFT_ACCEPT_WORK_SCHOOL_ACCOUNTS=true
 MICROSOFT_REQUIRE_EMAIL_CLAIM=true
 
 # Frontend URL already present but now required for reset/social links
-FRONTEND_BASE_URL=http://localhost:5001
+FRONTEND_BASE_URL=https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io
 ```
 
 Note configurazione Microsoft:
@@ -1663,3 +1663,4 @@ Segui rigorosamente le fasi:
 
 Non consentire mai autoregistrazione come PowerUser/Admin. Non consentire social login per PowerUser/Admin. Non salvare token temporanei in chiaro. Non lasciare redirect non validati. Non considerare completata la fase finché build backend/frontend/seeder e suite backend non sono verdi, oppure finché ogni verifica non eseguita è dichiarata esplicitamente con motivazione.
 ```
+

@@ -69,7 +69,7 @@ wwwroot/
 
 ### 2.2 appsettings.json
 Configurare:
-- `BackendApiUrl`: URL del backend API (es. `http://localhost:5000`)
+- `BackendApiUrl`: URL del backend API (es. `https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io`)
 - `FrontendPort`: porta del server frontend (es. `5001`)
 
 ### 2.3 CORS Policy
@@ -414,7 +414,7 @@ Footer
 ### 5.1 api-client.js
 ```javascript
 const ApiClient = {
-    baseUrl: 'http://localhost:5000',
+    baseUrl: 'https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io',
     
     async get(endpoint) {
         const response = await fetch(`${this.baseUrl}${endpoint}`);
@@ -673,7 +673,7 @@ Ogni file contiene:
 ### 10.1 Variabili Ambiente
 Creare file `.env` nel progetto Frontend:
 ```
-BACKEND_API_URL=http://localhost:5000
+BACKEND_API_URL=https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io
 FRONTEND_PORT=5001
 ```
 
@@ -685,7 +685,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5001")
+        policy.WithOrigins("https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io")
               .AllowAnyMethod()
               .AllowAnyHeader()
               .AllowCredentials();

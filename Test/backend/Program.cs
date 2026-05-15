@@ -28,7 +28,7 @@ var isTesting = builder.Environment.IsEnvironment("Testing") ||
 
 if (!isTesting)
 {
-    var dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
+    var dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "filmhub-db.internal.delightfuldune-f7916078.francecentral.azurecontainerapps.io";
     var dbPort = Environment.GetEnvironmentVariable("DB_PORT") ?? "3306";
     var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "filmapi_db";
     var dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? "root";
@@ -192,9 +192,8 @@ builder.Services.AddCors(options =>
                 return false;
             }
 
-            return (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps)
-                && (uri.Host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
-                    || uri.Host.Equals("127.0.0.1"));
+            return uri.Scheme == Uri.UriSchemeHttps
+                && uri.Host.Contains("azurecontainerapps.io", StringComparison.OrdinalIgnoreCase);
         })
             .AllowAnyMethod()
             .AllowAnyHeader()
@@ -511,9 +510,8 @@ static string BuildConnectSrcDirective(IWebHostEnvironment environment)
 
     if (!environment.IsProduction())
     {
-        origins.Add("http://localhost:5001");
-        origins.Add("http://127.0.0.1:5001");
-        origins.Add("https://localhost:7217");
+        origins.Add("https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io");
+        origins.Add("https://filmhub-frontend.delightfuldune-f7916078.francecentral.azurecontainerapps.io");
     }
 
     return string.Join(' ', origins);

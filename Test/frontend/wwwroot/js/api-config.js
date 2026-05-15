@@ -1,9 +1,9 @@
 (function () {
     let clientReadyPromise = null;
+    const AZURE_API_BASE_URL = 'https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io';
 
     function getFallbackBaseUrl() {
-        const currentHost = (window.location.hostname || '').toLowerCase();
-        return currentHost === '127.0.0.1' ? 'http://127.0.0.1:5001' : 'http://localhost:5001';
+        return AZURE_API_BASE_URL;
     }
 
     function createInPlaceFallbackClient() {
@@ -151,12 +151,7 @@
     }
 
     function getDefaults() {
-        const currentHost = (window.location.hostname || '').toLowerCase();
-        if (currentHost === '127.0.0.1') {
-            return ['http://127.0.0.1:5001', 'https://127.0.0.1:7217'];
-        }
-
-        return ['http://localhost:5001', 'https://localhost:7217'];
+        return [AZURE_API_BASE_URL];
     }
 
     function uniq(urls) {
@@ -179,12 +174,13 @@
     function isAcceptedLocalOrigin(origin) {
         try {
             const parsed = new URL(origin);
-            const isLocal = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
-            if (!isLocal) {
-                return true;
+            if (parsed.protocol !== 'https:') {
+                return false;
             }
-
-            return parsed.port === '5001' || parsed.port === '7217';
+            if (parsed.hostname.includes('filmhub-frontend')) {
+                return false;
+            }
+            return true;
         } catch {
             return false;
         }
@@ -195,12 +191,13 @@
         if (!normalized || !isAcceptedLocalOrigin(normalized)) {
             return null;
         }
-
-        const currentHost = (window.location.hostname || '').toLowerCase();
-        if (currentHost === 'localhost' && normalized.includes('127.0.0.1')) {
-            return null;
-        }
-        if (currentHost === '127.0.0.1' && normalized.includes('localhost')) {
+        try {
+            const parsed = new URL(normalized);
+            const currentHost = (window.location.hostname || '').toLowerCase();
+            if (parsed.hostname.toLowerCase() === currentHost) {
+                return null;
+            }
+        } catch {
             return null;
         }
 

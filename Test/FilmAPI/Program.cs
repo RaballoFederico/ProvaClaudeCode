@@ -17,7 +17,7 @@ var isTesting = builder.Environment.IsEnvironment("Testing") ||
 
 if (!isTesting)
 {
-    var dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "localhost";
+var dbHost = Environment.GetEnvironmentVariable("DB_HOST") ?? "filmhub-db.internal.delightfuldune-f7916078.francecentral.azurecontainerapps.io";
     var dbPort = Environment.GetEnvironmentVariable("DB_PORT") ?? "3306";
     var dbName = Environment.GetEnvironmentVariable("DB_NAME") ?? "filmapi_db";
     var dbUser = Environment.GetEnvironmentVariable("DB_USER") ?? "root";
@@ -68,9 +68,9 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowFrontend", policy =>
     {
         policy.WithOrigins(
-                "http://localhost:5001",
-                "http://localhost:5285",
-                "https://localhost:7217")
+    "https://filmhub-frontend.delightfuldune-f7916078.francecentral.azurecontainerapps.io",
+    "https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io",
+                "https://filmhub-frontend.delightfuldune-f7916078.francecentral.azurecontainerapps.io")
             .AllowAnyMethod()
             .AllowAnyHeader()
             .AllowCredentials();

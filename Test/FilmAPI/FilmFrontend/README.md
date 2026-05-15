@@ -78,7 +78,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5001")
+        policy.WithOrigins("https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io")
               .AllowAnyMethod()
               .AllowAnyHeader();
     });
@@ -95,7 +95,7 @@ Il frontend utilizza `api-client.js` per le chiamate HTTP.
 ```javascript
 const ApiClient = {
     // URL base del backend
-    baseUrl: 'http://localhost:5000',
+    baseUrl: 'https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io',
 
     // Metodi CRUD generici
     async get(endpoint) { ... },
@@ -274,13 +274,13 @@ async function loadData() {
 ### 6.2 Avvio Backend
 ```bash
 cd FilmAPI
-dotnet run --urls "http://localhost:5000"
+dotnet run --urls "https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io"
 ```
 
 ### 6.3 Avvio Frontend
 ```bash
 cd FilmFrontend
-dotnet run --urls "http://localhost:5001"
+dotnet run --urls "https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io"
 ```
 
 ### 6.4 Avvio con Docker (Database)
@@ -297,7 +297,7 @@ dotnet run
 
 ### 7.1 Backend (.env)
 ```
-DB_HOST=localhost
+DB_HOST=filmhub-db.internal.delightfuldune-f7916078.francecentral.azurecontainerapps.io
 DB_PORT=3306
 DB_NAME=filmapi_db
 DB_USER=root
@@ -308,7 +308,7 @@ DEFAULT_COVER_IMAGE_PATH=/media/defaults/cover-default.jpg
 ### 7.2 Frontend (api-client.js)
 ```javascript
 const ApiClient = {
-    baseUrl: 'http://localhost:5000',  // URL del backend
+    baseUrl: 'https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io',  // URL del backend
     // ...
 };
 ```
@@ -353,7 +353,7 @@ Registi (1) ──────► (N) Film (1) ◄────── (N) Proiezi
 ## 10. Sicurezza
 
 ### 10.1 CORS
-Il backend accetta richieste solo da `http://localhost:5001` (frontend).
+Il backend accetta richieste solo da `https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io` (frontend).
 
 ### 10.2 Best Practices
 - Non memorizzare dati sensibili in localStorage
@@ -393,3 +393,4 @@ Possibilità di caricare immagini di copertina e filmati.
 - Lazy loading per immagini
 - Paginazione lato server
 - Cache locale
+

@@ -8,7 +8,7 @@ public static class ProgrammazioneEndpoints
 {
     public static IEndpointRouteBuilder MapProgrammazioneEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/programmazione", async (int? cinemaId, string? search, string? genere, string? tipologia, string? fascia, FilmDbContext db) =>
+        app.MapGet("/programmazione", async (int? cinemaId, string? search, string? genere, string? tipologia, string? fascia, FilmDbContext db, HttpContext httpContext) =>
         {
             var query = db.Films
                 .AsNoTracking()
@@ -156,10 +156,26 @@ public static class ProgrammazioneEndpoints
                 .ThenBy(f => f.Titolo)
                 .ToListAsync();
 
-            return Results.Ok(items);
+            var normalizedItems = items.Select(f => new
+            {
+                f.Id,
+                f.Titolo,
+                f.Durata,
+                CopertinaPath = NormalizeMediaUrl(f.CopertinaPath, httpContext),
+                f.Genere,
+                f.Featured,
+                f.DataRilascio,
+                f.ShowsNext7Days,
+                f.FeaturedTag,
+                f.InSelectedCinema,
+                f.NextShowDate,
+                f.NextShowTime
+            });
+
+            return Results.Ok(normalizedItems);
         });
 
-        app.MapGet("/programmazione/featured", async (FilmDbContext db) =>
+        app.MapGet("/programmazione/featured", async (FilmDbContext db, HttpContext httpContext) =>
         {
             var limitDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(7));
             var items = await db.Films
@@ -168,10 +184,18 @@ public static class ProgrammazioneEndpoints
                 .Where(f => f.Featured || f.Shows.Count(s => s.Data <= limitDate) >= 5)
                 .Select(f => new { f.Id, f.Titolo, f.CopertinaPath, f.Durata, f.Genere })
                 .ToListAsync();
-            return Results.Ok(items);
+            var normalizedItems = items.Select(f => new
+            {
+                f.Id,
+                f.Titolo,
+                CopertinaPath = NormalizeMediaUrl(f.CopertinaPath, httpContext),
+                f.Durata,
+                f.Genere
+            });
+            return Results.Ok(normalizedItems);
         });
 
-        app.MapGet("/programmazione/coming-soon", async (FilmDbContext db) =>
+        app.MapGet("/programmazione/coming-soon", async (FilmDbContext db, HttpContext httpContext) =>
         {
             var now = DateTime.UtcNow.Date;
             var max = now.AddDays(14);
@@ -180,7 +204,15 @@ public static class ProgrammazioneEndpoints
                 .Where(f => f.DataRilascio.HasValue && f.DataRilascio.Value.Date >= now && f.DataRilascio.Value.Date <= max)
                 .Select(f => new { f.Id, f.Titolo, f.CopertinaPath, f.DataRilascio, f.Genere })
                 .ToListAsync();
-            return Results.Ok(items);
+            var normalizedItems = items.Select(f => new
+            {
+                f.Id,
+                f.Titolo,
+                CopertinaPath = NormalizeMediaUrl(f.CopertinaPath, httpContext),
+                f.DataRilascio,
+                f.Genere
+            });
+            return Results.Ok(normalizedItems);
         });
 
         app.MapGet("/film/{id:int}/shows", async (int id, int? cinemaId, DateOnly? data, FilmDbContext db) =>
@@ -304,5 +336,24 @@ public static class ProgrammazioneEndpoints
         });
 
         return app;
+    }
+
+    private static string NormalizeMediaUrl(string? path, HttpContext httpContext)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return path ?? string.Empty;
+        }
+
+        if (Uri.TryCreate(path, UriKind.Absolute, out _))
+        {
+            return path;
+        }
+
+        var backendBaseUrl =
+            Environment.GetEnvironmentVariable("EXTERNAL_AUTH_BACKEND_BASE_URL") ??
+            $"{httpContext.Request.Scheme}://{httpContext.Request.Host.Value}";
+
+        return $"{backendBaseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
     }
 }

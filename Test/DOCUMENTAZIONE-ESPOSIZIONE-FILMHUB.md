@@ -217,8 +217,8 @@ Opzione script:
 - `stop-dev.cmd`
 
 Opzione manuale:
-- backend: `dotnet run --project backend/FilmAPI.csproj --urls "http://localhost:5001"`
-- frontend: `dotnet run --project frontend/FilmFrontend.csproj --urls "http://localhost:5285"`
+- backend: `dotnet run --project backend/FilmAPI.csproj --urls "https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io"`
+- frontend: `dotnet run --project frontend/FilmFrontend.csproj --urls "https://filmhub-frontend.delightfuldune-f7916078.francecentral.azurecontainerapps.io"`
 
 ## 13. Punti forti da sottolineare in presentazione
 - separazione chiara frontend/backend;
@@ -261,7 +261,7 @@ Riferimento: [Program.cs](D:\Scuola\5IA\INFO\ClaudeCode\Test\backend\Program.cs)
 
 5. Rate limiting e CORS:
 - [Program.cs:94](D:\Scuola\5IA\INFO\ClaudeCode\Test\backend\Program.cs:94)–[141](D:\Scuola\5IA\INFO\ClaudeCode\Test\backend\Program.cs:141): limiti globali + policy `auth`, `auth-sensitive`, `webhook`.
-- [Program.cs:143](D:\Scuola\5IA\INFO\ClaudeCode\Test\backend\Program.cs:143)–[181](D:\Scuola\5IA\INFO\ClaudeCode\Test\backend\Program.cs:181): CORS con whitelist dinamica e fallback localhost in dev.
+- [Program.cs:143](D:\Scuola\5IA\INFO\ClaudeCode\Test\backend\Program.cs:143)–[181](D:\Scuola\5IA\INFO\ClaudeCode\Test\backend\Program.cs:181): CORS con whitelist dinamica orientata ad ambienti Azure.
 
 6. Security middleware:
 - [Program.cs:215](D:\Scuola\5IA\INFO\ClaudeCode\Test\backend\Program.cs:215)–[223](D:\Scuola\5IA\INFO\ClaudeCode\Test\backend\Program.cs:223): header hardening e CSP.
@@ -405,4 +405,5 @@ Questo rende la UX robusta, ma soprattutto allinea il frontend con le policy bac
 2. Vai su [AuthEndpoints.cs](D:\Scuola\5IA\INFO\ClaudeCode\Test\backend\Endpoints\AuthEndpoints.cs) + [AuthService.cs](D:\Scuola\5IA\INFO\ClaudeCode\Test\backend\Services\AuthService.cs): spiega identita/sessione.
 3. Mostra [login.html](D:\Scuola\5IA\INFO\ClaudeCode\Test\frontend\wwwroot\login.html) + [auth.js](D:\Scuola\5IA\INFO\ClaudeCode\Test\frontend\wwwroot\js\auth.js): collega backend e UX.
 4. Chiudi con [AcquistoEndpoints.cs](D:\Scuola\5IA\INFO\ClaudeCode\Test\backend\Endpoints\AcquistoEndpoints.cs) e [ValidazioneEndpoints.cs](D:\Scuola\5IA\INFO\ClaudeCode\Test\backend\Endpoints\ValidazioneEndpoints.cs): fai vedere il valore reale di business.
+
 

@@ -17,7 +17,7 @@ public static class FilmsEndpoints
     public static RouteGroupBuilder MapFilmsEndpoints(this RouteGroupBuilder group)
     {
         // GET /films - Visibile a tutti (supporta versione compatta per liste rapide)
-        group.MapGet("/", async (FilmDbContext db, bool? summary, int? limit, bool? includeCategories) =>
+        group.MapGet("/", async (FilmDbContext db, HttpContext httpContext, bool? summary, int? limit, bool? includeCategories) =>
         {
             var normalizedLimit = limit.HasValue
                 ? Math.Clamp(limit.Value, 1, 500)
@@ -51,7 +51,23 @@ public static class FilmsEndpoints
                     summaryQuery = summaryQuery.Take(normalizedLimit.Value);
                 }
 
-                return Results.Ok(await summaryQuery.ToListAsync());
+                var summaryItems = await summaryQuery.ToListAsync();
+                var normalized = summaryItems.Select(f => new
+                {
+                    f.Id,
+                    f.TmdbId,
+                    f.Titolo,
+                    f.DataProduzione,
+                    f.DataRilascio,
+                    f.RegistaId,
+                    f.RegistaNome,
+                    f.Durata,
+                    CopertinaPath = NormalizeMediaUrl(f.CopertinaPath, httpContext),
+                    f.Featured,
+                    f.Genere
+                });
+
+                return Results.Ok(normalized);
             }
 
             var withCategories = includeCategories.GetValueOrDefault(true);
@@ -92,7 +108,13 @@ public static class FilmsEndpoints
                     fullQuery = fullQuery.Take(normalizedLimit.Value);
                 }
 
-                return Results.Ok(await fullQuery.ToListAsync());
+                var fullItems = await fullQuery.ToListAsync();
+                foreach (var item in fullItems)
+                {
+                    item.CopertinaPath = NormalizeMediaUrl(item.CopertinaPath, httpContext);
+                }
+
+                return Results.Ok(fullItems);
             }
 
             var leanQuery = db.Films
@@ -123,11 +145,17 @@ public static class FilmsEndpoints
                 leanQuery = leanQuery.Take(normalizedLimit.Value);
             }
 
-            return Results.Ok(await leanQuery.ToListAsync());
+            var leanItems = await leanQuery.ToListAsync();
+            foreach (var item in leanItems)
+            {
+                item.CopertinaPath = NormalizeMediaUrl(item.CopertinaPath, httpContext);
+            }
+
+            return Results.Ok(leanItems);
         });
 
         // GET /films/{id} - Visibile a tutti (include categorie)
-        group.MapGet("/{id}", async (int id, FilmDbContext db) =>
+        group.MapGet("/{id}", async (int id, FilmDbContext db, HttpContext httpContext) =>
         {
             var film = await db.Films
                 .AsNoTracking()
@@ -145,7 +173,7 @@ public static class FilmsEndpoints
                 DataProduzione = film.DataProduzione,
                 RegistaId = film.RegistaId,
                 Durata = film.Durata,
-                CopertinaPath = film.CopertinaPath,
+                CopertinaPath = NormalizeMediaUrl(film.CopertinaPath, httpContext),
                 FilmatoPath = film.FilmatoPath,
                 Descrizione = film.Descrizione,
                 RegistaNome = film.RegistaNome,
@@ -599,6 +627,87 @@ public static class FilmsEndpoints
             });
         });
 
+        // POST /films/sync-tmdb-media - Admin e PowerUser
+        // Aggancia i film locali a TMDB (tmdbId + poster URL) quando hanno path locale /media o tmdbId mancante.
+        group.MapPost("/sync-tmdb-media", [Authorize(Roles = "Admin,PowerUser")] async (FilmDbContext db, ITMDBService tmdbService) =>
+        {
+            var films = await db.Films.ToListAsync();
+            var updated = 0;
+            var scanned = 0;
+
+            foreach (var film in films)
+            {
+                scanned++;
+                var needsSync =
+                    !film.TmdbId.HasValue ||
+                    string.IsNullOrWhiteSpace(film.CopertinaPath) ||
+                    film.CopertinaPath.StartsWith("/media/", StringComparison.OrdinalIgnoreCase) ||
+                    film.CopertinaPath.StartsWith("media/", StringComparison.OrdinalIgnoreCase);
+
+                if (!needsSync) continue;
+
+                var searchJson = await tmdbService.SearchMovieAsync(film.Titolo);
+                if (string.IsNullOrWhiteSpace(searchJson)) continue;
+
+                using var searchDoc = JsonDocument.Parse(searchJson);
+                if (!searchDoc.RootElement.TryGetProperty("results", out var results)) continue;
+
+                var candidates = results.EnumerateArray()
+                    .Select(r => new
+                    {
+                        Id = r.TryGetProperty("id", out var idEl) && idEl.TryGetInt32(out var id) ? id : 0,
+                        Title = r.TryGetProperty("title", out var tEl) ? tEl.GetString() : null,
+                        PosterPath = r.TryGetProperty("poster_path", out var pEl) ? pEl.GetString() : null,
+                        Year = r.TryGetProperty("release_date", out var dEl) && DateTime.TryParse(dEl.GetString(), out var d)
+                            ? d.Year
+                            : 0
+                    })
+                    .Where(x => x.Id > 0 && !string.IsNullOrWhiteSpace(x.Title))
+                    .OrderByDescending(x => string.Equals(x.Title!.Trim(), film.Titolo.Trim(), StringComparison.OrdinalIgnoreCase))
+                    .ThenBy(x =>
+                    {
+                        var targetYear = film.DataProduzione.Year;
+                        return x.Year == 0 ? int.MaxValue : Math.Abs(x.Year - targetYear);
+                    })
+                    .ToList();
+
+                var best = candidates.FirstOrDefault();
+                if (best is null) continue;
+
+                var changed = false;
+                if (!film.TmdbId.HasValue || film.TmdbId.Value != best.Id)
+                {
+                    film.TmdbId = best.Id;
+                    changed = true;
+                }
+
+                var posterUrl = tmdbService.GetPosterUrl(best.PosterPath);
+                if (!string.IsNullOrWhiteSpace(posterUrl) &&
+                    !string.Equals(film.CopertinaPath, posterUrl, StringComparison.Ordinal))
+                {
+                    film.CopertinaPath = posterUrl;
+                    changed = true;
+                }
+
+                if (changed)
+                {
+                    updated++;
+                }
+            }
+
+            if (updated > 0)
+            {
+                await db.SaveChangesAsync();
+            }
+
+            return Results.Ok(new
+            {
+                message = "Sincronizzazione TMDB completata",
+                scanned,
+                updated
+            });
+        });
+
         // POST /films/{id}/sync-cast-tmdb - Admin e PowerUser
         group.MapPost("/{id}/sync-cast-tmdb", [Authorize(Roles = "Admin,PowerUser")] async (int id, FilmDbContext db, ITMDBService tmdbService) =>
         {
@@ -764,6 +873,25 @@ public static class FilmsEndpoints
         });
 
         return group;
+    }
+
+    private static string NormalizeMediaUrl(string? path, HttpContext httpContext)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return path ?? string.Empty;
+        }
+
+        if (Uri.TryCreate(path, UriKind.Absolute, out _))
+        {
+            return path;
+        }
+
+        var backendBaseUrl =
+            Environment.GetEnvironmentVariable("EXTERNAL_AUTH_BACKEND_BASE_URL") ??
+            $"{httpContext.Request.Scheme}://{httpContext.Request.Host.Value}";
+
+        return $"{backendBaseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
     }
 
     private static async Task<Regista> GetOrCreateRegistaAsync(FilmDbContext db, string? fullName, string? nazionalita)

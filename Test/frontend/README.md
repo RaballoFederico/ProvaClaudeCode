@@ -23,15 +23,15 @@ Documentazione tecnica aggiornata del progetto cinema composto da backend API e 
 
 ## Architettura di runtime
 
-- Backend (default dev): `http://localhost:5001`
-- Frontend (default dev): `http://localhost:5285`
+- Backend (default dev): `https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io`
+- Frontend (default dev): `https://filmhub-frontend.delightfuldune-f7916078.francecentral.azurecontainerapps.io`
 - Endpoint health: `GET /health`
 
 Frontend e backend comunicano via Fetch API (`frontend/wwwroot/js/api-client.js`).
 
 ## Sicurezza e hardening
 
-- CORS limitato a host locali (`localhost`, `127.0.0.1`) in dev.
+- CORS configurato principalmente per frontend pubblicato su Azure Container Apps.
 - Validazione configurazione critica all'avvio (JWT/Stripe/ExternalAuth).
 - Rate limiting globale e policy specifica su endpoint auth/webhook.
 - Logging richieste con evidenza errori 4xx/5xx e trace id.
@@ -67,13 +67,13 @@ stop-dev.cmd
 Backend:
 
 ```bash
-dotnet run --project backend/FilmAPI.csproj --urls "http://localhost:5001"
+dotnet run --project backend/FilmAPI.csproj --urls "https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io"
 ```
 
 Frontend:
 
 ```bash
-dotnet run --project frontend/FilmFrontend.csproj --urls "http://localhost:5285"
+dotnet run --project frontend/FilmFrontend.csproj --urls "https://filmhub-frontend.delightfuldune-f7916078.francecentral.azurecontainerapps.io"
 ```
 
 ## Build e test
@@ -108,3 +108,4 @@ Pipeline GitHub Actions disponibile in `.github/workflows/ci.yml` con:
 
 - Il progetto contiene anche una copia storica in `FilmAPI/`; per sviluppo corrente usare `backend/` e `frontend/` dalla root `Test/`.
 - I file log/runtime sono esclusi da git tramite `.gitignore` in root.
+

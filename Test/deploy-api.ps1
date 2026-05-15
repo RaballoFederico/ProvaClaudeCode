@@ -16,7 +16,7 @@ $acrUser = az acr credential show -n $AcrName --query username -o tsv
 $acrPass = az acr credential show -n $AcrName --query "passwords[0].value" -o tsv
 
 Write-Host "[2/6] Build API image..."
-docker build -f "$root\FilmAPI\Dockerfile" -t "$ImageName`:$Tag" "$root\FilmAPI"
+docker build -f "$root\backend\Dockerfile" -t "$ImageName`:$Tag" "$root\backend"
 
 Write-Host "[3/6] Push image to ACR..."
 az acr login -n $AcrName

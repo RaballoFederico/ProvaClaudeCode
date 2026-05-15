@@ -1,0 +1,14 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+COPY frontend/FilmFrontend.csproj frontend/
+RUN dotnet restore frontend/FilmFrontend.csproj
+COPY frontend/. frontend/
+WORKDIR /src/frontend
+RUN dotnet publish FilmFrontend.csproj -c Release -o /app/publish /p:UseAppHost=false
+
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+WORKDIR /app
+COPY --from=build /app/publish ./
+ENV ASPNETCORE_URLS=http://+:8080
+EXPOSE 8080
+ENTRYPOINT ["dotnet","FilmFrontend.dll"]

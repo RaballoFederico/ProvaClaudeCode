@@ -644,26 +644,52 @@ public static class DbInitializer
             .Where(s => s.CinemaId > 0)
             .ToListAsync();
 
+        if (showRows.Count == 0)
+        {
+            return;
+        }
+
         var showIds = showRows.Select(s => s.Id).ToList();
-        var existingShowIds = await context.Proiezioni
-            .Where(p => p.ShowId.HasValue && showIds.Contains(p.ShowId.Value))
-            .Select(p => p.ShowId!.Value)
+        var existingProiezioni = await context.Proiezioni
+            .Select(p => new
+            {
+                p.ShowId,
+                p.CinemaId,
+                p.FilmId,
+                p.Data,
+                p.Ora
+            })
             .ToListAsync();
-        var existingSet = existingShowIds.ToHashSet();
+
+        var existingShowIds = existingProiezioni
+            .Where(p => p.ShowId.HasValue)
+            .Select(p => p.ShowId!.Value)
+            .ToHashSet();
+
+        var existingLegacyKeys = existingProiezioni
+            .Select(p => $"{p.CinemaId}|{p.FilmId}|{p.Data:yyyy-MM-dd}|{p.Ora}")
+            .ToHashSet();
 
         var projectionsToAdd = new List<Proiezione>();
         foreach (var s in showRows)
         {
-            if (existingSet.Contains(s.Id)) continue;
+            if (existingShowIds.Contains(s.Id)) continue;
+
+            var data = s.Data.ToDateTime(TimeOnly.MinValue);
+            var ora = s.OraInizio.ToTimeSpan();
+            var legacyKey = $"{s.CinemaId}|{s.FilmId}|{data:yyyy-MM-dd}|{ora}";
+            if (existingLegacyKeys.Contains(legacyKey)) continue;
 
             projectionsToAdd.Add(new Proiezione
             {
                 ShowId = s.Id,
                 CinemaId = s.CinemaId,
                 FilmId = s.FilmId,
-                Data = s.Data.ToDateTime(TimeOnly.MinValue),
-                Ora = s.OraInizio.ToTimeSpan()
+                Data = data,
+                Ora = ora
             });
+
+            existingLegacyKeys.Add(legacyKey);
         }
 
         if (projectionsToAdd.Count == 0)
@@ -671,8 +697,19 @@ public static class DbInitializer
             return;
         }
 
-        context.Proiezioni.AddRange(projectionsToAdd);
-        await context.SaveChangesAsync();
+        foreach (var projection in projectionsToAdd)
+        {
+            try
+            {
+                context.Proiezioni.Add(projection);
+                await context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (ex.InnerException?.Message?.Contains("IX_proiezioni_CinemaId_FilmId_Data_Ora", StringComparison.OrdinalIgnoreCase) == true)
+            {
+                // In ambienti concorrenti (o con dati legacy sporchi) ignora i duplicati della chiave unica.
+                context.Entry(projection).State = EntityState.Detached;
+            }
+        }
     }
 
     private static async Task EnsureCreditiAsync(FilmDbContext context, Dictionary<string, Utente> userMap)
