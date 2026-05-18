@@ -1,4 +1,6 @@
 using System.Text.Json;
+using System.Globalization;
+using System.Text;
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -29,30 +31,34 @@ public static class FilmsEndpoints
                     .AsNoTracking()
                     .OrderByDescending(f => f.DataRilascio ?? f.DataProduzione)
                     .ThenByDescending(f => f.Id)
-                    .Select(f => new
+                    .Select(f => new FilmSummaryItem
                     {
-                        f.Id,
-                        f.TmdbId,
-                        f.Titolo,
-                        f.DataProduzione,
-                        f.DataRilascio,
-                        f.RegistaId,
+                        Id = f.Id,
+                        TmdbId = f.TmdbId,
+                        Titolo = f.Titolo,
+                        DataProduzione = f.DataProduzione,
+                        DataRilascio = f.DataRilascio,
+                        RegistaId = f.RegistaId,
                         RegistaNome = !string.IsNullOrWhiteSpace(f.RegistaNome)
                             ? f.RegistaNome
                             : (f.Regista != null ? $"{f.Regista.Nome} {f.Regista.Cognome}" : null),
-                        f.Durata,
-                        f.CopertinaPath,
-                        f.Featured,
-                        f.Genere
+                        Durata = f.Durata,
+                        CopertinaPath = f.CopertinaPath,
+                        Featured = f.Featured,
+                        Genere = f.Genere
                     });
-
+                var summaryItems = await summaryQuery.ToListAsync();
+                var dedupedSummary = DeduplicateByTitle(
+                    summaryItems,
+                    item => item.Titolo,
+                    item => item.DataRilascio ?? item.DataProduzione,
+                    item => item.Id);
                 if (normalizedLimit.HasValue)
                 {
-                    summaryQuery = summaryQuery.Take(normalizedLimit.Value);
+                    dedupedSummary = dedupedSummary.Take(normalizedLimit.Value).ToList();
                 }
 
-                var summaryItems = await summaryQuery.ToListAsync();
-                var normalized = summaryItems.Select(f => new
+                var normalized = dedupedSummary.Select(f => new
                 {
                     f.Id,
                     f.TmdbId,
@@ -103,12 +109,16 @@ public static class FilmsEndpoints
                         }).ToList()
                     });
 
+                var fullItems = await fullQuery.ToListAsync();
+                fullItems = DeduplicateByTitle(
+                    fullItems,
+                    item => item.Titolo,
+                    item => item.DataRilascio ?? item.DataProduzione,
+                    item => item.Id);
                 if (normalizedLimit.HasValue)
                 {
-                    fullQuery = fullQuery.Take(normalizedLimit.Value);
+                    fullItems = fullItems.Take(normalizedLimit.Value).ToList();
                 }
-
-                var fullItems = await fullQuery.ToListAsync();
                 foreach (var item in fullItems)
                 {
                     item.CopertinaPath = NormalizeMediaUrl(item.CopertinaPath, httpContext);
@@ -140,12 +150,16 @@ public static class FilmsEndpoints
                     Categorie = new List<CategoriaDTO>()
                 });
 
+            var leanItems = await leanQuery.ToListAsync();
+            leanItems = DeduplicateByTitle(
+                leanItems,
+                item => item.Titolo,
+                item => item.DataRilascio ?? item.DataProduzione,
+                item => item.Id);
             if (normalizedLimit.HasValue)
             {
-                leanQuery = leanQuery.Take(normalizedLimit.Value);
+                leanItems = leanItems.Take(normalizedLimit.Value).ToList();
             }
-
-            var leanItems = await leanQuery.ToListAsync();
             foreach (var item in leanItems)
             {
                 item.CopertinaPath = NormalizeMediaUrl(item.CopertinaPath, httpContext);
@@ -873,6 +887,89 @@ public static class FilmsEndpoints
         });
 
         return group;
+    }
+
+    private sealed class FilmSummaryItem
+    {
+        public int Id { get; init; }
+        public int? TmdbId { get; init; }
+        public string Titolo { get; init; } = string.Empty;
+        public DateTime DataProduzione { get; init; }
+        public DateTime? DataRilascio { get; init; }
+        public int RegistaId { get; init; }
+        public string? RegistaNome { get; init; }
+        public int Durata { get; init; }
+        public string? CopertinaPath { get; init; }
+        public bool Featured { get; init; }
+        public string? Genere { get; init; }
+    }
+
+    private static List<T> DeduplicateByTitle<T>(
+        IEnumerable<T> items,
+        Func<T, string?> titleSelector,
+        Func<T, DateTime?> dateSelector,
+        Func<T, int> idSelector)
+    {
+        var map = new Dictionary<string, T>(StringComparer.Ordinal);
+        foreach (var item in items)
+        {
+            var key = NormalizeFilmTitleKey(titleSelector(item));
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                key = $"id:{idSelector(item)}";
+            }
+
+            if (!map.TryGetValue(key, out var existing))
+            {
+                map[key] = item;
+                continue;
+            }
+
+            var existingDate = dateSelector(existing) ?? DateTime.MinValue;
+            var candidateDate = dateSelector(item) ?? DateTime.MinValue;
+            if (candidateDate > existingDate || (candidateDate == existingDate && idSelector(item) > idSelector(existing)))
+            {
+                map[key] = item;
+            }
+        }
+
+        return map.Values
+            .OrderByDescending(x => dateSelector(x) ?? DateTime.MinValue)
+            .ThenByDescending(idSelector)
+            .ToList();
+    }
+
+    private static string NormalizeFilmTitleKey(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var normalized = value.Normalize(NormalizationForm.FormD);
+        Span<char> buffer = stackalloc char[normalized.Length];
+        var idx = 0;
+        foreach (var ch in normalized)
+        {
+            var category = CharUnicodeInfo.GetUnicodeCategory(ch);
+            if (category == UnicodeCategory.NonSpacingMark)
+            {
+                continue;
+            }
+
+            if (char.IsLetterOrDigit(ch))
+            {
+                buffer[idx++] = char.ToLowerInvariant(ch);
+                continue;
+            }
+
+            if (char.IsWhiteSpace(ch))
+            {
+                buffer[idx++] = ' ';
+            }
+        }
+
+        return string.Join(' ', new string(buffer[..idx]).Split(' ', StringSplitOptions.RemoveEmptyEntries));
     }
 
     private static string NormalizeMediaUrl(string? path, HttpContext httpContext)

@@ -150,6 +150,7 @@
                     ApiClient.get('/registi'),
                     ApiClient.get('/categorie')
                 ]);
+                allFilms = normalizeUniqueFilms(allFilms);
                 populateFilters();
                 filterFilms();
             } catch (error) {
@@ -158,6 +159,42 @@
             } finally {
                 Utils.hideLoading();
             }
+        }
+
+        function normalizeFilmTitle(value) {
+            return String(value || '')
+                .normalize('NFKD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^\w\s]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toLowerCase();
+        }
+
+        function normalizeUniqueFilms(films) {
+            const items = Array.isArray(films) ? films : [];
+            const byKey = new Map();
+
+            for (const film of items) {
+                const id = Number(film?.id || 0);
+                const title = normalizeFilmTitle(film?.titolo);
+                const release = String(film?.dataProduzione || film?.dataRilascio || '').trim().slice(0, 10);
+                const key = title ? `title:${title}` : (id > 0 ? `id:${id}` : `meta:${release}`);
+                const prev = byKey.get(key);
+
+                if (!prev) {
+                    byKey.set(key, film);
+                    continue;
+                }
+
+                const prevDate = prev?.dataProduzione ? new Date(prev.dataProduzione).getTime() : 0;
+                const currDate = film?.dataProduzione ? new Date(film.dataProduzione).getTime() : 0;
+                if (currDate > prevDate || (currDate === prevDate && Number(film?.id || 0) > Number(prev?.id || 0))) {
+                    byKey.set(key, film);
+                }
+            }
+
+            return Array.from(byKey.values());
         }
 
         function applyRoleUI() {
