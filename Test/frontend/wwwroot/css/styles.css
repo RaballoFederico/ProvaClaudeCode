@@ -459,6 +459,43 @@ footer {
     background: color-mix(in srgb, var(--primary) 18%, transparent);
 }
 
+.app-checkbox {
+    width: 1.25rem;
+    height: 1.25rem;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 2px solid color-mix(in srgb, var(--outline) 85%, white 15%);
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--surface-high) 90%, transparent);
+    position: relative;
+    display: inline-grid;
+    place-content: center;
+    cursor: pointer;
+    transition: border-color 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.app-checkbox:checked {
+    border-color: color-mix(in srgb, var(--primary) 88%, white 12%);
+}
+
+.app-checkbox:checked::before {
+    content: "\2713";
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    color: var(--text);
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.app-checkbox:focus,
+.app-checkbox:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(95, 107, 133, 0.35);
+}
+
 .a11y-actions {
     display: flex;
     gap: 0.5rem;
@@ -971,6 +1008,37 @@ tbody tr:hover {
     transform: translateY(0) scale(1.02);
     transition: transform 0.28s ease-out;
     will-change: transform;
+}
+
+html[data-theme="light"] .home-hero .home-hero-media img {
+    filter: brightness(1.06) saturate(0.92) contrast(0.92);
+}
+
+html[data-theme="light"] .home-hero-overlay {
+    background: linear-gradient(90deg, rgba(247, 242, 233, 0.94) 0%, rgba(243, 237, 227, 0.8) 48%, rgba(243, 237, 227, 0.22) 100%) !important;
+}
+
+html[data-theme="light"] .home-hero-eyebrow {
+    color: rgba(58, 50, 40, 0.78) !important;
+}
+
+html[data-theme="light"] .home-hero-title {
+    color: #2e2923 !important;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+}
+
+html[data-theme="light"] .home-hero-subtitle {
+    color: rgba(53, 47, 41, 0.86) !important;
+}
+
+html[data-theme="light"] .home-hero-secondary-btn {
+    background: rgba(255, 255, 255, 0.78) !important;
+    color: #2f2a24 !important;
+    border-color: rgba(108, 90, 70, 0.24) !important;
+}
+
+html[data-theme="light"] .home-hero-secondary-btn:hover {
+    background: rgba(255, 255, 255, 0.92) !important;
 }
 
 .home-featured-card {

@@ -118,7 +118,7 @@
                 selectedFilmId = params.get('filmId') ? parseInt(params.get('filmId')) : null;
                 
                 const films = await ApiClient.get('/films?summary=true&limit=240');
-                allFilms = Array.isArray(films) ? films : [];
+                allFilms = normalizeUniqueFilms(films);
 
                 showLoading(false);
                 renderProiezioni(allFilms);
@@ -167,6 +167,40 @@
             return filtered;
         }
 
+        function normalizeUniqueFilms(films) {
+            const items = Array.isArray(films) ? films : [];
+            const byKey = new Map();
+
+            for (const film of items) {
+                const id = Number(film?.id || 0);
+                const title = String(film?.titolo || '')
+                    .normalize('NFKD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .replace(/[^\w\s]/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                    .toLowerCase();
+                const release = String(film?.dataRilascio || film?.dataProduzione || '').trim().slice(0, 10);
+                const genre = String(film?.genere || '').trim().toLowerCase();
+                // Per la vista pubblica evitiamo doppioni visivi: un solo poster per titolo.
+                const key = title ? `title:${title}` : (id > 0 ? `id:${id}` : `meta:${release}|${genre}`);
+                const prev = byKey.get(key);
+
+                if (!prev) {
+                    byKey.set(key, film);
+                    continue;
+                }
+
+                const prevDate = prev?.dataRilascio ? new Date(prev.dataRilascio).getTime() : 0;
+                const currDate = film?.dataRilascio ? new Date(film.dataRilascio).getTime() : 0;
+                if (currDate > prevDate || (currDate === prevDate && Number(film?.id || 0) > Number(prev?.id || 0))) {
+                    byKey.set(key, film);
+                }
+            }
+
+            return Array.from(byKey.values());
+        }
+
         function renderProiezioni(films) {
             const grid = document.getElementById('proiezioni-grid');
 
@@ -176,6 +210,22 @@
             } else {
                 filmsToRender = applyClientFilters(films);
             }
+
+            // Guardia finale anti-doppioni in UI: un solo poster per titolo normalizzato.
+            const seenTitles = new Set();
+            filmsToRender = filmsToRender.filter((film) => {
+                const t = String(film?.titolo || '')
+                    .normalize('NFKD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .replace(/[^\w\s]/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim()
+                    .toLowerCase();
+                if (!t) return true;
+                if (seenTitles.has(t)) return false;
+                seenTitles.add(t);
+                return true;
+            });
             
             if (filmsToRender.length === 0) {
                 grid.innerHTML = `
