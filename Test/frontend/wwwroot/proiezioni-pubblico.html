@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
+<!-- DOC: Pagina UI 'proiezioni-pubblico': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <html lang="it" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -10,10 +11,12 @@
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-light.ico" media="(prefers-color-scheme: light)">
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico" media="(prefers-color-scheme: dark)">
     <link rel="shortcut icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico">
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="css/styles.css">
+    <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -46,6 +49,7 @@
         <div id="sidebar-container"></div>
 
     <!-- Main Content -->
+    <!-- DOC-BLOCK: Sezione principale: contiene il flusso operativo della pagina. -->
     <main class="page-shell flex-1 py-8 px-4 md:px-8 lg:px-12 pb-20 md:pb-8">
         <div class="max-w-7xl mx-auto">
             <div class="hero-banner p-6 md:p-8 mb-8 text-center reveal-up">
@@ -57,6 +61,7 @@
                 <p class="text-on-surface-variant mt-2">Scopri i film in programmazione nelle nostre sale</p>
             </div>
 
+            <!-- DOC-BLOCK: Blocco funzionale UI: raggruppa contenuti/azioni omogenee della pagina. -->
             <section class="app-card p-4 md:p-5 mb-6 reveal-up delay-1">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div class="md:col-span-2">
@@ -66,7 +71,7 @@
                     <div>
                         <label class="text-xs text-on-surface-variant uppercase tracking-[0.16em]" for="film-sort">Ordinamento</label>
                         <select id="film-sort" class="mt-1 w-full rounded-xl border border-outline-variant/30 bg-surface-container-high px-3 py-2.5 text-sm">
-                            <option value="recent">Più recenti</option>
+                            <option value="recent">PiÃ¹ recenti</option>
                             <option value="title">Titolo A-Z</option>
                         </select>
                     </div>
@@ -96,13 +101,21 @@
 
     <div id="footer-container"></div>
 
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="js/theme.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/api-config.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="js/auth.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="js/route-guard.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="js/template-loader.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="js/api-client.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="js/utils.js"></script>
+    <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
         let selectedFilmId = null;
         let allFilms = [];
@@ -117,6 +130,7 @@
                 const params = new URLSearchParams(window.location.search);
                 selectedFilmId = params.get('filmId') ? parseInt(params.get('filmId')) : null;
                 
+                // Carica la vista "leggera" dei film: meno campi, rendering più rapido in griglia pubblica.
                 const films = await ApiClient.get('/films?summary=true&limit=240');
                 allFilms = normalizeUniqueFilms(films);
 
@@ -142,6 +156,8 @@
         }
 
         function applyClientFilters(films) {
+            // Filtri solo lato client per mantenere UX reattiva:
+            // ricerca testuale + ordinamento senza nuove roundtrip API.
             let filtered = Array.isArray(films) ? [...films] : [];
 
             if (currentSearch) {
@@ -168,6 +184,8 @@
         }
 
         function normalizeUniqueFilms(films) {
+            // Deduplica difensiva: un solo elemento per titolo normalizzato.
+            // Se esistono varianti duplicate, mantiene il record più recente/ID maggiore.
             const items = Array.isArray(films) ? films : [];
             const byKey = new Map();
 
@@ -211,7 +229,8 @@
                 filmsToRender = applyClientFilters(films);
             }
 
-            // Guardia finale anti-doppioni in UI: un solo poster per titolo normalizzato.
+            // Guardia finale anti-doppioni in UI: anche con dati sporchi a valle dei filtri
+            // mostriamo un solo poster per titolo per evitare confusione all'utente.
             const seenTitles = new Set();
             filmsToRender = filmsToRender.filter((film) => {
                 const t = String(film?.titolo || '')
@@ -260,6 +279,7 @@
         }
 
         function openFilm(id) {
+            // Navigazione intenzionale verso dettaglio film con query id.
             window.location.href = `/scheda-film.html?id=${id}`;
         }
 
@@ -290,4 +310,5 @@
     </script>
 </body>
 </html>
+
 

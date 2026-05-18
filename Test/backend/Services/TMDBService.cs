@@ -1,3 +1,4 @@
+﻿// DOC: Service 'TMDBService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using System.Text.Json;
 
 namespace FilmAPI.Services;
@@ -20,6 +21,7 @@ public class TMDBService : ITMDBService
 
     private bool IsConfigured => !string.IsNullOrWhiteSpace(_apiKey);
 
+    // DOC-METHOD: 'SearchMovieAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<string?> SearchMovieAsync(string query, int page = 1)
     {
         if (!IsConfigured) return null;
@@ -28,6 +30,7 @@ public class TMDBService : ITMDBService
         return await _httpClient.GetStringAsync(url);
     }
 
+    // DOC-METHOD: 'GetMovieDetailAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<string?> GetMovieDetailAsync(int tmdbId, string language = "it-IT")
     {
         if (!IsConfigured) return null;
@@ -36,6 +39,7 @@ public class TMDBService : ITMDBService
         return await _httpClient.GetStringAsync(url);
     }
 
+    // DOC-METHOD: 'GetMovieCreditsAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<string?> GetMovieCreditsAsync(int tmdbId, string language = "it-IT")
     {
         if (!IsConfigured) return null;
@@ -44,6 +48,7 @@ public class TMDBService : ITMDBService
         return await _httpClient.GetStringAsync(url);
     }
 
+    // DOC-METHOD: 'GetPersonDetailAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<string?> GetPersonDetailAsync(int personId, string language = "it-IT")
     {
         if (!IsConfigured) return null;
@@ -52,6 +57,7 @@ public class TMDBService : ITMDBService
         return await _httpClient.GetStringAsync(url);
     }
 
+    // DOC-METHOD: 'GetPersonMovieCreditsAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<string?> GetPersonMovieCreditsAsync(int personId, string language = "it-IT")
     {
         if (!IsConfigured) return null;
@@ -60,6 +66,7 @@ public class TMDBService : ITMDBService
         return await _httpClient.GetStringAsync(url);
     }
 
+    // DOC-METHOD: 'GetPopularMoviesAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<string?> GetPopularMoviesAsync(int page = 1, string language = "it-IT")
     {
         if (!IsConfigured) return null;
@@ -68,18 +75,21 @@ public class TMDBService : ITMDBService
         return await _httpClient.GetStringAsync(url);
     }
 
+    // DOC-METHOD: 'GetPosterUrl' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public string GetPosterUrl(string? posterPath, string size = "w500")
     {
         if (string.IsNullOrWhiteSpace(posterPath)) return string.Empty;
         return $"https://image.tmdb.org/t/p/{size}{posterPath}";
     }
 
+    // DOC-METHOD: 'GetBackdropUrl' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public string GetBackdropUrl(string? backdropPath, string size = "w1280")
     {
         if (string.IsNullOrWhiteSpace(backdropPath)) return string.Empty;
         return $"https://image.tmdb.org/t/p/{size}{backdropPath}";
     }
 
+    // DOC-METHOD: 'GetProfileUrl' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public string GetProfileUrl(string? profilePath, string size = "w185")
     {
         if (string.IsNullOrWhiteSpace(profilePath)) return string.Empty;
@@ -125,3 +135,4 @@ public interface ITMDBService
         };
     }
 }
+

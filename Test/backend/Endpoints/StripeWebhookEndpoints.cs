@@ -1,3 +1,4 @@
+﻿// DOC: Endpoint 'StripeWebhookEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Services.Interfaces;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -5,6 +6,7 @@ namespace FilmAPI.Endpoints;
 
 public static class StripeWebhookEndpoints
 {
+    // DOC-METHOD: 'MapStripeWebhookEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static IEndpointRouteBuilder MapStripeWebhookEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("/webhooks/stripe", [EnableRateLimiting("webhook")] async (
@@ -60,3 +62,4 @@ public static class StripeWebhookEndpoints
         return app;
     }
 }
+

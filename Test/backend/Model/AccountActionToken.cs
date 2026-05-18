@@ -1,3 +1,4 @@
+﻿// DOC: Model 'AccountActionToken': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -36,3 +37,4 @@ public class AccountActionToken
     [ForeignKey(nameof(UtenteId))]
     public Utente? Utente { get; set; }
 }
+

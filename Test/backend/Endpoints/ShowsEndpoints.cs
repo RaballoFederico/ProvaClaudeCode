@@ -1,3 +1,4 @@
+﻿// DOC: Endpoint 'ShowsEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Services.Interfaces;
@@ -7,6 +8,7 @@ namespace FilmAPI.Endpoints;
 
 public static class ShowsEndpoints
 {
+    // DOC-METHOD: 'MapShowsEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static IEndpointRouteBuilder MapShowsEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGet("/shows", [AllowAnonymous] async (
@@ -124,3 +126,4 @@ public static class ShowsEndpoints
         return app;
     }
 }
+

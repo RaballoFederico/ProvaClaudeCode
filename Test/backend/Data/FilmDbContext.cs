@@ -1,3 +1,4 @@
+﻿// DOC: Layer dati 'FilmDbContext': contesto EF Core, configurazioni e bootstrap persistenza.
 using Microsoft.EntityFrameworkCore;
 using FilmAPI.Model;
 
@@ -417,3 +418,4 @@ public class FilmDbContext : DbContext
         });
     }
 }
+

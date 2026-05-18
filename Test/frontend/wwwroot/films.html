@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
+<!-- DOC: Pagina UI 'films': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <html class="dark" lang="it">
 <head>
     <meta charset="UTF-8">
@@ -10,9 +11,11 @@
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-light.ico" media="(prefers-color-scheme: light)">
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico" media="(prefers-color-scheme: dark)">
     <link rel="shortcut icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico">
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -55,6 +58,7 @@
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
         
+        <!-- DOC-BLOCK: Sezione principale: contiene il flusso operativo della pagina. -->
         <main class="page-shell flex-1 p-4 md:p-8 lg:p-12 overflow-x-hidden pb-20 md:pb-0">
             <header class="hero-banner p-6 md:p-8 mb-8 md:mb-10 reveal-up">
                 <div class="flex flex-col md:flex-row md:items-end justify-between gap-5 md:gap-6">
@@ -73,6 +77,7 @@
                 </div>
             </header>
 
+            <!-- DOC-BLOCK: Blocco funzionale UI: raggruppa contenuti/azioni omogenee della pagina. -->
             <section class="bg-surface-container-low p-4 md:p-6 rounded-xl mb-6 md:mb-8 flex flex-col lg:flex-row items-start lg:items-center gap-4 reveal-up delay-1">
                 <div class="flex-1 w-full lg:min-w-[300px] relative">
                     <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant opacity-50">search</span>
@@ -117,13 +122,21 @@
 
     <div id="modal-container"></div>
 
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/theme.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/api-config.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/auth.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/route-guard.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/template-loader.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/api-client.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/utils.js"></script>
+    <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
         let allFilms = [];
         let allRegisti = [];
@@ -150,6 +163,7 @@
                     ApiClient.get('/registi'),
                     ApiClient.get('/categorie')
                 ]);
+                // Normalizza lista film lato UI per evitare doppioni nel catalogo manager/pubblico.
                 allFilms = normalizeUniqueFilms(allFilms);
                 populateFilters();
                 filterFilms();
@@ -162,6 +176,9 @@
         }
 
         function normalizeFilmTitle(value) {
+            // Chiave canonica titolo:
+            // rimozione accenti/punteggiatura + lowercase + spazi compressi.
+            // Serve per confronti stabili tra sorgenti eterogenee.
             return String(value || '')
                 .normalize('NFKD')
                 .replace(/[\u0300-\u036f]/g, '')
@@ -172,6 +189,8 @@
         }
 
         function normalizeUniqueFilms(films) {
+            // Deduplica per titolo normalizzato (fallback id/data).
+            // Manteniamo il record con data più recente, poi id maggiore.
             const items = Array.isArray(films) ? films : [];
             const byKey = new Map();
 
@@ -253,6 +272,8 @@
         }
 
         function filterFilms() {
+            // Pipeline filtro catalogo:
+            // 1) testo (titolo/codice/cast), 2) regista, 3) anno, 4) categoria.
             const search = document.getElementById('search-input').value.toLowerCase();
             const registaId = document.getElementById('filter-regista').value;
             const year = document.getElementById('filter-year').value;
@@ -289,6 +310,7 @@
         }
 
         function renderFilms() {
+            // Render della griglia poster basata su filteredFilms già normalizzata e filtrata.
             const grid = document.getElementById('films-grid');
             const emptyState = document.getElementById('empty-state');
             const paginationInfo = document.getElementById('pagination-info');
@@ -434,6 +456,7 @@
                 return;
             }
             showModal('Nuovo Film', `
+                <!-- DOC-BLOCK: Form utente: raccoglie input, valida lato client e invia dati ai servizi API. -->
                 <form id="film-form" onsubmit="handleSubmit(event)">
                     <div class="space-y-4">
                         <div class="bg-surface-container-high rounded-xl p-3">
@@ -512,6 +535,7 @@
             const dataProduzione = film.dataProduzione ? film.dataProduzione.split('T')[0] : '';
 
             showModal('Modifica Film', `
+                <!-- DOC-BLOCK: Form utente: raccoglie input, valida lato client e invia dati ai servizi API. -->
                 <form id="film-form" onsubmit="handleSubmit(event)">
                     <div class="space-y-4">
                         <div class="bg-surface-container-high rounded-xl p-3">
@@ -741,4 +765,5 @@
     </script>
 </body>
 </html>
+
 

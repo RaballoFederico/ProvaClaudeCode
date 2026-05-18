@@ -1,3 +1,4 @@
+﻿/* DOC: Modulo JS 'route-guard': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
 const AccessControl = {
     roleMap: {
         admin: ['Admin'],
@@ -44,7 +45,9 @@ const AccessControl = {
         'newsletter-admin.html': 'admin'
     },
 
+    /* DOC-FN: 'getUser' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     getUser() {
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (typeof Auth === 'undefined' || !Auth.isAuthenticated()) {
             return null;
         }
@@ -52,7 +55,9 @@ const AccessControl = {
         return Auth.getUser() || null;
     },
 
+    /* DOC-FN: 'getRoles' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     getRoles(user) {
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (!user || !Array.isArray(user.ruoli)) {
             return [];
         }
@@ -62,21 +67,26 @@ const AccessControl = {
             .filter(Boolean);
     },
 
+    /* DOC-FN: 'hasAnyRole' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     hasAnyRole(user, rolesToMatch) {
         const roles = this.getRoles(user).map(r => r.toLowerCase());
         return rolesToMatch.some(role => roles.includes(String(role || '').toLowerCase()));
     },
 
+    /* DOC-FN: 'canAccess' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     canAccess(rule) {
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (rule === null) {
             return true;
         }
 
         const user = this.getUser();
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (rule === 'guest') {
             return !user;
         }
 
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (!user) {
             return false;
         }
@@ -85,6 +95,7 @@ const AccessControl = {
         return this.hasAnyRole(user, allowedRoles);
     },
 
+    /* DOC-FN: 'canAccessByRule' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     canAccessByRule(rule, user) {
         if (rule === 'public' || rule === null) return true;
         if (rule === 'guest') return !user;
@@ -93,6 +104,7 @@ const AccessControl = {
         if (rule === 'auth') return true;
         if (rule === 'manager') return this.hasAnyRole(user, ['Admin', 'PowerUser']);
         if (rule === 'admin') return this.hasAnyRole(user, ['Admin']);
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (rule === 'user') {
             const isManager = this.hasAnyRole(user, ['Admin', 'PowerUser']);
             return !isManager && this.hasAnyRole(user, ['User']);
@@ -101,11 +113,14 @@ const AccessControl = {
         return false;
     },
 
+    /* DOC-FN: 'getDefaultRoute' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     getDefaultRoute() {
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (!Auth.isAuthenticated()) {
             return '/home.html';
         }
 
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (Auth.hasRole('Admin') || Auth.hasRole('PowerUser')) {
             return '/index.html';
         }
@@ -113,20 +128,25 @@ const AccessControl = {
         return '/profilo.html';
     },
 
+    /* DOC-FN: 'enforceCurrentPage' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     enforceCurrentPage() {
         const page = window.location.pathname.split('/').pop() || 'index.html';
         const rule = this.pageRules[page];
 
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (rule === undefined) {
             return;
         }
 
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (!this.canAccess(rule)) {
+            /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
             if (rule === 'guest') {
                 window.location.href = this.getDefaultRoute();
                 return;
             }
 
+            /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
             if (!Auth.isAuthenticated()) {
                 window.location.href = `/login.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`;
                 return;
@@ -140,8 +160,10 @@ const AccessControl = {
 window.AccessControl = AccessControl;
 
 document.addEventListener('DOMContentLoaded', async () => {
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (typeof Auth !== 'undefined') {
         await Auth.ensureInitialized();
         AccessControl.enforceCurrentPage();
     }
 });
+

@@ -1,3 +1,4 @@
+﻿// DOC: Service 'CategoriaService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -15,6 +16,7 @@ public class CategoriaService : ICategoriaService
         _db = db;
     }
 
+    // DOC-METHOD: 'GetAllAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<List<CategoriaDTO>> GetAllAsync()
     {
         return await _db.Categorie
@@ -29,6 +31,7 @@ public class CategoriaService : ICategoriaService
             .ToListAsync();
     }
 
+    // DOC-METHOD: 'GetByIdAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<CategoriaDTO?> GetByIdAsync(int id)
     {
         return await _db.Categorie
@@ -43,6 +46,7 @@ public class CategoriaService : ICategoriaService
             .FirstOrDefaultAsync();
     }
 
+    // DOC-METHOD: 'GetFilmsByCategoriaAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<List<FilmDTO>> GetFilmsByCategoriaAsync(int categoriaId)
     {
         return await _db.FilmsCategorie
@@ -137,6 +141,7 @@ public class CategoriaService : ICategoriaService
         }, null);
     }
 
+    // DOC-METHOD: 'DeleteAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<bool> DeleteAsync(int id)
     {
         var categoria = await _db.Categorie.FindAsync(id);
@@ -150,3 +155,4 @@ public class CategoriaService : ICategoriaService
         return true;
     }
 }
+

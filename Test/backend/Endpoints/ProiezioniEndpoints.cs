@@ -1,3 +1,4 @@
+﻿// DOC: Endpoint 'ProiezioniEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -8,6 +9,7 @@ namespace FilmAPI.Endpoints;
 
 public static class ProiezioniEndpoints
 {
+    // DOC-METHOD: 'MapProiezioniEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static RouteGroupBuilder MapProiezioniEndpoints(this RouteGroupBuilder group)
     {
         // GET /proiezioni - Visibile a tutti (supporta filtro intervallo per carichi veloci)
@@ -207,3 +209,4 @@ public static class ProiezioniEndpoints
         return group;
     }
 }
+

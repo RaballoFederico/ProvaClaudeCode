@@ -1,3 +1,4 @@
+﻿// DOC: Model 'Sala': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -48,3 +49,4 @@ public class Sala
 
     public ICollection<Show> Shows { get; set; } = new List<Show>();
 }
+

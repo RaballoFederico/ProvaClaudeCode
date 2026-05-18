@@ -1,3 +1,4 @@
+﻿// DOC: Service 'BigliettoService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using System.Security.Cryptography;
 using System.Text;
 using FilmAPI.Data;
@@ -8,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FilmAPI.Services;
 
+// DOC-METHOD: 'BigliettoService' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
 public class BigliettoService(
     FilmDbContext context,
     ICreditoService creditoService,
@@ -16,6 +18,7 @@ public class BigliettoService(
     IPdfService pdfService,
     IConfiguration configuration) : IBigliettoService
 {
+    // DOC-METHOD: 'GetPiantinaStatoAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<IEnumerable<PostoStatoDTO>> GetPiantinaStatoAsync(int showId)
     {
         var show = await context.Shows.Include(s => s.Sala).FirstOrDefaultAsync(s => s.Id == showId);
@@ -42,6 +45,7 @@ public class BigliettoService(
         return result;
     }
 
+    // DOC-METHOD: 'LockPostiAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<PrenotazioneTempDTO> LockPostiAsync(int utenteId, int showId, List<PostoDTO> posti, string sessionId)
     {
         if (posti.Count == 0) throw new InvalidOperationException("Nessun posto selezionato");
@@ -95,6 +99,7 @@ public class BigliettoService(
         }
     }
 
+    // DOC-METHOD: 'RinnovaLockAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<bool> RinnovaLockAsync(int utenteId, string codiceTemporaneo)
     {
         var locks = await context.PrenotazioniTemporanee
@@ -110,6 +115,7 @@ public class BigliettoService(
         return true;
     }
 
+    // DOC-METHOD: 'GetLockDettaglioAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<LockDettaglioDTO?> GetLockDettaglioAsync(string codiceTemporaneo, int utenteId)
     {
         var locks = await context.PrenotazioniTemporanee
@@ -134,6 +140,7 @@ public class BigliettoService(
         };
     }
 
+    // DOC-METHOD: 'RilasciaLockAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<bool> RilasciaLockAsync(int utenteId, string codiceTemporaneo)
     {
         var locks = await context.PrenotazioniTemporanee
@@ -148,6 +155,7 @@ public class BigliettoService(
         return true;
     }
 
+    // DOC-METHOD: 'ConfermaAcquistoAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<AcquistoResultDTO> ConfermaAcquistoAsync(int utenteId, ConfermaAcquistoDTO dto)
     {
         var locks = await context.PrenotazioniTemporanee
@@ -546,12 +554,14 @@ public class BigliettoService(
         return (true, "Rimborso ticket completato: quota carta su Stripe e quota credito sul saldo sito");
     }
 
+    // DOC-METHOD: 'GetBigliettoAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<BigliettoDTO?> GetBigliettoAsync(int id)
     {
         var b = await context.Biglietti.FirstOrDefaultAsync(x => x.Id == id);
         return b is null ? null : ToDto(b);
     }
 
+    // DOC-METHOD: 'GetBigliettiUtenteAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<IEnumerable<BigliettoDTO>> GetBigliettiUtenteAsync(int utenteId)
     {
         var list = await context.Biglietti
@@ -623,6 +633,7 @@ public class BigliettoService(
         return list;
     }
 
+    // DOC-METHOD: 'GetBigliettoPerValidazioneAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<BigliettoValidazioneDTO?> GetBigliettoPerValidazioneAsync(string codiceHash)
     {
         var b = await context.Biglietti
@@ -648,6 +659,7 @@ public class BigliettoService(
         };
     }
 
+    // DOC-METHOD: 'ValidaBigliettoAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<bool> ValidaBigliettoAsync(string codiceHash, int operatoreId, int cinemaId)
     {
         var b = await context.Biglietti.FirstOrDefaultAsync(x => x.CodiceHash == codiceHash);
@@ -658,6 +670,7 @@ public class BigliettoService(
         return true;
     }
 
+    // DOC-METHOD: 'GeneraCodiceHash' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public string GeneraCodiceHash(int bigliettoId, int acquistoId, string posto)
     {
         var raw = $"{bigliettoId}|{acquistoId}|{posto}|filmapi";
@@ -665,11 +678,13 @@ public class BigliettoService(
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 
+    // DOC-METHOD: 'GeneraQRCodeUrl' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public string GeneraQRCodeUrl(string codiceHash)
     {
         return $"https://filmapi.com/validazione/qr/{codiceHash}";
     }
 
+    // DOC-METHOD: 'ToDto' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static BigliettoDTO ToDto(Biglietto b) => new()
     {
         Id = b.Id,
@@ -734,6 +749,7 @@ public class BigliettoService(
             .ToList();
     }
 
+    // DOC-METHOD: 'ParsePosto' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static PostoDTO? ParsePosto(string postoText)
     {
         var parts = postoText.Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
@@ -746,6 +762,7 @@ public class BigliettoService(
         return new PostoDTO { Fila = fila, Numero = numero };
     }
 
+    // DOC-METHOD: 'NormalizeValue' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string? NormalizeValue(string? value, int maxLength)
     {
         if (string.IsNullOrWhiteSpace(value)) return null;
@@ -775,6 +792,7 @@ public class BigliettoService(
         return (credito, carta);
     }
 
+    // DOC-METHOD: 'ExtractTaggedAmount' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static decimal ExtractTaggedAmount(string text, string prefix, string suffix)
     {
         var start = text.IndexOf(prefix, StringComparison.OrdinalIgnoreCase);
@@ -790,3 +808,4 @@ public class BigliettoService(
             : 0m;
     }
 }
+

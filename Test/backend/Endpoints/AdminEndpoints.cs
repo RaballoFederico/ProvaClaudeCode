@@ -1,3 +1,4 @@
+﻿// DOC: Endpoint 'AdminEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -10,6 +11,7 @@ namespace FilmAPI.Endpoints;
 
 public static class AdminEndpoints
 {
+    // DOC-METHOD: 'MapAdminEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static IEndpointRouteBuilder MapAdminEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/admin");
@@ -90,7 +92,7 @@ public static class AdminEndpoints
 
             if (ruoliEsistenti.Count != request.RuoloIds.Count)
             {
-                return Results.BadRequest(new { message = "Uno o più ruoli non esistono" });
+                return Results.BadRequest(new { message = "Uno o piÃ¹ ruoli non esistono" });
             }
 
             var adminRuolo = await db.Ruoli.FirstOrDefaultAsync(r => r.Nome == "Admin");
@@ -436,12 +438,14 @@ public static class AdminEndpoints
         return app;
     }
 
+    // DOC-METHOD: 'GetUserId' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static int GetUserId(HttpContext context)
     {
         var userIdClaim = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         return int.Parse(userIdClaim!);
     }
 
+    // DOC-METHOD: 'ResolveFrontendBaseUrl' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string ResolveFrontendBaseUrl(string? returnUrl)
     {
         if (!string.IsNullOrWhiteSpace(returnUrl) && Uri.TryCreate(returnUrl, UriKind.Absolute, out var parsed))
@@ -452,3 +456,4 @@ public static class AdminEndpoints
         return "https://filmhub-frontend.delightfuldune-f7916078.francecentral.azurecontainerapps.io";
     }
 }
+

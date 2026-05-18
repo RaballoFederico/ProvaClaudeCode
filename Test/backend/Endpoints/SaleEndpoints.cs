@@ -1,3 +1,4 @@
+﻿// DOC: Endpoint 'SaleEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Services.Interfaces;
@@ -8,6 +9,7 @@ namespace FilmAPI.Endpoints;
 
 public static class SaleEndpoints
 {
+    // DOC-METHOD: 'MapSaleEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static IEndpointRouteBuilder MapSaleEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGet("/admin/cinemas/{cinemaId:int}/sale", [Authorize(Roles = "Admin,PowerUser")] async (int cinemaId, ISalaService salaService) =>
@@ -57,3 +59,4 @@ public static class SaleEndpoints
         return app;
     }
 }
+

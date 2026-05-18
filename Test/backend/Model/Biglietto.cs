@@ -1,3 +1,4 @@
+﻿// DOC: Model 'Biglietto': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -59,3 +60,4 @@ public class Biglietto
     [MaxLength(500)]
     public string QRCodeUrl { get; set; } = string.Empty;
 }
+

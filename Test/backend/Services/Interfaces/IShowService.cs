@@ -1,3 +1,4 @@
+﻿// DOC: Interfaccia service 'IShowService': contratto della logica applicativa usata dagli endpoint.
 using FilmAPI.DTO;
 
 namespace FilmAPI.Services.Interfaces;
@@ -15,3 +16,4 @@ public interface IShowService
     Task<int> GetPostiDisponibiliAsync(int showId);
     Task<DisponibilitaPostiDTO?> GetDisponibilitaPostiAsync(int showId);
 }
+

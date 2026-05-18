@@ -1,3 +1,4 @@
+﻿// DOC: Service 'AuthService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -227,7 +228,7 @@ public class AuthService : IAuthService
         }
 
         // Per utenti esterni appena creati serve prima persistere l'utente
-        // così l'ID esiste prima di creare il refresh token.
+        // cosÃ¬ l'ID esiste prima di creare il refresh token.
         if (utente.Id == 0)
         {
             await _db.SaveChangesAsync();
@@ -242,6 +243,7 @@ public class AuthService : IAuthService
         return (response, null);
     }
 
+    // DOC-METHOD: 'LogoutAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<string?> LogoutAsync(int userId, string? ipAddress = null, string? userAgent = null)
     {
         var utente = await _db.Utenti.FindAsync(userId);
@@ -263,6 +265,7 @@ public class AuthService : IAuthService
         return null;
     }
 
+    // DOC-METHOD: 'LogoutAllAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<string?> LogoutAllAsync(int userId, string? ipAddress = null, string? userAgent = null)
     {
         return await LogoutAsync(userId, ipAddress, userAgent);
@@ -313,6 +316,7 @@ public class AuthService : IAuthService
         return (true, null);
     }
 
+    // DOC-METHOD: 'GetMeAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<UtenteDTO?> GetMeAsync(int userId)
     {
         var utente = await _db.Utenti
@@ -336,6 +340,7 @@ public class AuthService : IAuthService
         };
     }
 
+    // DOC-METHOD: 'BuildLoginResponseAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private async Task<LoginResponseDTO> BuildLoginResponseAsync(Utente utente)
     {
         utente.DataUltimoAccesso = DateTime.UtcNow;
@@ -373,6 +378,7 @@ public class AuthService : IAuthService
         };
     }
 
+    // DOC-METHOD: 'RevokeActiveRefreshTokensAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private async Task RevokeActiveRefreshTokensAsync(int userId)
     {
         var activeTokens = await _db.RefreshTokens
@@ -391,6 +397,7 @@ public class AuthService : IAuthService
         }
     }
 
+    // DOC-METHOD: 'GenerateUniqueUsernameAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private async Task<string> GenerateUniqueUsernameAsync(string? suggestedUsername, string email)
     {
         var baseValue = string.IsNullOrWhiteSpace(suggestedUsername)
@@ -446,6 +453,7 @@ public class AuthService : IAuthService
         return (parts[0], string.Join(' ', parts.Skip(1)));
     }
 
+    // DOC-METHOD: 'IsStrongPassword' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static bool IsStrongPassword(string? password)
     {
         if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
@@ -461,3 +469,4 @@ public class AuthService : IAuthService
         return hasUpper && hasLower && hasDigit && hasSymbol;
     }
 }
+

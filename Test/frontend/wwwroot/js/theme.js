@@ -1,7 +1,9 @@
+﻿/* DOC: Modulo JS 'theme': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
 (function () {
     const STORAGE_KEY = 'siteTheme';
     let volatileTheme = 'dark';
 
+    /* DOC-FN: 'safeGetStoredTheme' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function safeGetStoredTheme() {
         try {
             return localStorage.getItem(STORAGE_KEY);
@@ -10,6 +12,7 @@
         }
     }
 
+    /* DOC-FN: 'safeSetStoredTheme' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function safeSetStoredTheme(theme) {
         volatileTheme = theme;
         try {
@@ -19,8 +22,10 @@
         }
     }
 
+    /* DOC-FN: 'getPreferredTheme' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function getPreferredTheme() {
         const stored = safeGetStoredTheme();
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (stored === 'light' || stored === 'dark') {
             return stored;
         }
@@ -29,6 +34,7 @@
         return prefersDark ? 'dark' : 'light';
     }
 
+    /* DOC-FN: 'applyTheme' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function applyTheme(theme) {
         document.documentElement.setAttribute('data-theme', theme);
         document.documentElement.classList.toggle('dark', theme === 'dark');
@@ -36,6 +42,7 @@
         safeSetStoredTheme(theme);
 
         const icon = document.getElementById('theme-toggle-icon');
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (icon) {
             icon.textContent = theme === 'dark' ? 'light_mode' : 'dark_mode';
         }
@@ -47,6 +54,7 @@
         window.dispatchEvent(new CustomEvent('theme:changed', { detail: { theme } }));
     }
 
+    /* DOC-FN: 'applyMotionProfile' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function applyMotionProfile() {
         const path = (window.location.pathname.split('/').pop() || 'home.html').toLowerCase();
         const cinematicPages = new Set([
@@ -76,9 +84,11 @@
     }
 
     window.Theme = {
+        /* DOC-FN: 'init' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         init() {
             applyTheme(getPreferredTheme());
         },
+        /* DOC-FN: 'toggle' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         toggle() {
             const current = document.documentElement.getAttribute('data-theme') || 'dark';
             applyTheme(current === 'dark' ? 'light' : 'dark');
@@ -88,15 +98,18 @@
     window.Theme.init();
     applyMotionProfile();
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (window.matchMedia) {
         const media = window.matchMedia('(prefers-color-scheme: dark)');
         const handleSystemThemeChange = (event) => {
             const stored = safeGetStoredTheme();
+            /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
             if (stored !== 'light' && stored !== 'dark') {
                 applyTheme(event.matches ? 'dark' : 'light');
             }
         };
 
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (typeof media.addEventListener === 'function') {
             media.addEventListener('change', handleSystemThemeChange);
         } else if (typeof media.addListener === 'function') {
@@ -104,6 +117,7 @@
         }
     }
 
+    /* DOC-FN: 'initMotionEnhancements' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function initMotionEnhancements() {
         const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (reduceMotion) return;
@@ -127,6 +141,7 @@
         const popTargets = document.querySelectorAll('.app-card, .app-btn, .film-card, .badge-soft');
         popTargets.forEach((el) => {
             el.classList.add('motion-pop');
+            /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
             if (el.classList.contains('app-card') || el.classList.contains('film-card')) {
                 el.classList.add('motion-glow');
             }
@@ -147,6 +162,7 @@
     }
 
     let motionRefreshScheduled = false;
+    /* DOC-FN: 'scheduleMotionRefresh' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function scheduleMotionRefresh() {
         if (motionRefreshScheduled) return;
         motionRefreshScheduled = true;
@@ -158,6 +174,7 @@
 
     window.Theme.refreshMotion = scheduleMotionRefresh;
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initMotionEnhancements);
     } else {
@@ -171,11 +188,13 @@
 
     const mutationObserver = new MutationObserver((mutations) => {
         const hasAddedNodes = mutations.some((m) => m.addedNodes && m.addedNodes.length > 0);
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (hasAddedNodes) {
             scheduleMotionRefresh();
         }
     });
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (document.body) {
         mutationObserver.observe(document.body, { childList: true, subtree: true });
     } else {
@@ -184,3 +203,4 @@
         });
     }
 })();
+

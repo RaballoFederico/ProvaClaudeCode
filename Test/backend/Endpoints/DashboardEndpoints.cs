@@ -1,3 +1,4 @@
+﻿// DOC: Endpoint 'DashboardEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +7,7 @@ namespace FilmAPI.Endpoints;
 
 public static class DashboardEndpoints
 {
+    // DOC-METHOD: 'MapDashboardEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static IEndpointRouteBuilder MapDashboardEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGet("/dashboard/overview", async (FilmDbContext db, IMemoryCache cache, HttpContext httpContext) =>
@@ -122,6 +124,7 @@ public static class DashboardEndpoints
         return app;
     }
 
+    // DOC-METHOD: 'NormalizeMediaUrl' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string NormalizeMediaUrl(string? path, HttpContext httpContext)
     {
         if (string.IsNullOrWhiteSpace(path))
@@ -141,3 +144,4 @@ public static class DashboardEndpoints
         return $"{backendBaseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
     }
 }
+

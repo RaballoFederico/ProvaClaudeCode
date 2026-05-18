@@ -1,3 +1,4 @@
+﻿// DOC: DTO 'PagamentoDTO': contratto dati per request/response API.
 namespace FilmAPI.DTO;
 
 public class CalcoloImportoRequestDTO
@@ -69,3 +70,4 @@ public class StripeWebhookResultDTO
     public decimal? Amount { get; set; }
     public bool AlreadyProcessed { get; set; }
 }
+

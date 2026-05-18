@@ -1,3 +1,4 @@
+﻿// DOC: Interfaccia service 'IAuthService': contratto della logica applicativa usata dagli endpoint.
 using FilmAPI.DTO;
 
 namespace FilmAPI.Services.Interfaces;
@@ -14,3 +15,4 @@ public interface IAuthService
     Task<(bool success, string? error)> SetPasswordAsync(int userId, string newPassword);
     Task<UtenteDTO?> GetMeAsync(int userId);
 }
+

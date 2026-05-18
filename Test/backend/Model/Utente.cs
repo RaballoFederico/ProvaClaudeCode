@@ -1,3 +1,4 @@
+﻿// DOC: Model 'Utente': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -71,3 +72,4 @@ public class Utente
 
     public ICollection<AbbonamentoUtente> Abbonamenti { get; set; } = new List<AbbonamentoUtente>();
 }
+

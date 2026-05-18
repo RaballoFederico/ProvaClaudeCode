@@ -1,3 +1,4 @@
+﻿// DOC: Service 'EmailService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.Services.Interfaces;
 using MailKit.Net.Smtp;
 using MailKit.Security;
@@ -6,8 +7,10 @@ using System.Net.Sockets;
 
 namespace FilmAPI.Services;
 
+// DOC-METHOD: 'EmailService' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
 public class EmailService(IConfiguration configuration, ILogger<EmailService> logger) : IEmailService
 {
+    // DOC-METHOD: 'NormalizeSetting' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string? NormalizeSetting(string? value, bool removeAllSpaces = false)
     {
         if (string.IsNullOrWhiteSpace(value))
@@ -29,6 +32,7 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
         return string.IsNullOrWhiteSpace(trimmed) ? null : trimmed;
     }
 
+    // DOC-METHOD: 'IsPlaceholder' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static bool IsPlaceholder(string value)
     {
         if (string.IsNullOrWhiteSpace(value)) return true;
@@ -38,12 +42,15 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
                || v.Contains("placeholder", StringComparison.OrdinalIgnoreCase);
     }
 
+    // DOC-METHOD: 'InviaConfermaAcquistoAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task InviaConfermaAcquistoAsync(string toEmail, string soggetto, string htmlBody, byte[]? allegatoPdf = null, string? nomeFile = null)
         => await InviaEmailCoreAsync(toEmail, soggetto, htmlBody, allegatoPdf, nomeFile, strict: false);
 
+    // DOC-METHOD: 'InviaEmailStrictAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task InviaEmailStrictAsync(string toEmail, string soggetto, string htmlBody, byte[]? allegatoPdf = null, string? nomeFile = null)
         => await InviaEmailCoreAsync(toEmail, soggetto, htmlBody, allegatoPdf, nomeFile, strict: true);
 
+    // DOC-METHOD: 'InviaEmailCoreAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private async Task InviaEmailCoreAsync(string toEmail, string soggetto, string htmlBody, byte[]? allegatoPdf, string? nomeFile, bool strict)
     {
         var host = NormalizeSetting(Environment.GetEnvironmentVariable("SMTP_HOST")) ?? NormalizeSetting(configuration["SMTP:Host"]);
@@ -165,3 +172,4 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
         }
     }
 }
+

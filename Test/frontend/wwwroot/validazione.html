@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
+<!-- DOC: Pagina UI 'validazione': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <html lang="it" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -10,17 +11,21 @@
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-light.ico" media="(prefers-color-scheme: light)">
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico" media="(prefers-color-scheme: dark)">
     <link rel="shortcut icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico">
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="/css/styles.css">
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="https://unpkg.com/html5-qrcode" defer></script>
 </head>
 <body class="bg-background text-on-surface font-body min-h-screen flex flex-col">
     <div id="navbar-container"></div>
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
+        <!-- DOC-BLOCK: Sezione principale: contiene il flusso operativo della pagina. -->
         <main class="page-shell flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
+            <!-- DOC-BLOCK: Blocco funzionale UI: raggruppa contenuti/azioni omogenee della pagina. -->
             <section class="hero-banner p-6 md:p-8 mb-5 reveal-up">
                 <span class="badge-soft mb-3">
                     <span class="material-symbols-outlined text-sm">qr_code_scanner</span>
@@ -34,6 +39,7 @@
                 </div>
             </section>
 
+            <!-- DOC-BLOCK: Blocco funzionale UI: raggruppa contenuti/azioni omogenee della pagina. -->
             <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 mb-5 reveal-up delay-1">
                 <div class="flex items-center justify-between mb-3">
                     <h2 class="font-headline text-lg font-bold">Scanner QR</h2>
@@ -42,11 +48,13 @@
                 <div id="qr-reader" class="hidden max-w-md"></div>
             </section>
 
+            <!-- DOC-BLOCK: Blocco funzionale UI: raggruppa contenuti/azioni omogenee della pagina. -->
             <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 reveal-up delay-2">
                 <h2 class="font-headline text-lg font-bold mb-3">Risultato</h2>
                 <div id="result-box" class="text-on-surface-variant">Nessuna verifica eseguita.</div>
             </section>
 
+            <!-- DOC-BLOCK: Blocco funzionale UI: raggruppa contenuti/azioni omogenee della pagina. -->
             <section class="bg-surface-container rounded-2xl border border-outline-variant/20 p-5 mt-5 reveal-up delay-3">
                 <div class="flex items-center justify-between gap-3 mb-3">
                     <h2 class="font-headline text-lg font-bold">Ultime verifiche</h2>
@@ -58,13 +66,21 @@
     </div>
     <div id="footer-container"></div>
 
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/theme.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/api-config.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/auth.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/route-guard.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/template-loader.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/api-client.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/utils.js"></script>
+    <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
         let cinemas = [];
         let scanner = null;
@@ -277,4 +293,5 @@
     </script>
 </body>
 </html>
+
 

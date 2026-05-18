@@ -1,3 +1,4 @@
+﻿// DOC: Interfaccia service 'ICategoriaService': contratto della logica applicativa usata dagli endpoint.
 using FilmAPI.DTO;
 
 namespace FilmAPI.Services.Interfaces;
@@ -11,3 +12,4 @@ public interface ICategoriaService
     Task<(CategoriaDTO? categoria, string? error)> UpdateAsync(int id, CategoriaCreateDTO dto);
     Task<bool> DeleteAsync(int id);
 }
+

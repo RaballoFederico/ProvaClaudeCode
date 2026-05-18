@@ -1,3 +1,4 @@
+﻿// DOC: Endpoint 'NotificheEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -7,6 +8,7 @@ namespace FilmAPI.Endpoints;
 
 public static class NotificheEndpoints
 {
+    // DOC-METHOD: 'MapNotificheEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static IEndpointRouteBuilder MapNotificheEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/notifiche").RequireAuthorization("Authenticated");
@@ -112,12 +114,14 @@ public static class NotificheEndpoints
         return app;
     }
 
+    // DOC-METHOD: 'GetUserId' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static int? GetUserId(HttpContext context)
     {
         var claim = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
         return int.TryParse(claim, out var userId) ? userId : null;
     }
 
+    // DOC-METHOD: 'Normalize' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string? Normalize(string? value, int max)
     {
         if (string.IsNullOrWhiteSpace(value)) return null;
@@ -125,3 +129,4 @@ public static class NotificheEndpoints
         return v.Length <= max ? v : v[..max];
     }
 }
+

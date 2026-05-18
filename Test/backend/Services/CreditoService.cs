@@ -1,3 +1,4 @@
+﻿// DOC: Service 'CreditoService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -6,14 +7,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FilmAPI.Services;
 
+// DOC-METHOD: 'CreditoService' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
 public class CreditoService(FilmDbContext context) : ICreditoService
 {
+    // DOC-METHOD: 'GetSaldoAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<decimal> GetSaldoAsync(int utenteId)
     {
         var credito = await EnsureCreditoAsync(utenteId);
         return credito.Saldo;
     }
 
+    // DOC-METHOD: 'RicaricaAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<TransazioneCreditoDTO> RicaricaAsync(int operatoreId, RicaricaCreditoDTO dto)
     {
         if (dto.Importo <= 0) throw new InvalidOperationException("Importo non valido");
@@ -42,6 +46,7 @@ public class CreditoService(FilmDbContext context) : ICreditoService
         return ToDto(tx);
     }
 
+    // DOC-METHOD: 'GetStoricoAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<IEnumerable<TransazioneCreditoDTO>> GetStoricoAsync(int utenteId)
     {
         return await context.TransazioniCredito
@@ -64,6 +69,7 @@ public class CreditoService(FilmDbContext context) : ICreditoService
             .ToListAsync();
     }
 
+    // DOC-METHOD: 'GetAllTransazioniAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<IEnumerable<TransazioneCreditoDTO>> GetAllTransazioniAsync(TransazioneFilterDTO? filter = null)
     {
         var q = context.TransazioniCredito.AsQueryable();
@@ -94,6 +100,7 @@ public class CreditoService(FilmDbContext context) : ICreditoService
             .ToListAsync();
     }
 
+    // DOC-METHOD: 'ScalaCreditoAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<bool> ScalaCreditoAsync(int utenteId, decimal importo, int acquistoId)
     {
         if (importo <= 0) return true;
@@ -120,6 +127,7 @@ public class CreditoService(FilmDbContext context) : ICreditoService
         return true;
     }
 
+    // DOC-METHOD: 'EnsureCreditoAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private async Task<CreditoUtente> EnsureCreditoAsync(int utenteId)
     {
         var credito = await context.CreditiUtente.FirstOrDefaultAsync(c => c.UtenteId == utenteId);
@@ -131,6 +139,7 @@ public class CreditoService(FilmDbContext context) : ICreditoService
         return credito;
     }
 
+    // DOC-METHOD: 'ToDto' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static TransazioneCreditoDTO ToDto(TransazioneCredito t) => new()
     {
         Id = t.Id,
@@ -146,3 +155,4 @@ public class CreditoService(FilmDbContext context) : ICreditoService
         AcquistoId = t.AcquistoId
     };
 }
+

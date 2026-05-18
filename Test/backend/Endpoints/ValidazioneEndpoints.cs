@@ -1,3 +1,4 @@
+﻿// DOC: Endpoint 'ValidazioneEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 
@@ -5,6 +6,7 @@ namespace FilmAPI.Endpoints;
 
 public static class ValidazioneEndpoints
 {
+    // DOC-METHOD: 'MapValidazioneEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static IEndpointRouteBuilder MapValidazioneEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/validazione");
@@ -40,6 +42,7 @@ public static class ValidazioneEndpoints
         return app;
     }
 
+    // DOC-METHOD: 'GetUserId' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static int? GetUserId(HttpContext context)
     {
         var userIdClaim = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -47,3 +50,4 @@ public static class ValidazioneEndpoints
         return null;
     }
 }
+

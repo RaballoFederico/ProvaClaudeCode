@@ -1,3 +1,4 @@
+﻿// DOC: DTO 'CinemaDTO': contratto dati per request/response API.
 namespace FilmAPI.DTO;
 
 public class CinemaDTO
@@ -36,3 +37,4 @@ public class CinemaUpdateDTO
     public string? CodiceLocale { get; set; }
     public string? ImageUrl { get; set; }
 }
+

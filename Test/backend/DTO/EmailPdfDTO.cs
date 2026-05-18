@@ -1,3 +1,4 @@
+﻿// DOC: DTO 'EmailPdfDTO': contratto dati per request/response API.
 namespace FilmAPI.DTO;
 
 public class BigliettoPdfDTO
@@ -17,3 +18,4 @@ public class BigliettoPdfDTO
     public string CodiceHash { get; set; } = string.Empty;
     public string QRCodeUrl { get; set; } = string.Empty;
 }
+

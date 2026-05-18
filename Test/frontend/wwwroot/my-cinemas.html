@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
+<!-- DOC: Pagina UI 'my-cinemas': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <html lang="it" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -10,10 +11,12 @@
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-light.ico" media="(prefers-color-scheme: light)">
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico" media="(prefers-color-scheme: dark)">
     <link rel="shortcut icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico">
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="/css/styles.css">
+    <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -41,7 +44,9 @@
     <div id="navbar-container"></div>
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
+        <!-- DOC-BLOCK: Sezione principale: contiene il flusso operativo della pagina. -->
         <main class="page-shell flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
+            <!-- DOC-BLOCK: Blocco funzionale UI: raggruppa contenuti/azioni omogenee della pagina. -->
             <section class="hero-banner p-6 md:p-8 mb-6 reveal-up">
                 <span class="section-eyebrow mb-3 inline-flex items-center gap-2">
                     <span class="material-symbols-outlined text-sm">location_city</span>
@@ -67,6 +72,7 @@
                 </div>
             </section>
 
+            <!-- DOC-BLOCK: Blocco funzionale UI: raggruppa contenuti/azioni omogenee della pagina. -->
             <section class="app-card p-4 mb-6 reveal-up delay-1">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                     <div class="md:col-span-2">
@@ -83,18 +89,27 @@
                 </div>
             </section>
 
+            <!-- DOC-BLOCK: Blocco funzionale UI: raggruppa contenuti/azioni omogenee della pagina. -->
             <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 mb-6 reveal-up delay-2" id="cinemas-grid"></section>
         </main>
     </div>
     <div id="footer-container"></div>
 
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/theme.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/api-config.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/auth.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/route-guard.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/template-loader.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/api-client.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/utils.js"></script>
+    <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
         let cinemas = [];
         let cinemaSearchQuery = '';
@@ -259,4 +274,5 @@
     </script>
 </body>
 </html>
+
 

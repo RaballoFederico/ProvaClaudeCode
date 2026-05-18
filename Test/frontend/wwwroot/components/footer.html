@@ -1,3 +1,4 @@
+﻿<!-- DOC: Pagina UI 'footer': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <footer class="mt-10 md:mt-14 px-4 md:px-8 lg:px-12 pb-24 md:pb-8">
     <div class="max-w-[1500px] mx-auto rounded-2xl bg-surface-container border border-outline-variant/20 px-4 md:px-7 py-5 md:py-6 flex flex-col gap-4 footer-shell">
         <div>
@@ -8,6 +9,7 @@
         <div class="w-full grid gap-4 md:grid-cols-[minmax(280px,1fr)_auto] items-start">
             <div class="max-w-xl footer-newsletter">
                 <p class="text-[11px] uppercase tracking-[0.18em] text-on-surface-variant">Newsletter</p>
+                <!-- DOC-BLOCK: Form utente: raccoglie input, valida lato client e invia dati ai servizi API. -->
                 <form id="footer-newsletter-form" class="mt-2 flex flex-col sm:flex-row gap-2">
                     <input id="footer-newsletter-email" type="email" required placeholder="La tua email" class="flex-1 rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm text-on-surface">
                     <button type="submit" class="app-btn app-btn-primary whitespace-nowrap">Iscriviti</button>
@@ -20,12 +22,13 @@
                 <a class="hover:text-on-surface transition-colors" href="/termini.html">Termini</a>
                 <a class="hover:text-on-surface transition-colors" href="/condizioni.html">Condizioni</a>
                 <a class="hover:text-on-surface transition-colors" href="/privacy.html">Privacy</a>
-                <span class="text-on-surface-variant/70">© 2026</span>
+                <span class="text-on-surface-variant/70">Â© 2026</span>
             </div>
         </div>
     </div>
 </footer>
 
+<!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
 <script>
     (function initFooterNewsletter() {
         const form = document.getElementById('footer-newsletter-form');
@@ -58,3 +61,4 @@
         });
     })();
 </script>
+

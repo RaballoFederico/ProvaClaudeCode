@@ -1,3 +1,4 @@
+﻿// DOC: Model 'RefreshToken': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -43,3 +44,4 @@ public class RefreshToken
     [MaxLength(256)]
     public string? RevokedByUserAgent { get; set; }
 }
+

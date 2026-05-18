@@ -1,17 +1,22 @@
+﻿/* DOC: Modulo JS 'template-loader': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
 const componentHtmlCache = new Map();
 const COMPONENT_CACHE_VERSION = 'v3';
 
+/* DOC-FN: 'getComponentCacheKey' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function getComponentCacheKey(componentPath) {
     return `component-cache:${COMPONENT_CACHE_VERSION}:${componentPath}`;
 }
 
+/* DOC-FN: 'getCachedComponentHtml' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function getCachedComponentHtml(componentPath) {
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (componentHtmlCache.has(componentPath)) {
         return componentHtmlCache.get(componentPath);
     }
 
     try {
         const cached = window.sessionStorage.getItem(getComponentCacheKey(componentPath));
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (cached) {
             componentHtmlCache.set(componentPath, cached);
             return cached;
@@ -23,6 +28,7 @@ function getCachedComponentHtml(componentPath) {
     return null;
 }
 
+/* DOC-FN: 'setCachedComponentHtml' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function setCachedComponentHtml(componentPath, html) {
     componentHtmlCache.set(componentPath, html);
     try {
@@ -32,8 +38,10 @@ function setCachedComponentHtml(componentPath, html) {
     }
 }
 
+/* DOC-FN: 'injectComponentHtml' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function injectComponentHtml(elementId, html) {
     const element = document.getElementById(elementId);
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (!element) {
         return;
     }
@@ -41,8 +49,10 @@ function injectComponentHtml(elementId, html) {
     element.innerHTML = html;
 
     const scripts = Array.from(element.querySelectorAll('script'));
+    /* DOC-FN: 'for' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     for (const oldScript of scripts) {
         const newScript = document.createElement('script');
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (oldScript.src) {
             newScript.src = oldScript.src;
         } else {
@@ -53,15 +63,18 @@ function injectComponentHtml(elementId, html) {
     }
 }
 
+/* DOC-FN: 'loadComponent' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 async function loadComponent(elementId, componentPath) {
     try {
         const cachedHtml = getCachedComponentHtml(componentPath);
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (cachedHtml) {
             injectComponentHtml(elementId, cachedHtml);
             return;
         }
 
         const response = await fetch(componentPath);
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (!response.ok) {
             throw new Error(`Failed to load ${componentPath}`);
         }
@@ -73,7 +86,9 @@ async function loadComponent(elementId, componentPath) {
     }
 }
 
+/* DOC-FN: 'loadAllComponents' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 async function loadAllComponents() {
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (typeof Auth !== 'undefined' && typeof Auth.ensureInitialized === 'function') {
         // Avvia inizializzazione auth in background senza bloccare il rendering layout.
         Auth.ensureInitialized().catch(() => {});
@@ -92,29 +107,36 @@ async function loadAllComponents() {
     initNavigation();
     applyPageAccessControl();
     renderCookieBanner();
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (window.Theme && typeof window.Theme.refreshMotion === 'function') {
         window.Theme.refreshMotion();
     }
 }
 
+/* DOC-FN: 'getCurrentUser' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function getCurrentUser() {
     if (typeof Auth === 'undefined') return null;
     return Auth.getUser();
 }
 
+/* DOC-FN: 'isManagerUser' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function isManagerUser() {
     if (typeof Auth === 'undefined' || !Auth.isAuthenticated()) return false;
     return Auth.canManageCatalog();
 }
 
+/* DOC-FN: 'isAuthenticatedUser' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function isAuthenticatedUser() {
     return typeof Auth !== 'undefined' && Auth.isAuthenticated();
 }
 
+/* DOC-FN: 'applyPageAccessControl' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function applyPageAccessControl() {
     const currentPath = window.location.pathname.split('/').pop() || 'home.html';
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (typeof AccessControl !== 'undefined' && AccessControl.pageRules) {
         const rule = AccessControl.pageRules[currentPath];
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (rule !== undefined && !AccessControl.canAccess(rule)) {
             window.location.href = AccessControl.getDefaultRoute();
             return;
@@ -122,11 +144,13 @@ function applyPageAccessControl() {
     }
 }
 
+/* DOC-FN: 'initNavigation' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function initNavigation() {
     const currentPath = window.location.pathname.split('/').pop() || 'home.html';
     
     document.querySelectorAll('nav a').forEach(link => {
         const href = link.getAttribute('href');
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (href === currentPath || (currentPath === '' && href === 'home.html')) {
             link.classList.add('bg-surface-container-high', 'text-primary-container');
             link.classList.remove('text-on-surface-variant');
@@ -136,6 +160,7 @@ function initNavigation() {
 
 const COOKIE_CONSENT_KEY = 'filmapi_cookie_consent_v1';
 
+/* DOC-FN: 'getCookieConsent' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function getCookieConsent() {
     try {
         return localStorage.getItem(COOKIE_CONSENT_KEY);
@@ -144,6 +169,7 @@ function getCookieConsent() {
     }
 }
 
+/* DOC-FN: 'setCookieConsent' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function setCookieConsent(value) {
     try {
         localStorage.setItem(COOKIE_CONSENT_KEY, value);
@@ -152,6 +178,7 @@ function setCookieConsent(value) {
     }
 }
 
+/* DOC-FN: 'ensureCookieBannerStyles' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function ensureCookieBannerStyles() {
     if (document.getElementById('cookie-banner-styles')) return;
 
@@ -220,6 +247,7 @@ function ensureCookieBannerStyles() {
     document.head.appendChild(style);
 }
 
+/* DOC-FN: 'renderCookieBanner' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function renderCookieBanner() {
     if (document.getElementById('cookie-banner')) return;
     if (getCookieConsent()) return;
@@ -247,6 +275,7 @@ function renderCookieBanner() {
     const acceptBtn = document.getElementById('cookie-accept-btn');
     const rejectBtn = document.getElementById('cookie-reject-btn');
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (acceptBtn) {
         acceptBtn.addEventListener('click', () => {
             setCookieConsent('accepted');
@@ -254,6 +283,7 @@ function renderCookieBanner() {
         });
     }
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (rejectBtn) {
         rejectBtn.addEventListener('click', () => {
             setCookieConsent('rejected');
@@ -261,3 +291,4 @@ function renderCookieBanner() {
         });
     }
 }
+

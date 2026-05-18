@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
+<!-- DOC: Pagina UI 'profilo': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <html lang="it" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -10,10 +11,12 @@
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-light.ico" media="(prefers-color-scheme: light)">
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico" media="(prefers-color-scheme: dark)">
     <link rel="shortcut icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico">
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="css/styles.css">
+    <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -50,6 +53,7 @@
         <div id="navbar-container"></div>
 
         <!-- Content -->
+        <!-- DOC-BLOCK: Sezione principale: contiene il flusso operativo della pagina. -->
         <main class="page-shell flex-1 p-4 md:p-8 pb-24 md:pb-8">
             <div class="max-w-6xl mx-auto">
                 <button
@@ -68,7 +72,7 @@
                         Account personale
                     </span>
                     <h1 class="text-3xl md:text-5xl lg:text-6xl font-semibold text-on-surface font-headline leading-[0.98]">Area Personale</h1>
-                    <p class="text-on-surface-variant mt-3 max-w-3xl">Gestisci profilo, proiezioni salvate, acquisti e rimborsi in un’unica dashboard personale.</p>
+                    <p class="text-on-surface-variant mt-3 max-w-3xl">Gestisci profilo, proiezioni salvate, acquisti e rimborsi in unâ€™unica dashboard personale.</p>
                 </div>
 
                 <!-- Loading State -->
@@ -206,6 +210,7 @@
                 </button>
             </div>
 
+            <!-- DOC-BLOCK: Form utente: raccoglie input, valida lato client e invia dati ai servizi API. -->
             <form id="edit-form" class="space-y-4">
                 <div>
                     <label class="block text-sm text-on-surface-variant mb-1">Email *</label>
@@ -251,6 +256,7 @@
                 </button>
             </div>
 
+            <!-- DOC-BLOCK: Form utente: raccoglie input, valida lato client e invia dati ai servizi API. -->
             <form id="security-form" class="space-y-4">
                 <div>
                     <label class="block text-sm text-on-surface-variant mb-1">Password attuale *</label>
@@ -296,6 +302,7 @@
                 <p id="prenota-data" class="text-sm text-on-surface-variant"></p>
             </div>
 
+            <!-- DOC-BLOCK: Form utente: raccoglie input, valida lato client e invia dati ai servizi API. -->
             <form id="prenota-form" class="space-y-4">
                 <div>
                     <label class="block text-sm text-on-surface-variant mb-1">Numero di posti *</label>
@@ -317,14 +324,23 @@
         </div>
     </div>
 
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="js/theme.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/api-config.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="js/auth.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="js/route-guard.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="js/template-loader.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="js/api-client.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="js/utils.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="js/pages/profilo.js"></script>
 </body>
 </html>
+
 

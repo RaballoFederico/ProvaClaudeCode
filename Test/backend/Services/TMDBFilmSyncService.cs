@@ -1,3 +1,4 @@
+﻿// DOC: Service 'TMDBFilmSyncService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using System.Text.Json;
 using FilmAPI.Data;
 using FilmAPI.Model;
@@ -57,6 +58,7 @@ public class TMDBFilmSyncService : BackgroundService
         }
     }
 
+    // DOC-METHOD: 'RunSyncSafelyAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private async Task RunSyncSafelyAsync(CancellationToken stoppingToken)
     {
         try
@@ -70,6 +72,7 @@ public class TMDBFilmSyncService : BackgroundService
         }
     }
 
+    // DOC-METHOD: 'SyncPopularMoviesAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task SyncPopularMoviesAsync(CancellationToken stoppingToken = default)
     {
         using var scope = _scopeFactory.CreateScope();
@@ -264,6 +267,7 @@ public class TMDBFilmSyncService : BackgroundService
         _logger.LogInformation("Sincronizzazione TMDB completata: {Imported} importati, {Updated} aggiornati", importedCount, updatedCount);
     }
 
+    // DOC-METHOD: 'BackfillLocalMoviesAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private async Task BackfillLocalMoviesAsync(CancellationToken stoppingToken)
     {
         using var scope = _scopeFactory.CreateScope();
@@ -353,6 +357,7 @@ public class TMDBFilmSyncService : BackgroundService
         _logger.LogInformation("Backfill TMDB completato: {Updated} film aggiornati", updated);
     }
 
+    // DOC-METHOD: 'GetOrCreateRegistaAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static async Task<Regista> GetOrCreateRegistaAsync(FilmDbContext context, string? fullName, string? nazionalita, CancellationToken stoppingToken)
     {
         var (nome, cognome) = SplitDirectorName(fullName);
@@ -385,6 +390,7 @@ public class TMDBFilmSyncService : BackgroundService
         return regista;
     }
 
+    // DOC-METHOD: 'ResolveDirectorNationalityAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static async Task<string?> ResolveDirectorNationalityAsync(ITMDBService tmdbService, int directorId, CancellationToken stoppingToken)
     {
         stoppingToken.ThrowIfCancellationRequested();
@@ -412,6 +418,7 @@ public class TMDBFilmSyncService : BackgroundService
         return null;
     }
 
+    // DOC-METHOD: 'NormalizeNationalityFromPlace' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string NormalizeNationalityFromPlace(string placeOfBirth)
     {
         var country = placeOfBirth.Split(',').Last().Trim();
@@ -531,3 +538,4 @@ public class TMDBFilmSyncService : BackgroundService
         return (nome, cognome);
     }
 }
+

@@ -1,3 +1,4 @@
+﻿// DOC: Endpoint 'CinemasEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -12,6 +13,7 @@ namespace FilmAPI.Endpoints;
 
 public static class CinemasEndpoints
 {
+    // DOC-METHOD: 'MapCinemasEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static RouteGroupBuilder MapCinemasEndpoints(this RouteGroupBuilder group)
     {
         // GET /cinemas - Visibile a tutti
@@ -49,7 +51,7 @@ public static class CinemasEndpoints
             });
         });
 
-        // POST /cinemas - Solo Admin (PowerUser può solo leggere)
+        // POST /cinemas - Solo Admin (PowerUser puÃ² solo leggere)
         group.MapPost("/", [Authorize(Roles = "Admin")] async (CinemaCreateDTO dto, FilmDbContext db, IHttpClientFactory httpClientFactory, IConfiguration configuration) =>
         {
             var cinema = new Cinema
@@ -123,6 +125,7 @@ public static class CinemasEndpoints
         return group;
     }
 
+    // DOC-METHOD: 'ResolveCinemaImageUrlAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static async Task<string> ResolveCinemaImageUrlAsync(
         string? providedUrl,
         string? nomeCinema,
@@ -154,6 +157,7 @@ public static class CinemasEndpoints
         return $"https://picsum.photos/seed/{safeSeed}/1200/800";
     }
 
+    // DOC-METHOD: 'TryResolveCinemaImageFromGooglePlacesAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static async Task<string?> TryResolveCinemaImageFromGooglePlacesAsync(
         string? nomeCinema,
         string? citta,
@@ -232,3 +236,4 @@ public static class CinemasEndpoints
         }
     }
 }
+

@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
+<!-- DOC: Pagina UI 'registi': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <html class="dark" lang="it">
 <head>
     <meta charset="UTF-8">
@@ -10,9 +11,11 @@
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-light.ico" media="(prefers-color-scheme: light)">
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico" media="(prefers-color-scheme: dark)">
     <link rel="shortcut icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico">
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -55,6 +58,7 @@
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
         
+        <!-- DOC-BLOCK: Sezione principale: contiene il flusso operativo della pagina. -->
         <main class="page-shell flex-1 p-4 md:p-8 lg:p-12 max-w-7xl mx-auto w-full pb-20 md:pb-0">
             <div class="hero-banner p-6 md:p-8 mb-8 md:mb-10 reveal-up">
                 <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
@@ -80,7 +84,7 @@
                         <h3 id="total-registi" class="text-3xl md:text-4xl font-headline font-light text-secondary">0</h3>
                     </div>
                     <div class="bg-surface-container-high p-4 md:p-6 rounded-xl border border-outline-variant/5">
-                        <p class="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Nazionalità</p>
+                        <p class="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">NazionalitÃ </p>
                         <h3 id="nations-count" class="text-3xl md:text-4xl font-headline font-light text-on-surface">0 <span class="text-lg text-on-surface-variant font-body tracking-normal">Paesi</span></h3>
                     </div>
                 </div>
@@ -103,13 +107,21 @@
 
     <div id="modal-container"></div>
 
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/theme.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/api-config.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/auth.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/route-guard.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/template-loader.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/api-client.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/utils.js"></script>
+    <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
         let currentRegisti = [];
         let editingId = null;
@@ -219,6 +231,7 @@
             }
             editingId = null;
             showModal('Nuovo Regista', `
+                <!-- DOC-BLOCK: Form utente: raccoglie input, valida lato client e invia dati ai servizi API. -->
                 <form id="regista-form" onsubmit="handleSubmit(event)">
                     <div class="space-y-4">
                         <div>
@@ -230,7 +243,7 @@
                             <input type="text" name="cognome" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary placeholder:text-on-surface-variant/50">
                         </div>
                         <div>
-                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Nazionalità</label>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">NazionalitÃ </label>
                             <input type="text" name="nazionalita" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary placeholder:text-on-surface-variant/50">
                         </div>
                     </div>
@@ -252,6 +265,7 @@
             if (!regista) return;
 
             showModal('Modifica Regista', `
+                <!-- DOC-BLOCK: Form utente: raccoglie input, valida lato client e invia dati ai servizi API. -->
                 <form id="regista-form" onsubmit="handleSubmit(event)">
                     <div class="space-y-4">
                         <div>
@@ -263,7 +277,7 @@
                             <input type="text" name="cognome" value="${escapeHtml(regista.cognome)}" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
                         </div>
                         <div>
-                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Nazionalità</label>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">NazionalitÃ </label>
                             <input type="text" name="nazionalita" value="${escapeHtml(regista.nazionalita)}" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
                         </div>
                     </div>
@@ -349,4 +363,5 @@
     </script>
 </body>
 </html>
+
 

@@ -1,3 +1,4 @@
+﻿// DOC: Service 'SalaService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using System.Text.Json;
 using FilmAPI.Data;
 using FilmAPI.DTO;
@@ -7,8 +8,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FilmAPI.Services;
 
+// DOC-METHOD: 'SalaService' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
 public class SalaService(FilmDbContext context) : ISalaService
 {
+    // DOC-METHOD: 'GetSaleByCinemaAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<IEnumerable<SalaDTO>> GetSaleByCinemaAsync(int cinemaId)
     {
         return await context.Sale
@@ -30,6 +33,7 @@ public class SalaService(FilmDbContext context) : ISalaService
             .ToListAsync();
     }
 
+    // DOC-METHOD: 'GetSalaAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<SalaDTO?> GetSalaAsync(int id)
     {
         return await context.Sale.Where(s => s.Id == id).Select(s => new SalaDTO
@@ -47,6 +51,7 @@ public class SalaService(FilmDbContext context) : ISalaService
         }).FirstOrDefaultAsync();
     }
 
+    // DOC-METHOD: 'CreateSalaAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<SalaDTO> CreateSalaAsync(int cinemaId, SalaCreateDTO dto)
     {
         var sala = new Sala
@@ -67,6 +72,7 @@ public class SalaService(FilmDbContext context) : ISalaService
         return ToDtoCompiled(sala);
     }
 
+    // DOC-METHOD: 'UpdateSalaAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<SalaDTO?> UpdateSalaAsync(int id, SalaUpdateDTO dto)
     {
         var sala = await context.Sale.FindAsync(id);
@@ -84,6 +90,7 @@ public class SalaService(FilmDbContext context) : ISalaService
         return ToDtoCompiled(sala);
     }
 
+    // DOC-METHOD: 'DeleteSalaAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<bool> DeleteSalaAsync(int id)
     {
         var sala = await context.Sale.FindAsync(id);
@@ -99,6 +106,7 @@ public class SalaService(FilmDbContext context) : ISalaService
         return true;
     }
 
+    // DOC-METHOD: 'GetPiantinaAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<PiantinaDTO?> GetPiantinaAsync(int salaId)
     {
         var sala = await context.Sale.FindAsync(salaId);
@@ -113,6 +121,7 @@ public class SalaService(FilmDbContext context) : ISalaService
         };
     }
 
+    // DOC-METHOD: 'UpdatePiantinaAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<bool> UpdatePiantinaAsync(int salaId, PiantinaUpdateDTO dto)
     {
         var sala = await context.Sale.FindAsync(salaId);
@@ -127,6 +136,7 @@ public class SalaService(FilmDbContext context) : ISalaService
         return true;
     }
 
+    // DOC-METHOD: 'ValidateConfigurazioneAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public Task<bool> ValidateConfigurazioneAsync(string configurazioneJson)
     {
         if (string.IsNullOrWhiteSpace(configurazioneJson)) return Task.FromResult(true);
@@ -147,6 +157,7 @@ public class SalaService(FilmDbContext context) : ISalaService
         }
     }
 
+    // DOC-METHOD: 'CalcolaPostiTotali' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static int CalcolaPostiTotali(int numeroFile, int? postiPerFila, string? configurazione)
     {
         if (!string.IsNullOrWhiteSpace(configurazione))
@@ -218,5 +229,7 @@ public class SalaService(FilmDbContext context) : ISalaService
         Attiva = s.Attiva
     };
 
+    // DOC-METHOD: 'ToDtoCompiled' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static SalaDTO ToDtoCompiled(Sala s) => ToDto(s);
 }
+

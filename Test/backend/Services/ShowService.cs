@@ -1,3 +1,4 @@
+﻿// DOC: Service 'ShowService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -6,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace FilmAPI.Services;
 
+// DOC-METHOD: 'ShowService' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
 public class ShowService(FilmDbContext context) : IShowService
 {
     private static readonly Dictionary<TipologiaSala, decimal> PrezziBase = new()
@@ -16,6 +18,7 @@ public class ShowService(FilmDbContext context) : IShowService
         [TipologiaSala.DUE_D] = 8.00m
     };
 
+    // DOC-METHOD: 'GetShowsAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<IEnumerable<ShowDTO>> GetShowsAsync(ShowFilterDTO? filter = null)
     {
         var query = context.Shows
@@ -65,6 +68,7 @@ public class ShowService(FilmDbContext context) : IShowService
         }).ToListAsync();
     }
 
+    // DOC-METHOD: 'GetShowAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<ShowDTO?> GetShowAsync(int id)
     {
         return await context.Shows
@@ -89,6 +93,7 @@ public class ShowService(FilmDbContext context) : IShowService
         }).FirstOrDefaultAsync();
     }
 
+    // DOC-METHOD: 'CreateShowAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<ShowDTO> CreateShowAsync(ShowCreateDTO dto)
     {
         var sala = await context.Sale.FindAsync(dto.SalaId) ?? throw new InvalidOperationException("Sala non trovata");
@@ -115,6 +120,7 @@ public class ShowService(FilmDbContext context) : IShowService
         return ToDtoCompiled(show);
     }
 
+    // DOC-METHOD: 'UpdateShowAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<ShowDTO?> UpdateShowAsync(int id, ShowUpdateDTO dto)
     {
         var show = await context.Shows.FindAsync(id);
@@ -138,6 +144,7 @@ public class ShowService(FilmDbContext context) : IShowService
         return ToDtoCompiled(show);
     }
 
+    // DOC-METHOD: 'DeleteShowAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<bool> DeleteShowAsync(int id)
     {
         var show = await context.Shows.FindAsync(id);
@@ -147,6 +154,7 @@ public class ShowService(FilmDbContext context) : IShowService
         return true;
     }
 
+    // DOC-METHOD: 'ValidateOrarioAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<bool> ValidateOrarioAsync(int salaId, DateOnly data, TimeOnly oraInizio, int durataFilm, int? excludeShowId = null)
     {
         var oraFine = oraInizio.AddMinutes(durataFilm);
@@ -172,6 +180,7 @@ public class ShowService(FilmDbContext context) : IShowService
         return true;
     }
 
+    // DOC-METHOD: 'GetShowsByFilmAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<IEnumerable<ShowDTO>> GetShowsByFilmAsync(int filmId, int? cinemaId = null, DateOnly? data = null)
     {
         var query = context.Shows
@@ -199,6 +208,7 @@ public class ShowService(FilmDbContext context) : IShowService
         }).ToListAsync();
     }
 
+    // DOC-METHOD: 'GetShowsByCinemaAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<IEnumerable<ShowDTO>> GetShowsByCinemaAsync(int cinemaId, DateOnly data)
     {
         return await context.Shows
@@ -225,12 +235,14 @@ public class ShowService(FilmDbContext context) : IShowService
             .ToListAsync();
     }
 
+    // DOC-METHOD: 'GetPostiDisponibiliAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<int> GetPostiDisponibiliAsync(int showId)
     {
         var disp = await GetDisponibilitaPostiAsync(showId);
         return disp?.Disponibili ?? 0;
     }
 
+    // DOC-METHOD: 'GetDisponibilitaPostiAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<DisponibilitaPostiDTO?> GetDisponibilitaPostiAsync(int showId)
     {
         var show = await context.Shows
@@ -269,5 +281,7 @@ public class ShowService(FilmDbContext context) : IShowService
         Stato = s.Stato.ToString()
     };
 
+    // DOC-METHOD: 'ToDtoCompiled' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static ShowDTO ToDtoCompiled(Show s) => ToDto(s);
 }
+

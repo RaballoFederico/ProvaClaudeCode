@@ -1,3 +1,4 @@
+﻿/* DOC: Script pagina 'recupera-password': gestisce eventi UI, chiamate API e rendering dinamico della pagina. */
 document.getElementById('recover-form').addEventListener('submit', async (event) => {
     event.preventDefault();
 
@@ -6,6 +7,7 @@ document.getElementById('recover-form').addEventListener('submit', async (event)
     message.textContent = '';
 
     const result = await Auth.forgotPassword(email, window.location.origin + '/reimposta-password.html');
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (!result.success) {
         message.textContent = result.error || 'Errore durante la richiesta';
         return;
@@ -13,3 +15,4 @@ document.getElementById('recover-form').addEventListener('submit', async (event)
 
     message.textContent = result.message || 'Se esiste un account associato, riceverai una email con le istruzioni.';
 });
+

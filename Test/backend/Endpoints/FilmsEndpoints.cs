@@ -1,3 +1,4 @@
+﻿// DOC: Endpoint 'FilmsEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using System.Text.Json;
 using System.Globalization;
 using System.Text;
@@ -16,17 +17,20 @@ public static class FilmsEndpoints
     private static readonly string DefaultCoverImagePath =
         Environment.GetEnvironmentVariable("DEFAULT_COVER_IMAGE_PATH") ?? "/media/defaults/cover-default.jpg";
 
+    // DOC-METHOD: 'MapFilmsEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static RouteGroupBuilder MapFilmsEndpoints(this RouteGroupBuilder group)
     {
         // GET /films - Visibile a tutti (supporta versione compatta per liste rapide)
         group.MapGet("/", async (FilmDbContext db, HttpContext httpContext, bool? summary, int? limit, bool? includeCategories) =>
         {
+            // Normalizzazione limite per proteggere endpoint e payload size.
             var normalizedLimit = limit.HasValue
                 ? Math.Clamp(limit.Value, 1, 500)
                 : (int?)null;
 
             if (summary.GetValueOrDefault())
             {
+                // Vista summary: meno campi, ottimizzata per listing pubblici e card veloci.
                 var summaryQuery = db.Films
                     .AsNoTracking()
                     .OrderByDescending(f => f.DataRilascio ?? f.DataProduzione)
@@ -48,6 +52,7 @@ public static class FilmsEndpoints
                         Genere = f.Genere
                     });
                 var summaryItems = await summaryQuery.ToListAsync();
+                // Deduplica server-side per evitare che duplicati DB contaminino tutte le UI.
                 var dedupedSummary = DeduplicateByTitle(
                     summaryItems,
                     item => item.Titolo,
@@ -79,6 +84,7 @@ public static class FilmsEndpoints
             var withCategories = includeCategories.GetValueOrDefault(true);
             if (withCategories)
             {
+                // Vista completa con categorie joinate: usata da pagine gestione/catalogo dettagliato.
                 var fullQuery = db.Films
                     .AsNoTracking()
                     .Include(f => f.FilmsCategorie)
@@ -110,6 +116,7 @@ public static class FilmsEndpoints
                     });
 
                 var fullItems = await fullQuery.ToListAsync();
+                // Anche qui deduplica per garantire coerenza tra endpoint summary/full.
                 fullItems = DeduplicateByTitle(
                     fullItems,
                     item => item.Titolo,
@@ -151,6 +158,7 @@ public static class FilmsEndpoints
                 });
 
             var leanItems = await leanQuery.ToListAsync();
+            // Vista lean senza include categorie: deduplica applicata comunque per consistenza API-wide.
             leanItems = DeduplicateByTitle(
                 leanItems,
                 item => item.Titolo,
@@ -426,7 +434,7 @@ public static class FilmsEndpoints
 
                 if (categorieEsistenti.Count != dto.CategoriaIds.Count)
                 {
-                    return Results.BadRequest("Una o più categorie non esistono");
+                    return Results.BadRequest("Una o piÃ¹ categorie non esistono");
                 }
             }
 
@@ -818,7 +826,7 @@ public static class FilmsEndpoints
 
                 if (categorieEsistenti.Count != dto.CategoriaIds.Count)
                 {
-                    return Results.BadRequest("Una o più categorie non esistono");
+                    return Results.BadRequest("Una o piÃ¹ categorie non esistono");
                 }
             }
 
@@ -910,6 +918,10 @@ public static class FilmsEndpoints
         Func<T, DateTime?> dateSelector,
         Func<T, int> idSelector)
     {
+        // Algoritmo:
+        // - costruisce chiave titolo normalizzato
+        // - se collisione, tiene record "migliore" (data più recente, poi id più alto)
+        // - restituisce lista già ordinata per recency
         var map = new Dictionary<string, T>(StringComparer.Ordinal);
         foreach (var item in items)
         {
@@ -939,8 +951,11 @@ public static class FilmsEndpoints
             .ToList();
     }
 
+    // DOC-METHOD: 'NormalizeFilmTitleKey' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string NormalizeFilmTitleKey(string? value)
     {
+        // Rende confrontabili titoli con varianti grafiche:
+        // accenti, punteggiatura e whitespace non devono creare falsi "film diversi".
         if (string.IsNullOrWhiteSpace(value))
         {
             return string.Empty;
@@ -972,6 +987,7 @@ public static class FilmsEndpoints
         return string.Join(' ', new string(buffer[..idx]).Split(' ', StringSplitOptions.RemoveEmptyEntries));
     }
 
+    // DOC-METHOD: 'NormalizeMediaUrl' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string NormalizeMediaUrl(string? path, HttpContext httpContext)
     {
         if (string.IsNullOrWhiteSpace(path))
@@ -991,6 +1007,7 @@ public static class FilmsEndpoints
         return $"{backendBaseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
     }
 
+    // DOC-METHOD: 'GetOrCreateRegistaAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static async Task<Regista> GetOrCreateRegistaAsync(FilmDbContext db, string? fullName, string? nazionalita)
     {
         var (nome, cognome) = SplitDirectorName(fullName);
@@ -1022,6 +1039,7 @@ public static class FilmsEndpoints
         return regista;
     }
 
+    // DOC-METHOD: 'ResolveDirectorNationalityAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static async Task<string?> ResolveDirectorNationalityAsync(ITMDBService tmdbService, int directorId)
     {
         var personJson = await tmdbService.GetPersonDetailAsync(directorId);
@@ -1044,6 +1062,7 @@ public static class FilmsEndpoints
         return null;
     }
 
+    // DOC-METHOD: 'NormalizeNationalityFromPlace' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string NormalizeNationalityFromPlace(string placeOfBirth)
     {
         var country = placeOfBirth.Split(',').Last().Trim();
@@ -1163,6 +1182,7 @@ public static class FilmsEndpoints
         return (nome, cognome);
     }
 
+    // DOC-METHOD: 'BuildCastTextFromTmdb' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string? BuildCastTextFromTmdb(JsonElement castArr)
     {
         var castList = castArr.EnumerateArray()
@@ -1185,6 +1205,7 @@ public static class FilmsEndpoints
         return cast.Length > 1000 ? cast[..1000] : cast;
     }
 
+    // DOC-METHOD: 'ExtractCastNames' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string[] ExtractCastNames(JsonElement castArr)
     {
         return castArr.EnumerateArray()
@@ -1201,6 +1222,7 @@ public static class FilmsEndpoints
             .ToArray();
     }
 
+    // DOC-METHOD: 'ResolveTmdbIdForFilmAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static async Task<int?> ResolveTmdbIdForFilmAsync(Film film, ITMDBService tmdbService)
     {
         if (film.TmdbId.HasValue)
@@ -1248,3 +1270,4 @@ public static class FilmsEndpoints
         return matchedId;
     }
 }
+

@@ -1,3 +1,4 @@
+﻿// DOC: Model 'PrenotazioneTemporanea': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -51,3 +52,4 @@ public class PrenotazioneTemporanea
     [MaxLength(50)]
     public string SessionId { get; set; } = string.Empty;
 }
+

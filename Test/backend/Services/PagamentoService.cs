@@ -1,3 +1,4 @@
+﻿// DOC: Service 'PagamentoService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Services.Interfaces;
@@ -7,10 +8,12 @@ using Stripe.Checkout;
 
 namespace FilmAPI.Services;
 
+// DOC-METHOD: 'PagamentoService' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
 public class PagamentoService(FilmDbContext context, ICreditoService creditoService) : IPagamentoService
 {
     private static bool StripeConfigurato => !string.IsNullOrWhiteSpace(StripeConfiguration.ApiKey);
 
+    // DOC-METHOD: 'CalcolaImportoAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<CalcoloImportoDTO> CalcolaImportoAsync(int utenteId, CalcoloImportoRequestDTO dto)
     {
         var show = await context.Shows.FindAsync(dto.ShowId) ?? throw new InvalidOperationException("Show non trovato");
@@ -28,6 +31,7 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
         };
     }
 
+    // DOC-METHOD: 'ProcessaPagamentoAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<PagamentoResultDTO> ProcessaPagamentoAsync(int utenteId, PagamentoRequestDTO dto)
     {
         var calc = await CalcolaImportoAsync(utenteId, new CalcoloImportoRequestDTO
@@ -47,6 +51,7 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
         };
     }
 
+    // DOC-METHOD: 'RimborsaAcquistoAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<RimborsoResultDTO> RimborsaAcquistoAsync(int acquistoId)
     {
         var acquisto = await context.Acquisti.FirstOrDefaultAsync(a => a.Id == acquistoId);
@@ -60,6 +65,7 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
         return new RimborsoResultDTO { Success = true, Message = "Rimborso registrato" };
     }
 
+    // DOC-METHOD: 'RimborsaPagamentoStripeAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<RimborsoResultDTO> RimborsaPagamentoStripeAsync(string paymentIntentId, decimal importo, string? motivo = null)
     {
         if (string.IsNullOrWhiteSpace(paymentIntentId))
@@ -106,6 +112,7 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
         }
     }
 
+    // DOC-METHOD: 'CreaCheckoutSessionAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<StripeCheckoutSessionDTO> CreaCheckoutSessionAsync(decimal importo, int utenteId, string successUrl, string cancelUrl, string? productName = null, string integration = "filmapi_checkout", Dictionary<string, string>? extraMetadata = null, string? preferredPaymentMethodType = null)
     {
         if (importo <= 0)
@@ -200,11 +207,13 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
         };
     }
 
+    // DOC-METHOD: 'NormalizeStripeCheckoutSessionPlaceholder' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string NormalizeStripeCheckoutSessionPlaceholder(string url)
     {
         return url.Replace("%7BCHECKOUT_SESSION_ID%7D", "{CHECKOUT_SESSION_ID}", StringComparison.OrdinalIgnoreCase);
     }
 
+    // DOC-METHOD: 'VerificaCheckoutSessionAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<StripeCheckoutVerificationDTO> VerificaCheckoutSessionAsync(string sessionId, decimal importoAtteso)
     {
         if (string.IsNullOrWhiteSpace(sessionId))
@@ -238,6 +247,7 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
         };
     }
 
+    // DOC-METHOD: 'GestisciWebhookAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<StripeWebhookResultDTO> GestisciWebhookAsync(string payload, string? stripeSignature, string? expectedWebhookSecret)
     {
         if (string.IsNullOrWhiteSpace(payload))
@@ -391,3 +401,4 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
         };
     }
 }
+

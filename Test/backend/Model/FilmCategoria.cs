@@ -1,3 +1,4 @@
+﻿// DOC: Model 'FilmCategoria': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,3 +18,4 @@ public class FilmCategoria
     [ForeignKey(nameof(CategoriaId))]
     public Categoria Categoria { get; set; } = null!;
 }
+

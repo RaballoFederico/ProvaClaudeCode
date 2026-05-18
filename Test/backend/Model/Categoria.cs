@@ -1,3 +1,4 @@
+﻿// DOC: Model 'Categoria': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -19,3 +20,4 @@ public class Categoria
 
     public ICollection<FilmCategoria> FilmsCategorie { get; set; } = new List<FilmCategoria>();
 }
+

@@ -1,3 +1,4 @@
+﻿// DOC: Endpoint 'AcquistoEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.DTO;
 using FilmAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -7,6 +8,7 @@ namespace FilmAPI.Endpoints;
 
 public static class AcquistoEndpoints
 {
+    // DOC-METHOD: 'MapAcquistoEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static IEndpointRouteBuilder MapAcquistoEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/acquisto").RequireAuthorization("Authenticated");
@@ -179,6 +181,7 @@ public static class AcquistoEndpoints
         return app;
     }
 
+    // DOC-METHOD: 'GetUserId' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static int? GetUserId(HttpContext context)
     {
         var userIdClaim = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -186,3 +189,4 @@ public static class AcquistoEndpoints
         return null;
     }
 }
+

@@ -1,3 +1,4 @@
+﻿// DOC: DTO 'CategoriaDTOs': contratto dati per request/response API.
 namespace FilmAPI.DTO;
 
 public class CategoriaDTO
@@ -39,3 +40,4 @@ public class FilmUpdateWithCategorieDTO
     public string? FilmatoPath { get; set; }
     public List<int> CategoriaIds { get; set; } = new();
 }
+

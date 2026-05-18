@@ -1,3 +1,4 @@
+﻿/* DOC: Modulo JS 'usability-tools': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
 (() => {
     const STORAGE_KEY = 'filmhub_usability_settings_v1';
     const TOUR_PENDING_EMAIL_KEY = 'filmhub_tour_pending_email';
@@ -11,6 +12,7 @@
 
     const state = { ...DEFAULTS };
 
+    /* DOC-FN: 'readSettings' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function readSettings() {
         try {
             const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
@@ -20,10 +22,12 @@
         }
     }
 
+    /* DOC-FN: 'saveSettings' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function saveSettings() {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
 
+    /* DOC-FN: 'applySettings' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function applySettings() {
         const html = document.documentElement;
         html.classList.toggle('a11y-high-contrast', !!state.highContrast);
@@ -32,12 +36,14 @@
         html.classList.toggle('a11y-reduce-motion', !!state.reduceMotion);
     }
 
+    /* DOC-FN: 'escapeHtml' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function escapeHtml(value) {
         const div = document.createElement('div');
         div.textContent = value || '';
         return div.innerHTML;
     }
 
+    /* DOC-FN: 'getTourSteps' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function getTourSteps() {
         const page = (window.location.pathname.split('/').pop() || 'home.html').toLowerCase();
         const base = [
@@ -82,6 +88,7 @@
         ];
     }
 
+    /* DOC-FN: 'buildPanel' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function buildPanel() {
         let root = document.getElementById('a11y-tools-root');
         if (root) return root;
@@ -96,7 +103,7 @@
             <div id="a11y-panel" class="a11y-panel hidden" role="dialog" aria-label="Pannello accessibilita">
                 <div class="a11y-panel-header">
                     <strong>Accessibilita</strong>
-                    <button id="a11y-close" class="a11y-icon-btn" aria-label="Chiudi">✕</button>
+                    <button id="a11y-close" class="a11y-icon-btn" aria-label="Chiudi">âœ•</button>
                 </div>
                 <label class="a11y-toggle"><input id="a11y-high-contrast" type="checkbox"> Contrasto alto</label>
                 <label class="a11y-toggle"><input id="a11y-large-text" type="checkbox"> Testo piu grande</label>
@@ -113,6 +120,7 @@
         return root;
     }
 
+    /* DOC-FN: 'syncPanelControls' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function syncPanelControls() {
         const map = [
             ['a11y-high-contrast', 'highContrast'],
@@ -122,6 +130,7 @@
         ];
         map.forEach(([id, key]) => {
             const input = document.getElementById(id);
+            /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
             if (input) {
                 input.checked = !!state[key];
                 input.closest('.a11y-toggle')?.classList.toggle('is-checked', !!state[key]);
@@ -129,6 +138,7 @@
         });
     }
 
+    /* DOC-FN: 'bindPanel' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function bindPanel() {
         const fab = document.getElementById('a11y-fab');
         const panel = document.getElementById('a11y-panel');
@@ -174,11 +184,13 @@
         });
     }
 
+    /* DOC-FN: 'waitForTourTargets' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function waitForTourTargets(steps, timeoutMs = 2500) {
         const startAt = Date.now();
         return new Promise((resolve) => {
             const check = () => {
                 const foundCount = steps.filter((step) => !!resolveStepElement(step)).length;
+                /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
                 if (foundCount > 0 || (Date.now() - startAt) >= timeoutMs) {
                     resolve();
                     return;
@@ -189,12 +201,16 @@
         });
     }
 
+    /* DOC-FN: 'resolveStepElement' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function resolveStepElement(step) {
         if (!step || !step.selector) return null;
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (typeof step.selector === 'string') {
             return document.querySelector(step.selector);
         }
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (Array.isArray(step.selector)) {
+            /* DOC-FN: 'for' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
             for (const selector of step.selector) {
                 const match = document.querySelector(selector);
                 if (match) return match;
@@ -203,6 +219,7 @@
         return null;
     }
 
+    /* DOC-FN: 'startTour' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function startTour() {
         const steps = getTourSteps();
         if (!steps.length) return;
@@ -216,8 +233,10 @@
         overlay.className = 'tour-overlay';
         document.body.appendChild(overlay);
 
+        /* DOC-FN: 'getRenderableSteps' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         function getRenderableSteps() {
             const renderable = [];
+            /* DOC-FN: 'for' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
             for (let idx = 0; idx < steps.length; idx += 1) {
                 const el = resolveStepElement(steps[idx]);
                 if (el) renderable.push({ index: idx, element: el });
@@ -225,6 +244,7 @@
             return renderable;
         }
 
+        /* DOC-FN: 'positionCard' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         function positionCard(rect, cardEl) {
             const spacing = 12;
             const vw = window.innerWidth;
@@ -235,6 +255,7 @@
             left = Math.min(Math.max(12, left), maxLeft);
 
             let top = rect.bottom + spacing;
+            /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
             if (top + cardRect.height > vh - 12) {
                 top = rect.top - cardRect.height - spacing;
             }
@@ -246,15 +267,18 @@
 
         const render = (shouldScroll = false) => {
             const renderableSteps = getRenderableSteps();
+            /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
             if (!renderableSteps.length) {
                 stopTour();
                 return;
             }
 
             let currentStep = renderableSteps.find((entry) => entry.index === current);
+            /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
             if (!currentStep) {
                 currentStep = renderableSteps.find((entry) => entry.index > current) || renderableSteps[renderableSteps.length - 1];
             }
+            /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
             if (!currentStep) {
                 stopTour();
                 return;
@@ -266,6 +290,7 @@
             const currentPosition = renderableSteps.findIndex((entry) => entry.index === current);
             const totalSteps = renderableSteps.length;
 
+            /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
             if (shouldScroll) {
                 element.scrollIntoView({ block: 'center', behavior: 'smooth' });
             }
@@ -290,6 +315,7 @@
             `;
 
             const card = overlay.querySelector('.tour-card');
+            /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
             if (card) {
                 positionCard(rect, card);
             }
@@ -305,6 +331,7 @@
             document.getElementById('tour-next')?.addEventListener('click', () => {
                 const liveRenderable = getRenderableSteps();
                 const pos = liveRenderable.findIndex((entry) => entry.index === current);
+                /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
                 if (pos < 0 || pos >= liveRenderable.length - 1) {
                     stopTour();
                     return;
@@ -318,6 +345,7 @@
             if (e.key === 'Escape') stopTour();
         };
 
+        /* DOC-FN: 'stopTour' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         function stopTour() {
             document.removeEventListener('keydown', onEsc);
             window.removeEventListener('resize', onResize);
@@ -338,18 +366,21 @@
         });
     }
 
+    /* DOC-FN: 'getCurrentUser' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function getCurrentUser() {
         if (typeof window === 'undefined' || typeof window.Auth === 'undefined') return null;
         if (!Auth.isAuthenticated || !Auth.isAuthenticated()) return null;
         return Auth.getUser ? Auth.getUser() : null;
     }
 
+    /* DOC-FN: 'getTourSeenKey' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function getTourSeenKey(user) {
         const userId = user?.id;
         if (!userId) return null;
         return `${TOUR_SEEN_PREFIX}${userId}`;
     }
 
+    /* DOC-FN: 'maybeStartTutorialForNewUser' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function maybeStartTutorialForNewUser() {
         const user = getCurrentUser();
         if (!user) return;
@@ -370,6 +401,7 @@
         }, 900);
     }
 
+    /* DOC-FN: 'ensureInit' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     function ensureInit() {
         Object.assign(state, readSettings());
         applySettings();
@@ -385,9 +417,11 @@
 
     window.UsabilityTools = {
         startTour,
+        /* DOC-FN: 'openAccessibility' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         openAccessibility() {
             document.getElementById('a11y-panel')?.classList.remove('hidden');
         },
+        /* DOC-FN: 'resetAccessibility' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         resetAccessibility() {
             Object.assign(state, DEFAULTS);
             saveSettings();
@@ -396,9 +430,11 @@
         }
     };
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', ensureInit);
     } else {
         ensureInit();
     }
 })();
+

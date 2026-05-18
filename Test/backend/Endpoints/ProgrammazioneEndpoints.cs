@@ -1,3 +1,4 @@
+﻿// DOC: Endpoint 'ProgrammazioneEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.Model;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +7,7 @@ namespace FilmAPI.Endpoints;
 
 public static class ProgrammazioneEndpoints
 {
+    // DOC-METHOD: 'MapProgrammazioneEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static IEndpointRouteBuilder MapProgrammazioneEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapGet("/programmazione", async (int? cinemaId, string? search, string? genere, string? tipologia, string? fascia, FilmDbContext db, HttpContext httpContext) =>
@@ -338,6 +340,7 @@ public static class ProgrammazioneEndpoints
         return app;
     }
 
+    // DOC-METHOD: 'NormalizeMediaUrl' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string NormalizeMediaUrl(string? path, HttpContext httpContext)
     {
         if (string.IsNullOrWhiteSpace(path))
@@ -357,3 +360,4 @@ public static class ProgrammazioneEndpoints
         return $"{backendBaseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
     }
 }
+

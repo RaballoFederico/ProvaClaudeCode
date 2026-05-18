@@ -1,3 +1,4 @@
+﻿// DOC: Model 'UserSecurityAuditLog': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -30,3 +31,4 @@ public class UserSecurityAuditLog
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }
+

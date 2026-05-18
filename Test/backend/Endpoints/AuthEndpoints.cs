@@ -1,3 +1,4 @@
+﻿// DOC: Endpoint 'AuthEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -14,6 +15,7 @@ public static class AuthEndpoints
 {
     private const string RefreshTokenCookieName = "filmapi_refresh_token";
 
+    // DOC-METHOD: 'MapAuthEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/auth");
@@ -467,6 +469,7 @@ public static class AuthEndpoints
         return app;
     }
 
+    // DOC-METHOD: 'ResolveBackendBaseUrl' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string ResolveBackendBaseUrl(HttpContext context, IConfiguration configuration)
     {
         var configured = Environment.GetEnvironmentVariable("EXTERNAL_AUTH_BACKEND_BASE_URL")
@@ -480,6 +483,7 @@ public static class AuthEndpoints
         return $"{context.Request.Scheme}://{context.Request.Host}";
     }
 
+    // DOC-METHOD: 'ResolveFrontendBaseUrl' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string ResolveFrontendBaseUrl(IConfiguration configuration, string? returnUrl)
     {
         if (!string.IsNullOrWhiteSpace(returnUrl))
@@ -514,6 +518,7 @@ public static class AuthEndpoints
         return "https://filmhub-frontend.delightfuldune-f7916078.francecentral.azurecontainerapps.io";
     }
 
+    // DOC-METHOD: 'CreateRandomUrlSafeToken' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string CreateRandomUrlSafeToken()
     {
         Span<byte> bytes = stackalloc byte[32];
@@ -521,6 +526,7 @@ public static class AuthEndpoints
         return Convert.ToBase64String(bytes.ToArray()).TrimEnd('=').Replace('+', '-').Replace('/', '_');
     }
 
+    // DOC-METHOD: 'AppendRefreshTokenCookie' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static void AppendRefreshTokenCookie(HttpContext context, string refreshToken)
     {
         if (string.IsNullOrWhiteSpace(refreshToken))
@@ -540,6 +546,7 @@ public static class AuthEndpoints
         });
     }
 
+    // DOC-METHOD: 'DeleteRefreshTokenCookie' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static void DeleteRefreshTokenCookie(HttpContext context)
     {
         var isHttps = context.Request.IsHttps || context.RequestServices.GetRequiredService<IWebHostEnvironment>().IsProduction();
@@ -553,6 +560,7 @@ public static class AuthEndpoints
         });
     }
 
+    // DOC-METHOD: 'GetUserId' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static int? GetUserId(HttpContext context)
     {
         var userIdClaim = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -560,3 +568,4 @@ public static class AuthEndpoints
         return null;
     }
 }
+

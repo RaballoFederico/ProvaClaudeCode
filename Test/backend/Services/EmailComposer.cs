@@ -1,9 +1,11 @@
+﻿// DOC: Service 'EmailComposer': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.DTO;
 
 namespace FilmAPI.Services;
 
 public static class EmailComposer
 {
+    // DOC-METHOD: 'BuildRicevutaRicaricaCreditoHtml' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static string BuildRicevutaRicaricaCreditoHtml(
         string nominativo,
         decimal importo,
@@ -61,6 +63,7 @@ public static class EmailComposer
 </html>";
     }
 
+    // DOC-METHOD: 'BuildConfermaAcquistoHtml' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static string BuildConfermaAcquistoHtml(
         string nominativo,
         string codiceConferma,
@@ -159,7 +162,10 @@ public static class EmailComposer
 </html>";
     }
 
+    // DOC-METHOD: 'Escape' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string Escape(string value) => System.Net.WebUtility.HtmlEncode(value ?? string.Empty);
 
+    // DOC-METHOD: 'FormatEuro' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string FormatEuro(decimal amount) => $"{amount:0.00} EUR";
 }
+

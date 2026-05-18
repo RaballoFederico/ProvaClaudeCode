@@ -1,23 +1,28 @@
+﻿/* DOC: Script pagina 'profilo': gestisce eventi UI, chiamate API e rendering dinamico della pagina. */
 // js/pages/profilo.js
 // Gestione area personale utente
 
 let profiloData = null;
 let proiezioneDaPrenotare = null;
 
+/* DOC-FN: 'getProfilePictureStorageKey' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function getProfilePictureStorageKey(userId) {
     return `profile_picture_user_${userId}`;
 }
 
+/* DOC-FN: 'getStoredProfilePicture' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function getStoredProfilePicture(userId) {
     if (!userId) return null;
     return localStorage.getItem(getProfilePictureStorageKey(userId));
 }
 
+/* DOC-FN: 'setStoredProfilePicture' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function setStoredProfilePicture(userId, dataUrl) {
     if (!userId) return;
     localStorage.setItem(getProfilePictureStorageKey(userId), dataUrl);
 }
 
+/* DOC-FN: 'applyProfilePictureToUI' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function applyProfilePictureToUI() {
     if (!profiloData?.id) return;
 
@@ -30,6 +35,7 @@ function applyProfilePictureToUI() {
     profileAvatarImg.classList.toggle('hidden', !hasPicture);
     initialsSpan.classList.toggle('hidden', hasPicture);
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (hasPicture) {
         profileAvatarImg.src = picture;
     } else {
@@ -38,9 +44,11 @@ function applyProfilePictureToUI() {
 
     const navAvatar = document.getElementById('nav-user-avatar-image');
     const navInitials = document.getElementById('nav-user-initials');
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (navAvatar && navInitials) {
         navAvatar.classList.toggle('hidden', !hasPicture);
         navInitials.classList.toggle('hidden', hasPicture);
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (hasPicture) {
             navAvatar.src = picture;
         } else {
@@ -50,6 +58,7 @@ function applyProfilePictureToUI() {
 }
 
 // Carica il profilo
+/* DOC-FN: 'loadProfile' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 async function loadProfile() {
     try {
         showLoading(true);
@@ -68,6 +77,7 @@ async function loadProfile() {
     }
 }
 
+/* DOC-FN: 'loadNewsletterPreference' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 async function loadNewsletterPreference() {
     const checkbox = document.getElementById('newsletter-consent');
     if (!checkbox) return;
@@ -79,17 +89,20 @@ async function loadNewsletterPreference() {
     }
 }
 
+/* DOC-FN: 'formatMoney' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function formatMoney(value) {
     const amount = Number(value ?? 0);
     return `${amount.toFixed(2)} EUR`;
 }
 
+/* DOC-FN: 'escapeHtml' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text || '';
     return div.innerHTML;
 }
 
+/* DOC-FN: 'loadStoricoAcquistiRimborsi' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 async function loadStoricoAcquistiRimborsi() {
     const acquistiList = document.getElementById('acquisti-list');
     const acquistiEmpty = document.getElementById('acquisti-empty');
@@ -112,6 +125,7 @@ async function loadStoricoAcquistiRimborsi() {
         const acquistiSafe = Array.isArray(acquisti) ? acquisti : [];
         const creditoSafe = Array.isArray(storicoCredito) ? storicoCredito : [];
 
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (!acquistiSafe.length) {
             acquistiEmpty.classList.remove('hidden');
         } else {
@@ -149,6 +163,7 @@ async function loadStoricoAcquistiRimborsi() {
             })
             .slice(0, 10);
 
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (!rimborsiOMovimenti.length) {
             rimborsiEmpty.classList.remove('hidden');
         } else {
@@ -186,6 +201,7 @@ async function loadStoricoAcquistiRimborsi() {
     }
 }
 
+/* DOC-FN: 'handlePrenotaQueryParam' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function handlePrenotaQueryParam() {
     const params = new URLSearchParams(window.location.search);
     const prenotaParam = params.get('prenota');
@@ -212,12 +228,14 @@ function handlePrenotaQueryParam() {
     window.history.replaceState({}, '', nextUrl);
 }
 
+/* DOC-FN: 'showLoading' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function showLoading(show) {
     document.getElementById('loading').classList.toggle('hidden', !show);
     document.getElementById('content').classList.toggle('hidden', show);
     document.getElementById('error').classList.add('hidden');
 }
 
+/* DOC-FN: 'showError' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function showError(message) {
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('content').classList.add('hidden');
@@ -225,6 +243,7 @@ function showError(message) {
     document.getElementById('error-text').textContent = message;
 }
 
+/* DOC-FN: 'renderProfile' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function renderProfile() {
     const user = profiloData;
     
@@ -260,10 +279,12 @@ function renderProfile() {
     applyProfilePictureToUI();
 }
 
+/* DOC-FN: 'renderProiezioni' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function renderProiezioni() {
     const list = document.getElementById('proiezioni-list');
     const noProiezioni = document.getElementById('no-proiezioni');
     
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (!profiloData.proiezioniSalvate || profiloData.proiezioniSalvate.length === 0) {
         list.innerHTML = '';
         noProiezioni.classList.remove('hidden');
@@ -347,6 +368,7 @@ document.getElementById('cancel-edit').addEventListener('click', () => {
 
 document.getElementById('change-picture-btn').addEventListener('click', () => {
     const input = document.getElementById('profile-picture-input');
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (input) {
         input.value = '';
         input.click();
@@ -357,14 +379,18 @@ document.getElementById('profile-picture-input').addEventListener('change', asyn
     const file = event.target.files?.[0];
     if (!file || !profiloData?.id) return;
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (!file.type.startsWith('image/')) {
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (typeof Utils !== 'undefined') {
             Utils.showNotification('Seleziona un file immagine valido', 'error');
         }
         return;
     }
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (file.size > 2 * 1024 * 1024) {
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (typeof Utils !== 'undefined') {
             Utils.showNotification('Immagine troppo grande (max 2MB)', 'error');
         }
@@ -381,10 +407,12 @@ document.getElementById('profile-picture-input').addEventListener('change', asyn
     if (typeof dataUrl !== 'string') return;
     setStoredProfilePicture(profiloData.id, dataUrl);
     applyProfilePictureToUI();
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (typeof updateNavbar === 'function') {
         updateNavbar();
     }
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (typeof Utils !== 'undefined') {
         Utils.showNotification('Foto profilo aggiornata', 'success');
     }
@@ -397,6 +425,7 @@ document.getElementById('open-security-btn').addEventListener('click', () => {
 document.getElementById('close-security-modal').addEventListener('click', closeSecurityModal);
 document.getElementById('cancel-security').addEventListener('click', closeSecurityModal);
 
+/* DOC-FN: 'closeSecurityModal' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function closeSecurityModal() {
     document.getElementById('security-modal').classList.add('hidden');
     document.getElementById('security-error').classList.add('hidden');
@@ -417,18 +446,21 @@ document.getElementById('security-form').addEventListener('submit', async (e) =>
 
     errorDiv.classList.add('hidden');
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (newPassword.length < 8) {
         errorDiv.textContent = 'La nuova password deve contenere almeno 8 caratteri';
         errorDiv.classList.remove('hidden');
         return;
     }
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (newPassword !== confirmPassword) {
         errorDiv.textContent = 'La conferma password non coincide';
         errorDiv.classList.remove('hidden');
         return;
     }
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (newPassword === currentPassword) {
         errorDiv.textContent = 'La nuova password deve essere diversa da quella attuale';
         errorDiv.classList.remove('hidden');
@@ -442,6 +474,7 @@ document.getElementById('security-form').addEventListener('submit', async (e) =>
     try {
         await ApiClient.put('/user/change-password', { currentPassword, newPassword });
         closeSecurityModal();
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (typeof Utils !== 'undefined') {
             Utils.showNotification('Password aggiornata con successo', 'success');
         }
@@ -471,6 +504,7 @@ document.getElementById('edit-form').addEventListener('submit', async (e) => {
     errorDiv.classList.add('hidden');
     
     // Validazione
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (!email.includes('@')) {
         errorDiv.textContent = 'Email non valida';
         errorDiv.classList.remove('hidden');
@@ -488,6 +522,7 @@ document.getElementById('edit-form').addEventListener('submit', async (e) => {
         document.getElementById('edit-modal').classList.add('hidden');
         
         // Mostra notifica di successo
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (typeof Utils !== 'undefined') {
             Utils.showNotification('Profilo aggiornato con successo', 'success');
         }
@@ -505,6 +540,7 @@ document.getElementById('edit-form').addEventListener('submit', async (e) => {
 });
 
 // Prenotazione
+/* DOC-FN: 'apriPrenotazione' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function apriPrenotazione(id, filmTitolo, cinemaNome, data) {
     proiezioneDaPrenotare = id;
     document.getElementById('prenota-film').textContent = filmTitolo;
@@ -538,6 +574,7 @@ document.getElementById('prenota-form').addEventListener('submit', async (e) => 
     
     errorDiv.classList.add('hidden');
     
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (numeroPosti < 1 || numeroPosti > 10) {
         errorDiv.textContent = 'Il numero di posti deve essere tra 1 e 10';
         errorDiv.classList.remove('hidden');
@@ -556,6 +593,7 @@ document.getElementById('prenota-form').addEventListener('submit', async (e) => 
         
         document.getElementById('prenota-modal').classList.add('hidden');
         
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (typeof Utils !== 'undefined') {
             Utils.showNotification('Prenotazione effettuata con successo!', 'success');
         }
@@ -572,12 +610,15 @@ document.getElementById('prenota-form').addEventListener('submit', async (e) => 
     }
 });
 
+/* DOC-FN: 'vaiABiglietti' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function vaiABiglietti(showId) {
     const url = showId ? `/user-biglietti.html?showId=${showId}` : '/user-biglietti.html';
     window.location.href = url;
 }
 
+/* DOC-FN: 'vaiAPrenotazione' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 async function vaiAPrenotazione(proiezioneSalvataId, showId, proiezioneId) {
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (showId) {
         try {
             const show = await ApiClient.get(`/shows/${showId}`);
@@ -607,36 +648,42 @@ async function vaiAPrenotazione(proiezioneSalvataId, showId, proiezioneId) {
     apriPrenotazione(target.id, target.filmTitolo, target.cinemaNome, dataFormattata);
 }
 
+/* DOC-FN: 'rimuoviProiezione' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 async function rimuoviProiezione(id) {
     if (!confirm('Sei sicuro di voler rimuovere questa proiezione dai salvati?')) return;
     
     try {
         await ApiClient.delete(`/user/proiezioni-salvate/${id}`);
         
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (typeof Utils !== 'undefined') {
             Utils.showNotification('Proiezione rimossa', 'info');
         }
         
         await loadProfile();
     } catch (error) {
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (typeof Utils !== 'undefined') {
             Utils.showNotification('Errore: ' + error.message, 'error');
         }
     }
 }
 
+/* DOC-FN: 'annullaPrenotazione' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 async function annullaPrenotazione(id) {
     if (!confirm('Sei sicuro di voler annullare questa prenotazione?')) return;
     
     try {
         await ApiClient.delete(`/user/prenota/${id}`);
         
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (typeof Utils !== 'undefined') {
             Utils.showNotification('Prenotazione annullata', 'info');
         }
         
         await loadProfile();
     } catch (error) {
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (typeof Utils !== 'undefined') {
             Utils.showNotification('Errore: ' + error.message, 'error');
         }
@@ -646,11 +693,13 @@ async function annullaPrenotazione(id) {
 // Inizializza
 document.addEventListener('DOMContentLoaded', async () => {
     const ok = await Auth.ensureInitialized();
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (!ok || !Auth.isAuthenticated()) {
         window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
         return;
     }
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (typeof loadAllComponents === 'function') {
         await loadAllComponents();
     }
@@ -661,11 +710,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         const checked = !!event.target.checked;
         try {
             await ApiClient.put('/newsletter/preference', { consenso: checked });
+            /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
             if (typeof Utils !== 'undefined') {
                 Utils.showNotification(checked ? 'Newsletter attivata' : 'Newsletter disattivata', 'success');
             }
         } catch (error) {
             event.target.checked = !checked;
+            /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
             if (typeof Utils !== 'undefined') {
                 Utils.showNotification(error.message || 'Errore aggiornamento preferenza newsletter', 'error');
             }
@@ -673,9 +724,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     const params = new URLSearchParams(window.location.search);
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (params.get('edit') === '1') {
         const openEdit = () => {
             const modal = document.getElementById('edit-modal');
+            /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
             if (modal) {
                 modal.classList.remove('hidden');
                 params.delete('edit');
@@ -687,3 +740,4 @@ document.addEventListener('DOMContentLoaded', async () => {
         setTimeout(openEdit, 250);
     }
 });
+

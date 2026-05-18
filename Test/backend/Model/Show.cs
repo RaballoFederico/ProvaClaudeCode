@@ -1,3 +1,4 @@
+﻿// DOC: Model 'Show': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -51,3 +52,4 @@ public class Show
     public ICollection<ProiezioneSalvata> ProiezioniSalvateLegacy { get; set; } = new List<ProiezioneSalvata>();
     public ICollection<Prenotazione> PrenotazioniLegacy { get; set; } = new List<Prenotazione>();
 }
+

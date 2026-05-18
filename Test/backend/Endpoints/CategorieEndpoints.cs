@@ -1,3 +1,4 @@
+﻿// DOC: Endpoint 'CategorieEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Services.Interfaces;
@@ -7,6 +8,7 @@ namespace FilmAPI.Endpoints;
 
 public static class CategorieEndpoints
 {
+    // DOC-METHOD: 'MapCategorieEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static IEndpointRouteBuilder MapCategorieEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/categorie");
@@ -76,3 +78,4 @@ public static class CategorieEndpoints
         return app;
     }
 }
+

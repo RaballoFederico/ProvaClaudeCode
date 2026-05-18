@@ -1,3 +1,4 @@
+﻿// DOC: Service 'PdfService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.DTO;
 using FilmAPI.Services.Interfaces;
 using QRCoder;
@@ -7,6 +8,7 @@ using QuestPDF.Infrastructure;
 
 namespace FilmAPI.Services;
 
+// DOC-METHOD: 'PdfService' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
 public class PdfService(IConfiguration configuration) : IPdfService
 {
     static PdfService()
@@ -14,6 +16,7 @@ public class PdfService(IConfiguration configuration) : IPdfService
         QuestPDF.Settings.License = LicenseType.Community;
     }
 
+    // DOC-METHOD: 'GeneraBigliettiPdf' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public byte[] GeneraBigliettiPdf(IReadOnlyCollection<BigliettoPdfDTO> biglietti, string codiceConferma)
     {
         var brandName = configuration["Branding:Name"] ?? "FilmAPI";
@@ -119,6 +122,7 @@ public class PdfService(IConfiguration configuration) : IPdfService
         }).GeneratePdf();
     }
 
+    // DOC-METHOD: 'GeneraRicevutaRicaricaPdf' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public byte[] GeneraRicevutaRicaricaPdf(
         string nominativo,
         decimal importo,
@@ -195,6 +199,7 @@ public class PdfService(IConfiguration configuration) : IPdfService
         }).GeneratePdf();
     }
 
+    // DOC-METHOD: 'CreateQrCodePng' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static byte[] CreateQrCodePng(string payload)
     {
         using var generator = new QRCodeGenerator();
@@ -203,6 +208,7 @@ public class PdfService(IConfiguration configuration) : IPdfService
         return png.GetGraphic(8);
     }
 
+    // DOC-METHOD: 'TryLoadLogo' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static byte[]? TryLoadLogo(string? value)
     {
         if (string.IsNullOrWhiteSpace(value)) return null;
@@ -234,6 +240,7 @@ public class PdfService(IConfiguration configuration) : IPdfService
         return null;
     }
 
+    // DOC-METHOD: 'CellHeader' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static IContainer CellHeader(IContainer container)
     {
         return container
@@ -244,6 +251,7 @@ public class PdfService(IConfiguration configuration) : IPdfService
             .DefaultTextStyle(x => x.SemiBold().FontSize(10));
     }
 
+    // DOC-METHOD: 'CellValue' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static IContainer CellValue(IContainer container)
     {
         return container
@@ -253,3 +261,4 @@ public class PdfService(IConfiguration configuration) : IPdfService
             .DefaultTextStyle(x => x.FontSize(10));
     }
 }
+

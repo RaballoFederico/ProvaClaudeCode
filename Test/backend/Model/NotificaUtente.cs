@@ -1,3 +1,4 @@
+﻿// DOC: Model 'NotificaUtente': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -37,3 +38,4 @@ public class NotificaUtente
 
     public DateTime DataCreazione { get; set; } = DateTime.UtcNow;
 }
+

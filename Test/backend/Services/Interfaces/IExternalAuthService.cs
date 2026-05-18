@@ -1,3 +1,4 @@
+﻿// DOC: Interfaccia service 'IExternalAuthService': contratto della logica applicativa usata dagli endpoint.
 using FilmAPI.DTO;
 
 namespace FilmAPI.Services.Interfaces;
@@ -9,3 +10,4 @@ public interface IExternalAuthService
     Task<string> HandleCallbackAsync(string provider, string backendBaseUrl, string? code, string? state, string? oauthError);
     Task<(LoginResponseDTO? response, string? error)> CompleteAsync(ExternalAuthCompleteRequestDTO request);
 }
+

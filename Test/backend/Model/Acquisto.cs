@@ -1,3 +1,4 @@
+﻿// DOC: Model 'Acquisto': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -60,3 +61,4 @@ public class Acquisto
 
     public ICollection<Biglietto> Biglietti { get; set; } = new List<Biglietto>();
 }
+

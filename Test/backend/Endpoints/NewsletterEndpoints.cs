@@ -1,3 +1,4 @@
+﻿// DOC: Endpoint 'NewsletterEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -14,6 +15,7 @@ public static class NewsletterEndpoints
         "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$",
         RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
+    // DOC-METHOD: 'MapNewsletterEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static IEndpointRouteBuilder MapNewsletterEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("/newsletter/subscribe", async (NewsletterPublicSubscribeRequestDTO request, FilmDbContext db) =>
@@ -131,6 +133,7 @@ public static class NewsletterEndpoints
         return app;
     }
 
+    // DOC-METHOD: 'GetUserId' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static int? GetUserId(HttpContext context)
     {
         var userIdClaim = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -138,3 +141,4 @@ public static class NewsletterEndpoints
         return null;
     }
 }
+

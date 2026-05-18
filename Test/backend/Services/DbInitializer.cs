@@ -1,3 +1,4 @@
+﻿// DOC: Service 'DbInitializer': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using System.Security.Cryptography;
 using System.Text;
 using FilmAPI.Data;
@@ -8,6 +9,7 @@ namespace FilmAPI.Services;
 
 public static class DbInitializer
 {
+    // DOC-METHOD: 'InitializeAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static async Task InitializeAsync(FilmDbContext context)
     {
         await context.Database.MigrateAsync();
@@ -180,7 +182,7 @@ public static class DbInitializer
             new Cinema { Nome = "Cinepolis Galleria", Citta = "Napoli", Indirizzo = "Via Toledo 402", PostiMassimi = 290, Latitudine = 40.83690000m, Longitudine = 14.24840000m, CodiceLocale = "CPS-NAP" },
             new Cinema { Nome = "Cinema Fiume", Citta = "Palermo", Indirizzo = "Via E. F. 88", PostiMassimi = 240, Latitudine = 38.11570000m, Longitudine = 13.35850000m, CodiceLocale = "FLM-PAL" },
             new Cinema { Nome = "Odeon Firenze", Citta = "Firenze", Indirizzo = "Piazza Strozzi 6", PostiMassimi = 310, Latitudine = 43.77370000m, Longitudine = 11.25670000m, CodiceLocale = "ODE-FIR" },
-            new Cinema { Nome = "Cinema Republic", Citta = "Genova", Indirizzo = "Via流水 45", PostiMassimi = 230, Latitudine = 44.40760000m, Longitudine = 8.93930000m, CodiceLocale = "REP-GEN" },
+            new Cinema { Nome = "Cinema Republic", Citta = "Genova", Indirizzo = "Viaæµæ°´ 45", PostiMassimi = 230, Latitudine = 44.40760000m, Longitudine = 8.93930000m, CodiceLocale = "REP-GEN" },
             new Cinema { Nome = "UCI Fiumara", Citta = "Genova", Indirizzo = "Via Pammatone 8", PostiMassimi = 350, Latitudine = 44.42400000m, Longitudine = 8.89100000m, CodiceLocale = "UCI-FIU" },
             new Cinema { Nome = "Cinecitta World", Citta = "Roma", Indirizzo = "Via di Settebello 29", PostiMassimi = 400, Latitudine = 41.89200000m, Longitudine = 12.50200000m, CodiceLocale = "CCW-ROM" },
             new Cinema { Nome = "UCI Verona", Citta = "Verona", Indirizzo = "Via Monte Baldo 8", PostiMassimi = 270, Latitudine = 45.44300000m, Longitudine = 10.98700000m, CodiceLocale = "UCI-VER" },
@@ -629,6 +631,7 @@ public static class DbInitializer
                 s => s);
     }
 
+    // DOC-METHOD: 'EnsureProiezioniFromShowsAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static async Task EnsureProiezioniFromShowsAsync(FilmDbContext context)
     {
         var showRows = await context.Shows
@@ -712,6 +715,7 @@ public static class DbInitializer
         }
     }
 
+    // DOC-METHOD: 'EnsureCreditiAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static async Task EnsureCreditiAsync(FilmDbContext context, Dictionary<string, Utente> userMap)
     {
         var credits = new[]
@@ -752,6 +756,7 @@ public static class DbInitializer
         await context.SaveChangesAsync();
     }
 
+    // DOC-METHOD: 'EnsureAcquistiBigliettiAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static async Task EnsureAcquistiBigliettiAsync(
         FilmDbContext context,
         Dictionary<string, Utente> userMap,
@@ -939,6 +944,7 @@ public static class DbInitializer
         await context.SaveChangesAsync();
     }
 
+    // DOC-METHOD: 'CreateTicket' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static Biglietto CreateTicket(
         int acquistoId,
         int showId,
@@ -966,6 +972,7 @@ public static class DbInitializer
         };
     }
 
+    // DOC-METHOD: 'GenerateHash' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string GenerateHash(int bigliettoId, int acquistoId, string posto)
     {
         var raw = $"{bigliettoId}|{acquistoId}|{posto}|filmapi";
@@ -973,3 +980,4 @@ public static class DbInitializer
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 }
+

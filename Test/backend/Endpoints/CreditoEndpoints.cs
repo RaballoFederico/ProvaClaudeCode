@@ -1,3 +1,4 @@
+﻿// DOC: Endpoint 'CreditoEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Services;
@@ -9,6 +10,7 @@ namespace FilmAPI.Endpoints;
 
 public static class CreditoEndpoints
 {
+    // DOC-METHOD: 'MapCreditoEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static IEndpointRouteBuilder MapCreditoEndpoints(this IEndpointRouteBuilder app)
     {
         var adminGroup = app.MapGroup("/admin/credito").RequireAuthorization("PowerUserOrAdmin");
@@ -138,6 +140,7 @@ public static class CreditoEndpoints
         return app;
     }
 
+    // DOC-METHOD: 'GetUserId' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static int? GetUserId(HttpContext context)
     {
         var userIdClaim = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -145,6 +148,7 @@ public static class CreditoEndpoints
         return null;
     }
 
+    // DOC-METHOD: 'InviaRicevutaRicaricaAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static async Task InviaRicevutaRicaricaAsync(
         FilmDbContext db,
         IEmailService emailService,
@@ -206,3 +210,4 @@ public static class CreditoEndpoints
         await emailService.InviaConfermaAcquistoAsync(utente.Email, subject, html, pdf, attachmentName);
     }
 }
+

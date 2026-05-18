@@ -1,3 +1,4 @@
+﻿// DOC: Service 'ExternalAuthService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
@@ -37,6 +38,7 @@ public class ExternalAuthService : IExternalAuthService
         _logger = logger;
     }
 
+    // DOC-METHOD: 'GetEnabledProviders' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public IReadOnlyList<ExternalAuthProviderDTO> GetEnabledProviders()
     {
         var providers = new List<ExternalAuthProviderDTO>();
@@ -92,6 +94,7 @@ public class ExternalAuthService : IExternalAuthService
         return (authorizationUrl, null);
     }
 
+    // DOC-METHOD: 'HandleCallbackAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<string> HandleCallbackAsync(string provider, string backendBaseUrl, string? code, string? state, string? oauthError)
     {
         var normalizedProvider = provider.Trim().ToLowerInvariant();
@@ -218,6 +221,7 @@ public class ExternalAuthService : IExternalAuthService
         return Task.FromResult<(LoginResponseDTO?, string?)>((response, null));
     }
 
+    // DOC-METHOD: 'ExchangeCodeAndFetchProfileAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private async Task<ExternalProfile> ExchangeCodeAndFetchProfileAsync(string provider, ProviderConfig cfg, string code, string redirectUri)
     {
         var client = _httpClientFactory.CreateClient();
@@ -231,6 +235,7 @@ public class ExternalAuthService : IExternalAuthService
         };
     }
 
+    // DOC-METHOD: 'HandleGoogleAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private async Task<ExternalProfile> HandleGoogleAsync(HttpClient client, ProviderConfig cfg, string code, string redirectUri)
     {
         var tokenPayload = new Dictionary<string, string>
@@ -267,6 +272,7 @@ public class ExternalAuthService : IExternalAuthService
         };
     }
 
+    // DOC-METHOD: 'HandleGitHubAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private async Task<ExternalProfile> HandleGitHubAsync(HttpClient client, ProviderConfig cfg, string code, string redirectUri)
     {
         var tokenPayload = new Dictionary<string, string>
@@ -352,6 +358,7 @@ public class ExternalAuthService : IExternalAuthService
         };
     }
 
+    // DOC-METHOD: 'HandleMicrosoftAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private async Task<ExternalProfile> HandleMicrosoftAsync(HttpClient client, ProviderConfig cfg, string code, string redirectUri)
     {
         var tenant = string.IsNullOrWhiteSpace(cfg.TenantId) ? "common" : cfg.TenantId;
@@ -406,6 +413,7 @@ public class ExternalAuthService : IExternalAuthService
         };
     }
 
+    // DOC-METHOD: 'BuildAuthorizationUrl' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private string BuildAuthorizationUrl(string provider, ProviderConfig cfg, string redirectUri, string state)
     {
         return provider switch
@@ -417,6 +425,7 @@ public class ExternalAuthService : IExternalAuthService
         };
     }
 
+    // DOC-METHOD: 'GetProviderConfig' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private ProviderConfig GetProviderConfig(string provider)
     {
         var section = _configuration.GetSection($"ExternalAuth:Providers:{provider}");
@@ -439,6 +448,7 @@ public class ExternalAuthService : IExternalAuthService
         };
     }
 
+    // DOC-METHOD: 'ResolveReturnUrl' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private string? ResolveReturnUrl(string? returnUrl)
     {
         var defaultReturnUrl = _configuration["ExternalAuth:DefaultReturnUrl"];
@@ -508,17 +518,20 @@ public class ExternalAuthService : IExternalAuthService
         return null;
     }
 
+    // DOC-METHOD: 'AppendQuery' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string AppendQuery(string url, string key, string value)
     {
         var separator = url.Contains('?') ? "&" : "?";
         return $"{url}{separator}{Uri.EscapeDataString(key)}={Uri.EscapeDataString(value)}";
     }
 
+    // DOC-METHOD: 'BuildCallbackUrl' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string BuildCallbackUrl(string backendBaseUrl, string provider)
     {
         return $"{backendBaseUrl.TrimEnd('/')}/auth/external/{provider}/callback";
     }
 
+    // DOC-METHOD: 'CreateRandomUrlSafeToken' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string CreateRandomUrlSafeToken()
     {
         Span<byte> bytes = stackalloc byte[32];
@@ -526,14 +539,18 @@ public class ExternalAuthService : IExternalAuthService
         return Base64UrlEncode(bytes.ToArray());
     }
 
+    // DOC-METHOD: 'GetStateCacheKey' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string GetStateCacheKey(string nonce) => $"ext-auth-state:{nonce}";
+    // DOC-METHOD: 'GetAuthCodeCacheKey' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string GetAuthCodeCacheKey(string authCode) => $"ext-auth-code:{authCode}";
 
+    // DOC-METHOD: 'Base64UrlEncode' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string Base64UrlEncode(byte[] bytes)
     {
         return Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
     }
 
+    // DOC-METHOD: 'Base64UrlDecode' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static byte[] Base64UrlDecode(string input)
     {
         var padded = input.Replace('-', '+').Replace('_', '/');
@@ -573,3 +590,4 @@ public class ExternalAuthService : IExternalAuthService
         public string? SuggestedUsername { get; set; }
     }
 }
+

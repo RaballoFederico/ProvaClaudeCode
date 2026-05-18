@@ -1,3 +1,4 @@
+﻿// DOC: Endpoint 'AbbonamentiEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -16,6 +17,7 @@ public static class AbbonamentiEndpoints
         new PianoAbbonamentoDTO { Codice = "Premium", Nome = "Premium", PrezzoMensile = 49.90m, IngressiSettimanali = 7, Include3D = true, IncludeScontoSnack = true }
     };
 
+    // DOC-METHOD: 'MapAbbonamentiEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static IEndpointRouteBuilder MapAbbonamentiEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/abbonamenti").RequireAuthorization("Authenticated");
@@ -219,6 +221,7 @@ public static class AbbonamentiEndpoints
         return app;
     }
 
+    // DOC-METHOD: 'GetUserId' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static int? GetUserId(HttpContext context)
     {
         var userIdClaim = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -226,6 +229,7 @@ public static class AbbonamentiEndpoints
         return null;
     }
 
+    // DOC-METHOD: 'TryResolvePiano' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static bool TryResolvePiano(string? pianoRaw, out TipoPianoAbbonamento pianoEnum, out PianoAbbonamentoDTO pianoInfo)
     {
         if (Enum.TryParse<TipoPianoAbbonamento>(pianoRaw, true, out pianoEnum))
@@ -240,6 +244,7 @@ public static class AbbonamentiEndpoints
         return false;
     }
 
+    // DOC-METHOD: 'AttivaPianoAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static async Task AttivaPianoAsync(FilmDbContext db, int userId, TipoPianoAbbonamento piano)
     {
         var active = await db.AbbonamentiUtente
@@ -264,3 +269,4 @@ public static class AbbonamentiEndpoints
         await db.SaveChangesAsync();
     }
 }
+

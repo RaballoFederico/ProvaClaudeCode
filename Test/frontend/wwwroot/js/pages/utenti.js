@@ -1,9 +1,11 @@
+﻿/* DOC: Script pagina 'utenti': gestisce eventi UI, chiamate API e rendering dinamico della pagina. */
 const utentiState = {
     users: [],
     rolesByName: {},
     confirmResolver: null
 };
 
+/* DOC-FN: 'setMessage' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function setMessage(text, isError = false) {
     const message = document.getElementById('message');
     if (!message) return;
@@ -11,6 +13,7 @@ function setMessage(text, isError = false) {
     message.className = isError ? 'mt-4 text-sm text-red-400' : 'mt-4 text-sm text-on-surface-variant';
 }
 
+/* DOC-FN: 'fmtDate' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function fmtDate(value) {
     if (!value) return '-';
     const d = new Date(value);
@@ -18,20 +21,24 @@ function fmtDate(value) {
     return d.toLocaleString('it-IT');
 }
 
+/* DOC-FN: 'fmtMoney' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function fmtMoney(value) {
     const n = Number(value ?? 0);
     return `${n.toFixed(2)} EUR`;
 }
 
+/* DOC-FN: 'countRole' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function countRole(roleName) {
     return utentiState.users.filter((u) => Array.isArray(u.ruoli) && u.ruoli.includes(roleName)).length;
 }
 
+/* DOC-FN: 'canAssignTargetRole' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function canAssignTargetRole(user, targetRoleName) {
     const roles = Array.isArray(user.ruoli) ? user.ruoli : [];
     const isAdmin = roles.includes('Admin');
     const isPowerUser = roles.includes('PowerUser');
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (isAdmin && targetRoleName !== 'Admin' && countRole('Admin') <= 1) {
         return {
             ok: false,
@@ -39,6 +46,7 @@ function canAssignTargetRole(user, targetRoleName) {
         };
     }
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (isPowerUser && targetRoleName !== 'PowerUser' && countRole('PowerUser') <= 1) {
         return {
             ok: false,
@@ -49,6 +57,7 @@ function canAssignTargetRole(user, targetRoleName) {
     return { ok: true, reason: '' };
 }
 
+/* DOC-FN: 'showConfirm' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 async function showConfirm(message) {
     const modal = document.getElementById('confirm-role-modal');
     const msg = document.getElementById('confirm-role-message');
@@ -61,6 +70,7 @@ async function showConfirm(message) {
     });
 }
 
+/* DOC-FN: 'closeConfirm' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function closeConfirm(result) {
     const modal = document.getElementById('confirm-role-modal');
     if (modal) modal.classList.add('hidden');
@@ -69,11 +79,13 @@ function closeConfirm(result) {
     if (resolver) resolver(result);
 }
 
+/* DOC-FN: 'loadRoles' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 async function loadRoles() {
     try {
         const roles = await ApiClient.get('/admin/ruoli');
         const map = {};
         (Array.isArray(roles) ? roles : []).forEach((role) => {
+            /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
             if (role?.nome && Number.isFinite(role?.id)) {
                 map[role.nome] = role.id;
             }
@@ -81,7 +93,7 @@ async function loadRoles() {
         utentiState.rolesByName = map;
         return;
     } catch {
-        // Fallback compatibilità con backend precedente
+        // Fallback compatibilitÃ  con backend precedente
     }
 
     utentiState.rolesByName = {
@@ -91,11 +103,13 @@ async function loadRoles() {
     };
 }
 
+/* DOC-FN: 'renderUsersTable' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function renderUsersTable(users) {
     const tbody = document.getElementById('users-tbody');
     if (!tbody) return;
     tbody.innerHTML = '';
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (!users.length) {
         tbody.innerHTML = `<tr><td colspan="5" class="px-3 py-4 text-center text-on-surface-variant">Nessun utente registrato.</td></tr>`;
         return;
@@ -129,6 +143,7 @@ function renderUsersTable(users) {
     });
 }
 
+/* DOC-FN: 'loadUsers' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 async function loadUsers() {
     setMessage('Caricamento utenti...');
     try {
@@ -141,8 +156,10 @@ async function loadUsers() {
     }
 }
 
+/* DOC-FN: 'updateRole' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 async function updateRole(userId, targetRoleName) {
     const me = await ApiClient.get('/auth/me');
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (!me?.ruoli?.includes('Admin')) {
         throw new Error('Operazione consentita solo agli Admin.');
     }
@@ -153,11 +170,13 @@ async function updateRole(userId, targetRoleName) {
     const guard = canAssignTargetRole(user, targetRoleName);
     if (!guard.ok) throw new Error(guard.reason);
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (!utentiState.rolesByName.Admin || !utentiState.rolesByName.PowerUser || !utentiState.rolesByName.User) {
         await loadRoles();
     }
 
     const roleId = utentiState.rolesByName[targetRoleName];
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (!roleId) {
         throw new Error(`Ruolo ${targetRoleName} non disponibile`);
     }
@@ -166,6 +185,7 @@ async function updateRole(userId, targetRoleName) {
         await ApiClient.put(`/admin/utenti/${userId}/ruoli`, { ruoloIds: [roleId] });
     } catch (error) {
         const msg = String(error?.message || '').toLowerCase();
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (msg.includes('http 404') || msg.includes('not found')) {
             await ApiClient.put(`/admin/users/${userId}/roles`, { ruoloIds: [roleId] });
             return;
@@ -174,14 +194,17 @@ async function updateRole(userId, targetRoleName) {
     }
 }
 
+/* DOC-FN: 'setUserActivation' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 async function setUserActivation(userId, activate) {
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (activate) {
         try {
             await ApiClient.post(`/admin/users/${userId}/activate`, {});
         } catch (error) {
             const msg = String(error?.message || '').toLowerCase();
+            /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
             if (msg.includes('http 404') || msg.includes('not found')) {
-                // Compatibilità con backend eventualmente senza route activate legacy
+                // CompatibilitÃ  con backend eventualmente senza route activate legacy
                 throw new Error('Riattivazione non disponibile su questa versione backend.');
             }
             throw error;
@@ -192,6 +215,7 @@ async function setUserActivation(userId, activate) {
         await ApiClient.delete(`/admin/utenti/${userId}`);
     } catch (error) {
         const msg = String(error?.message || '').toLowerCase();
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (msg.includes('http 404') || msg.includes('not found')) {
             // Fallback backend legacy: soft delete/disattivazione
             await ApiClient.delete(`/admin/users/${userId}`);
@@ -201,9 +225,11 @@ async function setUserActivation(userId, activate) {
     }
 }
 
+/* DOC-FN: 'renderCreditHistory' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function renderCreditHistory(items) {
     const tbody = document.getElementById('credit-history-tbody');
     if (!tbody) return;
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (!items.length) {
         tbody.innerHTML = `<tr><td colspan="4" class="px-3 py-3 text-on-surface-variant">Nessun movimento disponibile.</td></tr>`;
         return;
@@ -218,9 +244,11 @@ function renderCreditHistory(items) {
     `).join('');
 }
 
+/* DOC-FN: 'renderOrdersHistory' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function renderOrdersHistory(items) {
     const tbody = document.getElementById('orders-history-tbody');
     if (!tbody) return;
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (!items.length) {
         tbody.innerHTML = `<tr><td colspan="4" class="px-3 py-3 text-on-surface-variant">Nessun acquisto disponibile.</td></tr>`;
         return;
@@ -235,6 +263,7 @@ function renderOrdersHistory(items) {
     `).join('');
 }
 
+/* DOC-FN: 'loadUserTransactions' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 async function loadUserTransactions(userId) {
     const panel = document.getElementById('transactions-panel');
     const title = document.getElementById('transactions-user');
@@ -268,6 +297,7 @@ async function loadUserTransactions(userId) {
     }
 }
 
+/* DOC-FN: 'openEditUserModal' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function openEditUserModal(userId) {
     const user = utentiState.users.find((u) => u.id === userId);
     if (!user) return;
@@ -279,6 +309,7 @@ function openEditUserModal(userId) {
     document.getElementById('edit-user-modal').classList.remove('hidden');
 }
 
+/* DOC-FN: 'closeEditUserModal' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function closeEditUserModal() {
     document.getElementById('edit-user-modal')?.classList.add('hidden');
 }
@@ -292,6 +323,7 @@ document.addEventListener('click', async (event) => {
     if (!Number.isFinite(userId) || !action) return;
 
     try {
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (action === 'set-user') {
             const ok = await showConfirm('Confermi di riportare questo account al ruolo User?');
             if (!ok) return;
@@ -301,6 +333,7 @@ document.addEventListener('click', async (event) => {
             return;
         }
 
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (action === 'set-poweruser') {
             const ok = await showConfirm('Confermi di impostare questo account come PowerUser?');
             if (!ok) return;
@@ -310,6 +343,7 @@ document.addEventListener('click', async (event) => {
             return;
         }
 
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (action === 'set-admin') {
             const ok = await showConfirm('Confermi di impostare questo account come Admin?');
             if (!ok) return;
@@ -319,6 +353,7 @@ document.addEventListener('click', async (event) => {
             return;
         }
 
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (action === 'deactivate') {
             const ok = await showConfirm('Confermi eliminazione definitiva dell\'account? Questa operazione non e annullabile.');
             if (!ok) return;
@@ -328,11 +363,13 @@ document.addEventListener('click', async (event) => {
             return;
         }
 
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (action === 'view-transactions') {
             await loadUserTransactions(userId);
             return;
         }
 
+        /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
         if (action === 'edit-profile') {
             openEditUserModal(userId);
         }
@@ -343,6 +380,7 @@ document.addEventListener('click', async (event) => {
 
 document.addEventListener('DOMContentLoaded', async () => {
     const ok = await Auth.ensureInitialized();
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (!ok || !Auth.isAuthenticated() || !Auth.hasRole('Admin')) {
         window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
         return;
@@ -379,3 +417,4 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadRoles();
     await loadUsers();
 });
+

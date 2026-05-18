@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
+<!-- DOC: Pagina UI 'newsletter-admin': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <html lang="it" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -10,6 +11,7 @@
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-light.ico" media="(prefers-color-scheme: light)">
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico" media="(prefers-color-scheme: dark)">
     <link rel="shortcut icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico">
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
@@ -19,14 +21,18 @@
     <div id="navbar-container"></div>
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
+        <!-- DOC-BLOCK: Sezione principale: contiene il flusso operativo della pagina. -->
         <main class="page-shell flex-1 p-4 md:p-8 lg:p-10">
+            <!-- DOC-BLOCK: Blocco funzionale UI: raggruppa contenuti/azioni omogenee della pagina. -->
             <section class="hero-banner p-6 md:p-8 mb-6">
                 <h1 class="font-headline text-3xl md:text-5xl font-semibold">Newsletter Admin</h1>
                 <p class="text-on-surface-variant mt-2">Invia campagne email agli utenti iscritti e consulta lo storico invii.</p>
             </section>
 
+            <!-- DOC-BLOCK: Blocco funzionale UI: raggruppa contenuti/azioni omogenee della pagina. -->
             <section class="app-card p-4 mb-6">
                 <h2 class="font-headline text-xl font-semibold mb-3">Nuova campagna</h2>
+                <!-- DOC-BLOCK: Form utente: raccoglie input, valida lato client e invia dati ai servizi API. -->
                 <form id="campaign-form" class="space-y-3">
                     <input id="campaign-subject" type="text" required placeholder="Oggetto newsletter" class="w-full rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm">
                     <textarea id="campaign-html" required rows="8" placeholder="<h2>Novita FilmHub</h2><p>Contenuto campagna...</p>" class="w-full rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm"></textarea>
@@ -34,6 +40,7 @@
                 </form>
             </section>
 
+            <!-- DOC-BLOCK: Blocco funzionale UI: raggruppa contenuti/azioni omogenee della pagina. -->
             <section class="app-card p-4">
                 <div class="flex items-center justify-between gap-3 mb-3">
                     <h2 class="font-headline text-xl font-semibold">Storico campagne</h2>
@@ -48,13 +55,21 @@
     </div>
     <div id="footer-container"></div>
 
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/theme.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/api-config.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/auth.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/route-guard.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/template-loader.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/api-client.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/utils.js"></script>
+    <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
         let allCampaigns = [];
         const LOCAL_CAMPAIGNS_KEY = 'newsletter_admin_local_campaigns_v1';
@@ -159,3 +174,4 @@
     </script>
 </body>
 </html>
+

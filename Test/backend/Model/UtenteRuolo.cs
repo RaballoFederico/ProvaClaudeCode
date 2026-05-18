@@ -1,3 +1,4 @@
+﻿// DOC: Model 'UtenteRuolo': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,3 +18,4 @@ public class UtenteRuolo
     [ForeignKey(nameof(RuoloId))]
     public Ruolo Ruolo { get; set; } = null!;
 }
+

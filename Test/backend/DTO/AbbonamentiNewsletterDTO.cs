@@ -1,3 +1,4 @@
+﻿// DOC: DTO 'AbbonamentiNewsletterDTO': contratto dati per request/response API.
 namespace FilmAPI.DTO;
 
 public class PianoAbbonamentoDTO
@@ -50,3 +51,4 @@ public class NewsletterCampagnaRequestDTO
     public string Oggetto { get; set; } = string.Empty;
     public string HtmlBody { get; set; } = string.Empty;
 }
+

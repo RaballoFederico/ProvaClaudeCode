@@ -1,3 +1,4 @@
+﻿// DOC: File backend 'Program': parte del runtime API .NET dell'app.
 using System.Text;
 using System.Threading.RateLimiting;
 using DotNetEnv;
@@ -518,3 +519,4 @@ static string BuildConnectSrcDirective(IWebHostEnvironment environment)
 }
 
 public partial class Program { }
+

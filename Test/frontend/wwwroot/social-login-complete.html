@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
+<!-- DOC: Pagina UI 'social-login-complete': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <html lang="it" class="dark">
 <head>
     <meta charset="UTF-8">
@@ -10,10 +11,12 @@
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-light.ico" media="(prefers-color-scheme: light)">
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico" media="(prefers-color-scheme: dark)">
     <link rel="shortcut icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico">
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="css/styles.css">
+    <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -43,7 +46,9 @@
         <span data-theme-toggle-icon class="material-symbols-outlined">light_mode</span>
     </button>
 
+    <!-- DOC-BLOCK: Sezione principale: contiene il flusso operativo della pagina. -->
     <main class="auth-shell mx-auto reveal-up">
+        <!-- DOC-BLOCK: Blocco funzionale UI: raggruppa contenuti/azioni omogenee della pagina. -->
         <section class="auth-spotlight reveal-up delay-1 hidden lg:block">
             <span class="section-eyebrow mb-5 inline-flex items-center gap-2">
                 <span class="material-symbols-outlined text-sm">hub</span>
@@ -53,6 +58,7 @@
             <p class="mt-3 text-sm md:text-base text-on-surface-variant">Attendi qualche secondo: validiamo il provider esterno e ti portiamo alla tua dashboard.</p>
         </section>
 
+        <!-- DOC-BLOCK: Blocco funzionale UI: raggruppa contenuti/azioni omogenee della pagina. -->
         <section class="auth-card auth-card-compact p-6 md:p-8 reveal-up delay-2 text-center">
             <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-container mb-4 shadow-xl shadow-primary-container/20">
                 <span class="material-symbols-outlined text-3xl text-white">sync</span>
@@ -69,10 +75,16 @@
         </section>
     </main>
 
+<!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
 <script src="js/theme.js"></script>
+<!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
 <script src="/js/api-config.js"></script>
+<!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
 <script src="js/auth.js"></script>
+<!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
 <script src="/js/api-client.js"></script>
+<!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
 <script src="js/pages/social-login-complete.js"></script>
 </body>
 </html>
+

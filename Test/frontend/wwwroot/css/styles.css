@@ -1,3 +1,4 @@
+﻿/* DOC: Foglio stile 'styles': definisce tema visivo, componenti e stati responsive/accessibility dell'app. */
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 .material-symbols-outlined {
@@ -1410,3 +1411,4 @@ a:focus-visible {
         transition: none !important;
     }
 }
+

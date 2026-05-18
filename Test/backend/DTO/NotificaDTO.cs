@@ -1,3 +1,4 @@
+﻿// DOC: DTO 'NotificaDTO': contratto dati per request/response API.
 namespace FilmAPI.DTO;
 
 public class NotificaDTO
@@ -20,3 +21,4 @@ public class CreaNotificaRequestDTO
     public string? Url { get; set; }
     public string? DedupeKey { get; set; }
 }
+

@@ -1,3 +1,4 @@
+﻿// DOC: Interfaccia service 'IPagamentoService': contratto della logica applicativa usata dagli endpoint.
 using FilmAPI.DTO;
 
 namespace FilmAPI.Services.Interfaces;
@@ -12,3 +13,4 @@ public interface IPagamentoService
     Task<StripeCheckoutVerificationDTO> VerificaCheckoutSessionAsync(string sessionId, decimal importoAtteso);
     Task<StripeWebhookResultDTO> GestisciWebhookAsync(string payload, string? stripeSignature, string? expectedWebhookSecret);
 }
+

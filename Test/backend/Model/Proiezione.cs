@@ -1,3 +1,4 @@
+﻿// DOC: Model 'Proiezione': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -33,3 +34,4 @@ public class Proiezione
     [Required]
     public TimeSpan Ora { get; set; }
 }
+

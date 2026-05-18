@@ -1,3 +1,4 @@
+﻿// DOC: DTO 'TMDBDTO': contratto dati per request/response API.
 namespace FilmAPI.DTO;
 
 public class TMDBMovieSearchResultDTO

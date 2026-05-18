@@ -1,3 +1,4 @@
+﻿// DOC: Interfaccia service 'IPdfService': contratto della logica applicativa usata dagli endpoint.
 using FilmAPI.DTO;
 
 namespace FilmAPI.Services.Interfaces;
@@ -13,3 +14,4 @@ public interface IPdfService
         DateTime dataOperazione,
         string causale);
 }
+

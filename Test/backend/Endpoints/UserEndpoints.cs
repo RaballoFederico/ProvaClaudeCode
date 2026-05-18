@@ -1,3 +1,4 @@
+﻿// DOC: Endpoint 'UserEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -8,6 +9,7 @@ namespace FilmAPI.Endpoints;
 
 public static class UserEndpoints
 {
+    // DOC-METHOD: 'MapUserEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static IEndpointRouteBuilder MapUserEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/user").RequireAuthorization();
@@ -197,7 +199,7 @@ public static class UserEndpoints
             {
                 if (await db.Utenti.AnyAsync(u => u.Email == request.Email && u.Id != userId))
                 {
-                    return Results.Conflict(new { message = "Email già in uso" });
+                    return Results.Conflict(new { message = "Email giÃ  in uso" });
                 }
                 utente.Email = request.Email;
             }
@@ -295,13 +297,13 @@ public static class UserEndpoints
                 return Results.NotFound(new { message = "Proiezione non trovata" });
             }
 
-            // Verifica che non sia già salvata
+            // Verifica che non sia giÃ  salvata
             var esistente = await db.ProiezioniSalvate
                 .FirstOrDefaultAsync(ps => ps.UtenteId == userId && ps.ProiezioneId == request.ProiezioneId);
 
             if (esistente != null)
             {
-                return Results.Conflict(new { message = "Proiezione già salvata" });
+                return Results.Conflict(new { message = "Proiezione giÃ  salvata" });
             }
 
             var salvata = new ProiezioneSalvata
@@ -357,7 +359,7 @@ public static class UserEndpoints
 
             if (salvata.Prenotato)
             {
-                return Results.Conflict(new { message = "Proiezione già prenotata" });
+                return Results.Conflict(new { message = "Proiezione giÃ  prenotata" });
             }
 
             if (request.NumeroPosti <= 0)
@@ -390,7 +392,7 @@ public static class UserEndpoints
             var dataOraProiezione = salvata.Proiezione.Data.Add(salvata.Proiezione.Ora);
             if (dataOraProiezione < DateTime.Now)
             {
-                return Results.BadRequest(new { message = "Non è possibile prenotare una proiezione passata" });
+                return Results.BadRequest(new { message = "Non Ã¨ possibile prenotare una proiezione passata" });
             }
 
             salvata.Prenotato = true;
@@ -503,6 +505,7 @@ public static class UserEndpoints
         return app;
     }
 
+    // DOC-METHOD: 'GetUserId' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static int? GetUserId(HttpContext context)
     {
         var userIdClaim = context.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
@@ -513,6 +516,7 @@ public static class UserEndpoints
         return null;
     }
 
+    // DOC-METHOD: 'NormalizeValue' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string? NormalizeValue(string? value, int maxLength)
     {
         if (string.IsNullOrWhiteSpace(value)) return null;
@@ -521,3 +525,4 @@ public static class UserEndpoints
         return trimmed[..maxLength];
     }
 }
+

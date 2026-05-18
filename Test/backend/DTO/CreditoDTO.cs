@@ -1,3 +1,4 @@
+﻿// DOC: DTO 'CreditoDTO': contratto dati per request/response API.
 namespace FilmAPI.DTO;
 
 public class RicaricaCreditoDTO
@@ -38,3 +39,4 @@ public class TransazioneFilterDTO
     public DateTime? Al { get; set; }
     public int? CinemaId { get; set; }
 }
+

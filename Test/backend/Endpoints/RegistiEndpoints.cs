@@ -1,3 +1,4 @@
+﻿// DOC: Endpoint 'RegistiEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -8,6 +9,7 @@ namespace FilmAPI.Endpoints;
 
 public static class RegistiEndpoints
 {
+    // DOC-METHOD: 'MapRegistiEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static RouteGroupBuilder MapRegistiEndpoints(this RouteGroupBuilder group)
     {
         // GET /registi - Visibile a tutti
@@ -95,3 +97,4 @@ public static class RegistiEndpoints
         return group;
     }
 }
+

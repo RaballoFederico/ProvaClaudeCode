@@ -1,3 +1,4 @@
+﻿/* DOC: Script pagina 'reimposta-password': gestisce eventi UI, chiamate API e rendering dinamico della pagina. */
 document.getElementById('reset-form').addEventListener('submit', async (event) => {
     event.preventDefault();
 
@@ -8,11 +9,13 @@ document.getElementById('reset-form').addEventListener('submit', async (event) =
     const message = document.getElementById('message');
     message.textContent = '';
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (!token) {
         message.textContent = 'Token mancante o non valido.';
         return;
     }
 
+    /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (newPassword !== confirmPassword) {
         message.textContent = 'Le password non coincidono.';
         return;
@@ -23,3 +26,4 @@ document.getElementById('reset-form').addEventListener('submit', async (event) =
         ? (result.message || 'Password aggiornata con successo.')
         : (result.error || 'Errore durante il reset password.');
 });
+

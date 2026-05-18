@@ -1,4 +1,5 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
+<!-- DOC: Pagina UI 'cinemas': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <html class="dark" lang="it">
 <head>
     <meta charset="UTF-8">
@@ -10,9 +11,11 @@
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-light.ico" media="(prefers-color-scheme: light)">
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico" media="(prefers-color-scheme: dark)">
     <link rel="shortcut icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico">
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
         tailwind.config = {
             darkMode: "class",
@@ -55,7 +58,9 @@
     <div class="flex flex-1">
         <div id="sidebar-container"></div>
         
+        <!-- DOC-BLOCK: Sezione principale: contiene il flusso operativo della pagina. -->
         <main class="page-shell flex-1 p-4 md:p-8 lg:p-12 overflow-x-hidden pb-20 md:pb-0">
+            <!-- DOC-BLOCK: Blocco funzionale UI: raggruppa contenuti/azioni omogenee della pagina. -->
             <section class="hero-banner p-6 md:p-8 mb-8 md:mb-10 reveal-up">
                 <span class="badge-soft mb-3">
                     <span class="material-symbols-outlined text-sm">theaters</span>
@@ -65,6 +70,7 @@
                 <p class="text-on-surface-variant tracking-wide text-sm mt-2">Gestione infrastruttura, sedi e capienza dell'intera rete.</p>
             </section>
 
+            <!-- DOC-BLOCK: Blocco funzionale UI: raggruppa contenuti/azioni omogenee della pagina. -->
             <section class="space-y-6 reveal-up delay-1">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
                     <div class="space-y-1">
@@ -93,13 +99,21 @@
 
     <div id="modal-container"></div>
 
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/theme.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/api-config.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/auth.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/route-guard.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/template-loader.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/api-client.js"></script>
+    <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/utils.js"></script>
+    <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
         let currentCinemas = [];
         const isManager = () => typeof Auth !== 'undefined' && Auth.canManageCatalog();
@@ -268,6 +282,7 @@
                 return;
             }
             showModal('Nuovo Cinema', `
+                <!-- DOC-BLOCK: Form utente: raccoglie input, valida lato client e invia dati ai servizi API. -->
                 <form id="cinema-form" onsubmit="handleSubmit(event)">
                     <div class="space-y-4">
                         <div>
@@ -279,7 +294,7 @@
                             <input type="text" name="indirizzo" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
                         </div>
                         <div>
-                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Città *</label>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">CittÃ  *</label>
                             <input type="text" name="citta" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
                         </div>
                         <div>
@@ -308,6 +323,7 @@
             if (!cinema) return;
 
             showModal('Modifica Cinema', `
+                <!-- DOC-BLOCK: Form utente: raccoglie input, valida lato client e invia dati ai servizi API. -->
                 <form id="cinema-form" onsubmit="handleSubmit(event)">
                     <div class="space-y-4">
                         <div>
@@ -319,7 +335,7 @@
                             <input type="text" name="indirizzo" value="${escapeHtml(cinema.indirizzo)}" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
                         </div>
                         <div>
-                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Città *</label>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">CittÃ  *</label>
                             <input type="text" name="citta" value="${escapeHtml(cinema.citta)}" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
                         </div>
                         <div>
@@ -428,4 +444,5 @@
     </script>
 </body>
 </html>
+
 

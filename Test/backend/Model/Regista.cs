@@ -1,3 +1,4 @@
+﻿// DOC: Model 'Regista': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -23,3 +24,4 @@ public class Regista
 
     public ICollection<Film> Films { get; set; } = new List<Film>();
 }
+

@@ -1,9 +1,11 @@
+﻿// DOC: Service 'PrenotazioneTempCleanupService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.Data;
 using FilmAPI.Model;
 using Microsoft.EntityFrameworkCore;
 
 namespace FilmAPI.Services;
 
+// DOC-METHOD: 'PrenotazioneTempCleanupService' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
 public class PrenotazioneTempCleanupService(IServiceScopeFactory scopeFactory, ILogger<PrenotazioneTempCleanupService> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,3 +45,4 @@ public class PrenotazioneTempCleanupService(IServiceScopeFactory scopeFactory, I
         }
     }
 }
+
