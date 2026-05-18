@@ -118,6 +118,8 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
             throw new InvalidOperationException("URL di redirect non validi");
         }
 
+        successUrl = NormalizeStripeCheckoutSessionPlaceholder(successUrl);
+
         if (!StripeConfigurato)
         {
             var fakeSession = $"cs_mock_{Guid.NewGuid():N}";
@@ -196,6 +198,11 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
             SessionId = session.Id,
             Url = session.Url ?? string.Empty
         };
+    }
+
+    private static string NormalizeStripeCheckoutSessionPlaceholder(string url)
+    {
+        return url.Replace("%7BCHECKOUT_SESSION_ID%7D", "{CHECKOUT_SESSION_ID}", StringComparison.OrdinalIgnoreCase);
     }
 
     public async Task<StripeCheckoutVerificationDTO> VerificaCheckoutSessionAsync(string sessionId, decimal importoAtteso)

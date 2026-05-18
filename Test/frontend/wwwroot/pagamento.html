@@ -144,10 +144,10 @@
 
                         <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high p-4 mb-4">
                             <label class="flex items-start gap-3 text-sm cursor-pointer select-none">
-                                <input id="use-credit" type="checkbox" class="payment-checkbox rounded mt-0.5" checked>
+                                <input id="use-credit" type="checkbox" class="payment-checkbox rounded mt-0.5">
                                 <span>
                                     <span class="font-medium text-on-surface">Usa il mio credito prima dei metodi esterni</span>
-                                    <span class="block text-on-surface-variant text-xs mt-1">Se il credito copre tutto, non verra addebitato nessun metodo esterno.</span>
+                                    <span class="block text-on-surface-variant text-xs mt-1">Attivalo solo se vuoi scalare il saldo prima dell'eventuale pagamento esterno.</span>
                                 </span>
                             </label>
                         </div>
@@ -155,7 +155,7 @@
                         <div id="payment-panel-container" class="space-y-4"></div>
 
                         <div class="mt-4 text-xs text-on-surface-variant">
-                            Controllo rapido: prima usiamo il credito (se attivo), poi addebitiamo solo l'eventuale residuo.
+                            Controllo rapido: se attivi il credito, verra scalato dal totale; il residuo andra su Stripe.
                         </div>
 
                         <div class="mt-5 rounded-xl border border-outline-variant/20 bg-surface-container-high p-4">
@@ -221,7 +221,7 @@
         let subtotal = 0;
         let credito = 0;
         let remaining = 0;
-        let useCredit = true;
+        let useCredit = false;
         let selectedMethodId = 'stripe_checkout';
         let preferredPaymentMethodId = null;
         let lockInfo = null;
@@ -420,6 +420,30 @@
 
             try {
                 Utils.showLoading();
+                const selectedSeatsCount = Array.isArray(lockInfo?.posti) ? lockInfo.posti.length : 0;
+                if (!selectedSeatsCount) {
+                    throw new Error('Nessun posto selezionato o lock scaduto');
+                }
+
+                const subtotalServer = Number(showData?.prezzoBase || 0) * selectedSeatsCount;
+
+                // Regola hard: se credito NON attivo e c'e' importo > 0, forziamo il passaggio Stripe.
+                // Questo evita qualunque salto diretto alla conferma senza checkout esterno.
+                if (!useCredit && subtotalServer > 0) {
+                    remaining = subtotalServer;
+                } else {
+                    // Fonte autorevole: il backend decide quanto va effettivamente su carta.
+                    const calc = await ApiClient.post('/acquisto/calcola-importo', {
+                        showId,
+                        numeroBiglietti: selectedSeatsCount,
+                        usaCredito: useCredit
+                    });
+                    remaining = Math.max(0, Number(calc?.daPagareCarta || 0));
+                }
+
+                document.getElementById('remaining').textContent = remaining.toFixed(2);
+                renderPaymentPanel();
+
                 if (remaining <= 0) {
                     await finalizePurchase(null);
                     return;
@@ -427,8 +451,9 @@
 
                 const params = new URLSearchParams(window.location.search);
                 params.set('checkout', 'success');
-                params.set('session_id', '{CHECKOUT_SESSION_ID}');
-                const successUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+                params.delete('session_id');
+                const successUrlBase = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+                const successUrl = `${successUrlBase}&session_id={CHECKOUT_SESSION_ID}`;
 
                 params.set('checkout', 'cancel');
                 params.delete('session_id');
