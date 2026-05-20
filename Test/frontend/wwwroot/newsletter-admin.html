@@ -62,6 +62,17 @@
     </div>
     <div id="footer-container"></div>
 
+    <div id="newsletter-confirm-modal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-surface-container rounded-2xl p-6 w-full max-w-md border border-outline-variant/20">
+            <h3 class="text-xl font-bold text-on-surface">Conferma invio</h3>
+            <p id="newsletter-confirm-message" class="mt-3 text-sm text-on-surface-variant"></p>
+            <div class="mt-5 flex gap-3">
+                <button id="newsletter-confirm-cancel" type="button" class="flex-1 rounded-lg border border-outline-variant/30 px-4 py-2 text-sm hover:bg-surface-container-high">Annulla</button>
+                <button id="newsletter-confirm-ok" type="button" class="flex-1 rounded-lg bg-primary-container px-4 py-2 text-sm text-white">Conferma</button>
+            </div>
+        </div>
+    </div>
+
     <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/theme.js"></script>
     <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
@@ -80,6 +91,26 @@
     <script>
         let allCampaigns = [];
         const LOCAL_CAMPAIGNS_KEY = 'newsletter_admin_local_campaigns_v1';
+        let newsletterConfirmResolver = null;
+
+        async function showNewsletterConfirm(message) {
+            const modal = document.getElementById('newsletter-confirm-modal');
+            const msg = document.getElementById('newsletter-confirm-message');
+            if (!modal || !msg) return window.confirm(message);
+            msg.textContent = message;
+            modal.classList.remove('hidden');
+            return await new Promise((resolve) => {
+                newsletterConfirmResolver = resolve;
+            });
+        }
+
+        function closeNewsletterConfirm(result) {
+            const modal = document.getElementById('newsletter-confirm-modal');
+            if (modal) modal.classList.add('hidden');
+            const resolver = newsletterConfirmResolver;
+            newsletterConfirmResolver = null;
+            if (resolver) resolver(result);
+        }
 
         function getLocalCampaigns() {
             try {
@@ -168,7 +199,8 @@
             const htmlBody = document.getElementById('campaign-html').value.trim();
             if (!subject || !htmlBody) return;
 
-            if (!confirm('Confermi invio newsletter agli utenti iscritti?')) return;
+            const ok = await showNewsletterConfirm('Confermi invio newsletter agli utenti iscritti?');
+            if (!ok) return;
 
             try {
                 const res = await ApiClient.post('/admin/newsletter/campagne/invia', { oggetto: subject, htmlBody });
@@ -229,6 +261,8 @@
             document.getElementById('send-test-campaign-btn')?.addEventListener('click', sendTestCampaign);
             document.getElementById('refresh-campaigns-btn')?.addEventListener('click', loadCampaigns);
             document.getElementById('campaign-search')?.addEventListener('input', () => renderCampaigns());
+            document.getElementById('newsletter-confirm-cancel')?.addEventListener('click', () => closeNewsletterConfirm(false));
+            document.getElementById('newsletter-confirm-ok')?.addEventListener('click', () => closeNewsletterConfirm(true));
             await loadRecipientCount();
             await loadCampaigns();
         });

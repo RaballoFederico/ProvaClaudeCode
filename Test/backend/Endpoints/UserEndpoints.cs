@@ -199,7 +199,7 @@ public static class UserEndpoints
             {
                 if (await db.Utenti.AnyAsync(u => u.Email == request.Email && u.Id != userId))
                 {
-                    return Results.Conflict(new { message = "Email giÃ  in uso" });
+                return Results.Conflict(new { message = "Email gia in uso" });
                 }
                 utente.Email = request.Email;
             }
@@ -297,13 +297,13 @@ public static class UserEndpoints
                 return Results.NotFound(new { message = "Proiezione non trovata" });
             }
 
-            // Verifica che non sia giÃ  salvata
+            // Verifica che non sia gia salvata
             var esistente = await db.ProiezioniSalvate
                 .FirstOrDefaultAsync(ps => ps.UtenteId == userId && ps.ProiezioneId == request.ProiezioneId);
 
             if (esistente != null)
             {
-                return Results.Conflict(new { message = "Proiezione giÃ  salvata" });
+                return Results.Conflict(new { message = "Proiezione gia salvata" });
             }
 
             var salvata = new ProiezioneSalvata
@@ -359,7 +359,7 @@ public static class UserEndpoints
 
             if (salvata.Prenotato)
             {
-                return Results.Conflict(new { message = "Proiezione giÃ  prenotata" });
+                return Results.Conflict(new { message = "Proiezione gia prenotata" });
             }
 
             if (request.NumeroPosti <= 0)
@@ -392,7 +392,7 @@ public static class UserEndpoints
             var dataOraProiezione = salvata.Proiezione.Data.Add(salvata.Proiezione.Ora);
             if (dataOraProiezione < DateTime.Now)
             {
-                return Results.BadRequest(new { message = "Non Ã¨ possibile prenotare una proiezione passata" });
+                return Results.BadRequest(new { message = "Non e possibile prenotare una proiezione passata" });
             }
 
             salvata.Prenotato = true;

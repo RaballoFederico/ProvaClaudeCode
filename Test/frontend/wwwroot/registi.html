@@ -84,7 +84,7 @@
                         <h3 id="total-registi" class="text-3xl md:text-4xl font-headline font-light text-secondary">0</h3>
                     </div>
                     <div class="bg-surface-container-high p-4 md:p-6 rounded-xl border border-outline-variant/5">
-                        <p class="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">NazionalitÃ </p>
+                        <p class="text-on-surface-variant text-[10px] uppercase tracking-widest mb-1">Nazionalita</p>
                         <h3 id="nations-count" class="text-3xl md:text-4xl font-headline font-light text-on-surface">0 <span class="text-lg text-on-surface-variant font-body tracking-normal">Paesi</span></h3>
                     </div>
                 </div>
@@ -141,7 +141,7 @@
         async function loadRegisti() {
             try {
                 Utils.showLoading();
-                currentRegisti = await ApiClient.get('/registi');
+                currentRegisti = normalizeUniqueRegisti(await ApiClient.request('/registi', { method: 'GET', bypassCache: true }));
                 renderRegisti();
                 updateStats();
             } catch (error) {
@@ -158,6 +158,86 @@
             const emptyAddRegistaBtn = document.getElementById('empty-add-regista-btn');
             if (newRegistaBtn) newRegistaBtn.classList.toggle('hidden', !canManage);
             if (emptyAddRegistaBtn) emptyAddRegistaBtn.classList.toggle('hidden', !canManage);
+        }
+
+        function normalizePersonKey(value) {
+            return String(value || '')
+                .normalize('NFKD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^\w\s]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toLowerCase();
+        }
+
+        function normalizeNationality(value) {
+            const raw = String(value || '').trim();
+            if (!raw) return '';
+
+            const key = raw
+                .normalize('NFKD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[._-]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toLowerCase();
+
+            const aliases = {
+                'usa': 'Stati Uniti',
+                'us': 'Stati Uniti',
+                'u s a': 'Stati Uniti',
+                'united states': 'Stati Uniti',
+                'united states of america': 'Stati Uniti',
+                'america': 'Stati Uniti',
+                'uk': 'Regno Unito',
+                'u k': 'Regno Unito',
+                'united kingdom': 'Regno Unito',
+                'great britain': 'Regno Unito',
+                'england': 'Regno Unito',
+                'scotland': 'Regno Unito',
+                'wales': 'Regno Unito',
+                'japan': 'Giappone',
+                'mexico': 'Messico',
+                'south korea': 'Corea del Sud',
+                'korea': 'Corea del Sud',
+                'republic of korea': 'Corea del Sud',
+                'russia': 'Russia',
+                'tailandese': 'Thailandia',
+                'thailand': 'Thailandia',
+                'thailandia': 'Thailandia',
+                'unknown': 'Sconosciuta'
+            };
+
+            return aliases[key] || raw;
+        }
+
+        function normalizeUniqueRegisti(registi) {
+            const items = Array.isArray(registi) ? registi : [];
+            const byName = new Map();
+
+            for (const regista of items) {
+                const normalized = {
+                    ...regista,
+                    nazionalita: normalizeNationality(regista?.nazionalita)
+                };
+                const fullName = `${normalized.nome || ''} ${normalized.cognome || ''}`;
+                const key = normalizePersonKey(fullName) || `id:${normalized.id || ''}`;
+                const prev = byName.get(key);
+
+                if (!prev) {
+                    byName.set(key, normalized);
+                    continue;
+                }
+
+                const prevHasNation = Boolean(prev.nazionalita && prev.nazionalita !== 'Sconosciuta');
+                const currHasNation = Boolean(normalized.nazionalita && normalized.nazionalita !== 'Sconosciuta');
+                if ((currHasNation && !prevHasNation) || Number(normalized.id || 0) > Number(prev.id || 0)) {
+                    byName.set(key, normalized);
+                }
+            }
+
+            return Array.from(byName.values())
+                .sort((a, b) => `${a.cognome || ''} ${a.nome || ''}`.localeCompare(`${b.cognome || ''} ${b.nome || ''}`, 'it'));
         }
 
         function renderRegisti() {
@@ -220,7 +300,7 @@
 
         function updateStats() {
             document.getElementById('total-registi').textContent = currentRegisti.length;
-            const nations = new Set(currentRegisti.map(r => r.nazionalita));
+            const nations = new Set(currentRegisti.map(r => normalizeNationality(r.nazionalita)).filter(Boolean));
             document.getElementById('nations-count').innerHTML = `${nations.size} <span class="text-lg text-on-surface-variant font-body tracking-normal">Paesi</span>`;
         }
 
@@ -243,7 +323,7 @@
                             <input type="text" name="cognome" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary placeholder:text-on-surface-variant/50">
                         </div>
                         <div>
-                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">NazionalitÃ </label>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Nazionalita</label>
                             <input type="text" name="nazionalita" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary placeholder:text-on-surface-variant/50">
                         </div>
                     </div>
@@ -277,7 +357,7 @@
                             <input type="text" name="cognome" value="${escapeHtml(regista.cognome)}" required class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
                         </div>
                         <div>
-                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">NazionalitÃ </label>
+                            <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Nazionalita</label>
                             <input type="text" name="nazionalita" value="${escapeHtml(regista.nazionalita)}" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
                         </div>
                     </div>
@@ -297,9 +377,9 @@
             }
             const form = event.target;
             const data = {
-                nome: form.nome.value,
-                cognome: form.cognome.value,
-                nazionalita: form.nazionalita.value
+                nome: form.nome.value.trim(),
+                cognome: form.cognome.value.trim(),
+                nazionalita: normalizeNationality(form.nazionalita.value)
             };
 
             try {
@@ -333,6 +413,11 @@
                 Utils.showNotification('Regista eliminato con successo', 'success');
                 await loadRegisti();
             } catch (error) {
+                if (String(error?.message || '').includes('HTTP 404')) {
+                    Utils.showNotification('Regista gia rimosso o non trovato, aggiorno la lista.', 'info');
+                    await loadRegisti();
+                    return;
+                }
                 Utils.showNotification(error.message || 'Errore durante l\'eliminazione del regista', 'error');
             } finally {
                 Utils.hideLoading();

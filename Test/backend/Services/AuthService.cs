@@ -228,7 +228,7 @@ public class AuthService : IAuthService
         }
 
         // Per utenti esterni appena creati serve prima persistere l'utente
-        // cosÃ¬ l'ID esiste prima di creare il refresh token.
+        // cosi l'ID esiste prima di creare il refresh token.
         if (utente.Id == 0)
         {
             await _db.SaveChangesAsync();

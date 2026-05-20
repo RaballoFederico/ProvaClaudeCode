@@ -247,7 +247,7 @@ const ApiClient = {
             await auth.ensureToken();
         }
 
-        // Aggiungi header Authorization se l'utente Ã¨ autenticato
+        // Aggiungi header Authorization se l'utente e autenticato
         const headers = {
             'Content-Type': 'application/json',
             ...options.headers

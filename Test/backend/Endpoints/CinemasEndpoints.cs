@@ -51,7 +51,7 @@ public static class CinemasEndpoints
             });
         });
 
-        // POST /cinemas - Solo Admin (PowerUser puÃ² solo leggere)
+        // POST /cinemas - Solo Admin (PowerUser puo solo leggere)
         group.MapPost("/", [Authorize(Roles = "Admin")] async (CinemaCreateDTO dto, FilmDbContext db, IHttpClientFactory httpClientFactory, IConfiguration configuration) =>
         {
             var cinema = new Cinema

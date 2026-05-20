@@ -446,10 +446,17 @@
         }
 
         function renderCastBadges(cast) {
+            const seen = new Set();
             const names = (cast || '')
                 .split(',')
                 .map(name => name.trim())
                 .filter(Boolean)
+                .filter(name => {
+                    const key = normalizeTextKey(name);
+                    if (!key || seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                })
                 .slice(0, 10);
 
             if (!names.length) {
@@ -473,23 +480,51 @@
 
         function getCastText() {
             const direct = (currentFilm?.cast || '').trim();
-            if (direct) return direct;
+            if (direct) return normalizeCastText(direct);
             const alt = (currentFilm?.Cast || '').trim();
-            if (alt) return alt;
+            if (alt) return normalizeCastText(alt);
             if (Array.isArray(tmdbCast) && tmdbCast.length) {
-                return tmdbCast
+                return uniqueByTextKey(tmdbCast
                     .map(a => a?.nome || a?.Nome || '')
-                    .filter(Boolean)
+                    .filter(Boolean))
                     .slice(0, 10)
                     .join(', ');
             }
             if (Array.isArray(tmdbMeta?.cast) && tmdbMeta.cast.length) {
-                return tmdbMeta.cast
-                    .filter(Boolean)
+                return uniqueByTextKey(tmdbMeta.cast.filter(Boolean))
                     .slice(0, 10)
                     .join(', ');
             }
             return '';
+        }
+
+        function normalizeTextKey(value) {
+            return String(value || '')
+                .normalize('NFKD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^\w\s]/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim()
+                .toLowerCase();
+        }
+
+        function uniqueByTextKey(values) {
+            const seen = new Set();
+            return values.filter(value => {
+                const key = normalizeTextKey(value);
+                if (!key || seen.has(key)) return false;
+                seen.add(key);
+                return true;
+            });
+        }
+
+        function normalizeCastText(cast) {
+            return uniqueByTextKey(
+                String(cast || '')
+                    .split(',')
+                    .map(name => name.trim())
+                    .filter(Boolean)
+            ).join(', ');
         }
 
         function getDirectorName() {
@@ -547,7 +582,7 @@
                                 <div class="md:col-span-2 space-y-3">
                                     <div class="text-sm text-on-surface-variant">Nascita: <span class="text-on-surface">${escapeHtml(actor.compleanno || 'N/D')}</span></div>
                                     <div class="text-sm text-on-surface-variant">Luogo: <span class="text-on-surface">${escapeHtml(actor.luogoNascita || 'N/D')}</span></div>
-                                    <div class="text-sm text-on-surface-variant">PopolaritÃ  TMDB: <span class="text-on-surface">${typeof actor.popolarita === 'number' ? actor.popolarita.toFixed(1) : 'N/D'}</span></div>
+                                <div class="text-sm text-on-surface-variant">Popolarita TMDB: <span class="text-on-surface">${typeof actor.popolarita === 'number' ? actor.popolarita.toFixed(1) : 'N/D'}</span></div>
                                     <div>
                                         <p class="text-xs uppercase tracking-widest text-on-surface-variant mb-2">Biografia</p>
                                         <p class="text-sm leading-relaxed text-on-surface/90 max-h-56 overflow-y-auto pr-1">${escapeHtml(actor.biography || 'Biografia non disponibile')}</p>
@@ -580,7 +615,16 @@
                 return '<div class="text-sm text-on-surface-variant">Filmografia non disponibile</div>';
             }
 
-            return filmografia.map(movie => {
+            const uniqueFilmografia = [];
+            const seen = new Set();
+            for (const movie of filmografia) {
+                const key = movie?.id || normalizeTextKey(`${movie?.titolo || ''} ${String(movie?.dataRilascio || '').slice(0, 4)} ${movie?.personaggio || ''}`);
+                if (!key || seen.has(key)) continue;
+                seen.add(key);
+                uniqueFilmografia.push(movie);
+            }
+
+            return uniqueFilmografia.map(movie => {
                 const year = movie.dataRilascio ? String(movie.dataRilascio).slice(0, 4) : 'N/D';
                 const openAction = movie.localFilmId
                     ? `onclick="openLocalFilmFromActor(${movie.localFilmId})"`

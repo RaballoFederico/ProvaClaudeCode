@@ -684,10 +684,17 @@
         }
 
         function formatCastBadges(cast) {
+            const seen = new Set();
             const names = (cast || '')
                 .split(',')
                 .map(n => n.trim())
                 .filter(Boolean)
+                .filter(name => {
+                    const key = normalizeFilmTitle(name);
+                    if (!key || seen.has(key)) return false;
+                    seen.add(key);
+                    return true;
+                })
                 .slice(0, 8);
 
             if (!names.length) {

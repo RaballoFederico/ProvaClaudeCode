@@ -92,7 +92,7 @@ public static class AdminEndpoints
 
             if (ruoliEsistenti.Count != request.RuoloIds.Count)
             {
-                return Results.BadRequest(new { message = "Uno o piÃ¹ ruoli non esistono" });
+                return Results.BadRequest(new { message = "Uno o piu ruoli non esistono" });
             }
 
             var adminRuolo = await db.Ruoli.FirstOrDefaultAsync(r => r.Nome == "Admin");

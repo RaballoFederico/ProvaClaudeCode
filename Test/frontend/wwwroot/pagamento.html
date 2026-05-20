@@ -65,7 +65,7 @@
         }
 
         .payment-checkbox:checked::before {
-            content: "âœ“";
+            content: "\2713";
             position: absolute;
             inset: 0;
             display: grid;
@@ -149,20 +149,10 @@
                             </div>
                         </div>
 
-                        <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high p-4 mb-4">
-                            <label class="flex items-start gap-3 text-sm cursor-pointer select-none">
-                                <input id="use-credit" type="checkbox" class="payment-checkbox rounded mt-0.5">
-                                <span>
-                                    <span class="font-medium text-on-surface">Usa il mio credito prima dei metodi esterni</span>
-                                    <span class="block text-on-surface-variant text-xs mt-1">Attivalo solo se vuoi scalare il saldo prima dell'eventuale pagamento esterno.</span>
-                                </span>
-                            </label>
-                        </div>
-
                         <div id="payment-panel-container" class="space-y-4"></div>
 
                         <div class="mt-4 text-xs text-on-surface-variant">
-                            Controllo rapido: se attivi il credito, verra scalato dal totale; il residuo andra su Stripe.
+                            Controllo rapido: scegli il metodo a sinistra. Credito FilmHub usa il saldo interno, gli altri metodi aprono Stripe Checkout.
                         </div>
 
                         <div class="mt-5 rounded-xl border border-outline-variant/20 bg-surface-container-high p-4">
@@ -209,6 +199,14 @@
     <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
         const PAYMENT_METHODS = [
+            {
+                id: 'credito_wallet',
+                label: 'Credito FilmHub',
+                icon: 'account_balance_wallet',
+                subtitle: 'Paga interamente con il credito disponibile',
+                stripeType: null,
+                cta: 'Paga con credito'
+            },
             {
                 id: 'stripe_checkout',
                 label: 'Carta / Apple Pay / Google Pay',
@@ -272,12 +270,6 @@
         });
 
         function bindEvents() {
-            document.getElementById('use-credit').addEventListener('change', (e) => {
-                useCredit = e.target.checked;
-                recalc();
-                renderPaymentPanel();
-            });
-
             document.getElementById('pay-btn').addEventListener('click', handlePay);
             document.getElementById('back-btn').addEventListener('click', () => {
                 const params = new URLSearchParams({
@@ -360,6 +352,8 @@
             container.querySelectorAll('.payment-method-btn').forEach((btn) => {
                 btn.addEventListener('click', async () => {
                     selectedMethodId = btn.getAttribute('data-method-id');
+                    useCredit = selectedMethodId === 'credito_wallet';
+                    recalc();
                     renderMethodList();
                     renderPaymentPanel();
                 });
@@ -393,7 +387,7 @@
         }
 
         function recalc() {
-            const used = useCredit ? Math.min(credito, subtotal) : 0;
+            const used = selectedMethodId === 'credito_wallet' ? Math.min(credito, subtotal) : 0;
             remaining = Math.max(0, subtotal - used);
             document.getElementById('remaining').textContent = remaining.toFixed(2);
         }
@@ -403,6 +397,30 @@
 
             const method = getSelectedMethod();
             const container = document.getElementById('payment-panel-container');
+
+            if (method.id === 'credito_wallet') {
+                const creditoSufficiente = credito >= subtotal;
+                container.innerHTML = creditoSufficiente
+                    ? `
+                        <div class="rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-4 text-sm">
+                            <div class="flex items-center gap-2 text-emerald-300 font-medium">
+                                <span class="material-symbols-outlined text-base">account_balance_wallet</span>
+                                Pagamento interamente con credito
+                            </div>
+                            <p class="text-emerald-100/80 mt-1">Conferma l'ordine per emettere i biglietti senza checkout esterno.</p>
+                        </div>
+                    `
+                    : `
+                        <div class="rounded-xl border border-amber-400/25 bg-amber-500/10 p-4 text-sm">
+                            <div class="flex items-center gap-2 text-amber-200 font-medium">
+                                <span class="material-symbols-outlined text-base">warning</span>
+                                Credito insufficiente
+                            </div>
+                            <p class="text-amber-100/80 mt-1">Disponibile: ${credito.toFixed(2)} EUR. Totale: ${subtotal.toFixed(2)} EUR.</p>
+                        </div>
+                    `;
+                return;
+            }
 
             if (remaining <= 0) {
                 container.innerHTML = `
@@ -441,28 +459,25 @@
                 }
 
                 const subtotalServer = Number(showData?.prezzoBase || 0) * selectedSeatsCount;
+                const useWallet = selectedMethodId === 'credito_wallet';
+                useCredit = useWallet;
 
-                // Regola hard: se credito NON attivo e c'e' importo > 0, forziamo il passaggio Stripe.
-                // Questo evita qualunque salto diretto alla conferma senza checkout esterno.
-                if (!useCredit && subtotalServer > 0) {
-                    remaining = subtotalServer;
-                } else {
-                    // Fonte autorevole: il backend decide quanto va effettivamente su carta.
-                    const calc = await ApiClient.post('/acquisto/calcola-importo', {
-                        showId,
-                        numeroBiglietti: selectedSeatsCount,
-                        usaCredito: useCredit
-                    });
-                    remaining = Math.max(0, Number(calc?.daPagareCarta || 0));
-                }
-
-                document.getElementById('remaining').textContent = remaining.toFixed(2);
-                renderPaymentPanel();
-
-                if (remaining <= 0) {
+                if (useWallet) {
+                    if (credito < subtotalServer) {
+                        throw new Error('Credito insufficiente: ricarica il saldo o seleziona un metodo Stripe.');
+                    }
+                    remaining = 0;
+                    document.getElementById('remaining').textContent = remaining.toFixed(2);
+                    renderPaymentPanel();
                     await finalizePurchase(null);
                     return;
                 }
+
+                // Credito non selezionato: si paga sempre con Stripe Checkout.
+                remaining = subtotalServer;
+
+                document.getElementById('remaining').textContent = remaining.toFixed(2);
+                renderPaymentPanel();
 
                 const params = new URLSearchParams(window.location.search);
                 params.set('checkout', 'success');

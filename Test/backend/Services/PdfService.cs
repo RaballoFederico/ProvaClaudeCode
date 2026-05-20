@@ -19,7 +19,7 @@ public class PdfService(IConfiguration configuration) : IPdfService
     // DOC-METHOD: 'GeneraBigliettiPdf' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public byte[] GeneraBigliettiPdf(IReadOnlyCollection<BigliettoPdfDTO> biglietti, string codiceConferma)
     {
-        var brandName = configuration["Branding:Name"] ?? "FilmAPI";
+        var brandName = configuration["Branding:Name"] ?? "FilmHub";
         var primaryColor = configuration["Branding:PrimaryColor"] ?? "#0f172a";
         var accentColor = configuration["Branding:AccentColor"] ?? "#bfdbfe";
         var logoBytes = TryLoadLogo(configuration["Branding:PdfLogoUrl"]);
@@ -131,7 +131,7 @@ public class PdfService(IConfiguration configuration) : IPdfService
         DateTime dataOperazione,
         string causale)
     {
-        var brandName = configuration["Branding:Name"] ?? "FilmAPI";
+        var brandName = configuration["Branding:Name"] ?? "FilmHub";
         var primaryColor = configuration["Branding:PrimaryColor"] ?? "#0f172a";
         var accentColor = configuration["Branding:AccentColor"] ?? "#bfdbfe";
         var logoBytes = TryLoadLogo(configuration["Branding:PdfLogoUrl"]);

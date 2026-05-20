@@ -103,7 +103,7 @@
             <div id="a11y-panel" class="a11y-panel hidden" role="dialog" aria-label="Pannello accessibilita">
                 <div class="a11y-panel-header">
                     <strong>Accessibilita</strong>
-                    <button id="a11y-close" class="a11y-icon-btn" aria-label="Chiudi">âœ•</button>
+                    <button id="a11y-close" class="a11y-icon-btn" aria-label="Chiudi">&times;</button>
                 </div>
                 <label class="a11y-toggle"><input id="a11y-high-contrast" type="checkbox"> Contrasto alto</label>
                 <label class="a11y-toggle"><input id="a11y-large-text" type="checkbox"> Testo piu grande</label>
@@ -145,11 +145,37 @@
         const close = document.getElementById('a11y-close');
         if (!fab || !panel || !close) return;
 
-        const openPanel = () => panel.classList.remove('hidden');
-        const closePanel = () => panel.classList.add('hidden');
+        const isOpen = () => !panel.classList.contains('hidden');
+        const openPanel = () => {
+            panel.classList.remove('hidden');
+            fab.setAttribute('aria-expanded', 'true');
+            panel.setAttribute('aria-hidden', 'false');
+        };
+        const closePanel = () => {
+            panel.classList.add('hidden');
+            fab.setAttribute('aria-expanded', 'false');
+            panel.setAttribute('aria-hidden', 'true');
+        };
+        const togglePanel = () => {
+            if (isOpen()) {
+                closePanel();
+                return;
+            }
+            openPanel();
+        };
 
-        fab.addEventListener('click', openPanel);
+        fab.setAttribute('aria-expanded', 'false');
+        panel.setAttribute('aria-hidden', 'true');
+
+        fab.addEventListener('click', (e) => {
+            e.stopPropagation();
+            togglePanel();
+        });
         close.addEventListener('click', closePanel);
+        panel.addEventListener('click', (e) => e.stopPropagation());
+        document.addEventListener('click', () => {
+            if (isOpen()) closePanel();
+        });
 
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closePanel();

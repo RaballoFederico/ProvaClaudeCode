@@ -370,7 +370,7 @@
                 await loadData();
             } catch (error) {
                 if (error.message && error.message.includes('409')) {
-                    Utils.showNotification('Esiste giÃ  una proiezione con lo stesso film, cinema, data e ora.', 'error');
+                    Utils.showNotification('Esiste gia una proiezione con lo stesso film, cinema, data e ora.', 'error');
                 } else {
                     Utils.showNotification(error.message || 'Errore durante il salvataggio', 'error');
                 }

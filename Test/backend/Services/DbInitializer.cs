@@ -1,5 +1,6 @@
 ﻿// DOC: Service 'DbInitializer': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using System.Security.Cryptography;
+using System.Globalization;
 using System.Text;
 using FilmAPI.Data;
 using FilmAPI.Model;
@@ -26,6 +27,7 @@ public static class DbInitializer
 
         if (alreadySeeded)
         {
+            await NormalizeAndMergeRegistiAsync(context);
             // Mantiene allineata la vista legacy "Proiezioni" senza rieseguire tutto il seed.
             await EnsureProiezioniFromShowsAsync(context);
             return;
@@ -40,6 +42,7 @@ public static class DbInitializer
         var filmMap = await EnsureFilmsAsync(context, directorMap, categoryMap);
         var showMap = await EnsureShowsAsync(context, saleMap, filmMap);
         await EnsureProiezioniFromShowsAsync(context);
+        await NormalizeAndMergeRegistiAsync(context);
 
         await EnsureCreditiAsync(context, userMap);
         await EnsureAcquistiBigliettiAsync(context, userMap, showMap, cinemaMap);
@@ -135,24 +138,24 @@ public static class DbInitializer
     {
         var directors = new[]
         {
-            new Regista { Nome = "Christopher", Cognome = "Nolan", Nazionalita = "UK" },
+            new Regista { Nome = "Christopher", Cognome = "Nolan", Nazionalita = "Regno Unito" },
             new Regista { Nome = "Denis", Cognome = "Villeneuve", Nazionalita = "Canada" },
-            new Regista { Nome = "Greta", Cognome = "Gerwig", Nazionalita = "USA" },
-            new Regista { Nome = "Ridley", Cognome = "Scott", Nazionalita = "UK" },
-            new Regista { Nome = "Hayao", Cognome = "Miyazaki", Nazionalita = "Japan" },
-            new Regista { Nome = "Martin", Cognome = "Scorsese", Nazionalita = "USA" },
-            new Regista { Nome = "Quentin", Cognome = "Tarantino", Nazionalita = "USA" },
-            new Regista { Nome = "Patty", Cognome = "Jenkins", Nazionalita = "USA" },
-            new Regista { Nome = "Alfonso", Cognome = "Cuaron", Nazionalita = "Mexico" },
-            new Regista { Nome = "Sofia", Cognome = "Coppola", Nazionalita = "USA" },
-            new Regista { Nome = "Damien", Cognome = "Chazelle", Nazionalita = "USA" },
-            new Regista { Nome = "Bong", Cognome = "Joon-ho", Nazionalita = "Korea" },
-            new Regista { Nome = "Alejandro", Cognome = "Inarritu", Nazionalita = "Mexico" },
+            new Regista { Nome = "Greta", Cognome = "Gerwig", Nazionalita = "Stati Uniti" },
+            new Regista { Nome = "Ridley", Cognome = "Scott", Nazionalita = "Regno Unito" },
+            new Regista { Nome = "Hayao", Cognome = "Miyazaki", Nazionalita = "Giappone" },
+            new Regista { Nome = "Martin", Cognome = "Scorsese", Nazionalita = "Stati Uniti" },
+            new Regista { Nome = "Quentin", Cognome = "Tarantino", Nazionalita = "Stati Uniti" },
+            new Regista { Nome = "Patty", Cognome = "Jenkins", Nazionalita = "Stati Uniti" },
+            new Regista { Nome = "Alfonso", Cognome = "Cuaron", Nazionalita = "Messico" },
+            new Regista { Nome = "Sofia", Cognome = "Coppola", Nazionalita = "Stati Uniti" },
+            new Regista { Nome = "Damien", Cognome = "Chazelle", Nazionalita = "Stati Uniti" },
+            new Regista { Nome = "Bong", Cognome = "Joon-ho", Nazionalita = "Corea del Sud" },
+            new Regista { Nome = "Alejandro", Cognome = "Inarritu", Nazionalita = "Messico" },
             new Regista { Nome = "James", Cognome = "Cameron", Nazionalita = "Canada" },
-            new Regista { Nome = "Jordan", Cognome = "Peele", Nazionalita = "USA" },
-            new Regista { Nome = "Sam", Cognome = "Mendes", Nazionalita = "UK" },
-            new Regista { Nome = "Kathryn", Cognome = "Bigelow", Nazionalita = "USA" },
-            new Regista { Nome = "Pete", Cognome = "Docter", Nazionalita = "USA" }
+            new Regista { Nome = "Jordan", Cognome = "Peele", Nazionalita = "Stati Uniti" },
+            new Regista { Nome = "Sam", Cognome = "Mendes", Nazionalita = "Regno Unito" },
+            new Regista { Nome = "Kathryn", Cognome = "Bigelow", Nazionalita = "Stati Uniti" },
+            new Regista { Nome = "Pete", Cognome = "Docter", Nazionalita = "Stati Uniti" }
         };
 
         foreach (var d in directors)
@@ -163,6 +166,152 @@ public static class DbInitializer
 
         await context.SaveChangesAsync();
         return await context.Registi.ToDictionaryAsync(r => $"{r.Nome} {r.Cognome}", r => r);
+    }
+
+    private static async Task NormalizeAndMergeRegistiAsync(FilmDbContext context)
+    {
+        var registi = await context.Registi
+            .Include(r => r.Films)
+            .ToListAsync();
+
+        foreach (var regista in registi)
+        {
+            var normalized = NormalizeNationality(regista.Nazionalita);
+            if (!string.Equals(regista.Nazionalita, normalized, StringComparison.Ordinal))
+            {
+                regista.Nazionalita = normalized;
+            }
+        }
+
+        var groups = registi
+            .GroupBy(r => NormalizePersonKey(r.Nome, r.Cognome))
+            .Where(g => !string.IsNullOrWhiteSpace(g.Key) && g.Count() > 1);
+
+        foreach (var group in groups)
+        {
+            var keeper = group
+                .OrderByDescending(r => r.Films.Count)
+                .ThenByDescending(r => HasKnownNationality(r.Nazionalita))
+                .ThenByDescending(r => r.Id)
+                .First();
+
+            foreach (var duplicate in group.Where(r => r.Id != keeper.Id))
+            {
+                foreach (var film in duplicate.Films.ToList())
+                {
+                    film.RegistaId = keeper.Id;
+                    film.Regista = keeper;
+                    if (string.IsNullOrWhiteSpace(film.RegistaNome))
+                    {
+                        film.RegistaNome = $"{keeper.Nome} {keeper.Cognome}";
+                    }
+                }
+
+                if (!HasKnownNationality(keeper.Nazionalita) && HasKnownNationality(duplicate.Nazionalita))
+                {
+                    keeper.Nazionalita = duplicate.Nazionalita;
+                }
+
+                context.Registi.Remove(duplicate);
+            }
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+    private static bool HasKnownNationality(string? value) =>
+        !string.IsNullOrWhiteSpace(value) && value != "Sconosciuta";
+
+    private static string NormalizePersonKey(string? nome, string? cognome)
+    {
+        var value = $"{nome} {cognome}".Normalize(NormalizationForm.FormD);
+        Span<char> buffer = stackalloc char[value.Length];
+        var idx = 0;
+
+        foreach (var ch in value)
+        {
+            var category = CharUnicodeInfo.GetUnicodeCategory(ch);
+            if (category == UnicodeCategory.NonSpacingMark)
+            {
+                continue;
+            }
+
+            if (char.IsLetterOrDigit(ch))
+            {
+                buffer[idx++] = char.ToLowerInvariant(ch);
+            }
+            else if (char.IsWhiteSpace(ch) && idx > 0 && buffer[idx - 1] != ' ')
+            {
+                buffer[idx++] = ' ';
+            }
+        }
+
+        return new string(buffer[..idx]).Trim();
+    }
+
+    private static string? NormalizeNationality(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return null;
+        }
+
+        var trimmed = value.Trim();
+        var key = NormalizeNationalityKey(trimmed);
+        return key switch
+        {
+            "usa" => "Stati Uniti",
+            "us" => "Stati Uniti",
+            "u s a" => "Stati Uniti",
+            "united states" => "Stati Uniti",
+            "united states of america" => "Stati Uniti",
+            "america" => "Stati Uniti",
+            "uk" => "Regno Unito",
+            "u k" => "Regno Unito",
+            "united kingdom" => "Regno Unito",
+            "great britain" => "Regno Unito",
+            "england" => "Regno Unito",
+            "scotland" => "Regno Unito",
+            "wales" => "Regno Unito",
+            "japan" => "Giappone",
+            "mexico" => "Messico",
+            "south korea" => "Corea del Sud",
+            "korea" => "Corea del Sud",
+            "republic of korea" => "Corea del Sud",
+            "russia" => "Russia",
+            "tailandese" => "Thailandia",
+            "thailand" => "Thailandia",
+            "thailandia" => "Thailandia",
+            "unknown" => "Sconosciuta",
+            _ => trimmed
+        };
+    }
+
+    private static string NormalizeNationalityKey(string value)
+    {
+        var normalized = value.Normalize(NormalizationForm.FormD);
+        Span<char> buffer = stackalloc char[normalized.Length];
+        var idx = 0;
+
+        foreach (var ch in normalized)
+        {
+            var category = CharUnicodeInfo.GetUnicodeCategory(ch);
+            if (category == UnicodeCategory.NonSpacingMark)
+            {
+                continue;
+            }
+
+            if (char.IsLetterOrDigit(ch))
+            {
+                buffer[idx++] = char.ToLowerInvariant(ch);
+            }
+            else if ((char.IsWhiteSpace(ch) || ch is '.' or '-' or '_') && idx > 0 && buffer[idx - 1] != ' ')
+            {
+                buffer[idx++] = ' ';
+            }
+        }
+
+        return new string(buffer[..idx]).Trim();
     }
 
     private static async Task<Dictionary<string, Cinema>> EnsureCinemasAsync(FilmDbContext context)

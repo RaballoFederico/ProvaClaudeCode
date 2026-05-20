@@ -190,15 +190,15 @@ public static class CreditoEndpoints
             tx.SaldoSuccessivo,
             tx.DataTransazione.ToLocalTime(),
             causale,
-            configuration["Branding:Name"] ?? "FilmAPI",
+            configuration["Branding:Name"] ?? "FilmHub",
             configuration["Branding:PrimaryColor"] ?? "#0f172a",
             configuration["Branding:AccentColor"] ?? "#bfdbfe",
             configuration["Branding:EmailLogoUrl"],
             Environment.GetEnvironmentVariable("SMTP_FROM") ?? configuration["SMTP:From"]);
 
         var subjectPrefix = isAdminTopUp ? "Ricarica amministratore" : "Ricarica credito";
-        var subject = $"FilmAPI | {subjectPrefix} +{tx.Importo:0.00} EUR";
-        var attachmentName = $"FilmAPI-Ricevuta-Ricarica-{tx.DataTransazione:yyyyMMdd-HHmm}-{tx.Id}.pdf";
+        var subject = $"FilmHub | {subjectPrefix} +{tx.Importo:0.00} EUR";
+        var attachmentName = $"FilmHub-Ricevuta-Ricarica-{tx.DataTransazione:yyyyMMdd-HHmm}-{tx.Id}.pdf";
         var pdf = pdfService.GeneraRicevutaRicaricaPdf(
             nominativo,
             tx.Importo,

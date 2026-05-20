@@ -287,7 +287,7 @@ public class BigliettoService(
                 acquisto.ImportoTotale,
                 acquisto.CreditoUsato,
                 ticketPdfData,
-                configuration["Branding:Name"] ?? "FilmAPI",
+                configuration["Branding:Name"] ?? "FilmHub",
                 configuration["Branding:PrimaryColor"] ?? "#0f172a",
                 configuration["Branding:AccentColor"] ?? "#bfdbfe",
                 configuration["Branding:EmailLogoUrl"],
@@ -295,8 +295,8 @@ public class BigliettoService(
 
             var safeFilmTitle = string.Concat(ticketPdfData[0].FilmTitolo.Where(c => !Path.GetInvalidFileNameChars().Contains(c))).Trim();
             if (string.IsNullOrWhiteSpace(safeFilmTitle)) safeFilmTitle = "film";
-            var attachmentName = $"FilmAPI-Biglietti-{DateTime.Now:yyyyMMdd}-{safeFilmTitle}-{acquisto.CodiceConferma}.pdf";
-            var subject = $"FilmAPI | Conferma ordine {acquisto.CodiceConferma} - {ticketPdfData[0].FilmTitolo}";
+            var attachmentName = $"FilmHub-Biglietti-{DateTime.Now:yyyyMMdd}-{safeFilmTitle}-{acquisto.CodiceConferma}.pdf";
+            var subject = $"FilmHub | Conferma ordine {acquisto.CodiceConferma} - {ticketPdfData[0].FilmTitolo}";
 
             await emailService.InviaConfermaAcquistoAsync(
                 acquistoConUtente.Utente.Email,

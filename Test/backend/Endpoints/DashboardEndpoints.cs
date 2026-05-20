@@ -1,5 +1,7 @@
 ﻿// DOC: Endpoint 'DashboardEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
+using System.Globalization;
+using System.Text;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.EntityFrameworkCore;
 
@@ -12,7 +14,7 @@ public static class DashboardEndpoints
     {
         app.MapGet("/dashboard/overview", async (FilmDbContext db, IMemoryCache cache, HttpContext httpContext) =>
         {
-            const string cacheKey = "dashboard:overview:v1";
+            const string cacheKey = "dashboard:overview:v2";
             if (cache.TryGetValue(cacheKey, out object? cached) && cached is not null)
             {
                 return Results.Ok(cached);
@@ -32,7 +34,7 @@ public static class DashboardEndpoints
                 .OrderByDescending(f => f.Featured)
                 .ThenByDescending(f => f.DataRilascio ?? f.DataProduzione)
                 .ThenByDescending(f => f.Id)
-                .Take(6)
+                .Take(24)
                 .Select(f => new
                 {
                     f.Id,
@@ -45,6 +47,7 @@ public static class DashboardEndpoints
                     f.CopertinaPath,
                     f.Featured,
                     f.DataRilascio,
+                    f.DataProduzione,
                     f.Genere,
                     Categorie = f.FilmsCategorie
                         .OrderBy(fc => fc.Categoria.Nome)
@@ -58,7 +61,15 @@ public static class DashboardEndpoints
                 })
                 .ToListAsync();
 
-            var normalizedFeaturedFilms = featuredFilms.Select(f => new
+            var dedupedFeaturedFilms = DeduplicateByTitle(
+                featuredFilms,
+                item => item.Titolo,
+                item => item.DataRilascio ?? item.DataProduzione,
+                item => item.Id)
+                .Take(6)
+                .ToList();
+
+            var normalizedFeaturedFilms = dedupedFeaturedFilms.Select(f => new
             {
                 f.Id,
                 f.Titolo,
@@ -68,6 +79,7 @@ public static class DashboardEndpoints
                 CopertinaPath = NormalizeMediaUrl(f.CopertinaPath, httpContext),
                 f.Featured,
                 f.DataRilascio,
+                f.DataProduzione,
                 f.Genere,
                 f.Categorie
             }).ToList();
@@ -117,7 +129,7 @@ public static class DashboardEndpoints
 
         app.MapPost("/dashboard/cache/invalidate", [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,PowerUser")] (IMemoryCache cache) =>
         {
-            cache.Remove("dashboard:overview:v1");
+            cache.Remove("dashboard:overview:v2");
             return Results.Ok(new { message = "Dashboard cache invalidata" });
         });
 
@@ -142,6 +154,72 @@ public static class DashboardEndpoints
             $"{httpContext.Request.Scheme}://{httpContext.Request.Host.Value}";
 
         return $"{backendBaseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
+    }
+
+    private static List<T> DeduplicateByTitle<T>(
+        IEnumerable<T> items,
+        Func<T, string?> titleSelector,
+        Func<T, DateTime?> dateSelector,
+        Func<T, int> idSelector)
+    {
+        var map = new Dictionary<string, T>(StringComparer.Ordinal);
+        foreach (var item in items)
+        {
+            var key = NormalizeFilmTitleKey(titleSelector(item));
+            if (string.IsNullOrWhiteSpace(key))
+            {
+                key = $"id:{idSelector(item)}";
+            }
+
+            if (!map.TryGetValue(key, out var existing))
+            {
+                map[key] = item;
+                continue;
+            }
+
+            var existingDate = dateSelector(existing) ?? DateTime.MinValue;
+            var candidateDate = dateSelector(item) ?? DateTime.MinValue;
+            if (candidateDate > existingDate || (candidateDate == existingDate && idSelector(item) > idSelector(existing)))
+            {
+                map[key] = item;
+            }
+        }
+
+        return map.Values
+            .OrderByDescending(x => dateSelector(x) ?? DateTime.MinValue)
+            .ThenByDescending(idSelector)
+            .ToList();
+    }
+
+    private static string NormalizeFilmTitleKey(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        var normalized = value.Normalize(NormalizationForm.FormD);
+        Span<char> buffer = stackalloc char[normalized.Length];
+        var idx = 0;
+        foreach (var ch in normalized)
+        {
+            var category = CharUnicodeInfo.GetUnicodeCategory(ch);
+            if (category == UnicodeCategory.NonSpacingMark)
+            {
+                continue;
+            }
+
+            if (char.IsLetterOrDigit(ch))
+            {
+                buffer[idx++] = char.ToLowerInvariant(ch);
+            }
+            else if (char.IsWhiteSpace(ch) && idx > 0 && buffer[idx - 1] != ' ')
+            {
+                buffer[idx++] = ' ';
+            }
+        }
+
+        return new string(buffer[..idx]).Trim();
     }
 }
 

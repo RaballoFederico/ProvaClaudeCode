@@ -93,7 +93,7 @@ async function loadRoles() {
         utentiState.rolesByName = map;
         return;
     } catch {
-        // Fallback compatibilitÃ  con backend precedente
+        // Fallback compatibilita con backend precedente
     }
 
     utentiState.rolesByName = {
@@ -115,13 +115,13 @@ function renderUsersTable(users) {
         return;
     }
 
-    users.forEach((user) => {
+    users.forEach((user, index) => {
         const roles = Array.isArray(user.ruoli) ? user.ruoli.join(', ') : '-';
         const guardToUser = canAssignTargetRole(user, 'User');
 
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td class="px-3 py-3">${user.id}</td>
+            <td class="px-3 py-3">${index + 1}</td>
             <td class="px-3 py-3">
                 <div class="font-medium">${user.username || '-'}</div>
                 <div class="text-xs text-on-surface-variant">${(user.nome || '')} ${(user.cognome || '')}</div>
@@ -204,7 +204,7 @@ async function setUserActivation(userId, activate) {
             const msg = String(error?.message || '').toLowerCase();
             /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
             if (msg.includes('http 404') || msg.includes('not found')) {
-                // CompatibilitÃ  con backend eventualmente senza route activate legacy
+                // Compatibilita con backend eventualmente senza route activate legacy
                 throw new Error('Riattivazione non disponibile su questa versione backend.');
             }
             throw error;

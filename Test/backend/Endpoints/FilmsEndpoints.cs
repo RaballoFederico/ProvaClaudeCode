@@ -434,7 +434,7 @@ public static class FilmsEndpoints
 
                 if (categorieEsistenti.Count != dto.CategoriaIds.Count)
                 {
-                    return Results.BadRequest("Una o piÃ¹ categorie non esistono");
+                    return Results.BadRequest("Una o piu categorie non esistono");
                 }
             }
 
@@ -826,7 +826,7 @@ public static class FilmsEndpoints
 
                 if (categorieEsistenti.Count != dto.CategoriaIds.Count)
                 {
-                    return Results.BadRequest("Una o piÃ¹ categorie non esistono");
+                    return Results.BadRequest("Una o piu categorie non esistono");
                 }
             }
 

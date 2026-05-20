@@ -19,7 +19,7 @@ public static class EmailComposer
         string? logoUrl,
         string? supportEmail)
     {
-        var safeBrandName = string.IsNullOrWhiteSpace(brandName) ? "FilmAPI" : Escape(brandName.Trim());
+        var safeBrandName = string.IsNullOrWhiteSpace(brandName) ? "FilmHub" : Escape(brandName.Trim());
         var safePrimary = string.IsNullOrWhiteSpace(primaryColor) ? "#0f172a" : primaryColor.Trim();
         var safeAccent = string.IsNullOrWhiteSpace(accentColor) ? "#bfdbfe" : accentColor.Trim();
         var safeSupportEmail = Escape((supportEmail ?? string.Empty).Trim());
@@ -79,7 +79,7 @@ public static class EmailComposer
         var ticketList = biglietti.ToList();
         var dataOraInvio = DateTime.Now.ToString("dd/MM/yyyy HH:mm");
         var cartaAddebitata = Math.Max(0m, importoTotale - creditoUsato);
-        var safeBrandName = string.IsNullOrWhiteSpace(brandName) ? "FilmAPI" : Escape(brandName.Trim());
+        var safeBrandName = string.IsNullOrWhiteSpace(brandName) ? "FilmHub" : Escape(brandName.Trim());
         var safePrimary = string.IsNullOrWhiteSpace(primaryColor) ? "#0f172a" : primaryColor.Trim();
         var safeAccent = string.IsNullOrWhiteSpace(accentColor) ? "#bfdbfe" : accentColor.Trim();
         var safeSupportEmail = Escape((supportEmail ?? string.Empty).Trim());
