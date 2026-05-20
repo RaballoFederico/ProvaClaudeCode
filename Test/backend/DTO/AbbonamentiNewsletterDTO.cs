@@ -52,3 +52,10 @@ public class NewsletterCampagnaRequestDTO
     public string HtmlBody { get; set; } = string.Empty;
 }
 
+public class NewsletterTestRequestDTO
+{
+    public string Oggetto { get; set; } = string.Empty;
+    public string HtmlBody { get; set; } = string.Empty;
+    public string Email { get; set; } = string.Empty;
+}
+

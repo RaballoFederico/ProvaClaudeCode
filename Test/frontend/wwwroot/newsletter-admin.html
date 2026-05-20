@@ -31,12 +31,19 @@
 
             <!-- DOC-BLOCK: Blocco funzionale UI: raggruppa contenuti/azioni omogenee della pagina. -->
             <section class="app-card p-4 mb-6">
-                <h2 class="font-headline text-xl font-semibold mb-3">Nuova campagna</h2>
+                <div class="flex flex-col gap-1 mb-3">
+                    <h2 class="font-headline text-xl font-semibold">Nuova campagna</h2>
+                    <p id="newsletter-recipient-count" class="text-sm text-on-surface-variant">Destinatari iscritti: ...</p>
+                </div>
                 <!-- DOC-BLOCK: Form utente: raccoglie input, valida lato client e invia dati ai servizi API. -->
                 <form id="campaign-form" class="space-y-3">
                     <input id="campaign-subject" type="text" required placeholder="Oggetto newsletter" class="w-full rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm">
                     <textarea id="campaign-html" required rows="8" placeholder="<h2>Novita FilmHub</h2><p>Contenuto campagna...</p>" class="w-full rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm"></textarea>
-                    <button type="submit" class="app-btn app-btn-primary">Invia campagna</button>
+                    <div class="grid gap-2 md:grid-cols-[1fr_auto_auto]">
+                        <input id="campaign-test-email" type="email" placeholder="Email test" class="w-full rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm">
+                        <button id="send-test-campaign-btn" type="button" class="app-btn app-btn-secondary">Invia test</button>
+                        <button type="submit" class="app-btn app-btn-primary">Invia campagna</button>
+                    </div>
                 </form>
             </section>
 
@@ -88,6 +95,20 @@
             const current = getLocalCampaigns();
             const next = [campaign, ...current].slice(0, 50);
             localStorage.setItem(LOCAL_CAMPAIGNS_KEY, JSON.stringify(next));
+        }
+
+        async function loadRecipientCount() {
+            const label = document.getElementById('newsletter-recipient-count');
+            if (!label) return;
+            try {
+                const res = await ApiClient.get('/admin/newsletter/destinatari/count');
+                const count = Number(res?.destinatari || 0);
+                label.textContent = `Destinatari iscritti: ${count}`;
+                label.className = count > 0 ? 'text-sm text-green-400' : 'text-sm text-amber-300';
+            } catch {
+                label.textContent = 'Destinatari iscritti: non disponibili';
+                label.className = 'text-sm text-on-surface-variant';
+            }
         }
 
         async function loadCampaigns() {
@@ -156,19 +177,59 @@
                     Utils.showNotification('Nessun destinatario raggiunto: verifica iscrizioni newsletter e backend SMTP', 'error');
                     return;
                 }
-                Utils.showNotification(`${res.message || 'Campagna inviata'} (${sentCount} destinatari)`, 'success');
+                const failedCount = Number(res?.falliti || 0);
+                const statusType = failedCount > 0 ? 'warning' : 'success';
+                const suffix = failedCount > 0
+                    ? `${sentCount} inviate, ${failedCount} fallite`
+                    : `${sentCount} destinatari`;
+                Utils.showNotification(`${res.message || 'Campagna inviata'} (${suffix})`, statusType);
                 event.target.reset();
                 await loadCampaigns();
+                await loadRecipientCount();
             } catch (error) {
-                Utils.showNotification(error.message || 'Errore invio campagna', 'error');
+                const msg = error.message || 'Errore invio campagna';
+                if (msg.includes('Nessun destinatario')) {
+                    Utils.showNotification('Nessun iscritto alla newsletter: usa "Invia test" oppure attiva il consenso dal profilo di un utente.', 'warning');
+                    await loadRecipientCount();
+                    return;
+                }
+                Utils.showNotification(msg, 'error');
+            }
+        }
+
+        async function sendTestCampaign() {
+            const subject = document.getElementById('campaign-subject').value.trim();
+            const htmlBody = document.getElementById('campaign-html').value.trim();
+            const email = document.getElementById('campaign-test-email').value.trim();
+            if (!subject || !htmlBody) {
+                Utils.showNotification('Compila oggetto e contenuto prima del test', 'error');
+                return;
+            }
+            if (!email) {
+                Utils.showNotification('Inserisci una email per il test', 'error');
+                return;
+            }
+
+            try {
+                const res = await ApiClient.post('/admin/newsletter/campagne/test', { oggetto: subject, htmlBody, email });
+                Utils.showNotification(res?.message || 'Email di test inviata', 'success');
+            } catch (error) {
+                Utils.showNotification(error.message || 'Errore invio test newsletter', 'error');
             }
         }
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();
+            const user = typeof Auth !== 'undefined' ? Auth.getUser?.() : null;
+            if (user?.email) {
+                const testEmail = document.getElementById('campaign-test-email');
+                if (testEmail) testEmail.value = user.email;
+            }
             document.getElementById('campaign-form')?.addEventListener('submit', sendCampaign);
+            document.getElementById('send-test-campaign-btn')?.addEventListener('click', sendTestCampaign);
             document.getElementById('refresh-campaigns-btn')?.addEventListener('click', loadCampaigns);
             document.getElementById('campaign-search')?.addEventListener('input', () => renderCampaigns());
+            await loadRecipientCount();
             await loadCampaigns();
         });
     </script>

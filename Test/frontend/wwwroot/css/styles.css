@@ -679,6 +679,11 @@ body.sidebar-open {
     color: #ffe8e8;
 }
 
+.toast.warning {
+    background: #8a5a00;
+    color: #fff4d6;
+}
+
 .toast.info {
     background: color-mix(in srgb, var(--surface-high) 90%, transparent);
     color: var(--text);

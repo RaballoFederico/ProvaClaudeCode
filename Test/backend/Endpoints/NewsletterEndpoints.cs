@@ -88,8 +88,35 @@ public static class NewsletterEndpoints
             }
         });
 
-        adminGroup.MapPost("/campagne/invia", async (HttpContext context, NewsletterCampagnaRequestDTO request, FilmDbContext db, IEmailService emailService) =>
+        adminGroup.MapGet("/destinatari/count", async (FilmDbContext db) =>
         {
+            var emails = await GetNewsletterRecipientsAsync(db);
+            return Results.Ok(new { destinatari = emails.Count });
+        });
+
+        adminGroup.MapPost("/campagne/test", async (NewsletterTestRequestDTO request, IEmailService emailService) =>
+        {
+            var subject = (request.Oggetto ?? string.Empty).Trim();
+            var html = (request.HtmlBody ?? string.Empty).Trim();
+            var email = (request.Email ?? string.Empty).Trim().ToLowerInvariant();
+
+            if (string.IsNullOrWhiteSpace(subject) || string.IsNullOrWhiteSpace(html))
+            {
+                return Results.BadRequest(new { message = "Oggetto e contenuto sono obbligatori" });
+            }
+
+            if (string.IsNullOrWhiteSpace(email) || !EmailRegex.IsMatch(email))
+            {
+                return Results.BadRequest(new { message = "Email test non valida" });
+            }
+
+            await emailService.InviaEmailStrictAsync(email, $"[TEST] {subject}", html);
+            return Results.Ok(new { message = "Email di test inviata", email });
+        });
+
+        adminGroup.MapPost("/campagne/invia", async (HttpContext context, NewsletterCampagnaRequestDTO request, FilmDbContext db, IEmailService emailService, ILoggerFactory loggerFactory) =>
+        {
+            var logger = loggerFactory.CreateLogger("NewsletterEndpoints");
             var adminUserId = GetUserId(context);
             if (adminUserId == null) return Results.Unauthorized();
 
@@ -100,10 +127,7 @@ public static class NewsletterEndpoints
                 return Results.BadRequest(new { message = "Oggetto e contenuto sono obbligatori" });
             }
 
-            var recipients = await db.Utenti
-                .Where(u => u.Attivo && u.ConsensoNewsletter && !string.IsNullOrWhiteSpace(u.Email))
-                .Select(u => u.Email)
-                .ToListAsync();
+            var recipients = await GetNewsletterRecipientsAsync(db);
 
             if (recipients.Count == 0)
             {
@@ -111,10 +135,34 @@ public static class NewsletterEndpoints
             }
 
             var sent = 0;
+            var failed = 0;
+            string? firstError = null;
+
             foreach (var email in recipients)
             {
-                await emailService.InviaEmailStrictAsync(email, subject, html);
-                sent++;
+                try
+                {
+                    await emailService.InviaEmailStrictAsync(email, subject, html);
+                    sent++;
+                }
+                catch (Exception ex)
+                {
+                    failed++;
+                    firstError ??= ex.Message;
+                    logger.LogWarning(ex, "Invio newsletter fallito verso {Email}", email);
+                }
+            }
+
+            if (sent == 0)
+            {
+                return Results.BadRequest(new
+                {
+                    message = firstError is null
+                        ? "Nessuna email newsletter inviata"
+                        : $"Nessuna email newsletter inviata: {firstError}",
+                    destinatari = 0,
+                    falliti = failed
+                });
             }
 
             db.NewsletterCampagne.Add(new NewsletterCampagna
@@ -127,10 +175,29 @@ public static class NewsletterEndpoints
             });
             await db.SaveChangesAsync();
 
-            return Results.Ok(new { message = "Campagna inviata", destinatari = sent });
+            return Results.Ok(new
+            {
+                message = failed == 0 ? "Campagna inviata" : "Campagna inviata parzialmente",
+                destinatari = sent,
+                falliti = failed
+            });
         });
 
         return app;
+    }
+
+    private static async Task<List<string>> GetNewsletterRecipientsAsync(FilmDbContext db)
+    {
+        var recipients = await db.Utenti
+            .Where(u => u.Attivo && u.ConsensoNewsletter && !string.IsNullOrWhiteSpace(u.Email))
+            .Select(u => u.Email)
+            .ToListAsync();
+
+        return recipients
+            .Select(email => (email ?? string.Empty).Trim().ToLowerInvariant())
+            .Where(email => EmailRegex.IsMatch(email))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
     }
 
     // DOC-METHOD: 'GetUserId' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
