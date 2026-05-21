@@ -17,3 +17,5 @@ nul
 **/bin_temp_verify/
 **/run_backend_unblocked/
 .runtime/
+tmp_app_extract/
+tmp_scheda_check.html
