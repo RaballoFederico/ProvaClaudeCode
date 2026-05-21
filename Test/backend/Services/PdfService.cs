@@ -1,4 +1,5 @@
-﻿// DOC: Service 'PdfService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
+﻿// DOC: PdfService - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Service 'PdfService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.DTO;
 using FilmAPI.Services.Interfaces;
 using QRCoder;
@@ -261,4 +262,5 @@ public class PdfService(IConfiguration configuration) : IPdfService
             .DefaultTextStyle(x => x.FontSize(10));
     }
 }
+
 

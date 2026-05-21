@@ -1,4 +1,5 @@
-﻿// DOC: Service 'CategoriaService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
+﻿// DOC: CategoriaService - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Service 'CategoriaService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -155,4 +156,5 @@ public class CategoriaService : ICategoriaService
         return true;
     }
 }
+
 

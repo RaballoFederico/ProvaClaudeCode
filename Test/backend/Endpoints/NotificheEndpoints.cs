@@ -1,4 +1,5 @@
-﻿// DOC: Endpoint 'NotificheEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
+﻿// DOC: NotificheEndpoints - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Endpoint 'NotificheEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -129,4 +130,5 @@ public static class NotificheEndpoints
         return v.Length <= max ? v : v[..max];
     }
 }
+
 

@@ -1,4 +1,5 @@
-﻿// DOC: Model 'Film': entita dominio mappata su tabella database.
+﻿// DOC: Film - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Model 'Film': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -57,4 +58,5 @@ public class Film
 
     public ICollection<FilmCategoria> FilmsCategorie { get; set; } = new List<FilmCategoria>();
 }
+
 

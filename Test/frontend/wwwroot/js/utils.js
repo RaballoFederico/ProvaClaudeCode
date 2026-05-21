@@ -1,5 +1,9 @@
-﻿/* DOC: Modulo JS 'utils': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
+﻿// DOC: utils - file del progetto; contiene logica specifica della feature/modulo.
+/* DOC: Modulo JS 'utils': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
 const Utils = {
+    _confirmResolver: null,
+    _confirmInitialized: false,
+
     /* DOC-FN: 'formatDate' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     formatDate(dateString) {
         if (!dateString) return '';
@@ -52,7 +56,78 @@ const Utils = {
 
     /* DOC-FN: 'confirmDialog' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     confirmDialog(message) {
-        return window.confirm(message);
+        this._ensureConfirmDialog();
+
+        const modal = document.getElementById('global-confirm-modal');
+        const msg = document.getElementById('global-confirm-message');
+        if (!modal || !msg) {
+            return Promise.resolve(false);
+        }
+
+        msg.textContent = String(message || 'Confermi questa operazione?');
+        modal.classList.remove('hidden');
+
+        return new Promise((resolve) => {
+            this._confirmResolver = resolve;
+        });
+    },
+
+    _closeConfirmDialog(result) {
+        const modal = document.getElementById('global-confirm-modal');
+        if (modal) modal.classList.add('hidden');
+        const resolver = this._confirmResolver;
+        this._confirmResolver = null;
+        if (resolver) resolver(!!result);
+    },
+
+    _ensureConfirmDialog() {
+        if (this._confirmInitialized) return;
+        this._confirmInitialized = true;
+
+        if (!document.getElementById('global-confirm-style')) {
+            const style = document.createElement('style');
+            style.id = 'global-confirm-style';
+            style.textContent = `
+                .global-confirm-modal{position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem;}
+                .global-confirm-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.62);}
+                .global-confirm-card{position:relative;width:min(94vw,470px);border-radius:16px;border:1px solid rgba(255,255,255,.16);background:#1f1f1f;color:#f4f4f5;box-shadow:0 24px 56px rgba(0,0,0,.5);padding:18px;}
+                .global-confirm-title{font-size:1.1rem;font-weight:700;}
+                .global-confirm-text{margin-top:8px;font-size:.92rem;color:#c9c9ce;line-height:1.4rem;}
+                .global-confirm-actions{margin-top:16px;display:flex;gap:8px;justify-content:flex-end;}
+                .global-confirm-btn{border-radius:10px;padding:8px 12px;font-size:.88rem;font-weight:600;cursor:pointer;border:1px solid transparent;}
+                .global-confirm-btn-cancel{background:transparent;border-color:rgba(255,255,255,.22);color:#ededf2;}
+                .global-confirm-btn-ok{background:#e50914;color:#fff;}
+                .hidden{display:none!important;}
+            `;
+            document.head.appendChild(style);
+        }
+
+        if (!document.getElementById('global-confirm-modal')) {
+            const wrapper = document.createElement('div');
+            wrapper.id = 'global-confirm-modal';
+            wrapper.className = 'global-confirm-modal hidden';
+            wrapper.innerHTML = `
+                <div id="global-confirm-backdrop" class="global-confirm-backdrop"></div>
+                <div class="global-confirm-card">
+                    <div class="global-confirm-title">Conferma operazione</div>
+                    <p id="global-confirm-message" class="global-confirm-text"></p>
+                    <div class="global-confirm-actions">
+                        <button id="global-confirm-cancel" type="button" class="global-confirm-btn global-confirm-btn-cancel">Annulla</button>
+                        <button id="global-confirm-ok" type="button" class="global-confirm-btn global-confirm-btn-ok">Conferma</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(wrapper);
+        }
+
+        document.getElementById('global-confirm-cancel')?.addEventListener('click', () => this._closeConfirmDialog(false));
+        document.getElementById('global-confirm-ok')?.addEventListener('click', () => this._closeConfirmDialog(true));
+        document.getElementById('global-confirm-backdrop')?.addEventListener('click', () => this._closeConfirmDialog(false));
+        document.addEventListener('keydown', (event) => {
+            const modal = document.getElementById('global-confirm-modal');
+            if (!modal || modal.classList.contains('hidden')) return;
+            if (event.key === 'Escape') this._closeConfirmDialog(false);
+        });
     },
 
     /* DOC-FN: 'showLoading' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
@@ -293,4 +368,5 @@ const Utils = {
         localStorage.setItem(key, JSON.stringify(merged));
     }
 };
+
 

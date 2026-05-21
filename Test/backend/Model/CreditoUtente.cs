@@ -1,4 +1,5 @@
-﻿// DOC: Model 'CreditoUtente': entita dominio mappata su tabella database.
+﻿// DOC: CreditoUtente - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Model 'CreditoUtente': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -25,4 +26,5 @@ public class CreditoUtente
 
     public ICollection<TransazioneCredito> Transazioni { get; set; } = new List<TransazioneCredito>();
 }
+
 

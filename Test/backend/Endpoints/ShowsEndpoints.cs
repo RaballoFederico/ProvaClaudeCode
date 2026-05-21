@@ -1,4 +1,5 @@
-﻿// DOC: Endpoint 'ShowsEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
+﻿// DOC: ShowsEndpoints - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Endpoint 'ShowsEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Services.Interfaces;
@@ -126,4 +127,5 @@ public static class ShowsEndpoints
         return app;
     }
 }
+
 

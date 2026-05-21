@@ -1,4 +1,5 @@
-﻿// DOC: Endpoint 'ValidazioneEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
+﻿// DOC: ValidazioneEndpoints - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Endpoint 'ValidazioneEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 
@@ -50,4 +51,5 @@ public static class ValidazioneEndpoints
         return null;
     }
 }
+
 

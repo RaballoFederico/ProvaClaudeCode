@@ -1,4 +1,5 @@
-﻿// DOC: Interfaccia service 'IBigliettoService': contratto della logica applicativa usata dagli endpoint.
+﻿// DOC: IBigliettoService - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Interfaccia service 'IBigliettoService': contratto della logica applicativa usata dagli endpoint.
 using FilmAPI.DTO;
 
 namespace FilmAPI.Services.Interfaces;
@@ -20,4 +21,5 @@ public interface IBigliettoService
     string GeneraCodiceHash(int bigliettoId, int acquistoId, string posto);
     string GeneraQRCodeUrl(string codiceHash);
 }
+
 

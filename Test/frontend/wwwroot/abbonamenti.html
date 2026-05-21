@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿<!-- DOC: abbonamenti - file del progetto; contiene logica specifica della feature/modulo. -->
 <!-- DOC: Pagina UI 'abbonamenti': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <html lang="it" class="dark">
 <head>
@@ -424,7 +424,7 @@
         }
 
         async function disdiciAbbonamento() {
-            if (!confirm('Confermi disdetta abbonamento?')) return;
+            if (!await Utils.confirmDialog('Confermi disdetta abbonamento?')) return;
             try {
                 const res = await subscriptionRequest('/disdici', 'POST', {});
                 Utils.showNotification(res.message || 'Abbonamento disdetto', 'info');
@@ -509,4 +509,5 @@
     </script>
 </body>
 </html>
+
 

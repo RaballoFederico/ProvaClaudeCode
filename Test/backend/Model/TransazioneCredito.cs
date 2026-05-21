@@ -1,4 +1,5 @@
-﻿// DOC: Model 'TransazioneCredito': entita dominio mappata su tabella database.
+﻿// DOC: TransazioneCredito - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Model 'TransazioneCredito': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -60,4 +61,5 @@ public class TransazioneCredito
     [ForeignKey(nameof(AcquistoId))]
     public Acquisto? Acquisto { get; set; }
 }
+
 

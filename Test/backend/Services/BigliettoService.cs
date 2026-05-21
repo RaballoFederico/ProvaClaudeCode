@@ -1,4 +1,5 @@
-﻿// DOC: Service 'BigliettoService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
+﻿// DOC: BigliettoService - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Service 'BigliettoService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using System.Security.Cryptography;
 using System.Text;
 using FilmAPI.Data;
@@ -808,4 +809,5 @@ public class BigliettoService(
             : 0m;
     }
 }
+
 

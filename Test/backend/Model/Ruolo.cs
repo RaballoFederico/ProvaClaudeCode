@@ -1,4 +1,5 @@
-﻿// DOC: Model 'Ruolo': entita dominio mappata su tabella database.
+﻿// DOC: Ruolo - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Model 'Ruolo': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -20,4 +21,5 @@ public class Ruolo
 
     public ICollection<UtenteRuolo> UtentiRuoli { get; set; } = new List<UtenteRuolo>();
 }
+
 

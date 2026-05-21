@@ -1,4 +1,5 @@
-﻿// DOC: DTO 'SalaDTO': contratto dati per request/response API.
+﻿// DOC: SalaDTO - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: DTO 'SalaDTO': contratto dati per request/response API.
 namespace FilmAPI.DTO;
 
 public class SalaDTO
@@ -54,4 +55,5 @@ public class PiantinaUpdateDTO
     public int NumeroFile { get; set; }
     public int? PostiPerFila { get; set; }
 }
+
 

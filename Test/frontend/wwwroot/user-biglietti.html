@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿<!-- DOC: user-biglietti - file del progetto; contiene logica specifica della feature/modulo. -->
 <!-- DOC: Pagina UI 'user-biglietti': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <html lang="it" class="dark">
 <head>
@@ -85,6 +85,24 @@
         </main>
     </div>
     <div id="footer-container"></div>
+    <div id="refund-modal" class="hidden fixed inset-0 z-[9999]">
+        <div id="refund-modal-backdrop" class="absolute inset-0 bg-black/70"></div>
+        <div class="relative h-full w-full flex items-center justify-center p-4">
+            <div class="w-full max-w-md rounded-2xl border border-outline-variant/30 bg-surface-container p-5 shadow-2xl">
+                <div class="flex items-start justify-between gap-3">
+                    <div>
+                        <h3 class="font-headline text-xl font-semibold text-on-surface">Conferma rimborso</h3>
+                        <p id="refund-modal-message" class="mt-2 text-sm text-on-surface-variant"></p>
+                    </div>
+                    <button id="refund-modal-close" type="button" class="rounded-lg border border-outline-variant/30 px-2 py-1 text-xs text-on-surface-variant hover:text-on-surface">Chiudi</button>
+                </div>
+                <div class="mt-5 flex items-center justify-end gap-2">
+                    <button id="refund-modal-cancel" type="button" class="app-btn app-btn-secondary">Annulla</button>
+                    <button id="refund-modal-confirm" type="button" class="app-btn app-btn-primary">Conferma</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/theme.js"></script>
@@ -337,7 +355,7 @@
         }
 
         async function richiediRimborso(acquistoId) {
-            const ok = window.confirm(`Confermare rimborso per acquisto #${acquistoId}? L'importo verra accreditato sul credito sito.`);
+            const ok = await showRefundConfirmModal(`Confermare rimborso per acquisto #${acquistoId}? L'importo verra accreditato sul credito sito.`);
             if (!ok) return;
 
             try {
@@ -354,7 +372,7 @@
         }
 
         async function richiediRimborsoBiglietto(ticketId) {
-            const ok = window.confirm(`Confermare rimborso del biglietto #${ticketId}? L'importo verra accreditato sul credito sito.`);
+            const ok = await showRefundConfirmModal(`Confermare rimborso del biglietto #${ticketId}? L'importo verra accreditato sul credito sito.`);
             if (!ok) return;
 
             try {
@@ -393,6 +411,47 @@
             });
         }
 
+        function showRefundConfirmModal(message) {
+            return new Promise((resolve) => {
+                const modal = document.getElementById('refund-modal');
+                const messageNode = document.getElementById('refund-modal-message');
+                const confirmBtn = document.getElementById('refund-modal-confirm');
+                const cancelBtn = document.getElementById('refund-modal-cancel');
+                const closeBtn = document.getElementById('refund-modal-close');
+                const backdrop = document.getElementById('refund-modal-backdrop');
+
+                if (!modal || !messageNode || !confirmBtn || !cancelBtn || !closeBtn || !backdrop) {
+                    Utils.confirmDialog(message).then(resolve);
+                    return;
+                }
+
+                messageNode.textContent = message;
+                modal.classList.remove('hidden');
+
+                const cleanup = (value) => {
+                    modal.classList.add('hidden');
+                    confirmBtn.removeEventListener('click', onConfirm);
+                    cancelBtn.removeEventListener('click', onCancel);
+                    closeBtn.removeEventListener('click', onCancel);
+                    backdrop.removeEventListener('click', onCancel);
+                    document.removeEventListener('keydown', onEsc);
+                    resolve(value);
+                };
+
+                const onConfirm = () => cleanup(true);
+                const onCancel = () => cleanup(false);
+                const onEsc = (event) => {
+                    if (event.key === 'Escape') onCancel();
+                };
+
+                confirmBtn.addEventListener('click', onConfirm);
+                cancelBtn.addEventListener('click', onCancel);
+                closeBtn.addEventListener('click', onCancel);
+                backdrop.addEventListener('click', onCancel);
+                document.addEventListener('keydown', onEsc);
+            });
+        }
+
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text || '';
@@ -401,5 +460,6 @@
     </script>
 </body>
 </html>
+
 
 

@@ -1,4 +1,5 @@
-﻿// DOC: Service 'ExternalAuthService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
+﻿// DOC: ExternalAuthService - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Service 'ExternalAuthService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
@@ -590,4 +591,5 @@ public class ExternalAuthService : IExternalAuthService
         public string? SuggestedUsername { get; set; }
     }
 }
+
 

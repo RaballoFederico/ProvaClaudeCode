@@ -1,4 +1,5 @@
-﻿// DOC: Service 'PagamentoService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
+﻿// DOC: PagamentoService - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Service 'PagamentoService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Services.Interfaces;
@@ -401,4 +402,5 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
         };
     }
 }
+
 

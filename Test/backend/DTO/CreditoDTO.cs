@@ -1,4 +1,5 @@
-﻿// DOC: DTO 'CreditoDTO': contratto dati per request/response API.
+﻿// DOC: CreditoDTO - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: DTO 'CreditoDTO': contratto dati per request/response API.
 namespace FilmAPI.DTO;
 
 public class RicaricaCreditoDTO
@@ -39,4 +40,5 @@ public class TransazioneFilterDTO
     public DateTime? Al { get; set; }
     public int? CinemaId { get; set; }
 }
+
 

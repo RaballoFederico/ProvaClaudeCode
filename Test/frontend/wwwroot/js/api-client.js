@@ -1,4 +1,5 @@
-﻿/* DOC: Modulo JS 'api-client': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
+﻿// DOC: api-client - file del progetto; contiene logica specifica della feature/modulo.
+/* DOC: Modulo JS 'api-client': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
 (() => {
 /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 if (window.__apiClientInitialized) {
@@ -414,4 +415,5 @@ window.APIClient = ApiClient;
 ApiClient.installDomMediaNormalizer();
 window.dispatchEvent(new CustomEvent('apiclient:ready'));
 })();
+
 

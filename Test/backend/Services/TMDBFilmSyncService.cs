@@ -1,4 +1,5 @@
-﻿// DOC: Service 'TMDBFilmSyncService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
+﻿// DOC: TMDBFilmSyncService - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Service 'TMDBFilmSyncService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using System.Text.Json;
 using FilmAPI.Data;
 using FilmAPI.Model;
@@ -538,4 +539,5 @@ public class TMDBFilmSyncService : BackgroundService
         return (nome, cognome);
     }
 }
+
 

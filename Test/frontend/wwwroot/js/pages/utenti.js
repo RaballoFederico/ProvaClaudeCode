@@ -1,4 +1,5 @@
-﻿/* DOC: Script pagina 'utenti': gestisce eventi UI, chiamate API e rendering dinamico della pagina. */
+﻿// DOC: utenti - file del progetto; contiene logica specifica della feature/modulo.
+/* DOC: Script pagina 'utenti': gestisce eventi UI, chiamate API e rendering dinamico della pagina. */
 const utentiState = {
     users: [],
     rolesByName: {},
@@ -61,7 +62,7 @@ function canAssignTargetRole(user, targetRoleName) {
 async function showConfirm(message) {
     const modal = document.getElementById('confirm-role-modal');
     const msg = document.getElementById('confirm-role-message');
-    if (!modal || !msg) return window.confirm(message);
+    if (!modal || !msg) return await Utils.confirmDialog(message);
     msg.textContent = message;
     modal.classList.remove('hidden');
 
@@ -417,4 +418,5 @@ document.addEventListener('DOMContentLoaded', async () => {
     await loadRoles();
     await loadUsers();
 });
+
 

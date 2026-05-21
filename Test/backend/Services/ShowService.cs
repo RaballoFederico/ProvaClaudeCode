@@ -1,4 +1,5 @@
-﻿// DOC: Service 'ShowService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
+﻿// DOC: ShowService - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Service 'ShowService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -284,4 +285,5 @@ public class ShowService(FilmDbContext context) : IShowService
     // DOC-METHOD: 'ToDtoCompiled' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static ShowDTO ToDtoCompiled(Show s) => ToDto(s);
 }
+
 

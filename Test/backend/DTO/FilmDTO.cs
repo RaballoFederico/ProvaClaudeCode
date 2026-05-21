@@ -1,4 +1,5 @@
-﻿// DOC: DTO 'FilmDTO': contratto dati per request/response API.
+﻿// DOC: FilmDTO - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: DTO 'FilmDTO': contratto dati per request/response API.
 namespace FilmAPI.DTO;
 
 public class FilmDTO
@@ -54,4 +55,5 @@ public class FilmUpdateDTO
     public string? Genere { get; set; }
     public List<int> CategoriaIds { get; set; } = new();
 }
+
 

@@ -1,4 +1,5 @@
-﻿// DOC: Service 'PrenotazioneTempCleanupService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
+﻿// DOC: PrenotazioneTempCleanupService - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Service 'PrenotazioneTempCleanupService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.Data;
 using FilmAPI.Model;
 using Microsoft.EntityFrameworkCore;
@@ -45,4 +46,5 @@ public class PrenotazioneTempCleanupService(IServiceScopeFactory scopeFactory, I
         }
     }
 }
+
 

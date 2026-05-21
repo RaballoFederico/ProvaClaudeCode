@@ -1,4 +1,5 @@
-﻿// DOC: Service 'JwtService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
+﻿// DOC: JwtService - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Service 'JwtService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -133,4 +134,5 @@ public class JwtService
         return int.TryParse(raw, out var parsed) && parsed > 0 ? parsed : fallback;
     }
 }
+
 

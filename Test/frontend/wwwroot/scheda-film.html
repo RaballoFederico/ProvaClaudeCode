@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿<!-- DOC: scheda-film - file del progetto; contiene logica specifica della feature/modulo. -->
 <!-- DOC: Pagina UI 'scheda-film': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <html lang="it" class="dark">
 <head>
@@ -16,6 +16,59 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .tmdb-cast-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(112px, 112px));
+            justify-content: center;
+            gap: 10px;
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        .tmdb-cast-card {
+            width: 100%;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(0, 0, 0, 0.24);
+            padding: 6px;
+            text-align: left;
+            transition: transform 0.16s ease, background-color 0.16s ease;
+        }
+
+        .tmdb-cast-card:hover {
+            background: rgba(0, 0, 0, 0.34);
+            transform: translateY(-1px);
+        }
+
+        .tmdb-cast-thumb {
+            aspect-ratio: 1 / 1;
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.28);
+            margin-bottom: 6px;
+        }
+
+        .tmdb-cast-name {
+            font-size: 11px;
+            line-height: 1.15;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tmdb-cast-role {
+            font-size: 10px;
+            line-height: 1.15;
+            color: rgba(255, 255, 255, 0.72);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+    </style>
     <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
         tailwind.config = {
@@ -100,6 +153,7 @@
     <script src="/js/utils.js"></script>
     <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
+        // Stato principale della pagina (id film, data selezionata, cinema selezionato e cache dati).
         let filmId = null;
         let selectedDate = new Date();
         let selectedCinemaId = null;
@@ -110,6 +164,7 @@
         let tmdbCast = [];
         let tmdbMeta = null;
 
+        // Bootstrap pagina: carica componenti comuni, collega eventi UI e avvia il caricamento dati.
         document.addEventListener('DOMContentLoaded', async () => {
             await loadAllComponents();
             bindDateNav();
@@ -118,6 +173,7 @@
             await initPage();
         });
 
+        // Inizializzazione: legge querystring, recupera film e preferenze cinema, poi popola UI.
         async function initPage() {
             const params = new URLSearchParams(window.location.search);
             filmId = parseInt(params.get('id') || '0');
@@ -157,6 +213,7 @@
             }
         }
 
+        // Render hero della scheda film con metadati principali e blocco cast/attori.
         function renderHeader() {
             const h = document.getElementById('film-header');
             if (!h) return;
@@ -190,8 +247,8 @@
                                 <div class="flex flex-wrap gap-1.5">${renderCastBadges(getCastText())}</div>
                             </div>
                             <div class="mt-2">
-                                <div class="text-[11px] uppercase tracking-widest text-white/70 mb-1">Cast TMDB</div>
-                                <div id="tmdb-cast-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                                <div class="text-[11px] uppercase tracking-widest text-white/70 mb-1">Cast TMDB (compact v3)</div>
+                                <div id="tmdb-cast-grid" class="tmdb-cast-grid">
                                     ${renderTmdbCastCards()}
                                 </div>
                             </div>
@@ -220,6 +277,7 @@
             }
         }
 
+        // Carica cast da TMDB (non blocca la pagina in caso di errore: fallback a lista vuota).
         async function loadTmdbCast() {
             try {
                 tmdbCast = await ApiClient.get(`/films/${filmId}/cast-tmdb`);
@@ -231,6 +289,7 @@
             }
         }
 
+        // Carica metadati TMDB (descrizione/regista/cast extra) usati come fallback.
         async function loadTmdbMeta() {
             try {
                 tmdbMeta = await ApiClient.get(`/films/${filmId}/meta-tmdb`);
@@ -239,6 +298,7 @@
             }
         }
 
+        // Navigazione strip date (precedente/successivo) con ricarica spettacoli.
         function bindDateNav() {
             document.getElementById('prev-days').addEventListener('click', () => {
                 if (!availableDates.length) return;
@@ -257,6 +317,7 @@
             });
         }
 
+        // Azioni rapide sticky: salto alla sezione orari e prenotazione primo show disponibile.
         function bindStickyActions() {
             const jumpBtn = document.getElementById('jump-shows-btn');
             const quickBtn = document.getElementById('quick-book-btn');
@@ -274,6 +335,7 @@
             }
         }
 
+        // Reagisce al cambio cinema globale e ricalcola date + programmazione per quel cinema.
         function bindCinemaChanges() {
             window.addEventListener('cinema:changed', async (event) => {
                 const cinemaId = parseInt(event?.detail?.cinemaId || '0');
@@ -286,6 +348,7 @@
             });
         }
 
+        // Render pulsanti delle date disponibili e gestione stato selezionato/disabilitato.
         function renderDates() {
             const strip = document.getElementById('dates-strip');
             const prevBtn = document.getElementById('prev-days');
@@ -318,6 +381,7 @@
             }
         }
 
+        // Carica show del cinema selezionato, filtra date future e prepara la timeline locale.
         async function loadAvailableDates() {
             availableDates = [];
             cinemaShows = [];
@@ -339,6 +403,7 @@
             }
         }
 
+        // Render degli spettacoli per la data corrente, raggruppati per tipologia sala.
         async function loadShows() {
             const c = document.getElementById('shows-container');
             const stickyBar = document.getElementById('booking-sticky-bar');
@@ -402,6 +467,7 @@
             `).join('');
         }
 
+        // Navigazione verso acquisto: se non autenticato, passa da login con redirect preservato.
         function goToAcquisto(showId, salaId) {
             if (!Auth.isAuthenticated()) {
                 window.location.href = `/login.html?redirect=${encodeURIComponent(`/acquista.html?IdCinema=${selectedCinemaId}&IdFilm=${filmId}&IdSala=${salaId}&IdShow=${showId}`)}`;
@@ -421,6 +487,7 @@
             return `${y}-${m}-${d}`;
         }
 
+        // Normalizza payload show (camelCase/PascalCase) in un formato unico lato frontend.
         function normalizeShows(rawShows) {
             if (!Array.isArray(rawShows)) return [];
             return rawShows
@@ -439,12 +506,14 @@
                 .filter(s => s.id > 0 && s.salaId > 0 && s.cinemaId > 0 && s.data);
         }
 
+        // Escape HTML base per evitare injection quando stampiamo testo dinamico nel template.
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text || '';
             return div.innerHTML;
         }
 
+        // Render tag cast (badge) deduplicati.
         function renderCastBadges(cast) {
             const seen = new Set();
             const names = (cast || '')
@@ -468,6 +537,7 @@
                 .join('');
         }
 
+        // Seleziona descrizione con priorita: dato locale -> alias locale -> TMDB -> fallback.
         function getFilmDescription() {
             const direct = (currentFilm?.descrizione || '').trim();
             if (direct) return direct;
@@ -478,6 +548,7 @@
             return 'Descrizione non disponibile';
         }
 
+        // Costruisce testo cast usando prima i dati locali e poi fallback TMDB deduplicato.
         function getCastText() {
             const direct = (currentFilm?.cast || '').trim();
             if (direct) return normalizeCastText(direct);
@@ -498,6 +569,7 @@
             return '';
         }
 
+        // Crea una chiave di confronto robusta (minuscole, senza accenti/punteggiatura).
         function normalizeTextKey(value) {
             return String(value || '')
                 .normalize('NFKD')
@@ -508,6 +580,7 @@
                 .toLowerCase();
         }
 
+        // Rimuove duplicati testuali usando la chiave normalizzata.
         function uniqueByTextKey(values) {
             const seen = new Set();
             return values.filter(value => {
@@ -518,6 +591,7 @@
             });
         }
 
+        // Normalizza stringa cast CSV in una lista pulita e senza duplicati.
         function normalizeCastText(cast) {
             return uniqueByTextKey(
                 String(cast || '')
@@ -527,6 +601,7 @@
             ).join(', ');
         }
 
+        // Recupera regista con fallback locale/TMDB.
         function getDirectorName() {
             const direct = (currentFilm?.registaNome || '').trim();
             if (direct) return direct;
@@ -537,24 +612,26 @@
             return 'N/D';
         }
 
+        // Render card compatte del cast TMDB (foto, nome, ruolo) con apertura modal su click.
         function renderTmdbCastCards() {
             if (!tmdbCast.length) {
                 return '<div class="col-span-full text-xs text-white/70">Foto cast non disponibili</div>';
             }
 
             return tmdbCast.map(actor => `
-                <button type="button" onclick="openActorModal(${actor.id})" class="bg-black/20 rounded-lg p-2 border border-white/10 text-left hover:bg-black/30 transition-colors">
-                    <div class="aspect-square rounded-md overflow-hidden bg-black/30 mb-1">
+                <button type="button" onclick="openActorModal(${actor.id})" class="tmdb-cast-card">
+                    <div class="tmdb-cast-thumb">
                         ${actor.profile
-                            ? `<img src="${escapeHtml(actor.profile)}" alt="${escapeHtml(actor.nome || 'Attore')}" class="w-full h-full object-cover" loading="lazy">`
-                            : `<div class="w-full h-full flex items-center justify-center text-white/50 text-xs">No photo</div>`}
+                            ? `<img src="${escapeHtml(actor.profile)}" alt="${escapeHtml(actor.nome || 'Attore')}" class="w-full h-full object-cover" loading="lazy" decoding="async" referrerpolicy="no-referrer">`
+                            : `<div class="w-full h-full flex items-center justify-center text-white/50 text-[9px]">No photo</div>`}
                     </div>
-                    <div class="text-[11px] font-semibold text-white truncate">${escapeHtml(actor.nome || 'N/D')}</div>
-                    <div class="text-[10px] text-white/70 truncate">${escapeHtml(actor.personaggio || '')}</div>
+                    <div class="tmdb-cast-name">${escapeHtml(actor.nome || 'N/D')}</div>
+                    <div class="tmdb-cast-role">${escapeHtml(actor.personaggio || '')}</div>
                 </button>
             `).join('');
         }
 
+        // Apre modal dettaglio attore con bio e filmografia.
         async function openActorModal(actorId) {
             try {
                 Utils.showLoading();
@@ -605,11 +682,13 @@
             }
         }
 
+        // Chiude il modal attore svuotando il container overlay.
         function closeActorModal() {
             const container = document.getElementById('actor-modal-container');
             if (container) container.innerHTML = '';
         }
 
+        // Render filmografia attore deduplicata; se presente localFilmId abilita link interno.
         function renderActorFilmografia(filmografia) {
             if (!Array.isArray(filmografia) || filmografia.length === 0) {
                 return '<div class="text-sm text-on-surface-variant">Filmografia non disponibile</div>';
@@ -653,6 +732,7 @@
             }).join('');
         }
 
+        // Shortcut: dalla filmografia attore apre direttamente la scheda film interna al sito.
         function openLocalFilmFromActor(localFilmId) {
             closeActorModal();
             window.location.href = `/scheda-film.html?id=${localFilmId}`;
@@ -660,5 +740,6 @@
     </script>
 </body>
 </html>
+
 
 

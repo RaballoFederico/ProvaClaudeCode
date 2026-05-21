@@ -1,4 +1,5 @@
-﻿/* DOC: Modulo JS 'route-guard': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
+﻿// DOC: route-guard - file del progetto; contiene logica specifica della feature/modulo.
+/* DOC: Modulo JS 'route-guard': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
 const AccessControl = {
     roleMap: {
         admin: ['Admin'],
@@ -166,4 +167,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         AccessControl.enforceCurrentPage();
     }
 });
+
 

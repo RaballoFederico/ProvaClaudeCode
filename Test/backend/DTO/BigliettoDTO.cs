@@ -1,4 +1,5 @@
-﻿// DOC: DTO 'BigliettoDTO': contratto dati per request/response API.
+﻿// DOC: BigliettoDTO - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: DTO 'BigliettoDTO': contratto dati per request/response API.
 namespace FilmAPI.DTO;
 
 public class PostoDTO
@@ -95,4 +96,5 @@ public class BigliettoValidazioneDTO
     public string CodiceHash { get; set; } = string.Empty;
     public bool GiaValidato { get; set; }
 }
+
 

@@ -1,4 +1,5 @@
-﻿// DOC: Endpoint 'AcquistoEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
+﻿// DOC: AcquistoEndpoints - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Endpoint 'AcquistoEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.DTO;
 using FilmAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -189,4 +190,5 @@ public static class AcquistoEndpoints
         return null;
     }
 }
+
 

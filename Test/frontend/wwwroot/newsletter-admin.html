@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿<!-- DOC: newsletter-admin - file del progetto; contiene logica specifica della feature/modulo. -->
 <!-- DOC: Pagina UI 'newsletter-admin': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <html lang="it" class="dark">
 <head>
@@ -96,7 +96,7 @@
         async function showNewsletterConfirm(message) {
             const modal = document.getElementById('newsletter-confirm-modal');
             const msg = document.getElementById('newsletter-confirm-message');
-            if (!modal || !msg) return window.confirm(message);
+            if (!modal || !msg) return await Utils.confirmDialog(message);
             msg.textContent = message;
             modal.classList.remove('hidden');
             return await new Promise((resolve) => {
@@ -269,4 +269,5 @@
     </script>
 </body>
 </html>
+
 

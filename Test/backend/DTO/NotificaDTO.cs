@@ -1,4 +1,5 @@
-﻿// DOC: DTO 'NotificaDTO': contratto dati per request/response API.
+﻿// DOC: NotificaDTO - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: DTO 'NotificaDTO': contratto dati per request/response API.
 namespace FilmAPI.DTO;
 
 public class NotificaDTO
@@ -21,4 +22,5 @@ public class CreaNotificaRequestDTO
     public string? Url { get; set; }
     public string? DedupeKey { get; set; }
 }
+
 

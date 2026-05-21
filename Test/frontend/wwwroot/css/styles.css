@@ -1,4 +1,5 @@
-﻿/* DOC: Foglio stile 'styles': definisce tema visivo, componenti e stati responsive/accessibility dell'app. */
+﻿/* DOC: styles - file del progetto; contiene logica specifica della feature/modulo. */
+/* DOC: Foglio stile 'styles': definisce tema visivo, componenti e stati responsive/accessibility dell'app. */
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600&family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 .material-symbols-outlined {
@@ -49,17 +50,53 @@ html[data-theme="light"] {
     --neo-pressed: inset 6px 6px 12px rgba(196, 176, 146, 0.28), inset -6px -6px 12px rgba(255, 255, 255, 0.7);
 }
 
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
 * {
     scrollbar-width: thin;
     scrollbar-color: var(--outline) transparent;
 }
 
+html {
+    width: 100%;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
 body {
     min-height: 100vh;
+    width: 100%;
+    margin: 0;
     background: radial-gradient(circle at 12% -8%, rgba(201, 122, 100, 0.2), transparent 32%), radial-gradient(circle at 90% 10%, rgba(159, 179, 201, 0.18), transparent 30%), radial-gradient(circle at 50% 115%, rgba(120, 142, 170, 0.14), transparent 36%), linear-gradient(145deg, var(--bg) 0%, var(--bg-soft) 48%, var(--bg) 100%);
     color: var(--text);
     font-family: 'Space Grotesk', sans-serif;
     overflow-x: hidden;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+    max-width: 100%;
+}
+
+img,
+video {
+    height: auto;
+}
+
+button,
+input,
+select,
+textarea {
+    min-width: 0;
+    max-width: 100%;
 }
 
 html[data-theme="light"] body {
@@ -184,7 +221,43 @@ footer {
 
 .page-shell {
     position: relative;
+    width: 100%;
+    min-width: 0;
 }
+
+body > .flex,
+body > .flex.flex-1,
+.flex.flex-1,
+#navbar-container,
+#sidebar-container {
+    min-width: 0;
+}
+
+main.flex-1,
+.page-shell.flex-1 {
+    min-width: 0;
+    flex-basis: 0;
+}
+
+.max-w-7xl,
+.max-w-\[1500px\],
+.max-w-4xl,
+.max-w-3xl,
+.max-w-2xl,
+.max-w-lg,
+.max-w-md {
+    min-width: 0;
+}
+
+.max-w-7xl { max-width: min(80rem, 100%) !important; }
+.max-w-\[1500px\] { max-width: min(1500px, 100%) !important; }
+.max-w-5xl { max-width: min(64rem, 100%) !important; }
+.max-w-4xl { max-width: min(56rem, 100%) !important; }
+.max-w-3xl { max-width: min(48rem, 100%) !important; }
+.max-w-2xl { max-width: min(42rem, 100%) !important; }
+.max-w-xl { max-width: min(36rem, 100%) !important; }
+.max-w-lg { max-width: min(32rem, 100%) !important; }
+.max-w-md { max-width: min(28rem, 100%) !important; }
 
 .page-shell::before {
     content: "";
@@ -204,10 +277,13 @@ footer {
 
 .navbar-shell {
     position: relative;
+    min-width: 0;
 }
 
 .nav-brand-link {
     position: relative;
+    min-width: 0;
+    white-space: nowrap;
 }
 
 .nav-brand-link::after {
@@ -264,6 +340,18 @@ footer {
     border-color: color-mix(in srgb, var(--outline) 56%, transparent) !important;
     box-shadow: 0 2px 10px -6px rgba(0, 0, 0, 0.36);
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+#nav-auth-section,
+#nav-user-toggle,
+#nav-notif-toggle {
+    min-width: 0;
+}
+
+#nav-user-menu,
+#nav-notif-menu,
+#nav-search-results {
+    max-width: calc(100vw - 1rem);
 }
 
 #nav-search-wrapper .nav-search-shell:focus-within {
@@ -323,6 +411,18 @@ footer {
     will-change: transform;
 }
 
+#sidebar .nav-link,
+#mobile-bottom-nav .nav-link {
+    min-width: 0;
+}
+
+#sidebar .nav-link span:last-child,
+#mobile-bottom-nav .nav-link span:last-child {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .sidebar-shell {
     background-image: linear-gradient(180deg, color-mix(in srgb, var(--surface-high) 34%, transparent) 0%, transparent 30%);
 }
@@ -351,6 +451,7 @@ footer {
     backdrop-filter: blur(calc(var(--glass-blur) + 4px)) saturate(146%);
     background: color-mix(in srgb, var(--surface) 86%, transparent);
     box-shadow: 0 -8px 24px -16px rgba(0, 0, 0, 0.68), var(--neo-raised);
+    padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
 }
 
 .a11y-tools-root {
@@ -733,17 +834,19 @@ body.sidebar-open {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 1rem;
     z-index: 100;
 }
 
 .modal-content {
     background: color-mix(in srgb, var(--surface) 92%, transparent);
     border-radius: 1rem;
-    padding: 2rem;
-    max-width: 500px;
-    width: 90%;
-    max-height: 90vh;
+    padding: clamp(1rem, 2.5vw, 2rem);
+    max-width: min(500px, 100%);
+    width: min(100%, 90vw);
+    max-height: min(90vh, 760px);
     overflow-y: auto;
+    overflow-x: hidden;
     border: 1px solid var(--outline);
     box-shadow: var(--ring), var(--neo-raised);
     backdrop-filter: blur(calc(var(--glass-blur) + 2px));
@@ -845,6 +948,15 @@ textarea {
     color: var(--text);
     box-shadow: var(--neo-pressed);
     transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+table {
+    width: 100%;
+}
+
+th,
+td {
+    overflow-wrap: anywhere;
 }
 
 input:focus,
@@ -1016,6 +1128,22 @@ tbody tr:hover {
     will-change: transform;
 }
 
+.home-hero .reveal-up,
+.home-hero p {
+    width: 100%;
+}
+
+.home-hero .max-w-3xl,
+.home-hero .max-w-2xl {
+    max-width: 100% !important;
+}
+
+.home-hero .home-hero-title,
+.home-hero .home-hero-subtitle {
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+}
+
 html[data-theme="light"] .home-hero .home-hero-media img {
     filter: brightness(1.06) saturate(0.92) contrast(0.92);
 }
@@ -1081,6 +1209,30 @@ html[data-theme="light"] .home-hero-secondary-btn:hover {
     box-shadow: var(--ring), var(--neo-raised);
     backdrop-filter: blur(var(--glass-blur)) saturate(126%);
     transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+.app-card,
+.app-card-soft,
+.glass-panel,
+.hero-banner,
+.bg-surface-container,
+.bg-surface-container-low,
+.bg-surface-container-high,
+.bg-surface-container-highest {
+    min-width: 0;
+}
+
+.app-btn,
+.a11y-btn,
+.tour-btn,
+button,
+a {
+    overflow-wrap: anywhere;
+}
+
+.grid > *,
+.flex > * {
+    min-width: 0;
 }
 
 .app-card:hover {
@@ -1197,8 +1349,248 @@ a:focus-visible {
     color: #fff4f2;
 }
 
+/* Responsive layout scale */
+.page-shell {
+    container-type: inline-size;
+}
+
+main.page-shell[class*="p-4"],
+main.page-shell[class*="px-4"],
+main.page-shell[class*="py-8"] {
+    padding-inline: clamp(1rem, 3vw, 3rem) !important;
+}
+
+.page-shell > .max-w-7xl,
+.page-shell .max-w-7xl,
+.page-shell > .max-w-\[1500px\],
+.page-shell .max-w-\[1500px\] {
+    width: min(100%, 1440px);
+}
+
+.home-hero-title,
+.hero-banner h1,
+.hero-banner h2,
+#films-page-title,
+#page-title {
+    font-size: clamp(1.8rem, 5vw, 4.75rem) !important;
+    line-height: 1.02 !important;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+}
+
+.home-hero .home-hero-title {
+    font-size: clamp(1.9rem, 6vw, 5.5rem) !important;
+}
+
+.hero-banner {
+    padding: clamp(1rem, 2.4vw, 2.25rem) !important;
+}
+
+#featured-grid,
+#films-carousel,
+#films-grid,
+#proiezioni-grid,
+#registi-grid,
+#tmdb-cast-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+#plans-grid,
+#categorie-grid,
+#cinemas-grid,
+#tickets-grid,
+#projections-grid {
+    grid-template-columns: 1fr !important;
+}
+
+@media screen and (min-width: 480px) {
+    #featured-grid,
+    #films-carousel,
+    #films-grid,
+    #proiezioni-grid,
+    #registi-grid,
+    #tmdb-cast-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+@media screen and (min-width: 768px) {
+    #featured-grid,
+    #films-carousel,
+    #films-grid,
+    #proiezioni-grid,
+    #registi-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+
+    #plans-grid,
+    #categorie-grid,
+    #cinemas-grid,
+    #tickets-grid,
+    #projections-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+@media screen and (min-width: 1120px) {
+    #featured-grid,
+    #films-carousel,
+    #films-grid,
+    #proiezioni-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    }
+
+    #registi-grid,
+    #categorie-grid,
+    #cinemas-grid,
+    #tickets-grid,
+    #projections-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+@media screen and (min-width: 1440px) {
+    #featured-grid,
+    #films-carousel,
+    #proiezioni-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    }
+
+    #films-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    }
+
+    #plans-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+
+    #registi-grid,
+    #cinemas-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+}
+
+@media screen and (min-width: 1720px) {
+    .page-shell > .max-w-7xl,
+    .page-shell .max-w-7xl,
+    .page-shell > .max-w-\[1500px\],
+    .page-shell .max-w-\[1500px\] {
+        width: min(100%, 1540px);
+    }
+
+    main.page-shell[class*="p-4"],
+    main.page-shell[class*="px-4"],
+    main.page-shell[class*="py-8"] {
+        padding-inline: clamp(2rem, 4vw, 4.5rem) !important;
+    }
+}
+
+@media screen and (min-width: 1920px) {
+    .page-shell > .max-w-7xl,
+    .page-shell .max-w-7xl {
+        max-width: 1600px !important;
+    }
+
+    .page-shell > .max-w-\[1500px\],
+    .page-shell .max-w-\[1500px\] {
+        max-width: 1600px !important;
+    }
+
+    #featured-grid,
+    #films-carousel,
+    #proiezioni-grid {
+        grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    }
+
+    #films-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    }
+
+    #registi-grid,
+    #cinemas-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    }
+
+    .home-hero .home-hero-title {
+        max-width: 16ch;
+    }
+
+    .home-hero .home-hero-subtitle {
+        max-width: 52ch;
+    }
+}
+
+@media screen and (min-width: 2560px) {
+    .page-shell > .max-w-7xl,
+    .page-shell .max-w-7xl {
+        max-width: 1760px !important;
+    }
+
+    .page-shell > .max-w-\[1500px\],
+    .page-shell .max-w-\[1500px\] {
+        max-width: 1760px !important;
+    }
+
+    main.page-shell[class*="p-4"],
+    main.page-shell[class*="px-4"],
+    main.page-shell[class*="py-8"] {
+        padding-inline: clamp(2.5rem, 4.5vw, 6rem) !important;
+    }
+
+    #featured-grid,
+    #films-carousel,
+    #proiezioni-grid {
+        grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+    }
+
+    #films-grid {
+        grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    }
+}
+
+/* Ultra-wide profile (21:9 and wider), separate from classic 16:9 desktop */
+@media screen and (min-width: 2100px) and (min-aspect-ratio: 21/9) {
+    .page-shell > .max-w-7xl,
+    .page-shell .max-w-7xl {
+        max-width: 1980px !important;
+    }
+
+    .page-shell > .max-w-\[1500px\],
+    .page-shell .max-w-\[1500px\] {
+        max-width: 1980px !important;
+    }
+
+    .home-hero {
+        min-height: 72vh !important;
+    }
+
+    .home-hero .max-w-3xl {
+        max-width: 18ch !important;
+    }
+
+    .home-hero .home-hero-subtitle {
+        max-width: 58ch !important;
+    }
+
+    #featured-grid,
+    #films-carousel,
+    #proiezioni-grid {
+        grid-template-columns: repeat(9, minmax(0, 1fr)) !important;
+    }
+
+    #films-grid {
+        grid-template-columns: repeat(8, minmax(0, 1fr)) !important;
+    }
+
+    #registi-grid,
+    #cinemas-grid {
+        grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    }
+}
+
 .auth-shell {
     width: min(1040px, calc(100% - 1.5rem));
+    max-width: 100%;
     display: grid;
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -1207,9 +1599,16 @@ a:focus-visible {
 .auth-page {
     min-height: 100vh;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 1.25rem 0;
+    gap: 0.75rem;
+    padding: 1rem 0.75rem;
+    overflow-y: auto;
+}
+
+.auth-page > .mt-5 {
+    margin-top: 0 !important;
 }
 
 .auth-page .auth-shell {
@@ -1230,6 +1629,7 @@ a:focus-visible {
     background: color-mix(in srgb, var(--surface) 92%, transparent);
     box-shadow: var(--ring), var(--neo-raised);
     backdrop-filter: blur(var(--glass-blur));
+    overflow: hidden;
 }
 
 .auth-card h1,
@@ -1368,8 +1768,135 @@ a:focus-visible {
 }
 
 @media (max-width: 767px) {
+    .auth-page .auth-shell {
+        width: calc(100vw - 2rem) !important;
+    }
+
+    .auth-card,
+    .auth-card-compact {
+        width: 100%;
+    }
+
+    .auth-card {
+        padding: 1.25rem !important;
+    }
+
+    .auth-card form,
+    .auth-card form > *,
+    .auth-card .relative,
+    .auth-card input,
+    .auth-card button,
+    #external-login-buttons,
+    #external-login-buttons > * {
+        max-width: 100% !important;
+        min-width: 0 !important;
+    }
+
+    .auth-card input,
+    .auth-card #login-btn,
+    .auth-card #external-login-buttons > button,
+    .auth-card #external-login-buttons > a {
+        width: calc(100% - 1rem) !important;
+        margin-inline: auto;
+    }
+
+    #navbar {
+        padding-inline: 0.75rem !important;
+    }
+
+    .navbar-shell {
+        gap: 0.5rem !important;
+    }
+
+    .nav-brand-link {
+        font-size: 1.35rem !important;
+        line-height: 1.1 !important;
+        max-width: 36vw;
+    }
+
+    #nav-auth-section {
+        gap: 0.4rem !important;
+    }
+
+    #nav-auth-section > a {
+        padding-inline: 0.75rem !important;
+        white-space: nowrap;
+    }
+
+    #nav-auth-section > a:first-child {
+        display: none;
+    }
+
+    #nav-auth-section > a[href="register.html"] {
+        display: none;
+    }
+
+    #nav-user-toggle {
+        padding-right: 0.55rem !important;
+    }
+
+    .page-shell {
+        padding-inline: clamp(0.875rem, 4vw, 1.5rem) !important;
+    }
+
+    .home-hero {
+        min-height: auto !important;
+        padding-block: 4.5rem 3rem;
+    }
+
+    .home-hero-title,
+    .hero-banner h1 {
+        font-size: 2rem !important;
+        line-height: 1.05 !important;
+    }
+
+    .hero-banner {
+        padding: 1rem !important;
+    }
+
+    .hero-banner p,
+    .home-hero-subtitle {
+        font-size: 0.95rem !important;
+        line-height: 1.5 !important;
+    }
+
+    .app-btn,
+    button,
+    select,
+    input,
+    textarea {
+        font-size: 0.92rem;
+    }
+
+    .modal-backdrop {
+        align-items: flex-start;
+        overflow-y: auto;
+    }
+
+    .modal-content {
+        width: 100%;
+        max-width: 100%;
+        margin-block: 0.5rem;
+    }
+
+    .modal-content .grid[class*="grid-cols-2"],
+    .modal-content .grid[class*="grid-cols-3"],
+    .modal-content .grid[class*="md:grid-cols-2"],
+    .modal-content .grid[class*="md:grid-cols-3"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    #cinema-modal {
+        padding: 0.75rem !important;
+        overflow-y: auto;
+    }
+
+    #cinema-modal > div {
+        max-height: calc(100vh - 1.5rem);
+        overflow-y: auto;
+    }
+
     #films-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 0.75rem;
     }
 
@@ -1388,6 +1915,63 @@ a:focus-visible {
     .app-card,
     .hero-banner {
         box-shadow: 0 10px 22px -18px rgba(0, 0, 0, 0.45), var(--neo-raised);
+    }
+}
+
+@media (max-width: 420px) {
+    .nav-brand-link {
+        max-width: 30vw;
+    }
+
+    #nav-back-btn {
+        display: none !important;
+    }
+
+    #films-grid,
+    #featured-grid,
+    #films-carousel,
+    #proiezioni-grid,
+    #registi-grid {
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 135px), 1fr)) !important;
+    }
+
+    .toast-container {
+        left: 0.75rem;
+        right: 0.75rem;
+        bottom: 5.25rem;
+    }
+
+    .toast {
+        width: 100%;
+        padding: 0.85rem 1rem;
+    }
+
+    .a11y-tools-root {
+        right: 0.75rem;
+        bottom: 5rem;
+    }
+}
+
+@media screen and (max-width: 359px) {
+    .home-hero .max-w-3xl,
+    .home-hero .max-w-2xl {
+        width: calc(100vw - 4.5rem) !important;
+        max-width: calc(100vw - 4.5rem) !important;
+    }
+
+    .home-hero .home-hero-title,
+    .hero-banner h1,
+    .hero-banner h2 {
+        font-size: 1.75rem !important;
+        line-height: 1.08 !important;
+    }
+
+    #featured-grid,
+    #films-carousel,
+    #films-grid,
+    #proiezioni-grid,
+    #registi-grid {
+        grid-template-columns: 1fr !important;
     }
 }
 
@@ -1417,4 +2001,5 @@ a:focus-visible {
         transition: none !important;
     }
 }
+
 

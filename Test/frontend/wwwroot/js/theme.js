@@ -1,4 +1,5 @@
-﻿/* DOC: Modulo JS 'theme': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
+﻿// DOC: theme - file del progetto; contiene logica specifica della feature/modulo.
+/* DOC: Modulo JS 'theme': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
 (function () {
     const STORAGE_KEY = 'siteTheme';
     let volatileTheme = 'dark';
@@ -203,4 +204,5 @@
         });
     }
 })();
+
 

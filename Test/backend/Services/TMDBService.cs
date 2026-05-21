@@ -1,4 +1,5 @@
-﻿// DOC: Service 'TMDBService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
+﻿// DOC: TMDBService - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Service 'TMDBService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using System.Text.Json;
 
 namespace FilmAPI.Services;
@@ -135,4 +136,5 @@ public interface ITMDBService
         };
     }
 }
+
 

@@ -1,4 +1,5 @@
-﻿// DOC: Endpoint 'DashboardEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
+﻿// DOC: DashboardEndpoints - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Endpoint 'DashboardEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using System.Globalization;
 using System.Text;
@@ -222,4 +223,5 @@ public static class DashboardEndpoints
         return new string(buffer[..idx]).Trim();
     }
 }
+
 

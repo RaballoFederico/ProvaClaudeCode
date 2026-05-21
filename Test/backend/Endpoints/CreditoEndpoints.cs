@@ -1,4 +1,5 @@
-﻿// DOC: Endpoint 'CreditoEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
+﻿// DOC: CreditoEndpoints - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Endpoint 'CreditoEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Services;
@@ -210,4 +211,5 @@ public static class CreditoEndpoints
         await emailService.InviaConfermaAcquistoAsync(utente.Email, subject, html, pdf, attachmentName);
     }
 }
+
 

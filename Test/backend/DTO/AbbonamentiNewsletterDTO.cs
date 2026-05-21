@@ -1,4 +1,5 @@
-﻿// DOC: DTO 'AbbonamentiNewsletterDTO': contratto dati per request/response API.
+﻿// DOC: AbbonamentiNewsletterDTO - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: DTO 'AbbonamentiNewsletterDTO': contratto dati per request/response API.
 namespace FilmAPI.DTO;
 
 public class PianoAbbonamentoDTO
@@ -58,4 +59,5 @@ public class NewsletterTestRequestDTO
     public string HtmlBody { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
 }
+
 

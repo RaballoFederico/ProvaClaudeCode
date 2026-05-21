@@ -1,4 +1,5 @@
-﻿/* DOC: Modulo JS 'api-config': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
+﻿// DOC: api-config - file del progetto; contiene logica specifica della feature/modulo.
+/* DOC: Modulo JS 'api-config': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
 (function () {
     let clientReadyPromise = null;
     const AZURE_API_BASE_URL = 'https://filmhub-api.delightfuldune-f7916078.francecentral.azurecontainerapps.io';
@@ -267,4 +268,5 @@
         normalizeUrl
     };
 })();
+
 

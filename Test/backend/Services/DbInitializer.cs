@@ -1,4 +1,5 @@
-﻿// DOC: Service 'DbInitializer': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
+﻿// DOC: DbInitializer - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Service 'DbInitializer': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using System.Security.Cryptography;
 using System.Globalization;
 using System.Text;
@@ -1129,4 +1130,5 @@ public static class DbInitializer
         return Convert.ToHexString(bytes).ToLowerInvariant();
     }
 }
+
 

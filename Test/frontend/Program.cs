@@ -1,3 +1,4 @@
+﻿// DOC: Program - file del progetto; contiene logica specifica della feature/modulo.
 var builder = WebApplication.CreateBuilder(args);
 
 var app = builder.Build();
@@ -34,3 +35,4 @@ app.MapGet("/", () => Results.Redirect("/home.html"));
 app.MapFallback(() => Results.NotFound(new { message = "Pagina non trovata" }));
 
 app.Run();
+

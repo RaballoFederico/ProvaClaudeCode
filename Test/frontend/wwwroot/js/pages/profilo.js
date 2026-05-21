@@ -1,4 +1,5 @@
-﻿/* DOC: Script pagina 'profilo': gestisce eventi UI, chiamate API e rendering dinamico della pagina. */
+﻿// DOC: profilo - file del progetto; contiene logica specifica della feature/modulo.
+/* DOC: Script pagina 'profilo': gestisce eventi UI, chiamate API e rendering dinamico della pagina. */
 // js/pages/profilo.js
 // Gestione area personale utente
 
@@ -650,7 +651,7 @@ async function vaiAPrenotazione(proiezioneSalvataId, showId, proiezioneId) {
 
 /* DOC-FN: 'rimuoviProiezione' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 async function rimuoviProiezione(id) {
-    if (!confirm('Sei sicuro di voler rimuovere questa proiezione dai salvati?')) return;
+    if (!await Utils.confirmDialog('Sei sicuro di voler rimuovere questa proiezione dai salvati?')) return;
     
     try {
         await ApiClient.delete(`/user/proiezioni-salvate/${id}`);
@@ -671,7 +672,7 @@ async function rimuoviProiezione(id) {
 
 /* DOC-FN: 'annullaPrenotazione' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 async function annullaPrenotazione(id) {
-    if (!confirm('Sei sicuro di voler annullare questa prenotazione?')) return;
+    if (!await Utils.confirmDialog('Sei sicuro di voler annullare questa prenotazione?')) return;
     
     try {
         await ApiClient.delete(`/user/prenota/${id}`);
@@ -740,4 +741,5 @@ document.addEventListener('DOMContentLoaded', async () => {
         setTimeout(openEdit, 250);
     }
 });
+
 

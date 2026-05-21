@@ -1,4 +1,5 @@
-﻿// DOC: Interfaccia service 'ISalaService': contratto della logica applicativa usata dagli endpoint.
+﻿// DOC: ISalaService - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Interfaccia service 'ISalaService': contratto della logica applicativa usata dagli endpoint.
 using FilmAPI.DTO;
 
 namespace FilmAPI.Services.Interfaces;
@@ -14,4 +15,5 @@ public interface ISalaService
     Task<bool> UpdatePiantinaAsync(int salaId, PiantinaUpdateDTO dto);
     Task<bool> ValidateConfigurazioneAsync(string configurazioneJson);
 }
+
 

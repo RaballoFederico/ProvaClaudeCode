@@ -1,4 +1,5 @@
-﻿// DOC: DTO 'AuthDTOs': contratto dati per request/response API.
+﻿// DOC: AuthDTOs - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: DTO 'AuthDTOs': contratto dati per request/response API.
 namespace FilmAPI.DTO;
 
 public class LoginRequestDTO
@@ -161,4 +162,5 @@ public class CompleteInviteRequestDTO
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
 }
+
 

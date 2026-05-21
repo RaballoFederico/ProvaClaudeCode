@@ -1,4 +1,5 @@
-﻿/* DOC: Modulo JS 'auth': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
+﻿// DOC: auth - file del progetto; contiene logica specifica della feature/modulo.
+/* DOC: Modulo JS 'auth': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
 const ApiConfigAdapter = window.ApiConfig || {
     /* DOC-FN: 'getCandidates' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     getCandidates() {
@@ -621,4 +622,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     Auth.ensureInitialized();
 });
+
 

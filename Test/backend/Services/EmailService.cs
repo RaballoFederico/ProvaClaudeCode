@@ -1,4 +1,5 @@
-﻿// DOC: Service 'EmailService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
+﻿// DOC: EmailService - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Service 'EmailService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.Services.Interfaces;
 using MailKit.Net.Smtp;
 using MailKit.Security;
@@ -172,4 +173,5 @@ public class EmailService(IConfiguration configuration, ILogger<EmailService> lo
         }
     }
 }
+
 

@@ -1,4 +1,5 @@
-﻿// DOC: Interfaccia service 'ICreditoService': contratto della logica applicativa usata dagli endpoint.
+﻿// DOC: ICreditoService - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Interfaccia service 'ICreditoService': contratto della logica applicativa usata dagli endpoint.
 using FilmAPI.DTO;
 
 namespace FilmAPI.Services.Interfaces;
@@ -11,4 +12,5 @@ public interface ICreditoService
     Task<IEnumerable<TransazioneCreditoDTO>> GetAllTransazioniAsync(TransazioneFilterDTO? filter = null);
     Task<bool> ScalaCreditoAsync(int utenteId, decimal importo, int acquistoId);
 }
+
 

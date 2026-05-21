@@ -1,4 +1,5 @@
-﻿/* DOC: Script pagina 'social-login-complete': gestisce eventi UI, chiamate API e rendering dinamico della pagina. */
+﻿// DOC: social-login-complete - file del progetto; contiene logica specifica della feature/modulo.
+/* DOC: Script pagina 'social-login-complete': gestisce eventi UI, chiamate API e rendering dinamico della pagina. */
 (async () => {
     const statusEl = document.getElementById('status');
     const url = new URL(window.location.href);
@@ -32,4 +33,5 @@
         statusEl.textContent = error?.message || 'Errore durante il completamento del login esterno.';
     }
 })();
+
 

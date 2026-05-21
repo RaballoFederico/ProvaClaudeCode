@@ -1,4 +1,5 @@
-﻿/* DOC: Modulo JS 'usability-tools': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
+﻿// DOC: usability-tools - file del progetto; contiene logica specifica della feature/modulo.
+/* DOC: Modulo JS 'usability-tools': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
 (() => {
     const STORAGE_KEY = 'filmhub_usability_settings_v1';
     const TOUR_PENDING_EMAIL_KEY = 'filmhub_tour_pending_email';
@@ -463,4 +464,5 @@
         ensureInit();
     }
 })();
+
 

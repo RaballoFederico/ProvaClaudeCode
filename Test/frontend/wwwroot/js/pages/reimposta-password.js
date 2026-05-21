@@ -1,4 +1,5 @@
-﻿/* DOC: Script pagina 'reimposta-password': gestisce eventi UI, chiamate API e rendering dinamico della pagina. */
+﻿// DOC: reimposta-password - file del progetto; contiene logica specifica della feature/modulo.
+/* DOC: Script pagina 'reimposta-password': gestisce eventi UI, chiamate API e rendering dinamico della pagina. */
 document.getElementById('reset-form').addEventListener('submit', async (event) => {
     event.preventDefault();
 
@@ -26,4 +27,5 @@ document.getElementById('reset-form').addEventListener('submit', async (event) =
         ? (result.message || 'Password aggiornata con successo.')
         : (result.error || 'Errore durante il reset password.');
 });
+
 

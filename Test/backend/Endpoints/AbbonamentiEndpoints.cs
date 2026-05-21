@@ -1,4 +1,5 @@
-﻿// DOC: Endpoint 'AbbonamentiEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
+﻿// DOC: AbbonamentiEndpoints - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Endpoint 'AbbonamentiEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -269,4 +270,5 @@ public static class AbbonamentiEndpoints
         await db.SaveChangesAsync();
     }
 }
+
 

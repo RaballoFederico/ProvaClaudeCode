@@ -1,4 +1,5 @@
-﻿/* DOC: Modulo JS 'template-loader': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
+﻿// DOC: template-loader - file del progetto; contiene logica specifica della feature/modulo.
+/* DOC: Modulo JS 'template-loader': utility/comportamenti condivisi per autenticazione, routing, tema e API client. */
 const componentHtmlCache = new Map();
 const COMPONENT_CACHE_VERSION = 'v3';
 
@@ -158,7 +159,7 @@ function initNavigation() {
     });
 }
 
-const COOKIE_CONSENT_KEY = 'filmapi_cookie_consent_v1';
+const COOKIE_CONSENT_KEY = 'filmapi_cookie_consent_v2';
 
 /* DOC-FN: 'getCookieConsent' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function getCookieConsent() {
@@ -177,6 +178,62 @@ function setCookieConsent(value) {
         // ignore storage errors
     }
 }
+
+/* DOC-FN: 'getCookiePreferences' espone preferenze cookie in forma strutturata. */
+function getCookiePreferences() {
+    const raw = getCookieConsent();
+    if (!raw) return null;
+
+    if (raw === 'accepted') {
+        return {
+            necessary: true,
+            analytics: true,
+            marketing: true
+        };
+    }
+
+    if (raw === 'rejected') {
+        return {
+            necessary: true,
+            analytics: false,
+            marketing: false
+        };
+    }
+
+    try {
+        const parsed = JSON.parse(raw);
+        return {
+            necessary: true,
+            analytics: !!parsed?.analytics,
+            marketing: !!parsed?.marketing
+        };
+    } catch {
+        return null;
+    }
+}
+
+/* DOC-FN: 'hasCookieCategoryConsent' verifica il consenso per categoria. */
+function hasCookieCategoryConsent(category) {
+    if (category === 'necessary') return true;
+    const prefs = getCookiePreferences();
+    if (!prefs) return false;
+    return !!prefs[category];
+}
+
+/* DOC-FN: 'applyCookieConsentState' salva consenso e notifica il resto della UI. */
+function applyCookieConsentState(state) {
+    setCookieConsent(state);
+    window.dispatchEvent(new CustomEvent('cookie-consent-updated', {
+        detail: {
+            preferences: getCookiePreferences()
+        }
+    }));
+}
+
+window.CookieConsent = {
+    getPreferences: getCookiePreferences,
+    hasConsent: hasCookieCategoryConsent
+};
 
 /* DOC-FN: 'ensureCookieBannerStyles' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 function ensureCookieBannerStyles() {
@@ -243,6 +300,29 @@ function ensureCookieBannerStyles() {
             color: #93c5fd;
             text-decoration: underline;
         }
+        .cookie-switch {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .cookie-switch:last-of-type {
+            border-bottom: none;
+        }
+        .cookie-switch input {
+            width: 18px;
+            height: 18px;
+        }
+        .cookie-prefs {
+            display: none;
+            margin-top: 2px;
+            padding-top: 2px;
+        }
+        .cookie-prefs-open {
+            display: block;
+        }
     `;
     document.head.appendChild(style);
 }
@@ -264,9 +344,25 @@ function renderCookieBanner() {
             cookie aggiuntivi per migliorare l'esperienza. Leggi la nostra
             <a class="cookie-link" href="/privacy.html">Privacy Policy</a>.
         </div>
+        <div id="cookie-prefs-panel" class="cookie-prefs" aria-hidden="true">
+            <label class="cookie-switch">
+                <span>Cookie necessari (sempre attivi)</span>
+                <input type="checkbox" checked disabled>
+            </label>
+            <label class="cookie-switch">
+                <span>Cookie analytics</span>
+                <input type="checkbox" id="cookie-analytics-toggle">
+            </label>
+            <label class="cookie-switch">
+                <span>Cookie marketing</span>
+                <input type="checkbox" id="cookie-marketing-toggle">
+            </label>
+        </div>
         <div class="cookie-banner-actions">
+            <button type="button" id="cookie-customize-btn" class="cookie-btn cookie-btn-reject">Personalizza</button>
             <button type="button" id="cookie-accept-btn" class="cookie-btn cookie-btn-accept">Accetta</button>
             <button type="button" id="cookie-reject-btn" class="cookie-btn cookie-btn-reject">Rifiuta</button>
+            <button type="button" id="cookie-save-btn" class="cookie-btn cookie-btn-accept" style="display:none;">Salva preferenze</button>
         </div>
     `;
 
@@ -274,11 +370,16 @@ function renderCookieBanner() {
 
     const acceptBtn = document.getElementById('cookie-accept-btn');
     const rejectBtn = document.getElementById('cookie-reject-btn');
+    const customizeBtn = document.getElementById('cookie-customize-btn');
+    const saveBtn = document.getElementById('cookie-save-btn');
+    const prefsPanel = document.getElementById('cookie-prefs-panel');
+    const analyticsToggle = document.getElementById('cookie-analytics-toggle');
+    const marketingToggle = document.getElementById('cookie-marketing-toggle');
 
     /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (acceptBtn) {
         acceptBtn.addEventListener('click', () => {
-            setCookieConsent('accepted');
+            applyCookieConsentState('accepted');
             banner.remove();
         });
     }
@@ -286,9 +387,28 @@ function renderCookieBanner() {
     /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (rejectBtn) {
         rejectBtn.addEventListener('click', () => {
-            setCookieConsent('rejected');
+            applyCookieConsentState('rejected');
+            banner.remove();
+        });
+    }
+
+    if (customizeBtn && saveBtn && prefsPanel && analyticsToggle && marketingToggle) {
+        customizeBtn.addEventListener('click', () => {
+            const isOpen = prefsPanel.classList.toggle('cookie-prefs-open');
+            prefsPanel.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+            saveBtn.style.display = isOpen ? 'inline-block' : 'none';
+        });
+
+        saveBtn.addEventListener('click', () => {
+            const payload = {
+                necessary: true,
+                analytics: !!analyticsToggle.checked,
+                marketing: !!marketingToggle.checked
+            };
+            applyCookieConsentState(JSON.stringify(payload));
             banner.remove();
         });
     }
 }
+
 

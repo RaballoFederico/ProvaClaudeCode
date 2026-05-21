@@ -1,4 +1,5 @@
-﻿// DOC: Service 'SalaService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
+﻿// DOC: SalaService - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Service 'SalaService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using System.Text.Json;
 using FilmAPI.Data;
 using FilmAPI.DTO;
@@ -232,4 +233,5 @@ public class SalaService(FilmDbContext context) : ISalaService
     // DOC-METHOD: 'ToDtoCompiled' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static SalaDTO ToDtoCompiled(Sala s) => ToDto(s);
 }
+
 

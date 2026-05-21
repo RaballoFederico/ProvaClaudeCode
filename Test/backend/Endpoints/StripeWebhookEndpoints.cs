@@ -1,4 +1,5 @@
-﻿// DOC: Endpoint 'StripeWebhookEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
+﻿// DOC: StripeWebhookEndpoints - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Endpoint 'StripeWebhookEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Services.Interfaces;
 using Microsoft.AspNetCore.RateLimiting;
 
@@ -62,4 +63,5 @@ public static class StripeWebhookEndpoints
         return app;
     }
 }
+
 

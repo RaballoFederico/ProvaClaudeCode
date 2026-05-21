@@ -1,4 +1,5 @@
-﻿// DOC: DTO 'RegistaDTO': contratto dati per request/response API.
+﻿// DOC: RegistaDTO - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: DTO 'RegistaDTO': contratto dati per request/response API.
 namespace FilmAPI.DTO;
 
 public class RegistaDTO
@@ -22,4 +23,5 @@ public class RegistaUpdateDTO
     public string Cognome { get; set; } = string.Empty;
     public string? Nazionalita { get; set; }
 }
+
 

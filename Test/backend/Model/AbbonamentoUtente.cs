@@ -1,4 +1,5 @@
-﻿// DOC: Model 'AbbonamentoUtente': entita dominio mappata su tabella database.
+﻿// DOC: AbbonamentoUtente - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Model 'AbbonamentoUtente': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -69,4 +70,5 @@ public class UtilizzoAbbonamento
     [MaxLength(250)]
     public string? Note { get; set; }
 }
+
 

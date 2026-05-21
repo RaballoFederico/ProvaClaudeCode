@@ -1,4 +1,5 @@
-﻿// DOC: Service 'AccountActionTokenService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
+﻿// DOC: AccountActionTokenService - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Service 'AccountActionTokenService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using System.Security.Cryptography;
 using System.Text;
 using FilmAPI.Data;
@@ -69,4 +70,5 @@ public class AccountActionTokenService(FilmDbContext db) : IAccountActionTokenSe
         return Convert.ToBase64String(bytes.ToArray()).TrimEnd('=').Replace('+', '-').Replace('/', '_');
     }
 }
+
 

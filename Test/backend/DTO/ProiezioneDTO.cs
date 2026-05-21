@@ -1,4 +1,5 @@
-﻿// DOC: DTO 'ProiezioneDTO': contratto dati per request/response API.
+﻿// DOC: ProiezioneDTO - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: DTO 'ProiezioneDTO': contratto dati per request/response API.
 namespace FilmAPI.DTO;
 
 public class ProiezioneDTO
@@ -28,4 +29,5 @@ public class ProiezioneUpdateDTO
     public DateTime Data { get; set; }
     public TimeSpan Ora { get; set; }
 }
+
 

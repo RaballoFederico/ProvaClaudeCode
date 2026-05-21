@@ -1,4 +1,5 @@
-﻿/* DOC: Script pagina 'recupera-password': gestisce eventi UI, chiamate API e rendering dinamico della pagina. */
+﻿// DOC: recupera-password - file del progetto; contiene logica specifica della feature/modulo.
+/* DOC: Script pagina 'recupera-password': gestisce eventi UI, chiamate API e rendering dinamico della pagina. */
 document.getElementById('recover-form').addEventListener('submit', async (event) => {
     event.preventDefault();
 
@@ -15,4 +16,5 @@ document.getElementById('recover-form').addEventListener('submit', async (event)
 
     message.textContent = result.message || 'Se esiste un account associato, riceverai una email con le istruzioni.';
 });
+
 

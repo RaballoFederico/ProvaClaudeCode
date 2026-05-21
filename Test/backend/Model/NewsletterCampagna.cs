@@ -1,4 +1,5 @@
-﻿// DOC: Model 'NewsletterCampagna': entita dominio mappata su tabella database.
+﻿// DOC: NewsletterCampagna - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Model 'NewsletterCampagna': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -30,4 +31,5 @@ public class NewsletterCampagna
     [Required]
     public int DestinatariCount { get; set; }
 }
+
 

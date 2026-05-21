@@ -1,4 +1,5 @@
-﻿// DOC: Endpoint 'AdminEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
+﻿// DOC: AdminEndpoints - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Endpoint 'AdminEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -456,4 +457,5 @@ public static class AdminEndpoints
         return "https://filmhub-frontend.delightfuldune-f7916078.francecentral.azurecontainerapps.io";
     }
 }
+
 

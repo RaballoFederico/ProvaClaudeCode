@@ -1,4 +1,5 @@
-﻿// DOC: DTO 'CinemaDTO': contratto dati per request/response API.
+﻿// DOC: CinemaDTO - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: DTO 'CinemaDTO': contratto dati per request/response API.
 namespace FilmAPI.DTO;
 
 public class CinemaDTO
@@ -37,4 +38,5 @@ public class CinemaUpdateDTO
     public string? CodiceLocale { get; set; }
     public string? ImageUrl { get; set; }
 }
+
 

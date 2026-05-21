@@ -1,4 +1,5 @@
-﻿// DOC: Service 'UserSecurityAuditService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
+﻿// DOC: UserSecurityAuditService - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Service 'UserSecurityAuditService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.Data;
 using FilmAPI.Model;
 using FilmAPI.Services.Interfaces;
@@ -26,4 +27,5 @@ public class UserSecurityAuditService(FilmDbContext db) : IUserSecurityAuditServ
         await db.SaveChangesAsync();
     }
 }
+
 

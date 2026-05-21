@@ -1,4 +1,5 @@
-﻿// DOC: DTO 'ShowDTO': contratto dati per request/response API.
+﻿// DOC: ShowDTO - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: DTO 'ShowDTO': contratto dati per request/response API.
 namespace FilmAPI.DTO;
 
 public class ShowDTO
@@ -72,4 +73,5 @@ public class ShowBulkSlotDTO
     public List<TimeOnly> Orari { get; set; } = new();
     public List<int> GiorniSettimana { get; set; } = new();
 }
+
 

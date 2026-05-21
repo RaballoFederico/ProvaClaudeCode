@@ -1,4 +1,5 @@
-﻿// DOC: Endpoint 'ProgrammazioneEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
+﻿// DOC: ProgrammazioneEndpoints - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Endpoint 'ProgrammazioneEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.Model;
 using Microsoft.EntityFrameworkCore;
@@ -360,4 +361,5 @@ public static class ProgrammazioneEndpoints
         return $"{backendBaseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
     }
 }
+
 

@@ -1,4 +1,5 @@
-﻿// DOC: Endpoint 'CategorieEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
+﻿// DOC: CategorieEndpoints - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Endpoint 'CategorieEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Services.Interfaces;
@@ -78,4 +79,5 @@ public static class CategorieEndpoints
         return app;
     }
 }
+
 

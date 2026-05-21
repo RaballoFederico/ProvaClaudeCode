@@ -1,4 +1,5 @@
-﻿// DOC: Endpoint 'FilmsEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
+﻿// DOC: FilmsEndpoints - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Endpoint 'FilmsEndpoints': espone API HTTP e coordina validazione input, accesso dati e risposta.
 using System.Text.Json;
 using System.Globalization;
 using System.Text;
@@ -1270,4 +1271,5 @@ public static class FilmsEndpoints
         return matchedId;
     }
 }
+
 

@@ -1,4 +1,5 @@
-﻿// DOC: Service 'EmailComposer': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
+﻿// DOC: EmailComposer - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Service 'EmailComposer': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.DTO;
 
 namespace FilmAPI.Services;
@@ -168,4 +169,5 @@ public static class EmailComposer
     // DOC-METHOD: 'FormatEuro' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     private static string FormatEuro(decimal amount) => $"{amount:0.00} EUR";
 }
+
 

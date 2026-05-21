@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+﻿<!-- DOC: categorie - file del progetto; contiene logica specifica della feature/modulo. -->
 <!-- DOC: Pagina UI 'categorie': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <html class="dark" lang="it">
 <head>
@@ -106,7 +106,7 @@
         }
 
         async function removeCategoria(id) {
-            if (!confirm('Eliminare la categoria?')) return;
+            if (!await Utils.confirmDialog('Eliminare la categoria?')) return;
             await ApiClient.delete(`/categorie/${id}`);
             await loadCategorie();
         }
@@ -153,5 +153,6 @@
     </script>
 </body>
 </html>
+
 
 

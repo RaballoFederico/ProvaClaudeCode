@@ -1,4 +1,5 @@
-﻿// DOC: Service 'AuthService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
+﻿// DOC: AuthService - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Service 'AuthService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -469,4 +470,5 @@ public class AuthService : IAuthService
         return hasUpper && hasLower && hasDigit && hasSymbol;
     }
 }
+
 

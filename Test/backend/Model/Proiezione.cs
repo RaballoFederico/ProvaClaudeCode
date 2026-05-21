@@ -1,4 +1,5 @@
-﻿// DOC: Model 'Proiezione': entita dominio mappata su tabella database.
+﻿// DOC: Proiezione - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Model 'Proiezione': entita dominio mappata su tabella database.
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -34,4 +35,5 @@ public class Proiezione
     [Required]
     public TimeSpan Ora { get; set; }
 }
+
 

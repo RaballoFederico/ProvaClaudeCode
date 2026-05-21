@@ -1,4 +1,5 @@
-﻿// DOC: Service 'CreditoService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
+﻿// DOC: CreditoService - file del progetto; contiene logica specifica della feature/modulo.
+// DOC: Service 'CreditoService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
@@ -155,4 +156,5 @@ public class CreditoService(FilmDbContext context) : ICreditoService
         AcquistoId = t.AcquistoId
     };
 }
+
 
