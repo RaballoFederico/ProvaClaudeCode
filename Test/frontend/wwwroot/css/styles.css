@@ -7,7 +7,7 @@
 }
 
 /* Critical fallback utilities in case Tailwind CDN is delayed/blocked on client devices. */
-.hidden { display: none !important; }
+.hidden { display: none; }
 .block { display: block; }
 .inline-flex { display: inline-flex; }
 .flex { display: flex; }

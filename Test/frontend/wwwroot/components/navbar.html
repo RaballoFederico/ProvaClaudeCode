@@ -323,7 +323,7 @@
                             <img id="nav-user-avatar-image" alt="Foto profilo" class="w-full h-full object-cover ${hasProfilePicture ? '' : 'hidden'}" src="${hasProfilePicture ? profilePicture : ''}">
                             <span id="nav-user-initials" class="${hasProfilePicture ? 'hidden' : ''}">${initials}</span>
                         </span>
-                        <span class="hidden md:block max-w-36 truncate text-sm text-on-surface">${fullName}</span>
+                        <span class="max-w-36 truncate text-sm text-on-surface">${fullName}</span>
                         <span class="material-symbols-outlined text-sm text-on-surface-variant">expand_more</span>
                     </button>
 
@@ -383,55 +383,44 @@
                                 <span class="material-symbols-outlined text-sm">schedule</span>
                                 Gestione proiezioni
                             </a>
-                            <details class="rounded-xl">
-                                <summary class="list-none flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-on-surface-variant hover:bg-surface-container-high rounded-xl cursor-pointer">
-                                    <span class="inline-flex items-center gap-3">
-                                        <span class="material-symbols-outlined text-sm">more_horiz</span>
-                                        Altre opzioni
-                                    </span>
-                                    <span class="material-symbols-outlined text-sm">expand_more</span>
-                                </summary>
-                                <div class="mt-1 space-y-1 pl-2 pr-1 pb-1">
-                                    <a href="shows.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
-                                        <span class="material-symbols-outlined text-sm">movie_info</span>
-                                        Gestione show
-                                    </a>
-                                    <a href="cinemas.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
-                                        <span class="material-symbols-outlined text-sm">theaters</span>
-                                        Gestione cinema
-                                    </a>
-                                    <a href="registi.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
-                                        <span class="material-symbols-outlined text-sm">theater_comedy</span>
-                                        Gestione registi
-                                    </a>
-                                    <a href="validazione.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
-                                        <span class="material-symbols-outlined text-sm">qr_code_scanner</span>
-                                        Validazione biglietti
-                                    </a>
-                                    <a href="ricarica-credito.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
-                                        <span class="material-symbols-outlined text-sm">account_balance_wallet</span>
-                                        Ricarica credito utenti
-                                    </a>
-                                    ${isAdmin ? `
-                                        <a href="utenti.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
-                                            <span class="material-symbols-outlined text-sm">group</span>
-                                            Gestione utenti
-                                        </a>
-                                        <a href="newsletter-admin.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
-                                            <span class="material-symbols-outlined text-sm">mail</span>
-                                            Newsletter
-                                        </a>
-                                        <a href="sale.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
-                                            <span class="material-symbols-outlined text-sm">meeting_room</span>
-                                            Gestione sale
-                                        </a>
-                                        <a href="categorie.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
-                                            <span class="material-symbols-outlined text-sm">category</span>
-                                            Categorie
-                                        </a>
-                                    ` : ''}
-                                </div>
-                            </details>
+                            <a href="shows.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">movie_info</span>
+                                Gestione show
+                            </a>
+                            <a href="cinemas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">theaters</span>
+                                Gestione cinema
+                            </a>
+                            <a href="registi.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">theater_comedy</span>
+                                Gestione registi
+                            </a>
+                            <a href="validazione.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">qr_code_scanner</span>
+                                Validazione biglietti
+                            </a>
+                            <a href="ricarica-credito.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">account_balance_wallet</span>
+                                Ricarica credito utenti
+                            </a>
+                            ${isAdmin ? `
+                                <a href="utenti.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                    <span class="material-symbols-outlined text-sm">group</span>
+                                    Gestione utenti
+                                </a>
+                                <a href="newsletter-admin.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                    <span class="material-symbols-outlined text-sm">mail</span>
+                                    Newsletter
+                                </a>
+                                <a href="sale.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                    <span class="material-symbols-outlined text-sm">meeting_room</span>
+                                    Gestione sale
+                                </a>
+                                <a href="categorie.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                    <span class="material-symbols-outlined text-sm">category</span>
+                                    Categorie
+                                </a>
+                            ` : ''}
                         ` : ''}
 
                         <div class="h-px bg-outline-variant/20 my-1.5"></div>
