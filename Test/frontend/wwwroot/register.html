@@ -1,4 +1,4 @@
-﻿<!-- DOC: register - file del progetto; contiene logica specifica della feature/modulo. -->
+<!-- DOC: register - file del progetto; contiene logica specifica della feature/modulo. -->
 <!-- DOC: Pagina UI 'register': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <html lang="it" class="dark">
 <head>
@@ -12,13 +12,13 @@
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico" media="(prefers-color-scheme: dark)">
     <link rel="shortcut icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico">
     <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="stylesheet" href="/css/tailwind.local.css">
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="css/styles.css">
     <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
-        tailwind.config = {
+        window.tailwind = window.tailwind || {}; window.tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
@@ -49,16 +49,17 @@
             height: 1.25rem;
             appearance: none;
             -webkit-appearance: none;
-            border: 2px solid #5f6b85;
+            border: 2px solid color-mix(in srgb, var(--outline) 85%, white 15%);
             border-radius: 0.35rem;
-            background-color: transparent;
+            background-color: color-mix(in srgb, var(--surface-high) 90%, transparent);
             cursor: pointer;
             position: relative;
             transition: all 0.16s ease;
         }
 
         .newsletter-checkbox:checked {
-            border-color: #e97b7b;
+            border-color: color-mix(in srgb, var(--primary) 88%, white 12%);
+            background-color: color-mix(in srgb, var(--primary) 88%, #000000 12%);
         }
 
         .newsletter-checkbox:checked::before {
@@ -256,7 +257,7 @@
                     </div>
                 </div>
 
-                <div class="rounded-xl border border-outline-variant/30 bg-surface-container-high/60 p-4">
+                <div class="rounded-xl border border-outline-variant/30 bg-surface-container-high/75 p-4 shadow-[0_10px_24px_-18px_rgba(0,0,0,0.65)]">
                     <label for="consenso-newsletter" class="flex items-start gap-3 cursor-pointer">
                         <input
                             type="checkbox"
@@ -264,7 +265,7 @@
                             name="consenso-newsletter"
                             class="newsletter-checkbox mt-0.5"
                         >
-                        <span class="text-sm text-on-surface-variant">
+                        <span class="text-sm text-on-surface">
                             Voglio iscrivermi alla newsletter per ricevere novita' e promozioni.
                             <span class="block text-xs text-on-surface-variant/70 mt-1">Potrai modificare questa scelta in qualsiasi momento dal profilo.</span>
                         </span>
@@ -536,6 +537,8 @@
     </script>
 </body>
 </html>
+
+
 
 
 

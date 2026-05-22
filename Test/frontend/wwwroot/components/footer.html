@@ -1,4 +1,4 @@
-﻿<!-- DOC: footer - file del progetto; contiene logica specifica della feature/modulo. -->
+<!-- DOC: footer - file del progetto; contiene logica specifica della feature/modulo. -->
 <!-- DOC: Pagina UI 'footer': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <footer class="mt-10 md:mt-14 px-4 md:px-8 lg:px-12 pb-24 md:pb-8">
     <div class="max-w-[1500px] mx-auto rounded-2xl bg-surface-container border border-outline-variant/20 px-4 md:px-7 py-5 md:py-6 flex flex-col gap-4 footer-shell">
@@ -15,6 +15,9 @@
                     <input id="footer-newsletter-email" type="email" required placeholder="La tua email" class="flex-1 rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm text-on-surface">
                     <button type="submit" class="app-btn app-btn-primary whitespace-nowrap">Iscriviti</button>
                 </form>
+                <p id="footer-newsletter-guest-message" class="mt-2 text-xs text-on-surface-variant hidden">
+                    Per iscriverti alla newsletter devi aver effettuato login o registrazione.
+                </p>
                 <p id="footer-newsletter-feedback" class="mt-2 text-xs text-on-surface-variant hidden"></p>
             </div>
 
@@ -35,9 +38,17 @@
         const form = document.getElementById('footer-newsletter-form');
         const emailInput = document.getElementById('footer-newsletter-email');
         const feedback = document.getElementById('footer-newsletter-feedback');
-        if (!form || !emailInput || !feedback) return;
+        const guestMessage = document.getElementById('footer-newsletter-guest-message');
+        if (!form || !emailInput || !feedback || !guestMessage) return;
 
-        if (typeof Auth !== 'undefined' && Auth.isAuthenticated()) {
+        const isAuthenticated = typeof Auth !== 'undefined' && Auth.isAuthenticated();
+        if (!isAuthenticated) {
+            form.classList.add('hidden');
+            guestMessage.classList.remove('hidden');
+            return;
+        }
+
+        if (isAuthenticated) {
             const user = Auth.getUser();
             if (user?.email) emailInput.value = user.email;
         }
@@ -62,5 +73,7 @@
         });
     })();
 </script>
+
+
 
 
