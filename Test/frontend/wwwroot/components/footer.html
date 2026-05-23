@@ -15,6 +15,7 @@
                     <input id="footer-newsletter-email" type="email" required placeholder="La tua email" class="flex-1 rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm text-on-surface">
                     <button type="submit" class="app-btn app-btn-primary whitespace-nowrap">Iscriviti</button>
                 </form>
+                <p id="footer-newsletter-login-hint" class="mt-2 text-xs text-on-surface-variant hidden">Per iscriverti alla newsletter devi prima accedere o registrarti.</p>
                 <p id="footer-newsletter-feedback" class="mt-2 text-xs text-on-surface-variant hidden"></p>
             </div>
 
@@ -34,10 +35,18 @@
     (function initFooterNewsletter() {
         const form = document.getElementById('footer-newsletter-form');
         const emailInput = document.getElementById('footer-newsletter-email');
+        const loginHint = document.getElementById('footer-newsletter-login-hint');
         const feedback = document.getElementById('footer-newsletter-feedback');
-        if (!form || !emailInput || !feedback) return;
+        if (!form || !emailInput || !feedback || !loginHint) return;
 
-        if (typeof Auth !== 'undefined' && Auth.isAuthenticated()) {
+        const isAuthenticated = typeof Auth !== 'undefined' && Auth.isAuthenticated();
+        if (!isAuthenticated) {
+            form.classList.add('hidden');
+            loginHint.classList.remove('hidden');
+            return;
+        }
+
+        if (isAuthenticated) {
             const user = Auth.getUser();
             if (user?.email) emailInput.value = user.email;
         }

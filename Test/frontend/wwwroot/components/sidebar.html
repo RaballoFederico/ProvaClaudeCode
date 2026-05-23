@@ -354,6 +354,24 @@
             return;
         }
 
+        // Evita prompt geolocalizzazione automatici su ogni pagina (specie Safari/macOS):
+        // calcoliamo la distanza solo se il permesso risulta gia concesso.
+        if (navigator.permissions && typeof navigator.permissions.query === 'function') {
+            try {
+                const permission = await navigator.permissions.query({ name: 'geolocation' });
+                if (permission.state !== 'granted') {
+                    label.textContent = `Cinema: ${selected.nome} (${selected.citta})`;
+                    return;
+                }
+            } catch {
+                label.textContent = `Cinema: ${selected.nome} (${selected.citta})`;
+                return;
+            }
+        } else {
+            label.textContent = `Cinema: ${selected.nome} (${selected.citta})`;
+            return;
+        }
+
         await new Promise((resolve) => {
             navigator.geolocation.getCurrentPosition((pos) => {
                 const km = calcKm(

@@ -527,6 +527,17 @@
                 return;
             }
 
+            if (navigator.permissions && typeof navigator.permissions.query === 'function') {
+                try {
+                    const permission = await navigator.permissions.query({ name: 'geolocation' });
+                    if (permission.state === 'denied') {
+                        Utils.showNotification('Permesso posizione negato nel browser', 'error');
+                        return;
+                    }
+                } catch {
+                }
+            }
+
             navigator.geolocation.getCurrentPosition(pos => {
                 currentPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
                 const sorted = [...cinemas].sort((a, b) => {
@@ -537,7 +548,7 @@
                 renderCinemaList(sorted);
             }, () => {
                 Utils.showNotification('Impossibile leggere posizione', 'error');
-            });
+            }, { enableHighAccuracy: false, timeout: 6000, maximumAge: 300000 });
         }
 
         function calcKm(lat1, lng1, lat2, lng2) {
