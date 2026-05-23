@@ -6,28 +6,6 @@
     font-variation-settings: 'FILL' 0, 'wght' 460, 'GRAD' 0, 'opsz' 24;
 }
 
-/* Critical fallback utilities in case Tailwind CDN is delayed/blocked on client devices. */
-.hidden { display: none; }
-.block { display: block; }
-.inline-flex { display: inline-flex; }
-.flex { display: flex; }
-.grid { display: grid; }
-.items-center { align-items: center; }
-.items-start { align-items: flex-start; }
-.justify-center { justify-content: center; }
-.justify-between { justify-content: space-between; }
-.w-full { width: 100%; }
-.relative { position: relative; }
-.absolute { position: absolute; }
-.fixed { position: fixed; }
-.left-3 { left: 0.75rem; }
-.right-3 { right: 0.75rem; }
-.top-1\/2 { top: 50%; }
-.-translate-y-1\/2 { transform: translateY(-50%); }
-.pl-10 { padding-left: 2.5rem; }
-.pr-12 { padding-right: 3rem; }
-.pr-4 { padding-right: 1rem; }
-
 html[data-theme="light"] {
     color-scheme: light;
 }
@@ -1666,70 +1644,6 @@ main.page-shell[class*="py-8"] {
 .auth-card-compact {
     width: min(560px, 100%);
     margin-inline: auto;
-}
-
-/* Auth form fallback for environments where Tailwind CDN utilities are delayed/blocked. */
-.auth-card form .relative {
-    position: relative;
-}
-
-.auth-card form .relative > .material-symbols-outlined:first-child {
-    position: absolute;
-    left: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    pointer-events: none;
-    z-index: 2;
-}
-
-.auth-card form .relative > .toggle-password {
-    position: absolute;
-    right: 0.75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 2;
-    background: transparent;
-    border: 0;
-    padding: 0;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.auth-card form input[type="text"],
-.auth-card form input[type="email"],
-.auth-card form input[type="password"],
-.auth-card form input[type="tel"] {
-    width: 100%;
-    min-height: 3rem;
-}
-
-.auth-card form .relative > input[type="text"],
-.auth-card form .relative > input[type="email"],
-.auth-card form .relative > input[type="password"],
-.auth-card form .relative > input[type="tel"] {
-    padding-left: 2.5rem;
-}
-
-.auth-card form .relative > .toggle-password + input[type="password"],
-.auth-card form .relative > input[type="password"] {
-    padding-right: 2.75rem;
-}
-
-/* Global fallback for icon-inside-input fields used across multiple pages. */
-.relative > .material-symbols-outlined.absolute {
-    pointer-events: none;
-    z-index: 2;
-}
-
-.relative > .material-symbols-outlined.absolute + input,
-.relative > .material-symbols-outlined.absolute + select,
-.relative > .material-symbols-outlined.absolute + textarea {
-    padding-left: 2.5rem;
-}
-
-.relative > .material-symbols-outlined.absolute + input[type="password"] {
-    padding-right: 2.75rem;
 }
 
 @media (max-width: 1023px) {

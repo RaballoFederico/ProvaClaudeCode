@@ -1,4 +1,4 @@
-<!-- DOC: sidebar - file del progetto; contiene logica specifica della feature/modulo. -->
+﻿<!-- DOC: sidebar - file del progetto; contiene logica specifica della feature/modulo. -->
 <!-- DOC: Pagina UI 'sidebar': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <div id="sidebar-backdrop" class="fixed inset-0 bg-black/40 z-40 md:hidden"></div>
 
@@ -349,19 +349,7 @@
             return;
         }
 
-        if (!selected.latitudine || !selected.longitudine) {
-            label.textContent = `Cinema: ${selected.nome} (${selected.citta})`;
-            return;
-        }
-
-        // Avoid automatic geolocation prompts on each page load (notably Safari/macOS).
-        // Distance is shown only after an explicit user action elsewhere in the app.
-        if (localStorage.getItem('filmhub_geo_optin') !== '1') {
-            label.textContent = `Cinema: ${selected.nome} (${selected.citta})`;
-            return;
-        }
-
-        if (!navigator.geolocation) {
+        if (!navigator.geolocation || !selected.latitudine || !selected.longitudine) {
             label.textContent = `Cinema: ${selected.nome} (${selected.citta})`;
             return;
         }
@@ -395,7 +383,5 @@
 
     initSidebar();
 </script>
-
-
 
 

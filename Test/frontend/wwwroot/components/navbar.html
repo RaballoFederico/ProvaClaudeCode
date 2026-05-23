@@ -1,4 +1,4 @@
-<!-- DOC: navbar - file del progetto; contiene logica specifica della feature/modulo. -->
+﻿<!-- DOC: navbar - file del progetto; contiene logica specifica della feature/modulo. -->
 <!-- DOC: Pagina UI 'navbar': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <header id="navbar" class="sticky top-0 z-50 px-3 md:px-6 py-3 bg-surface-container border-b border-outline-variant/20 backdrop-blur-lg">
     <div class="max-w-[1500px] mx-auto flex items-center justify-between gap-3 md:gap-6 navbar-shell">
@@ -14,7 +14,7 @@
             </a>
         </div>
 
-        <div id="nav-search-wrapper" class="hidden md:block relative min-w-[320px] max-w-[440px] w-full">
+        <div id="nav-search-wrapper" class="hidden lg:block relative min-w-[320px] max-w-[440px] w-full">
             <div class="nav-search-shell flex items-center gap-3 bg-surface-container-high rounded-full px-3.5 py-2 border border-outline-variant/20">
                 <span class="nav-search-icon material-symbols-outlined text-on-surface-variant text-base">search</span>
                 <input id="nav-search-input" autocomplete="off" class="bg-transparent border-none focus:ring-0 w-full text-sm text-on-surface" placeholder="" aria-label="Cerca" type="text" />
@@ -276,11 +276,180 @@
         if (!navAuthSection) return;
 
         if (typeof Auth !== 'undefined' && Auth.isAuthenticated()) {
+            const user = Auth.getUser() || {};
+            const getProfilePicture = () => {
+                if (!user.id) return null;
+                return localStorage.getItem(`profile_picture_user_${user.id}`);
+            };
+            const username = String(user.username || user.email || 'utente');
+            const firstNameInitial = (user.nome && user.nome[0]) ? user.nome[0] : '';
+            const lastNameInitial = (user.cognome && user.cognome[0]) ? user.cognome[0] : '';
+            const initials = ((firstNameInitial + lastNameInitial) || username[0] || 'U').toUpperCase();
+            const fullName = user.nome && user.cognome ? `${user.nome} ${user.cognome}` : username;
+            const roles = Array.isArray(user.ruoli) ? user.ruoli : [];
+            const isManager = roles.includes('Admin') || roles.includes('PowerUser');
+            const isAdmin = roles.includes('Admin');
+            const profilePicture = getProfilePicture();
+            const hasProfilePicture = typeof profilePicture === 'string' && profilePicture.startsWith('data:image/');
+
             navAuthSection.innerHTML = `
-                <a href="profilo.html" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-high border border-outline-variant/20 text-on-surface hover:border-primary-container/40 transition-colors">
-                    <span class="material-symbols-outlined text-sm">person</span>
-                    <span class="text-sm font-medium">Profilo</span>
-                </a>
+                <div class="relative">
+                    <button id="nav-notif-toggle" class="hidden md:inline-flex p-2.5 rounded-full text-on-surface-variant hover:bg-surface-container-high transition-colors" title="Notifiche">
+                        <span class="material-symbols-outlined">notifications</span>
+                        <span id="nav-notif-badge" class="hidden absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-primary-container text-white text-[10px] leading-5 text-center">0</span>
+                    </button>
+                    <div id="nav-notif-menu" class="hidden absolute right-0 top-full mt-2 w-[360px] max-w-[90vw] bg-surface-container rounded-2xl border border-outline-variant/20 shadow-xl z-50 overflow-hidden">
+                        <div class="px-4 py-3 border-b border-outline-variant/20 flex items-center justify-between">
+                            <div class="text-sm font-semibold">Notifiche</div>
+                            <div class="flex items-center gap-3">
+                                <button id="nav-notif-read-all" class="text-xs text-primary-container hover:underline">Segna tutte lette</button>
+                                <button id="nav-notif-clear-all" class="text-xs text-red-400 hover:underline">Elimina tutte</button>
+                            </div>
+                        </div>
+                        <div class="px-4 py-2 border-b border-outline-variant/20 bg-surface-container-high/40">
+                            <select id="nav-notif-filter" class="w-full rounded-lg border border-outline-variant/30 bg-surface-container px-2 py-1.5 text-xs text-on-surface">
+                                <option value="all">Tutte le notifiche</option>
+                                <option value="payment">Pagamenti</option>
+                                <option value="booking">Prenotazioni</option>
+                                <option value="new-film">Nuovi film</option>
+                            </select>
+                        </div>
+                        <div id="nav-notif-list" class="max-h-[360px] overflow-auto"></div>
+                    </div>
+                </div>
+                <div class="relative">
+                    <button id="nav-user-toggle" class="flex items-center gap-2 bg-surface-container-high border border-outline-variant/20 rounded-full pl-1.5 pr-3 py-1.5 hover:border-primary-container/40 transition-colors">
+                        <span class="w-9 h-9 rounded-full bg-primary-container text-white text-sm font-bold flex items-center justify-center overflow-hidden">
+                            <img id="nav-user-avatar-image" alt="Foto profilo" class="w-full h-full object-cover ${hasProfilePicture ? '' : 'hidden'}" src="${hasProfilePicture ? profilePicture : ''}">
+                            <span id="nav-user-initials" class="${hasProfilePicture ? 'hidden' : ''}">${initials}</span>
+                        </span>
+                        <span class="hidden md:block max-w-36 truncate text-sm text-on-surface">${fullName}</span>
+                        <span class="material-symbols-outlined text-sm text-on-surface-variant">expand_more</span>
+                    </button>
+
+                    <div id="nav-user-menu" class="hidden absolute right-0 top-full mt-2 w-72 bg-surface-container rounded-2xl border border-outline-variant/20 shadow-xl p-2 z-50">
+                        <div class="px-3 py-2 rounded-xl bg-surface-container-high border border-outline-variant/20 mb-1.5">
+                            <div class="text-sm font-semibold text-on-surface truncate">${escapeHtml(fullName)}</div>
+                            <div class="text-xs text-on-surface-variant truncate">${escapeHtml(user.email || '')}</div>
+                        </div>
+
+                        <div class="px-2.5 pt-1 pb-1 text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Account</div>
+                        <a href="profilo.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                            <span class="material-symbols-outlined text-sm">person</span>
+                            Il mio account
+                        </a>
+                        <a href="profilo.html#prenotazioni" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                            <span class="material-symbols-outlined text-sm">confirmation_number</span>
+                            Le mie prenotazioni
+                        </a>
+                        <a href="user-biglietti.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                            <span class="material-symbols-outlined text-sm">local_activity</span>
+                            I miei biglietti
+                        </a>
+
+                        <div class="h-px bg-outline-variant/20 my-1.5"></div>
+                        <div class="px-2.5 pt-1 pb-1 text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Navigazione</div>
+                        <a href="proiezioni-pubblico.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                            <span class="material-symbols-outlined text-sm">movie</span>
+                            Programmazione
+                        </a>
+                        <a href="my-cinemas.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                            <span class="material-symbols-outlined text-sm">location_city</span>
+                            I nostri cinema
+                        </a>
+                        ${!isManager ? `
+                        <a href="ricarica-credito-utente.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                            <span class="material-symbols-outlined text-sm">account_balance_wallet</span>
+                            Ricarica credito
+                        </a>
+                        <a href="abbonamenti.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                            <span class="material-symbols-outlined text-sm">workspace_premium</span>
+                            Abbonamento
+                        </a>
+                        ` : ''}
+
+                        ${isManager ? `
+                            <div class="h-px bg-outline-variant/20 my-1.5"></div>
+                            <div class="px-2.5 pt-1 pb-1 text-[10px] uppercase tracking-[0.14em] text-on-surface-variant">Backoffice</div>
+                            <a href="index.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">dashboard</span>
+                                Dashboard
+                            </a>
+                            <a href="films.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">movie_edit</span>
+                                Gestione film
+                            </a>
+                            <a href="proiezioni.html" class="flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                <span class="material-symbols-outlined text-sm">schedule</span>
+                                Gestione proiezioni
+                            </a>
+                            <details class="rounded-xl">
+                                <summary class="list-none flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-on-surface-variant hover:bg-surface-container-high rounded-xl cursor-pointer">
+                                    <span class="inline-flex items-center gap-3">
+                                        <span class="material-symbols-outlined text-sm">more_horiz</span>
+                                        Altre opzioni
+                                    </span>
+                                    <span class="material-symbols-outlined text-sm">expand_more</span>
+                                </summary>
+                                <div class="mt-1 space-y-1 pl-2 pr-1 pb-1">
+                                    <a href="shows.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                        <span class="material-symbols-outlined text-sm">movie_info</span>
+                                        Gestione show
+                                    </a>
+                                    <a href="cinemas.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                        <span class="material-symbols-outlined text-sm">theaters</span>
+                                        Gestione cinema
+                                    </a>
+                                    <a href="registi.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                        <span class="material-symbols-outlined text-sm">theater_comedy</span>
+                                        Gestione registi
+                                    </a>
+                                    <a href="validazione.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                        <span class="material-symbols-outlined text-sm">qr_code_scanner</span>
+                                        Validazione biglietti
+                                    </a>
+                                    <a href="ricarica-credito.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                        <span class="material-symbols-outlined text-sm">account_balance_wallet</span>
+                                        Ricarica credito utenti
+                                    </a>
+                                    ${isAdmin ? `
+                                        <a href="utenti.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                            <span class="material-symbols-outlined text-sm">group</span>
+                                            Gestione utenti
+                                        </a>
+                                        <a href="newsletter-admin.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                            <span class="material-symbols-outlined text-sm">mail</span>
+                                            Newsletter
+                                        </a>
+                                        <a href="sale.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                            <span class="material-symbols-outlined text-sm">meeting_room</span>
+                                            Gestione sale
+                                        </a>
+                                        <a href="categorie.html" class="flex items-center gap-3 px-3 py-2 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors">
+                                            <span class="material-symbols-outlined text-sm">category</span>
+                                            Categorie
+                                        </a>
+                                    ` : ''}
+                                </div>
+                            </details>
+                        ` : ''}
+
+                        <div class="h-px bg-outline-variant/20 my-1.5"></div>
+                        <button onclick="window.UsabilityTools && UsabilityTools.openAccessibility()" class="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors text-left">
+                            <span class="material-symbols-outlined text-sm">accessibility_new</span>
+                            Accessibilita
+                        </button>
+                        <button onclick="window.UsabilityTools && UsabilityTools.startTour()" class="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-on-surface hover:bg-surface-container-high rounded-xl transition-colors text-left">
+                            <span class="material-symbols-outlined text-sm">school</span>
+                            Tour guidato
+                        </button>
+                        <div class="h-px bg-outline-variant/20 my-1.5"></div>
+                        <button onclick="Auth.logout()" class="w-full flex items-center gap-3 px-3 py-2.5 text-sm text-red-400 hover:bg-red-400/10 rounded-xl transition-colors text-left">
+                            <span class="material-symbols-outlined text-sm">logout</span>
+                            Esci
+                        </button>
+                    </div>
+                </div>
             `;
         } else {
             navAuthSection.innerHTML = `
@@ -445,7 +614,5 @@
 </script>
 <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
 <script src="/js/usability-tools.js"></script>
-
-
 
 

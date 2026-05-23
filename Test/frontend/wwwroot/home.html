@@ -1,4 +1,4 @@
-<!-- DOC: home - file del progetto; contiene logica specifica della feature/modulo. -->
+﻿<!-- DOC: home - file del progetto; contiene logica specifica della feature/modulo. -->
 <!-- DOC: Pagina UI 'home': definisce struttura, sezioni e hook JS per il flusso utente. -->
 <html class="dark" lang="it">
 <head>
@@ -12,13 +12,13 @@
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico" media="(prefers-color-scheme: dark)">
     <link rel="shortcut icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico">
     <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
-    <link rel="stylesheet" href="/css/tailwind.local.css">
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <link rel="stylesheet" href="/css/styles.css">
     <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
-        window.tailwind = window.tailwind || {}; window.tailwind.config = {
+        tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
@@ -184,8 +184,6 @@
     </script>
 </body>
 </html>
-
-
 
 
 
