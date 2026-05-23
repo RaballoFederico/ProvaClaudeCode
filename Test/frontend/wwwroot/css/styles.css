@@ -419,6 +419,17 @@ main.flex-1,
     box-shadow: var(--neo-raised);
 }
 
+#nav-profile-btn {
+    box-shadow: var(--neo-raised);
+    border: 1px solid color-mix(in srgb, var(--outline) 62%, transparent);
+}
+
+#nav-profile-btn:hover {
+    border-color: color-mix(in srgb, var(--primary) 62%, var(--outline) 38%);
+    background: color-mix(in srgb, var(--surface-high) 96%, transparent) !important;
+    transform: translateY(-1px);
+}
+
 #nav-user-menu,
 #nav-notif-menu {
     backdrop-filter: blur(calc(var(--glass-blur) + 4px)) saturate(145%);

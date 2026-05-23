@@ -264,6 +264,55 @@ function renderOrdersHistory(items) {
     `).join('');
 }
 
+/* DOC-FN: 'renderTicketsHistory' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
+function renderTicketsHistory(items) {
+    const tbody = document.getElementById('tickets-history-tbody');
+    if (!tbody) return;
+    if (!items.length) {
+        tbody.innerHTML = `<tr><td colspan="4" class="px-3 py-3 text-on-surface-variant">Nessun biglietto disponibile.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = items.map((item) => `
+        <tr>
+            <td class="px-3 py-2">${fmtDate(item.dataShow)}</td>
+            <td class="px-3 py-2">${item.filmTitolo || '-'}</td>
+            <td class="px-3 py-2">${item.posto || '-'}</td>
+            <td class="px-3 py-2">${item.validato ? 'Validato' : 'Non validato'}</td>
+        </tr>
+    `).join('');
+}
+
+/* DOC-FN: 'renderTransactionsSummary' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
+function renderTransactionsSummary(summary) {
+    const box = document.getElementById('transactions-summary');
+    if (!box) return;
+
+    const acquistiTotali = Number(summary?.acquistiTotali ?? 0);
+    const spesoTotale = Number(summary?.spesoTotale ?? 0);
+    const bigliettiTotali = Number(summary?.bigliettiTotali ?? 0);
+    const creditoMovimenti = Number(summary?.movimentiCreditoTotali ?? 0);
+
+    box.innerHTML = `
+        <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high/45 p-3">
+            <div class="text-xs text-on-surface-variant">Acquisti totali</div>
+            <div class="mt-1 text-lg font-semibold">${acquistiTotali}</div>
+        </div>
+        <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high/45 p-3">
+            <div class="text-xs text-on-surface-variant">Spesa totale</div>
+            <div class="mt-1 text-lg font-semibold">${fmtMoney(spesoTotale)}</div>
+        </div>
+        <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high/45 p-3">
+            <div class="text-xs text-on-surface-variant">Biglietti emessi</div>
+            <div class="mt-1 text-lg font-semibold">${bigliettiTotali}</div>
+        </div>
+        <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high/45 p-3">
+            <div class="text-xs text-on-surface-variant">Movimenti credito</div>
+            <div class="mt-1 text-lg font-semibold">${creditoMovimenti}</div>
+        </div>
+    `;
+}
+
 /* DOC-FN: 'loadUserTransactions' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
 async function loadUserTransactions(userId) {
     const panel = document.getElementById('transactions-panel');
@@ -289,12 +338,16 @@ async function loadUserTransactions(userId) {
         const user = response.utente || {};
         const fullName = `${user.nome || ''} ${user.cognome || ''}`.trim();
         title.textContent = `${fullName || user.username || '-'} (${user.email || '-'})`;
+        renderTransactionsSummary(response.summary || {});
         renderCreditHistory(Array.isArray(response.storicoCredito) ? response.storicoCredito : []);
         renderOrdersHistory(Array.isArray(response.storicoAcquisti) ? response.storicoAcquisti : []);
+        renderTicketsHistory(Array.isArray(response.biglietti) ? response.biglietti : []);
     } catch (error) {
         title.textContent = error.message || 'Errore caricamento storico transazioni.';
+        renderTransactionsSummary({});
         renderCreditHistory([]);
         renderOrdersHistory([]);
+        renderTicketsHistory([]);
     }
 }
 

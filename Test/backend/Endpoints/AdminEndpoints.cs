@@ -428,11 +428,41 @@ public static class AdminEndpoints
                 .Take(100)
                 .ToListAsync();
 
+            var biglietti = await db.Biglietti
+                .Where(b => b.Acquisto.UtenteId == id)
+                .OrderByDescending(b => b.Show.Data)
+                .ThenByDescending(b => b.Show.OraInizio)
+                .Select(b => new
+                {
+                    b.Id,
+                    b.Posto,
+                    b.SalaNumero,
+                    b.TipologiaSala,
+                    b.Prezzo,
+                    b.Validato,
+                    b.DataValidazione,
+                    b.CodiceUnivoco,
+                    FilmTitolo = b.Show.Film != null ? b.Show.Film.Titolo : null,
+                    DataShow = b.Show.Data.ToDateTime(b.Show.OraInizio)
+                })
+                .Take(200)
+                .ToListAsync();
+
+            var summary = new
+            {
+                acquistiTotali = acquisti.Count,
+                spesoTotale = acquisti.Sum(a => a.ImportoTotale),
+                bigliettiTotali = biglietti.Count,
+                movimentiCreditoTotali = transazioniCredito.Count
+            };
+
             return Results.Ok(new
             {
                 utente,
+                summary,
                 storicoCredito = transazioniCredito,
-                storicoAcquisti = acquisti
+                storicoAcquisti = acquisti,
+                biglietti
             });
         });
 

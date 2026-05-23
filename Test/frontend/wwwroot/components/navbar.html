@@ -37,10 +37,10 @@
 <script>
     const NAV_SEARCH_ITEMS = [
         { label: 'Home', href: 'home.html', access: 'guest', keywords: ['home', 'inizio'] },
-        { label: 'I nostri cinema', href: 'my-cinemas.html', access: 'public', keywords: ['cinema', 'sale cinema'] },
-        { label: 'Programmazione', href: 'proiezioni-pubblico.html', access: 'auth', keywords: ['programmazione', 'film', 'proiezioni pubblico'] },
-        { label: 'Prenotazioni', href: 'programmazione.html', access: 'auth', keywords: ['prenotazioni', 'prenota'] },
-        { label: 'I miei biglietti', href: 'user-biglietti.html', access: 'auth', keywords: ['biglietti', 'ticket'] },
+        { label: 'I nostri cinema', href: 'my-cinemas.html', access: 'user', keywords: ['cinema', 'sale cinema'] },
+        { label: 'Programmazione', href: 'proiezioni-pubblico.html', access: 'user', keywords: ['programmazione', 'film', 'proiezioni pubblico'] },
+        { label: 'Prenotazioni', href: 'programmazione.html', access: 'user', keywords: ['prenotazioni', 'prenota'] },
+        { label: 'I miei biglietti', href: 'user-biglietti.html', access: 'user', keywords: ['biglietti', 'ticket'] },
         { label: 'Profilo', href: 'profilo.html', access: 'auth', keywords: ['profilo', 'account', 'utente'] },
         { label: 'Dashboard', href: 'index.html', access: 'manager', keywords: ['dashboard', 'backoffice'] },
         { label: 'Gestione film', href: 'films.html', access: 'manager', keywords: ['gestione film', 'film admin'] },
@@ -50,7 +50,7 @@
         { label: 'Gestione registi', href: 'registi.html', access: 'manager', keywords: ['registi', 'gestione registi'] },
         { label: 'Validazione biglietti', href: 'validazione.html', access: 'manager', keywords: ['validazione', 'scanner'] },
         { label: 'Ricarica credito', href: 'ricarica-credito-utente.html', access: 'user', keywords: ['ricarica', 'credito', 'stripe'] },
-        { label: 'Abbonamenti', href: 'abbonamenti.html', access: 'auth', keywords: ['abbonamento', 'piano', 'subscription'] },
+        { label: 'Abbonamenti', href: 'abbonamenti.html', access: 'user', keywords: ['abbonamento', 'piano', 'subscription'] },
         { label: 'Ricarica credito utenti', href: 'ricarica-credito.html', access: 'manager', keywords: ['ricarica', 'credito', 'backoffice'] },
         { label: 'Gestione sale', href: 'sale.html', access: 'admin', keywords: ['sale', 'gestione sale'] },
         { label: 'Categorie', href: 'categorie.html', access: 'admin', keywords: ['categorie', 'generi'] },
@@ -290,7 +290,7 @@
             const hasProfilePicture = typeof profilePicture === 'string' && profilePicture.startsWith('data:image/');
 
             navAuthSection.innerHTML = `
-                <a href="profilo.html" class="inline-flex items-center gap-2 bg-surface-container-high border border-outline-variant/20 rounded-full pl-1.5 pr-3 py-1.5 hover:border-primary-container/40 transition-colors">
+                <a id="nav-profile-btn" href="profilo.html" class="inline-flex items-center gap-2 bg-surface-container-high border border-outline-variant/20 rounded-full pl-1.5 pr-3 py-1.5 transition-colors">
                     <span class="w-9 h-9 rounded-full bg-primary-container text-white text-sm font-bold flex items-center justify-center overflow-hidden">
                         <img id="nav-user-avatar-image" alt="Foto profilo" class="w-full h-full object-cover ${hasProfilePicture ? '' : 'hidden'}" src="${hasProfilePicture ? profilePicture : ''}">
                         <span id="nav-user-initials" class="${hasProfilePicture ? 'hidden' : ''}">${initials}</span>

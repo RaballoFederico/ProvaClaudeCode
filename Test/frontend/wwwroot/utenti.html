@@ -65,7 +65,9 @@
                 </button>
             </div>
 
-            <div class="mt-5 grid lg:grid-cols-2 gap-5">
+            <div id="transactions-summary" class="mt-4 grid sm:grid-cols-2 xl:grid-cols-4 gap-3"></div>
+
+            <div class="mt-5 grid lg:grid-cols-3 gap-5">
                 <article class="rounded-xl border border-outline-variant/20 overflow-hidden">
                     <div class="px-4 py-3 bg-surface-container-high text-sm font-semibold">Movimenti credito</div>
                     <div class="overflow-x-auto">
@@ -96,6 +98,23 @@
                                 </tr>
                             </thead>
                             <tbody id="orders-history-tbody" class="divide-y divide-outline-variant/20"></tbody>
+                        </table>
+                    </div>
+                </article>
+
+                <article class="rounded-xl border border-outline-variant/20 overflow-hidden">
+                    <div class="px-4 py-3 bg-surface-container-high text-sm font-semibold">Biglietti emessi</div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full text-sm">
+                            <thead class="text-on-surface-variant">
+                                <tr>
+                                    <th class="px-3 py-2 text-left">Data/Ora</th>
+                                    <th class="px-3 py-2 text-left">Film</th>
+                                    <th class="px-3 py-2 text-left">Posto</th>
+                                    <th class="px-3 py-2 text-left">Stato</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tickets-history-tbody" class="divide-y divide-outline-variant/20"></tbody>
                         </table>
                     </div>
                 </article>
