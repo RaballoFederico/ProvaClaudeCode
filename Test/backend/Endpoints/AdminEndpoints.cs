@@ -16,7 +16,7 @@ public static class AdminEndpoints
     public static IEndpointRouteBuilder MapAdminEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/admin");
-        var utentiGroup = app.MapGroup("/admin/utenti").RequireAuthorization("AdminOnly");
+        var utentiGroup = app.MapGroup("/admin/utenti").RequireAuthorization("PowerUserOrAdmin");
 
         // GET /admin/users - Lista tutti gli utenti (solo Admin)
         group.MapGet("/users", [Authorize(Roles = "Admin")] async (FilmDbContext db) =>
@@ -179,7 +179,7 @@ public static class AdminEndpoints
             return Results.Ok(ruoli);
         });
 
-        utentiGroup.MapGet("/", [Authorize(Roles = "Admin")] async (FilmDbContext db) =>
+        utentiGroup.MapGet("/", [Authorize(Roles = "Admin,PowerUser")] async (FilmDbContext db) =>
         {
             var utenti = await db.Utenti
                 .Include(u => u.UtentiRuoli)
@@ -300,7 +300,7 @@ public static class AdminEndpoints
             return Results.Ok(new { message = "Invito creato", email, ruolo });
         });
 
-        utentiGroup.MapPut("/{id:int}/profilo", [Authorize(Roles = "Admin")] async (int id, UpdateProfiloRequestDTO request, HttpContext context, FilmDbContext db) =>
+        utentiGroup.MapPut("/{id:int}/profilo", [Authorize(Roles = "Admin,PowerUser")] async (int id, UpdateProfiloRequestDTO request, HttpContext context, FilmDbContext db) =>
         {
             var actorUserId = GetUserId(context);
             var utente = await db.Utenti.FirstOrDefaultAsync(u => u.Id == id);
@@ -379,7 +379,7 @@ public static class AdminEndpoints
             return Results.Ok(new { message = "Account eliminato definitivamente" });
         });
 
-        utentiGroup.MapGet("/{id:int}/transazioni", [Authorize(Roles = "Admin")] async (int id, FilmDbContext db) =>
+        utentiGroup.MapGet("/{id:int}/transazioni", [Authorize(Roles = "Admin,PowerUser")] async (int id, FilmDbContext db) =>
         {
             var utente = await db.Utenti
                 .Where(u => u.Id == id)

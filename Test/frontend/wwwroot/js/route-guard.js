@@ -40,7 +40,7 @@ const AccessControl = {
         'recupera-password.html': 'guest',
         'reimposta-password.html': 'guest',
         'social-login-complete.html': 'guest',
-        'utenti.html': 'admin'
+        'utenti.html': 'manager'
         ,
         'abbonamenti.html': 'user',
         'newsletter-admin.html': 'admin'

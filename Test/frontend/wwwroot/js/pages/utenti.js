@@ -3,7 +3,8 @@
 const utentiState = {
     users: [],
     rolesByName: {},
-    confirmResolver: null
+    confirmResolver: null,
+    canManageRoles: false
 };
 
 /* DOC-FN: 'setMessage' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
@@ -119,6 +120,7 @@ function renderUsersTable(users) {
     users.forEach((user, index) => {
         const roles = Array.isArray(user.ruoli) ? user.ruoli.join(', ') : '-';
         const guardToUser = canAssignTargetRole(user, 'User');
+        const canManageRoles = !!utentiState.canManageRoles;
 
         const row = document.createElement('tr');
         row.innerHTML = `
@@ -131,11 +133,11 @@ function renderUsersTable(users) {
             <td class="px-3 py-3">${roles}</td>
             <td class="px-3 py-3">
                 <div class="flex flex-wrap gap-2">
-                    <button data-action="set-user" data-user-id="${user.id}" class="rounded-lg border border-outline-variant/30 px-2 py-1 text-xs hover:bg-surface-container-high ${!guardToUser.ok ? 'opacity-50 cursor-not-allowed' : ''}" ${!guardToUser.ok ? 'disabled' : ''} title="${!guardToUser.ok ? guardToUser.reason : ''}">User</button>
-                    <button data-action="set-poweruser" data-user-id="${user.id}" class="rounded-lg border border-outline-variant/30 px-2 py-1 text-xs hover:bg-surface-container-high">PowerUser</button>
-                    <button data-action="set-admin" data-user-id="${user.id}" class="rounded-lg border border-outline-variant/30 px-2 py-1 text-xs hover:bg-surface-container-high">Admin</button>
+                    <button data-action="set-user" data-user-id="${user.id}" class="rounded-lg border border-outline-variant/30 px-2 py-1 text-xs hover:bg-surface-container-high ${(canManageRoles && guardToUser.ok) ? '' : 'opacity-50 cursor-not-allowed'}" ${(canManageRoles && guardToUser.ok) ? '' : 'disabled'} title="${!canManageRoles ? 'Solo Admin' : (!guardToUser.ok ? guardToUser.reason : '')}">User</button>
+                    <button data-action="set-poweruser" data-user-id="${user.id}" class="rounded-lg border border-outline-variant/30 px-2 py-1 text-xs hover:bg-surface-container-high ${canManageRoles ? '' : 'opacity-50 cursor-not-allowed'}" ${canManageRoles ? '' : 'disabled'} title="${canManageRoles ? '' : 'Solo Admin'}">PowerUser</button>
+                    <button data-action="set-admin" data-user-id="${user.id}" class="rounded-lg border border-outline-variant/30 px-2 py-1 text-xs hover:bg-surface-container-high ${canManageRoles ? '' : 'opacity-50 cursor-not-allowed'}" ${canManageRoles ? '' : 'disabled'} title="${canManageRoles ? '' : 'Solo Admin'}">Admin</button>
                     <button data-action="edit-profile" data-user-id="${user.id}" class="rounded-lg border border-outline-variant/30 px-2 py-1 text-xs hover:bg-surface-container-high">Modifica profilo</button>
-                    <button data-action="deactivate" data-user-id="${user.id}" class="rounded-lg border border-outline-variant/30 px-2 py-1 text-xs hover:bg-surface-container-high">Elimina account</button>
+                    <button data-action="deactivate" data-user-id="${user.id}" class="rounded-lg border border-outline-variant/30 px-2 py-1 text-xs hover:bg-surface-container-high ${canManageRoles ? '' : 'opacity-50 cursor-not-allowed'}" ${canManageRoles ? '' : 'disabled'} title="${canManageRoles ? '' : 'Solo Admin'}">Elimina account</button>
                     <button data-action="view-transactions" data-user-id="${user.id}" class="rounded-lg border border-outline-variant/30 px-2 py-1 text-xs hover:bg-surface-container-high">Storico</button>
                 </div>
             </td>
@@ -435,10 +437,12 @@ document.addEventListener('click', async (event) => {
 document.addEventListener('DOMContentLoaded', async () => {
     const ok = await Auth.ensureInitialized();
     /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
-    if (!ok || !Auth.isAuthenticated() || !Auth.hasRole('Admin')) {
+    if (!ok || !Auth.isAuthenticated() || (!Auth.hasRole('Admin') && !Auth.hasRole('PowerUser'))) {
         window.location.href = '/login.html?redirect=' + encodeURIComponent(window.location.pathname);
         return;
     }
+
+    utentiState.canManageRoles = Auth.hasRole('Admin');
 
     document.getElementById('reload-users-btn')?.addEventListener('click', loadUsers);
     document.getElementById('close-transactions-btn')?.addEventListener('click', () => {
