@@ -107,6 +107,47 @@ public static class DashboardEndpoints
                 })
                 .ToListAsync();
 
+            var revenueDays = Enumerable.Range(0, 7)
+                .Select(offset => today.AddDays(-6 + offset))
+                .ToList();
+            var revenueStart = revenueDays.First();
+            var revenueEnd = today.AddDays(1);
+
+            var paidPurchases = await db.Acquisti
+                .AsNoTracking()
+                .Where(a =>
+                    a.Stato == Model.StatoAcquisto.PAGATO &&
+                    a.DataAcquisto >= revenueStart &&
+                    a.DataAcquisto < revenueEnd)
+                .Select(a => new { a.DataAcquisto, a.ImportoTotale })
+                .ToListAsync();
+
+            var revenueSeries = revenueDays.Select(day =>
+            {
+                var amount = paidPurchases
+                    .Where(a => a.DataAcquisto.Date == day.Date)
+                    .Sum(a => a.ImportoTotale);
+
+                return new
+                {
+                    date = day.ToString("yyyy-MM-dd"),
+                    label = day.ToString("ddd", CultureInfo.GetCultureInfo("it-IT")),
+                    amount = decimal.Round(amount, 2)
+                };
+            }).ToList();
+
+            var currentWeekTotal = decimal.Round(revenueSeries.Sum(x => x.amount), 2);
+            var previousWeekStart = revenueStart.AddDays(-7);
+            var previousWeekEnd = revenueStart;
+            var previousWeekTotal = decimal.Round(await db.Acquisti
+                .AsNoTracking()
+                .Where(a =>
+                    a.Stato == Model.StatoAcquisto.PAGATO &&
+                    a.DataAcquisto >= previousWeekStart &&
+                    a.DataAcquisto < previousWeekEnd)
+                .SumAsync(a => (decimal?)a.ImportoTotale) ?? 0m, 2);
+            var delta = currentWeekTotal - previousWeekTotal;
+
             var payload = new
             {
                 stats = new
@@ -117,7 +158,14 @@ public static class DashboardEndpoints
                     proiezioni = proiezioniCount
                 },
                 featuredFilms = normalizedFeaturedFilms,
-                upcomingProjections
+                upcomingProjections,
+                revenue = new
+                {
+                    series = revenueSeries,
+                    currentWeekTotal,
+                    previousWeekTotal,
+                    delta
+                }
             };
 
             cache.Set(cacheKey, payload, new MemoryCacheEntryOptions

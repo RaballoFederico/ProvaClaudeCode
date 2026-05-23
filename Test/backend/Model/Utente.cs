@@ -72,6 +72,8 @@ public class Utente
     public ICollection<NotificaUtente> Notifiche { get; set; } = new List<NotificaUtente>();
 
     public ICollection<AbbonamentoUtente> Abbonamenti { get; set; } = new List<AbbonamentoUtente>();
+
+    public ICollection<FilmRating> FilmRatings { get; set; } = new List<FilmRating>();
 }
 
 

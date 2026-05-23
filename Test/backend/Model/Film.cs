@@ -57,6 +57,8 @@ public class Film
     public ICollection<Show> Shows { get; set; } = new List<Show>();
 
     public ICollection<FilmCategoria> FilmsCategorie { get; set; } = new List<FilmCategoria>();
+
+    public ICollection<FilmRating> Ratings { get; set; } = new List<FilmRating>();
 }
 
 

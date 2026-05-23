@@ -10,6 +10,7 @@ using FilmAPI.Services;
 using FilmAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace FilmAPI.Endpoints;
 
@@ -212,6 +213,97 @@ public static class FilmsEndpoints
                     Descrizione = fc.Categoria.Descrizione
                 }).ToList()
             });
+        });
+
+        // GET /films/{id}/ratings/summary - Visibile a tutti
+        group.MapGet("/{id}/ratings/summary", async (int id, FilmDbContext db, HttpContext context) =>
+        {
+            var exists = await db.Films.AsNoTracking().AnyAsync(f => f.Id == id);
+            if (!exists)
+            {
+                return Results.NotFound("Film non trovato");
+            }
+
+            var ratings = await db.FilmRatings
+                .AsNoTracking()
+                .Where(r => r.FilmId == id)
+                .ToListAsync();
+
+            var count = ratings.Count;
+            var average = count > 0 ? Math.Round(ratings.Average(r => r.Valutazione), 2) : 0d;
+            var distribution = Enumerable.Range(1, 5)
+                .Select(stars => new
+                {
+                    stars,
+                    count = ratings.Count(r => r.Valutazione == stars)
+                })
+                .OrderByDescending(x => x.stars)
+                .ToList();
+
+            int? currentUserRating = null;
+            var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(userIdClaim, out var currentUserId))
+            {
+                currentUserRating = ratings
+                    .Where(r => r.UtenteId == currentUserId)
+                    .Select(r => (int?)r.Valutazione)
+                    .FirstOrDefault();
+            }
+
+            return Results.Ok(new
+            {
+                filmId = id,
+                average,
+                count,
+                distribution,
+                currentUserRating
+            });
+        });
+
+        // POST /films/{id}/ratings - Utente autenticato
+        group.MapPost("/{id}/ratings", [Authorize] async (int id, FilmRatingUpsertRequest request, FilmDbContext db, HttpContext context) =>
+        {
+            if (request.Valutazione < 1 || request.Valutazione > 5)
+            {
+                return Results.BadRequest("La valutazione deve essere compresa tra 1 e 5.");
+            }
+
+            var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out var userId))
+            {
+                return Results.Unauthorized();
+            }
+
+            var filmExists = await db.Films.AnyAsync(f => f.Id == id);
+            if (!filmExists)
+            {
+                return Results.NotFound("Film non trovato");
+            }
+
+            var existing = await db.FilmRatings
+                .FirstOrDefaultAsync(r => r.FilmId == id && r.UtenteId == userId);
+
+            if (existing is null)
+            {
+                db.FilmRatings.Add(new FilmRating
+                {
+                    FilmId = id,
+                    UtenteId = userId,
+                    Valutazione = request.Valutazione,
+                    Commento = string.IsNullOrWhiteSpace(request.Commento) ? null : request.Commento.Trim(),
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                existing.Valutazione = request.Valutazione;
+                existing.Commento = string.IsNullOrWhiteSpace(request.Commento) ? null : request.Commento.Trim();
+                existing.UpdatedAt = DateTime.UtcNow;
+            }
+
+            await db.SaveChangesAsync();
+            return Results.Ok(new { message = "Valutazione salvata" });
         });
 
         // GET /films/{id}/cast-tmdb - Visibile a tutti
@@ -911,6 +1003,12 @@ public static class FilmsEndpoints
         public string? CopertinaPath { get; init; }
         public bool Featured { get; init; }
         public string? Genere { get; init; }
+    }
+
+    private sealed class FilmRatingUpsertRequest
+    {
+        public int Valutazione { get; set; }
+        public string? Commento { get; set; }
     }
 
     private static List<T> DeduplicateByTitle<T>(

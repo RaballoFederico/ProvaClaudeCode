@@ -36,6 +36,7 @@ public class FilmDbContext : DbContext
     public DbSet<AbbonamentoUtente> AbbonamentiUtente { get; set; } = null!;
     public DbSet<UtilizzoAbbonamento> UtilizziAbbonamento { get; set; } = null!;
     public DbSet<NewsletterCampagna> NewsletterCampagne { get; set; } = null!;
+    public DbSet<FilmRating> FilmRatings { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -416,6 +417,27 @@ public class FilmDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.CreatoDaUtenteId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<FilmRating>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Valutazione).IsRequired();
+            entity.Property(e => e.Commento).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).IsRequired();
+            entity.Property(e => e.UpdatedAt).IsRequired();
+            entity.HasIndex(e => new { e.FilmId, e.UtenteId }).IsUnique();
+            entity.HasIndex(e => e.FilmId);
+
+            entity.HasOne(e => e.Film)
+                .WithMany(f => f.Ratings)
+                .HasForeignKey(e => e.FilmId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Utente)
+                .WithMany(u => u.FilmRatings)
+                .HasForeignKey(e => e.UtenteId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }
