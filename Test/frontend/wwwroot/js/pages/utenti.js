@@ -113,7 +113,7 @@ function renderUsersTable(users) {
 
     /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (!users.length) {
-        tbody.innerHTML = `<tr><td colspan="5" class="px-3 py-4 text-center text-on-surface-variant">Nessun utente registrato.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="px-3 py-4 text-center text-on-surface-variant">Nessun utente registrato.</td></tr>`;
         return;
     }
 
@@ -124,13 +124,16 @@ function renderUsersTable(users) {
 
         const row = document.createElement('tr');
         row.innerHTML = `
+            <td class="px-3 py-3"><input type="checkbox" data-user-select="${user.id}" class="rounded border-outline-variant/30 bg-surface-container"></td>
             <td class="px-3 py-3">${index + 1}</td>
             <td class="px-3 py-3">
                 <div class="font-medium">${user.username || '-'}</div>
                 <div class="text-xs text-on-surface-variant">${(user.nome || '')} ${(user.cognome || '')}</div>
+                <div class="text-xs ${user.attivo ? 'text-emerald-300' : 'text-red-300'}">${user.attivo ? 'Attivo' : 'Disattivato'}</div>
             </td>
             <td class="px-3 py-3">${user.email || '-'}</td>
             <td class="px-3 py-3">${roles}</td>
+            <td class="px-3 py-3">${fmtMoney(user.spesaTotale || 0)}<div class="text-xs text-on-surface-variant">${Number(user.acquistiTotali || 0)} acquisti</div></td>
             <td class="px-3 py-3">
                 <div class="flex flex-wrap gap-2">
                     <button data-action="set-user" data-user-id="${user.id}" class="rounded-lg border border-outline-variant/30 px-2 py-1 text-xs hover:bg-surface-container-high ${(canManageRoles && guardToUser.ok) ? '' : 'opacity-50 cursor-not-allowed'}" ${(canManageRoles && guardToUser.ok) ? '' : 'disabled'} title="${!canManageRoles ? 'Solo Admin' : (!guardToUser.ok ? guardToUser.reason : '')}">User</button>
@@ -150,13 +153,44 @@ function renderUsersTable(users) {
 async function loadUsers() {
     setMessage('Caricamento utenti...');
     try {
-        const users = await ApiClient.get('/admin/utenti');
-        utentiState.users = (Array.isArray(users) ? users : []).filter((u) => u.attivo !== false);
+        const query = buildUsersQuery();
+        const users = await ApiClient.get(`/admin/utenti${query ? `?${query}` : ''}`);
+        utentiState.users = Array.isArray(users) ? users : [];
         renderUsersTable(utentiState.users);
         setMessage(`Utenti caricati: ${utentiState.users.length}`);
     } catch (error) {
         setMessage(error.message || 'Errore caricamento utenti', true);
     }
+}
+
+function buildUsersQuery() {
+    const params = new URLSearchParams();
+    const q = document.getElementById('users-filter-q')?.value?.trim();
+    const ruolo = document.getElementById('users-filter-role')?.value;
+    const attivo = document.getElementById('users-filter-active')?.value;
+    const spesaMinima = document.getElementById('users-filter-min-spend')?.value;
+    if (q) params.set('q', q);
+    if (ruolo) params.set('ruolo', ruolo);
+    if (attivo) params.set('attivo', attivo);
+    if (spesaMinima) params.set('spesaMinima', spesaMinima);
+    return params.toString();
+}
+
+async function applyBulkAction() {
+    const action = document.getElementById('bulk-action')?.value;
+    const userIds = Array.from(document.querySelectorAll('[data-user-select]:checked'))
+        .map((input) => Number(input.getAttribute('data-user-select')))
+        .filter(Number.isFinite);
+    if (!action || userIds.length === 0) {
+        setMessage('Seleziona una azione e almeno un utente.', true);
+        return;
+    }
+
+    const ok = await showConfirm(`Confermi azione "${action}" su ${userIds.length} utenti?`);
+    if (!ok) return;
+    await ApiClient.post('/admin/utenti/bulk', { action, userIds });
+    setMessage('Azione bulk completata.');
+    await loadUsers();
 }
 
 /* DOC-FN: 'updateRole' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
@@ -445,6 +479,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     utentiState.canManageRoles = Auth.hasRole('Admin');
 
     document.getElementById('reload-users-btn')?.addEventListener('click', loadUsers);
+    document.getElementById('users-apply-filters')?.addEventListener('click', loadUsers);
+    document.getElementById('bulk-action-btn')?.addEventListener('click', applyBulkAction);
+    document.getElementById('select-all-users')?.addEventListener('change', (event) => {
+        document.querySelectorAll('[data-user-select]').forEach((checkbox) => {
+            checkbox.checked = event.target.checked;
+        });
+    });
     document.getElementById('close-transactions-btn')?.addEventListener('click', () => {
         document.getElementById('transactions-panel')?.classList.add('hidden');
     });

@@ -241,6 +241,7 @@ public static class FilmsEndpoints
                 .ToList();
 
             int? currentUserRating = null;
+            var canRate = false;
             var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (int.TryParse(userIdClaim, out var currentUserId))
             {
@@ -248,6 +249,7 @@ public static class FilmsEndpoints
                     .Where(r => r.UtenteId == currentUserId)
                     .Select(r => (int?)r.Valutazione)
                     .FirstOrDefault();
+                canRate = await UserCanRateFilmAsync(db, currentUserId, id);
             }
 
             return Results.Ok(new
@@ -256,7 +258,8 @@ public static class FilmsEndpoints
                 average,
                 count,
                 distribution,
-                currentUserRating
+                currentUserRating,
+                canRate
             });
         });
 
@@ -278,6 +281,11 @@ public static class FilmsEndpoints
             if (!filmExists)
             {
                 return Results.NotFound("Film non trovato");
+            }
+
+            if (!await UserCanRateFilmAsync(db, userId, id))
+            {
+                return Results.BadRequest(new { message = "Puoi valutare solo film per cui hai un acquisto pagato." });
             }
 
             var existing = await db.FilmRatings
@@ -1029,6 +1037,16 @@ public static class FilmsEndpoints
     {
         public int Valutazione { get; set; }
         public string? Commento { get; set; }
+    }
+
+    private static Task<bool> UserCanRateFilmAsync(FilmDbContext db, int userId, int filmId)
+    {
+        return db.Acquisti
+            .AsNoTracking()
+            .AnyAsync(a =>
+                a.UtenteId == userId &&
+                a.Stato == StatoAcquisto.PAGATO &&
+                a.Show.FilmId == filmId);
     }
 
     private static List<T> DeduplicateByTitle<T>(

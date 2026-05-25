@@ -179,11 +179,18 @@ public static class AdminEndpoints
             return Results.Ok(ruoli);
         });
 
-        utentiGroup.MapGet("/", [Authorize(Roles = "Admin,PowerUser")] async (FilmDbContext db) =>
+        utentiGroup.MapGet("/", [Authorize(Roles = "Admin,PowerUser")] async (
+            FilmDbContext db,
+            string? q,
+            string? ruolo,
+            bool? attivo,
+            DateTime? ultimoAccessoDa,
+            decimal? spesaMinima) =>
         {
             var utenti = await db.Utenti
                 .Include(u => u.UtentiRuoli)
                 .ThenInclude(ur => ur.Ruolo)
+                .Include(u => u.Acquisti)
                 .Select(u => new
                 {
                     u.Id,
@@ -195,11 +202,97 @@ public static class AdminEndpoints
                     u.DataRegistrazione,
                     u.DataUltimoAccesso,
                     u.Attivo,
-                    Ruoli = u.UtentiRuoli.Select(ur => ur.Ruolo.Nome).ToList()
+                    Ruoli = u.UtentiRuoli.Select(ur => ur.Ruolo.Nome).ToList(),
+                    SpesaTotale = u.Acquisti
+                        .Where(a => a.Stato == StatoAcquisto.PAGATO)
+                        .Sum(a => (decimal?)a.ImportoTotale) ?? 0m,
+                    AcquistiTotali = u.Acquisti.Count(a => a.Stato == StatoAcquisto.PAGATO)
                 })
                 .ToListAsync();
 
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                var needle = q.Trim();
+                utenti = utenti
+                    .Where(u =>
+                        u.Username.Contains(needle, StringComparison.OrdinalIgnoreCase) ||
+                        u.Email.Contains(needle, StringComparison.OrdinalIgnoreCase) ||
+                        (u.Nome ?? string.Empty).Contains(needle, StringComparison.OrdinalIgnoreCase) ||
+                        (u.Cognome ?? string.Empty).Contains(needle, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+
+            if (!string.IsNullOrWhiteSpace(ruolo))
+            {
+                utenti = utenti
+                    .Where(u => u.Ruoli.Any(r => string.Equals(r, ruolo.Trim(), StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
+            }
+
+            if (attivo.HasValue)
+            {
+                utenti = utenti.Where(u => u.Attivo == attivo.Value).ToList();
+            }
+
+            if (ultimoAccessoDa.HasValue)
+            {
+                utenti = utenti
+                    .Where(u => u.DataUltimoAccesso.HasValue && u.DataUltimoAccesso.Value >= ultimoAccessoDa.Value)
+                    .ToList();
+            }
+
+            if (spesaMinima.HasValue)
+            {
+                utenti = utenti.Where(u => u.SpesaTotale >= spesaMinima.Value).ToList();
+            }
+
             return Results.Ok(utenti);
+        });
+
+        utentiGroup.MapPost("/bulk", [Authorize(Roles = "Admin")] async (
+            BulkUserActionRequest request,
+            HttpContext context,
+            FilmDbContext db,
+            IUserSecurityAuditService auditService) =>
+        {
+            var actorUserId = GetUserId(context);
+            var ids = (request.UserIds ?? new List<int>()).Distinct().Where(id => id > 0 && id != actorUserId).ToList();
+            if (ids.Count == 0)
+            {
+                return Results.BadRequest(new { message = "Seleziona almeno un utente diverso dal tuo account." });
+            }
+
+            var action = (request.Action ?? string.Empty).Trim().ToLowerInvariant();
+            var users = await db.Utenti.Where(u => ids.Contains(u.Id)).ToListAsync();
+            if (users.Count == 0)
+            {
+                return Results.NotFound(new { message = "Nessun utente trovato." });
+            }
+
+            foreach (var user in users)
+            {
+                switch (action)
+                {
+                    case "activate":
+                        user.Attivo = true;
+                        break;
+                    case "deactivate":
+                        user.Attivo = false;
+                        break;
+                    case "newsletter-on":
+                        user.ConsensoNewsletter = true;
+                        break;
+                    case "newsletter-off":
+                        user.ConsensoNewsletter = false;
+                        break;
+                    default:
+                        return Results.BadRequest(new { message = "Azione supportata: activate, deactivate, newsletter-on, newsletter-off." });
+                }
+            }
+
+            await db.SaveChangesAsync();
+            await auditService.LogAsync("admin_bulk_user_action", "success", actorUserId, null, null, context.Connection.RemoteIpAddress?.ToString(), $"action={action};ids={string.Join(',', ids)}");
+            return Results.Ok(new { message = "Azione bulk completata", affected = users.Count });
         });
 
         utentiGroup.MapPut("/{id}/ruoli", [Authorize(Roles = "Admin")] async (int id, UpdateRuoliRequestDTO request, HttpContext context, FilmDbContext db, IUserSecurityAuditService auditService) =>
@@ -466,6 +559,69 @@ public static class AdminEndpoints
             });
         });
 
+        utentiGroup.MapGet("/{id:int}/timeline", [Authorize(Roles = "Admin,PowerUser")] async (int id, FilmDbContext db) =>
+        {
+            var exists = await db.Utenti.AnyAsync(u => u.Id == id);
+            if (!exists)
+            {
+                return Results.NotFound(new { message = "Utente non trovato" });
+            }
+
+            var purchases = await db.Acquisti
+                .Where(a => a.UtenteId == id)
+                .Select(a => new
+                {
+                    type = "acquisto",
+                    date = a.DataAcquisto,
+                    title = $"Acquisto #{a.Id}",
+                    detail = $"{a.Stato} - {a.ImportoTotale:C}"
+                })
+                .ToListAsync();
+
+            var credit = await db.TransazioniCredito
+                .Where(t => t.UtenteId == id)
+                .Select(t => new
+                {
+                    type = "credito",
+                    date = t.DataTransazione,
+                    title = t.Tipo.ToString(),
+                    detail = t.Descrizione ?? $"{t.Importo:C}"
+                })
+                .ToListAsync();
+
+            var support = await db.SupportTickets
+                .Where(t => t.UtenteId == id)
+                .Select(t => new
+                {
+                    type = "supporto",
+                    date = t.CreatoIl,
+                    title = $"Ticket #{t.Id}",
+                    detail = $"{t.Stato} - {t.Oggetto}"
+                })
+                .ToListAsync();
+
+            var audit = await db.UserSecurityAuditLogs
+                .Where(a => a.TargetUserId == id || a.ActorUserId == id)
+                .Select(a => new
+                {
+                    type = "audit",
+                    date = a.CreatedAt,
+                    title = a.EventType,
+                    detail = a.Details ?? a.Outcome
+                })
+                .ToListAsync();
+
+            var timeline = purchases
+                .Concat(credit)
+                .Concat(support)
+                .Concat(audit)
+                .OrderByDescending(x => x.date)
+                .Take(120)
+                .ToList();
+
+            return Results.Ok(timeline);
+        });
+
         return app;
     }
 
@@ -485,6 +641,12 @@ public static class AdminEndpoints
         }
 
         return "https://filmhub-frontend.delightfuldune-f7916078.francecentral.azurecontainerapps.io";
+    }
+
+    private sealed class BulkUserActionRequest
+    {
+        public List<int>? UserIds { get; set; }
+        public string? Action { get; set; }
     }
 }
 

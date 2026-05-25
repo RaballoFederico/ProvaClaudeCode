@@ -37,14 +37,44 @@
 
             <p id="message" class="mt-4 text-sm text-on-surface-variant"></p>
 
+            <div class="mt-5 grid md:grid-cols-[1.4fr_1fr_1fr_1fr_auto] gap-2">
+                <input id="users-filter-q" type="search" placeholder="Cerca nome, username o email" class="rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm">
+                <select id="users-filter-role" class="rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm">
+                    <option value="">Tutti i ruoli</option>
+                    <option value="User">User</option>
+                    <option value="PowerUser">PowerUser</option>
+                    <option value="Admin">Admin</option>
+                </select>
+                <select id="users-filter-active" class="rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm">
+                    <option value="">Tutti gli stati</option>
+                    <option value="true">Attivi</option>
+                    <option value="false">Disattivati</option>
+                </select>
+                <input id="users-filter-min-spend" type="number" min="0" step="1" placeholder="Spesa min." class="rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm">
+                <button id="users-apply-filters" class="app-btn app-btn-secondary">Filtra</button>
+            </div>
+
+            <div class="mt-3 flex flex-wrap items-center gap-2">
+                <select id="bulk-action" class="rounded-lg border border-outline-variant/30 bg-surface-container-high px-3 py-2 text-sm">
+                    <option value="">Azione bulk</option>
+                    <option value="activate">Attiva</option>
+                    <option value="deactivate">Disattiva</option>
+                    <option value="newsletter-on">Newsletter ON</option>
+                    <option value="newsletter-off">Newsletter OFF</option>
+                </select>
+                <button id="bulk-action-btn" class="app-btn app-btn-primary">Applica selezionati</button>
+            </div>
+
             <div class="mt-5 overflow-x-auto rounded-xl border border-outline-variant/20">
                 <table class="min-w-full text-sm">
                     <thead class="bg-surface-container-high text-on-surface-variant">
                         <tr>
+                            <th class="px-3 py-3 text-left"><input id="select-all-users" type="checkbox" class="rounded border-outline-variant/30 bg-surface-container"></th>
                             <th class="px-3 py-3 text-left">N.</th>
                             <th class="px-3 py-3 text-left">Utente</th>
                     <th class="px-3 py-3 text-left">Email</th>
                     <th class="px-3 py-3 text-left">Ruoli</th>
+                    <th class="px-3 py-3 text-left">Spesa</th>
                     <th class="px-3 py-3 text-left">Azioni</th>
                 </tr>
             </thead>

@@ -334,6 +334,10 @@
                 return 'Effettua il login per votare questo film.';
             }
 
+            if (!ratingSummary?.canRate) {
+                return 'Puoi votare solo dopo aver acquistato un biglietto per questo film.';
+            }
+
             if (savingRating) {
                 return 'Salvataggio valutazione in corso...';
             }
@@ -347,7 +351,7 @@
 
         function renderRatingStars() {
             const current = Number(ratingSummary?.currentUserRating || 0);
-            const disabled = !Auth.isAuthenticated() || savingRating;
+            const disabled = !Auth.isAuthenticated() || savingRating || !ratingSummary?.canRate;
             const stars = [];
             for (let i = 1; i <= 5; i++) {
                 stars.push(`

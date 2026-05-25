@@ -7,6 +7,7 @@ using FilmAPI.DTO;
 using FilmAPI.Model;
 using FilmAPI.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace FilmAPI.Services;
 
@@ -17,7 +18,8 @@ public class BigliettoService(
     IPagamentoService pagamentoService,
     IEmailService emailService,
     IPdfService pdfService,
-    IConfiguration configuration) : IBigliettoService
+    IConfiguration configuration,
+    IMemoryCache cache) : IBigliettoService
 {
     // DOC-METHOD: 'GetPiantinaStatoAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<IEnumerable<PostoStatoDTO>> GetPiantinaStatoAsync(int showId)
@@ -243,6 +245,7 @@ public class BigliettoService(
         }
 
         await context.SaveChangesAsync();
+        Endpoints.DashboardEndpoints.InvalidateDashboardCache(cache);
 
         var acquistoConUtente = await context.Acquisti
             .Include(a => a.Utente)
@@ -417,6 +420,7 @@ public class BigliettoService(
 
         acquisto.Stato = StatoAcquisto.REFUNDED;
         await context.SaveChangesAsync();
+        Endpoints.DashboardEndpoints.InvalidateDashboardCache(cache);
         return (true, "Rimborso completato: quota carta su Stripe e quota credito sul saldo sito");
     }
 
@@ -552,6 +556,7 @@ public class BigliettoService(
         }
 
         await context.SaveChangesAsync();
+        Endpoints.DashboardEndpoints.InvalidateDashboardCache(cache);
         return (true, "Rimborso ticket completato: quota carta su Stripe e quota credito sul saldo sito");
     }
 

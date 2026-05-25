@@ -203,8 +203,10 @@
                                     <p class="text-on-surface-variant text-sm mt-1">Andamento vendite e confronto settimana precedente</p>
                                 </div>
                                 <div class="inline-flex rounded-lg border border-outline-variant/20 overflow-hidden">
-                                    <button type="button" data-revenue-days="7" class="revenue-range-btn px-3 py-2 text-xs bg-primary-container text-white">7 giorni</button>
-                                    <button type="button" data-revenue-days="30" class="revenue-range-btn px-3 py-2 text-xs bg-surface-container-high text-on-surface-variant">30 giorni</button>
+                                    <button type="button" data-revenue-range="7d" class="revenue-range-btn px-3 py-2 text-xs bg-primary-container text-white">7 giorni</button>
+                                    <button type="button" data-revenue-range="30d" class="revenue-range-btn px-3 py-2 text-xs bg-surface-container-high text-on-surface-variant">30 giorni</button>
+                                    <button type="button" data-revenue-range="month" class="revenue-range-btn px-3 py-2 text-xs bg-surface-container-high text-on-surface-variant">Mese</button>
+                                    <button type="button" data-revenue-range="year" class="revenue-range-btn px-3 py-2 text-xs bg-surface-container-high text-on-surface-variant">Anno</button>
                                 </div>
                                 <div class="text-right">
                                     <div id="revenue-current" class="text-xl font-bold text-on-surface">€0,00</div>
@@ -215,6 +217,17 @@
                             <div class="mt-4 flex flex-wrap gap-4 text-sm">
                                 <div class="text-on-surface-variant">Settimana precedente: <span id="revenue-previous" class="text-on-surface font-semibold">€0,00</span></div>
                                 <div class="text-on-surface-variant">Delta: <span id="revenue-delta" class="text-on-surface font-semibold">€0,00</span></div>
+                            </div>
+                            <div id="revenue-kpis" class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3"></div>
+                            <div class="mt-5 grid md:grid-cols-2 gap-4">
+                                <div>
+                                    <h3 class="font-headline text-sm font-bold text-on-surface mb-2">Top cinema</h3>
+                                    <div id="top-cinemas" class="space-y-2"></div>
+                                </div>
+                                <div>
+                                    <h3 class="font-headline text-sm font-bold text-on-surface mb-2">Top sale</h3>
+                                    <div id="top-sale" class="space-y-2"></div>
+                                </div>
                             </div>
                         </div>
                     </section>
@@ -345,7 +358,7 @@
         let proiezioniData = [];
         let statsData = { films: 0, registi: 0, cinemas: 0, proiezioni: 0 };
         let revenueData = { series: [], currentWeekTotal: 0, previousWeekTotal: 0, delta: 0 };
-        let revenueDays = 7;
+        let revenueRange = '7d';
 
         document.addEventListener('DOMContentLoaded', async () => {
             const componentsPromise = loadAllComponents();
@@ -357,7 +370,7 @@
         async function loadDashboardData() {
             setDashboardSyncState('loading');
             try {
-                const overview = await ApiClient.get(`/dashboard/overview?revenueDays=${revenueDays}`);
+                const overview = await ApiClient.get(`/dashboard/overview?revenueRange=${encodeURIComponent(revenueRange)}`);
                 statsData = overview?.stats || statsData;
                 filmsData = normalizeUniqueFilms(overview?.featuredFilms || []);
                 proiezioniData = overview?.upcomingProjections || [];
@@ -386,9 +399,9 @@
         function bindRevenueRangeButtons() {
             document.querySelectorAll('.revenue-range-btn').forEach((button) => {
                 button.addEventListener('click', async () => {
-                    revenueDays = Number(button.getAttribute('data-revenue-days') || 7);
+                    revenueRange = button.getAttribute('data-revenue-range') || '7d';
                     document.querySelectorAll('.revenue-range-btn').forEach((btn) => {
-                        const active = Number(btn.getAttribute('data-revenue-days') || 0) === revenueDays;
+                        const active = (btn.getAttribute('data-revenue-range') || '') === revenueRange;
                         btn.className = `revenue-range-btn px-3 py-2 text-xs ${active ? 'bg-primary-container text-white' : 'bg-surface-container-high text-on-surface-variant'}`;
                     });
                     await loadDashboardData();
@@ -402,17 +415,23 @@
             const previousEl = document.getElementById('revenue-previous');
             const deltaEl = document.getElementById('revenue-delta');
             const titleEl = document.getElementById('revenue-title');
+            const kpisEl = document.getElementById('revenue-kpis');
+            const topCinemasEl = document.getElementById('top-cinemas');
+            const topSaleEl = document.getElementById('top-sale');
             if (!host || !currentEl || !previousEl || !deltaEl) return;
 
             const series = Array.isArray(revenueData?.series) ? revenueData.series : [];
             const max = Math.max(...series.map(item => Number(item.amount || 0)), 1);
-            if (titleEl) titleEl.textContent = `Ricavi Ultimi ${Number(revenueData?.days || revenueDays)} Giorni`;
+            if (titleEl) titleEl.textContent = `Ricavi - ${revenueData?.label || 'Ultimi 7 giorni'}`;
 
             currentEl.textContent = formatCurrency(Number(revenueData?.currentWeekTotal || 0));
             previousEl.textContent = formatCurrency(Number(revenueData?.previousWeekTotal || 0));
             const delta = Number(revenueData?.delta || 0);
             deltaEl.textContent = `${delta >= 0 ? '+' : ''}${formatCurrency(delta)}`;
             deltaEl.className = `text-sm font-semibold ${delta >= 0 ? 'text-emerald-300' : 'text-rose-300'}`;
+            renderRevenueKpis(kpisEl);
+            renderTopList(topCinemasEl, revenueData?.topCinemas || [], 'nome');
+            renderTopList(topSaleEl, revenueData?.topSale || [], 'label');
 
             if (!series.length) {
                 host.innerHTML = '<div class="text-sm text-on-surface-variant">Nessun dato ricavi disponibile.</div>';
@@ -437,6 +456,44 @@
 
         function formatCurrency(value) {
             return new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(Number(value || 0));
+        }
+
+        function renderRevenueKpis(host) {
+            if (!host) return;
+            const kpis = revenueData?.kpis || {};
+            const deltaPercent = Number(revenueData?.deltaPercent || 0);
+            const items = [
+                ['Acquisti', Number(kpis.purchases || 0)],
+                ['Biglietti', Number(kpis.tickets || 0)],
+                ['Ticket/acquisto', Number(kpis.ticketsPerPurchase || 0).toFixed(2)],
+                ['Ricavo/proiezione', formatCurrency(Number(kpis.revenuePerProjection || 0))],
+                ['Trend %', `${deltaPercent >= 0 ? '+' : ''}${deltaPercent.toFixed(2)}%`]
+            ];
+            host.innerHTML = items.map(([label, value]) => `
+                <div class="bg-surface-container-high rounded-xl border border-outline-variant/10 p-3">
+                    <div class="text-[11px] text-on-surface-variant">${escapeHtml(label)}</div>
+                    <div class="mt-1 text-sm font-bold text-on-surface">${escapeHtml(String(value))}</div>
+                </div>
+            `).join('');
+        }
+
+        function renderTopList(host, items, labelKey) {
+            if (!host) return;
+            const rows = Array.isArray(items) ? items : [];
+            if (!rows.length) {
+                host.innerHTML = '<div class="text-sm text-on-surface-variant">Nessun dato nel periodo.</div>';
+                return;
+            }
+
+            host.innerHTML = rows.map((item) => `
+                <div class="flex items-center justify-between gap-3 rounded-lg bg-surface-container-high border border-outline-variant/10 px-3 py-2">
+                    <div class="min-w-0">
+                        <div class="text-sm text-on-surface truncate">${escapeHtml(item[labelKey] || 'N/D')}</div>
+                        <div class="text-[11px] text-on-surface-variant">${escapeHtml(item.cinema || '')} ${Number(item.purchases || 0)} acquisti</div>
+                    </div>
+                    <div class="text-sm font-bold text-secondary">${escapeHtml(formatCurrency(Number(item.revenue || 0)))}</div>
+                </div>
+            `).join('');
         }
 
         function setDashboardSyncState(state) {

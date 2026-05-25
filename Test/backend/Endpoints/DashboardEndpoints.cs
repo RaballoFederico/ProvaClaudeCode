@@ -13,10 +13,10 @@ public static class DashboardEndpoints
     // DOC-METHOD: 'MapDashboardEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static IEndpointRouteBuilder MapDashboardEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/dashboard/overview", async (FilmDbContext db, IMemoryCache cache, HttpContext httpContext, int? revenueDays) =>
+        app.MapGet("/dashboard/overview", async (FilmDbContext db, IMemoryCache cache, HttpContext httpContext, int? revenueDays, string? revenueRange) =>
         {
-            var normalizedRevenueDays = Math.Clamp(revenueDays ?? 7, 7, 30);
-            var cacheKey = $"dashboard:overview:v3:{normalizedRevenueDays}";
+            var range = ResolveRevenueRange(today: DateTime.Now.Date, revenueRange, revenueDays);
+            var cacheKey = $"dashboard:overview:v4:{range.Key}";
             if (cache.TryGetValue(cacheKey, out object? cached) && cached is not null)
             {
                 return Results.Ok(cached);
@@ -108,11 +108,8 @@ public static class DashboardEndpoints
                 })
                 .ToListAsync();
 
-            var revenueDayRange = Enumerable.Range(0, normalizedRevenueDays)
-                .Select(offset => today.AddDays(-(normalizedRevenueDays - 1) + offset))
-                .ToList();
-            var revenueStart = revenueDayRange.First();
-            var revenueEnd = today.AddDays(1);
+            var revenueStart = range.Start;
+            var revenueEnd = range.End;
 
             var paidPurchases = await db.Acquisti
                 .AsNoTracking()
@@ -120,25 +117,35 @@ public static class DashboardEndpoints
                     a.Stato == Model.StatoAcquisto.PAGATO &&
                     a.DataAcquisto >= revenueStart &&
                     a.DataAcquisto < revenueEnd)
-                .Select(a => new { a.DataAcquisto, a.ImportoTotale })
+                .Select(a => new
+                {
+                    a.Id,
+                    a.ShowId,
+                    a.DataAcquisto,
+                    a.ImportoTotale,
+                    CinemaId = a.Show.Sala!.CinemaId,
+                    CinemaNome = a.Show.Sala.Cinema != null ? a.Show.Sala.Cinema.Nome : "N/D",
+                    SalaId = a.Show.SalaId,
+                    SalaLabel = $"Sala {a.Show.Sala.NumeroSala} - {a.Show.Sala.Tipologia}"
+                })
                 .ToListAsync();
 
-            var revenueSeries = revenueDayRange.Select(day =>
+            var revenueSeries = range.Buckets.Select(bucket =>
             {
                 var amount = paidPurchases
-                    .Where(a => a.DataAcquisto.Date == day.Date)
+                    .Where(a => a.DataAcquisto >= bucket.Start && a.DataAcquisto < bucket.End)
                     .Sum(a => a.ImportoTotale);
 
                 return new
                 {
-                    date = day.ToString("yyyy-MM-dd"),
-                    label = day.ToString("ddd", CultureInfo.GetCultureInfo("it-IT")),
+                    date = bucket.Start.ToString("yyyy-MM-dd"),
+                    label = bucket.Label,
                     amount = decimal.Round(amount, 2)
                 };
             }).ToList();
 
             var currentWeekTotal = decimal.Round(revenueSeries.Sum(x => x.amount), 2);
-            var previousWeekStart = revenueStart.AddDays(-normalizedRevenueDays);
+            var previousWeekStart = revenueStart.AddDays(-range.LengthDays);
             var previousWeekEnd = revenueStart;
             var previousWeekTotal = decimal.Round(await db.Acquisti
                 .AsNoTracking()
@@ -148,6 +155,50 @@ public static class DashboardEndpoints
                     a.DataAcquisto < previousWeekEnd)
                 .SumAsync(a => (decimal?)a.ImportoTotale) ?? 0m, 2);
             var delta = currentWeekTotal - previousWeekTotal;
+            var deltaPercent = previousWeekTotal == 0m
+                ? (currentWeekTotal > 0m ? 100m : 0m)
+                : decimal.Round((delta / previousWeekTotal) * 100m, 2);
+
+            var currentPurchaseIds = paidPurchases.Select(p => p.Id).ToList();
+            var ticketCount = await db.Biglietti
+                .AsNoTracking()
+                .CountAsync(b => currentPurchaseIds.Contains(b.AcquistoId));
+            var paidProjectionCount = paidPurchases.Select(p => p.ShowId).Distinct().Count();
+            var ticketsPerPurchase = paidPurchases.Count == 0
+                ? 0m
+                : decimal.Round((decimal)ticketCount / paidPurchases.Count, 2);
+            var revenuePerProjection = paidProjectionCount == 0
+                ? 0m
+                : decimal.Round(currentWeekTotal / paidProjectionCount, 2);
+
+            var topCinemas = paidPurchases
+                .GroupBy(p => new { p.CinemaId, p.CinemaNome })
+                .Select(g => new
+                {
+                    cinemaId = g.Key.CinemaId,
+                    nome = g.Key.CinemaNome,
+                    revenue = decimal.Round(g.Sum(x => x.ImportoTotale), 2),
+                    purchases = g.Count()
+                })
+                .OrderByDescending(x => x.revenue)
+                .ThenBy(x => x.nome)
+                .Take(5)
+                .ToList();
+
+            var topSale = paidPurchases
+                .GroupBy(p => new { p.SalaId, p.SalaLabel, p.CinemaNome })
+                .Select(g => new
+                {
+                    salaId = g.Key.SalaId,
+                    label = g.Key.SalaLabel,
+                    cinema = g.Key.CinemaNome,
+                    revenue = decimal.Round(g.Sum(x => x.ImportoTotale), 2),
+                    purchases = g.Count()
+                })
+                .OrderByDescending(x => x.revenue)
+                .ThenBy(x => x.label)
+                .Take(5)
+                .ToList();
 
             var payload = new
             {
@@ -162,11 +213,24 @@ public static class DashboardEndpoints
                 upcomingProjections,
                 revenue = new
                 {
-                    days = normalizedRevenueDays,
+                    range = range.Key,
+                    label = range.Label,
+                    days = range.LengthDays,
                     series = revenueSeries,
                     currentWeekTotal,
                     previousWeekTotal,
-                    delta
+                    delta,
+                    deltaPercent,
+                    kpis = new
+                    {
+                        purchases = paidPurchases.Count,
+                        tickets = ticketCount,
+                        ticketsPerPurchase,
+                        revenuePerProjection,
+                        paidProjectionCount
+                    },
+                    topCinemas,
+                    topSale
                 }
             };
 
@@ -183,6 +247,10 @@ public static class DashboardEndpoints
             cache.Remove("dashboard:overview:v2");
             cache.Remove("dashboard:overview:v3:7");
             cache.Remove("dashboard:overview:v3:30");
+            cache.Remove("dashboard:overview:v4:7d");
+            cache.Remove("dashboard:overview:v4:30d");
+            cache.Remove("dashboard:overview:v4:month");
+            cache.Remove("dashboard:overview:v4:year");
             return Results.Ok(new { message = "Dashboard cache invalidata" });
         });
 
@@ -208,6 +276,68 @@ public static class DashboardEndpoints
 
         return $"{backendBaseUrl.TrimEnd('/')}/{path.TrimStart('/')}";
     }
+
+    public static void InvalidateDashboardCache(IMemoryCache cache)
+    {
+        cache.Remove("dashboard:overview:v2");
+        cache.Remove("dashboard:overview:v3:7");
+        cache.Remove("dashboard:overview:v3:30");
+        cache.Remove("dashboard:overview:v4:7d");
+        cache.Remove("dashboard:overview:v4:30d");
+        cache.Remove("dashboard:overview:v4:month");
+        cache.Remove("dashboard:overview:v4:year");
+    }
+
+    private static RevenueRange ResolveRevenueRange(DateTime today, string? revenueRange, int? revenueDays)
+    {
+        var key = (revenueRange ?? string.Empty).Trim().ToLowerInvariant();
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            key = revenueDays == 30 ? "30d" : "7d";
+        }
+
+        return key switch
+        {
+            "30" or "30d" or "30days" => BuildDailyRange("30d", "Ultimi 30 giorni", today.AddDays(-29), today.AddDays(1)),
+            "month" or "mese" => BuildDailyRange("month", "Mese corrente", new DateTime(today.Year, today.Month, 1), today.AddDays(1)),
+            "year" or "anno" => BuildMonthlyRange(today),
+            _ => BuildDailyRange("7d", "Ultimi 7 giorni", today.AddDays(-6), today.AddDays(1))
+        };
+    }
+
+    private static RevenueRange BuildDailyRange(string key, string label, DateTime start, DateTime end)
+    {
+        var culture = CultureInfo.GetCultureInfo("it-IT");
+        var buckets = new List<RevenueBucket>();
+        for (var day = start.Date; day < end.Date; day = day.AddDays(1))
+        {
+            buckets.Add(new RevenueBucket(day, day.AddDays(1), day.ToString("ddd d", culture)));
+        }
+
+        return new RevenueRange(key, label, start.Date, end.Date, Math.Max(1, (end.Date - start.Date).Days), buckets);
+    }
+
+    private static RevenueRange BuildMonthlyRange(DateTime today)
+    {
+        var culture = CultureInfo.GetCultureInfo("it-IT");
+        var start = new DateTime(today.Year, 1, 1);
+        var end = today.AddDays(1);
+        var buckets = Enumerable.Range(1, today.Month)
+            .Select(month =>
+            {
+                var bucketStart = new DateTime(today.Year, month, 1);
+                var bucketEnd = month == 12 ? new DateTime(today.Year + 1, 1, 1) : new DateTime(today.Year, month + 1, 1);
+                if (bucketEnd > end) bucketEnd = end;
+                return new RevenueBucket(bucketStart, bucketEnd, bucketStart.ToString("MMM", culture));
+            })
+            .ToList();
+
+        return new RevenueRange("year", "Anno corrente", start, end, Math.Max(1, (end.Date - start.Date).Days), buckets);
+    }
+
+    private sealed record RevenueBucket(DateTime Start, DateTime End, string Label);
+
+    private sealed record RevenueRange(string Key, string Label, DateTime Start, DateTime End, int LengthDays, List<RevenueBucket> Buckets);
 
     private static List<T> DeduplicateByTitle<T>(
         IEnumerable<T> items,
