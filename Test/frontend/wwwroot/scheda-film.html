@@ -267,7 +267,11 @@
                             <div class="mt-2 flex items-center gap-1">
                                 ${renderRatingStars()}
                             </div>
+                            <div class="mt-2 space-y-1 max-w-sm">
+                                ${renderRatingDistribution()}
+                            </div>
                             <div class="mt-1 text-[11px] text-white/65">${getRatingHintText()}</div>
+                            ${ratingSummary?.currentUserRating ? '<button id="rating-delete-btn" type="button" class="mt-2 text-[11px] text-white/70 hover:text-white underline">Rimuovi la mia valutazione</button>' : ''}
                         </div>
                         <details class="mt-2 rounded-lg bg-black/20 border border-white/10 px-2.5 py-2">
                             <summary class="cursor-pointer select-none text-xs uppercase tracking-widest text-white/80 flex items-center justify-between">
@@ -308,6 +312,7 @@
                 });
             }
             bindRatingStars();
+            bindRatingDelete();
         }
 
         async function loadRatingsSummary() {
@@ -357,6 +362,28 @@
             return stars.join('');
         }
 
+        function renderRatingDistribution() {
+            const total = Number(ratingSummary?.count || 0);
+            const rows = Array.isArray(ratingSummary?.distribution) ? ratingSummary.distribution : [];
+            if (!total || rows.length === 0) {
+                return '<div class="text-[11px] text-white/55">Ancora nessuna distribuzione disponibile.</div>';
+            }
+
+            return rows.map((row) => {
+                const count = Number(row.count || 0);
+                const width = Math.round((count / total) * 100);
+                return `
+                    <div class="grid grid-cols-[34px_1fr_24px] items-center gap-2 text-[11px] text-white/70">
+                        <span>${Number(row.stars || 0)}★</span>
+                        <span class="h-1.5 rounded-full bg-white/15 overflow-hidden">
+                            <span class="block h-full bg-secondary" style="width:${width}%"></span>
+                        </span>
+                        <span class="text-right">${count}</span>
+                    </div>
+                `;
+            }).join('');
+        }
+
         function bindRatingStars() {
             document.querySelectorAll('.rating-star[data-rating]').forEach((button) => {
                 button.addEventListener('click', async () => {
@@ -382,6 +409,25 @@
                         renderHeader();
                     }
                 });
+            });
+        }
+
+        function bindRatingDelete() {
+            const button = document.getElementById('rating-delete-btn');
+            if (!button) return;
+            button.addEventListener('click', async () => {
+                if (savingRating) return;
+                savingRating = true;
+                try {
+                    await ApiClient.delete(`/films/${filmId}/ratings`);
+                    await loadRatingsSummary();
+                    Utils.showNotification('Valutazione rimossa', 'success');
+                } catch (error) {
+                    Utils.showNotification(error?.message || 'Errore durante rimozione valutazione', 'error');
+                } finally {
+                    savingRating = false;
+                    renderHeader();
+                }
             });
         }
 

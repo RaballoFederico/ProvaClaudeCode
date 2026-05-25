@@ -306,6 +306,26 @@ public static class FilmsEndpoints
             return Results.Ok(new { message = "Valutazione salvata" });
         });
 
+        // DELETE /films/{id}/ratings - Utente autenticato
+        group.MapDelete("/{id}/ratings", [Authorize] async (int id, FilmDbContext db, HttpContext context) =>
+        {
+            var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (!int.TryParse(userIdClaim, out var userId))
+            {
+                return Results.Unauthorized();
+            }
+
+            var rating = await db.FilmRatings.FirstOrDefaultAsync(r => r.FilmId == id && r.UtenteId == userId);
+            if (rating is null)
+            {
+                return Results.NotFound();
+            }
+
+            db.FilmRatings.Remove(rating);
+            await db.SaveChangesAsync();
+            return Results.NoContent();
+        });
+
         // GET /films/{id}/cast-tmdb - Visibile a tutti
         group.MapGet("/{id}/cast-tmdb", async (int id, FilmDbContext db, ITMDBService tmdbService) =>
         {

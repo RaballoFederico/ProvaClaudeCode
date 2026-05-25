@@ -13,9 +13,10 @@ public static class DashboardEndpoints
     // DOC-METHOD: 'MapDashboardEndpoints' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public static IEndpointRouteBuilder MapDashboardEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/dashboard/overview", async (FilmDbContext db, IMemoryCache cache, HttpContext httpContext) =>
+        app.MapGet("/dashboard/overview", async (FilmDbContext db, IMemoryCache cache, HttpContext httpContext, int? revenueDays) =>
         {
-            const string cacheKey = "dashboard:overview:v2";
+            var normalizedRevenueDays = Math.Clamp(revenueDays ?? 7, 7, 30);
+            var cacheKey = $"dashboard:overview:v3:{normalizedRevenueDays}";
             if (cache.TryGetValue(cacheKey, out object? cached) && cached is not null)
             {
                 return Results.Ok(cached);
@@ -107,10 +108,10 @@ public static class DashboardEndpoints
                 })
                 .ToListAsync();
 
-            var revenueDays = Enumerable.Range(0, 7)
-                .Select(offset => today.AddDays(-6 + offset))
+            var revenueDayRange = Enumerable.Range(0, normalizedRevenueDays)
+                .Select(offset => today.AddDays(-(normalizedRevenueDays - 1) + offset))
                 .ToList();
-            var revenueStart = revenueDays.First();
+            var revenueStart = revenueDayRange.First();
             var revenueEnd = today.AddDays(1);
 
             var paidPurchases = await db.Acquisti
@@ -122,7 +123,7 @@ public static class DashboardEndpoints
                 .Select(a => new { a.DataAcquisto, a.ImportoTotale })
                 .ToListAsync();
 
-            var revenueSeries = revenueDays.Select(day =>
+            var revenueSeries = revenueDayRange.Select(day =>
             {
                 var amount = paidPurchases
                     .Where(a => a.DataAcquisto.Date == day.Date)
@@ -137,7 +138,7 @@ public static class DashboardEndpoints
             }).ToList();
 
             var currentWeekTotal = decimal.Round(revenueSeries.Sum(x => x.amount), 2);
-            var previousWeekStart = revenueStart.AddDays(-7);
+            var previousWeekStart = revenueStart.AddDays(-normalizedRevenueDays);
             var previousWeekEnd = revenueStart;
             var previousWeekTotal = decimal.Round(await db.Acquisti
                 .AsNoTracking()
@@ -161,6 +162,7 @@ public static class DashboardEndpoints
                 upcomingProjections,
                 revenue = new
                 {
+                    days = normalizedRevenueDays,
                     series = revenueSeries,
                     currentWeekTotal,
                     previousWeekTotal,
@@ -179,6 +181,8 @@ public static class DashboardEndpoints
         app.MapPost("/dashboard/cache/invalidate", [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Admin,PowerUser")] (IMemoryCache cache) =>
         {
             cache.Remove("dashboard:overview:v2");
+            cache.Remove("dashboard:overview:v3:7");
+            cache.Remove("dashboard:overview:v3:30");
             return Results.Ok(new { message = "Dashboard cache invalidata" });
         });
 

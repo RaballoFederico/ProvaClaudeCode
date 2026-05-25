@@ -63,15 +63,54 @@
                 </article>
 
                 <article class="bg-surface-container-high rounded-xl p-4 border border-outline-variant/20">
-                    <h2 class="font-semibold text-lg">Invia richiesta</h2>
+                    <h2 class="font-semibold text-lg">Apri ticket</h2>
                     <!-- DOC-BLOCK: Form utente: raccoglie input, valida lato client e invia dati ai servizi API. -->
                     <form id="support-form" class="mt-3 space-y-2">
                         <input id="support-subject" type="text" placeholder="Oggetto" class="w-full rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-2 text-sm" required>
+                        <div class="grid grid-cols-2 gap-2">
+                            <select id="support-category" class="w-full rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-2 text-sm">
+                                <option value="Account">Account</option>
+                                <option value="Pagamento">Pagamento</option>
+                                <option value="Prenotazione">Prenotazione</option>
+                                <option value="Biglietto">Biglietto</option>
+                                <option value="Bug">Bug</option>
+                                <option value="Altro">Altro</option>
+                            </select>
+                            <select id="support-priority" class="w-full rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-2 text-sm">
+                                <option value="Media">Media</option>
+                                <option value="Bassa">Bassa</option>
+                                <option value="Alta">Alta</option>
+                                <option value="Urgente">Urgente</option>
+                            </select>
+                        </div>
                         <textarea id="support-message" rows="4" placeholder="Descrivi il problema..." class="w-full rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-2 text-sm" required></textarea>
                         <button type="submit" class="app-btn app-btn-primary">Invia richiesta</button>
                     </form>
                     <p id="support-feedback" class="mt-2 text-xs text-on-surface-variant hidden"></p>
                 </article>
+            </div>
+
+            <div id="support-auth-warning" class="mt-6 hidden bg-surface-container-high rounded-xl p-4 border border-outline-variant/20">
+                <p class="text-sm text-on-surface-variant">Per aprire e seguire i ticket devi effettuare il login.</p>
+                <a href="/login.html?redirect=/supporto.html" class="app-btn app-btn-primary mt-3 inline-flex">Accedi</a>
+            </div>
+
+            <div id="tickets-area" class="mt-6 grid lg:grid-cols-[320px_1fr] gap-4 hidden">
+                <section class="bg-surface-container-high rounded-xl p-4 border border-outline-variant/20">
+                    <div class="flex items-center justify-between gap-2 mb-3">
+                        <h2 class="font-semibold text-lg">I tuoi ticket</h2>
+                        <button id="refresh-tickets-btn" class="app-btn app-btn-secondary text-xs">Aggiorna</button>
+                    </div>
+                    <div id="tickets-list" class="space-y-2"></div>
+                </section>
+
+                <section class="bg-surface-container-high rounded-xl p-4 border border-outline-variant/20">
+                    <div id="ticket-detail" class="min-h-[240px] text-sm text-on-surface-variant">Seleziona un ticket per vedere la conversazione.</div>
+                    <form id="ticket-reply-form" class="mt-4 hidden space-y-2">
+                        <textarea id="ticket-reply-message" rows="3" placeholder="Scrivi una risposta..." class="w-full rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-2 text-sm" required></textarea>
+                        <button type="submit" class="app-btn app-btn-primary">Rispondi</button>
+                    </form>
+                </section>
             </div>
         </section>
     </main>
@@ -94,21 +133,161 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await loadComponent('navbar-container', '/components/navbar.html');
             await loadComponent('footer-container', '/components/footer.html');
+            await Auth.ensureInitialized();
             bindSupportForm();
+            bindTicketReply();
+            bindTicketRefresh();
+            if (Auth.isAuthenticated()) {
+                document.getElementById('tickets-area')?.classList.remove('hidden');
+                await loadTickets();
+                openTicketFromQuery();
+            } else {
+                document.getElementById('support-auth-warning')?.classList.remove('hidden');
+                document.getElementById('support-form')?.querySelectorAll('input,select,textarea,button').forEach((el) => el.disabled = true);
+            }
         });
+
+        let tickets = [];
+        let selectedTicketId = null;
 
         function bindSupportForm() {
             const form = document.getElementById('support-form');
             const feedback = document.getElementById('support-feedback');
             if (!form || !feedback) return;
 
-            form.addEventListener('submit', (event) => {
+            form.addEventListener('submit', async (event) => {
                 event.preventDefault();
-                feedback.classList.remove('hidden');
-                feedback.className = 'mt-2 text-xs text-emerald-300';
-                feedback.textContent = 'Richiesta registrata. Ti risponderemo via email entro 24h lavorative.';
-                form.reset();
+                if (!Auth.isAuthenticated()) {
+                    window.location.href = '/login.html?redirect=/supporto.html';
+                    return;
+                }
+
+                const payload = {
+                    oggetto: document.getElementById('support-subject').value,
+                    categoria: document.getElementById('support-category').value,
+                    priorita: document.getElementById('support-priority').value,
+                    messaggio: document.getElementById('support-message').value
+                };
+
+                try {
+                    await ApiClient.post('/support/tickets', payload);
+                    feedback.classList.remove('hidden');
+                    feedback.className = 'mt-2 text-xs text-emerald-300';
+                    feedback.textContent = 'Ticket aperto. Lo staff ricevera una notifica.';
+                    form.reset();
+                    await loadTickets();
+                } catch (error) {
+                    feedback.classList.remove('hidden');
+                    feedback.className = 'mt-2 text-xs text-red-300';
+                    feedback.textContent = error?.message || 'Errore durante invio ticket.';
+                }
             });
+        }
+
+        function bindTicketRefresh() {
+            document.getElementById('refresh-tickets-btn')?.addEventListener('click', loadTickets);
+        }
+
+        function bindTicketReply() {
+            const form = document.getElementById('ticket-reply-form');
+            const input = document.getElementById('ticket-reply-message');
+            if (!form || !input) return;
+
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                if (!selectedTicketId) return;
+                try {
+                    await ApiClient.post(`/support/tickets/${selectedTicketId}/messages`, { messaggio: input.value });
+                    input.value = '';
+                    await openTicket(selectedTicketId);
+                    await loadTickets();
+                } catch (error) {
+                    alert(error?.message || 'Errore invio risposta');
+                }
+            });
+        }
+
+        async function loadTickets() {
+            const list = document.getElementById('tickets-list');
+            if (!list) return;
+            list.innerHTML = '<div class="text-sm text-on-surface-variant">Caricamento...</div>';
+            try {
+                tickets = await ApiClient.get('/support/tickets/mine');
+                if (!Array.isArray(tickets) || tickets.length === 0) {
+                    list.innerHTML = '<div class="text-sm text-on-surface-variant">Nessun ticket aperto.</div>';
+                    return;
+                }
+
+                list.innerHTML = tickets.map((ticket) => `
+                    <button type="button" onclick="openTicket(${ticket.id})" class="w-full text-left rounded-lg border border-outline-variant/20 bg-surface-container p-3 hover:border-primary-container/40 ${selectedTicketId === ticket.id ? 'border-primary-container/60' : ''}">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="font-semibold text-sm truncate">${escapeHtml(ticket.oggetto)}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-primary-container/20 text-primary-container">${escapeHtml(ticket.stato)}</span>
+                        </div>
+                        <div class="mt-1 text-xs text-on-surface-variant">${escapeHtml(ticket.categoria)} - ${escapeHtml(ticket.priorita)}</div>
+                    </button>
+                `).join('');
+            } catch (error) {
+                list.innerHTML = `<div class="text-sm text-red-300">${escapeHtml(error?.message || 'Errore caricamento ticket')}</div>`;
+            }
+        }
+
+        async function openTicket(id) {
+            selectedTicketId = Number(id);
+            const detail = document.getElementById('ticket-detail');
+            const replyForm = document.getElementById('ticket-reply-form');
+            if (!detail || !replyForm) return;
+            detail.innerHTML = '<div class="text-sm text-on-surface-variant">Caricamento conversazione...</div>';
+            try {
+                const ticket = await ApiClient.get(`/support/tickets/${selectedTicketId}`);
+                detail.innerHTML = renderTicketDetail(ticket);
+                replyForm.classList.toggle('hidden', ticket.stato === 'Chiuso');
+                await loadTickets();
+            } catch (error) {
+                detail.innerHTML = `<div class="text-sm text-red-300">${escapeHtml(error?.message || 'Errore caricamento ticket')}</div>`;
+                replyForm.classList.add('hidden');
+            }
+        }
+
+        function renderTicketDetail(ticket) {
+            const messages = Array.isArray(ticket.messaggi) ? ticket.messaggi : [];
+            return `
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <h2 class="font-headline text-xl font-bold text-on-surface">${escapeHtml(ticket.oggetto)}</h2>
+                        <p class="text-xs text-on-surface-variant">${escapeHtml(ticket.categoria)} - ${escapeHtml(ticket.priorita)} - ${escapeHtml(ticket.stato)}</p>
+                    </div>
+                    <span class="text-xs px-2 py-1 rounded-full bg-primary-container/20 text-primary-container">${escapeHtml(ticket.stato)}</span>
+                </div>
+                <div class="mt-4 space-y-3">
+                    ${messages.map((message) => `
+                        <div class="rounded-lg p-3 border ${message.staff ? 'border-primary-container/30 bg-primary-container/10' : 'border-outline-variant/20 bg-surface-container'}">
+                            <div class="flex items-center justify-between gap-2 text-xs text-on-surface-variant">
+                                <span>${escapeHtml(message.autore?.username || 'Utente')} ${message.staff ? '(staff)' : ''}</span>
+                                <span>${formatDateTime(message.creatoIl)}</span>
+                            </div>
+                            <p class="mt-2 text-sm text-on-surface whitespace-pre-wrap">${escapeHtml(message.messaggio)}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function openTicketFromQuery() {
+            const params = new URLSearchParams(window.location.search);
+            const id = Number(params.get('ticketId') || 0);
+            if (id) openTicket(id);
+        }
+
+        function formatDateTime(value) {
+            if (!value) return '';
+            return new Date(value).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' });
+        }
+
+        function escapeHtml(value) {
+            const div = document.createElement('div');
+            div.textContent = value || '';
+            return div.innerHTML;
         }
     </script>
 </body>

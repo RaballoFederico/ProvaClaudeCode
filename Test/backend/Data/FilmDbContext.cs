@@ -37,6 +37,8 @@ public class FilmDbContext : DbContext
     public DbSet<UtilizzoAbbonamento> UtilizziAbbonamento { get; set; } = null!;
     public DbSet<NewsletterCampagna> NewsletterCampagne { get; set; } = null!;
     public DbSet<FilmRating> FilmRatings { get; set; } = null!;
+    public DbSet<SupportTicket> SupportTickets { get; set; } = null!;
+    public DbSet<SupportTicketMessage> SupportTicketMessages { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -437,6 +439,48 @@ public class FilmDbContext : DbContext
             entity.HasOne(e => e.Utente)
                 .WithMany(u => u.FilmRatings)
                 .HasForeignKey(e => e.UtenteId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<SupportTicket>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Oggetto).IsRequired().HasMaxLength(160);
+            entity.Property(e => e.Categoria).IsRequired();
+            entity.Property(e => e.Priorita).IsRequired();
+            entity.Property(e => e.Stato).IsRequired();
+            entity.Property(e => e.CreatoIl).IsRequired();
+            entity.Property(e => e.AggiornatoIl).IsRequired();
+            entity.HasIndex(e => new { e.Stato, e.Priorita, e.AggiornatoIl });
+            entity.HasIndex(e => e.UtenteId);
+
+            entity.HasOne(e => e.Utente)
+                .WithMany(u => u.SupportTickets)
+                .HasForeignKey(e => e.UtenteId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.AssegnatoA)
+                .WithMany()
+                .HasForeignKey(e => e.AssegnatoAId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+
+        modelBuilder.Entity<SupportTicketMessage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Messaggio).IsRequired().HasMaxLength(4000);
+            entity.Property(e => e.Staff).IsRequired();
+            entity.Property(e => e.CreatoIl).IsRequired();
+            entity.HasIndex(e => new { e.SupportTicketId, e.CreatoIl });
+
+            entity.HasOne(e => e.Ticket)
+                .WithMany(t => t.Messaggi)
+                .HasForeignKey(e => e.SupportTicketId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Autore)
+                .WithMany(u => u.SupportTicketMessages)
+                .HasForeignKey(e => e.AutoreId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

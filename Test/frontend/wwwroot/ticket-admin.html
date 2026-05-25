@@ -1,0 +1,200 @@
+<!-- DOC: ticket-admin - pagina backoffice per gestione ticket supporto. -->
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ticket Supporto | FilmAPI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col overflow-x-hidden">
+    <div id="navbar-container"></div>
+    <div class="flex flex-1 min-w-0">
+        <div id="sidebar-container"></div>
+        <main class="page-shell flex-1 min-w-0 overflow-x-hidden p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
+            <section class="mb-6">
+                <p class="section-eyebrow">Backoffice</p>
+                <h1 class="font-headline text-3xl md:text-4xl font-bold">Ticket Supporto</h1>
+                <p class="mt-2 text-on-surface-variant">Gestione richieste utenti, assegnazioni e risposte staff.</p>
+            </section>
+
+            <section class="grid lg:grid-cols-[360px_1fr] gap-4">
+                <aside class="app-card p-4">
+                    <div class="grid grid-cols-3 gap-2 mb-3">
+                        <select id="filter-status" class="rounded-lg border border-outline-variant/30 bg-surface-container px-2 py-2 text-xs">
+                            <option value="">Tutti stati</option>
+                            <option value="Aperto">Aperti</option>
+                            <option value="InLavorazione">In lavoro</option>
+                            <option value="InAttesaUtente">Attesa utente</option>
+                            <option value="Chiuso">Chiusi</option>
+                        </select>
+                        <select id="filter-priority" class="rounded-lg border border-outline-variant/30 bg-surface-container px-2 py-2 text-xs">
+                            <option value="">Priorita</option>
+                            <option value="Urgente">Urgente</option>
+                            <option value="Alta">Alta</option>
+                            <option value="Media">Media</option>
+                            <option value="Bassa">Bassa</option>
+                        </select>
+                        <button id="refresh-admin-tickets" class="app-btn app-btn-secondary text-xs">Aggiorna</button>
+                    </div>
+                    <div id="admin-ticket-list" class="space-y-2"></div>
+                </aside>
+
+                <section class="app-card p-4">
+                    <div id="admin-ticket-detail" class="min-h-[320px] text-sm text-on-surface-variant">Seleziona un ticket.</div>
+                    <form id="admin-reply-form" class="mt-4 hidden space-y-2">
+                        <textarea id="admin-reply-message" rows="3" placeholder="Risposta staff..." class="w-full rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-2 text-sm" required></textarea>
+                        <div class="flex flex-wrap gap-2">
+                            <button type="submit" class="app-btn app-btn-primary">Rispondi</button>
+                            <button type="button" id="assign-ticket-btn" class="app-btn app-btn-secondary">Prendi in carico</button>
+                            <button type="button" id="close-ticket-btn" class="app-btn app-btn-secondary">Chiudi</button>
+                            <button type="button" id="reopen-ticket-btn" class="app-btn app-btn-secondary">Riapri</button>
+                        </div>
+                    </form>
+                </section>
+            </section>
+        </main>
+    </div>
+    <div id="footer-container"></div>
+
+    <script src="/js/theme.js"></script>
+    <script src="/js/api-config.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/route-guard.js"></script>
+    <script src="/js/template-loader.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        let adminTickets = [];
+        let selectedAdminTicketId = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllComponents();
+            await Auth.ensureInitialized();
+            if (!Auth.isPowerUser()) {
+                window.location.href = '/home.html';
+                return;
+            }
+            bindAdminActions();
+            await loadAdminTickets();
+        });
+
+        function bindAdminActions() {
+            ['filter-status', 'filter-priority'].forEach((id) => {
+                document.getElementById(id)?.addEventListener('change', loadAdminTickets);
+            });
+            document.getElementById('refresh-admin-tickets')?.addEventListener('click', loadAdminTickets);
+            document.getElementById('assign-ticket-btn')?.addEventListener('click', () => mutateTicket(`/support/tickets/${selectedAdminTicketId}/assign-me`, 'PUT'));
+            document.getElementById('close-ticket-btn')?.addEventListener('click', () => updateStatus('Chiuso'));
+            document.getElementById('reopen-ticket-btn')?.addEventListener('click', () => updateStatus('Aperto'));
+
+            document.getElementById('admin-reply-form')?.addEventListener('submit', async (event) => {
+                event.preventDefault();
+                const input = document.getElementById('admin-reply-message');
+                if (!selectedAdminTicketId || !input?.value.trim()) return;
+                await ApiClient.post(`/support/tickets/${selectedAdminTicketId}/messages`, { messaggio: input.value });
+                input.value = '';
+                await openAdminTicket(selectedAdminTicketId);
+                await loadAdminTickets();
+            });
+        }
+
+        async function loadAdminTickets() {
+            const list = document.getElementById('admin-ticket-list');
+            const status = document.getElementById('filter-status')?.value || '';
+            const priority = document.getElementById('filter-priority')?.value || '';
+            const query = new URLSearchParams();
+            if (status) query.set('status', status);
+            if (priority) query.set('priority', priority);
+
+            list.innerHTML = '<div class="text-sm text-on-surface-variant">Caricamento...</div>';
+            try {
+                adminTickets = await ApiClient.get(`/support/tickets?${query.toString()}`);
+                if (!Array.isArray(adminTickets) || adminTickets.length === 0) {
+                    list.innerHTML = '<div class="text-sm text-on-surface-variant">Nessun ticket trovato.</div>';
+                    return;
+                }
+                list.innerHTML = adminTickets.map((ticket) => `
+                    <button type="button" onclick="openAdminTicket(${ticket.id})" class="w-full text-left rounded-lg border border-outline-variant/20 bg-surface-container p-3 hover:border-primary-container/40 ${selectedAdminTicketId === ticket.id ? 'border-primary-container/60' : ''}">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="font-semibold text-sm truncate">${escapeHtml(ticket.oggetto)}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-primary-container/20 text-primary-container">${escapeHtml(ticket.stato)}</span>
+                        </div>
+                        <div class="mt-1 text-xs text-on-surface-variant">${escapeHtml(ticket.utente?.username || 'Utente')} - ${escapeHtml(ticket.priorita)}</div>
+                    </button>
+                `).join('');
+            } catch (error) {
+                list.innerHTML = `<div class="text-sm text-red-300">${escapeHtml(error?.message || 'Errore caricamento ticket')}</div>`;
+            }
+        }
+
+        async function openAdminTicket(id) {
+            selectedAdminTicketId = Number(id);
+            const detail = document.getElementById('admin-ticket-detail');
+            const replyForm = document.getElementById('admin-reply-form');
+            detail.innerHTML = '<div class="text-sm text-on-surface-variant">Caricamento...</div>';
+            try {
+                const ticket = await ApiClient.get(`/support/tickets/${selectedAdminTicketId}`);
+                detail.innerHTML = renderAdminTicket(ticket);
+                replyForm.classList.remove('hidden');
+                await loadAdminTickets();
+            } catch (error) {
+                detail.innerHTML = `<div class="text-sm text-red-300">${escapeHtml(error?.message || 'Errore caricamento ticket')}</div>`;
+                replyForm.classList.add('hidden');
+            }
+        }
+
+        async function mutateTicket(endpoint, method) {
+            if (!selectedAdminTicketId) return;
+            if (method === 'PUT') await ApiClient.put(endpoint, {});
+            await openAdminTicket(selectedAdminTicketId);
+            await loadAdminTickets();
+        }
+
+        async function updateStatus(stato) {
+            if (!selectedAdminTicketId) return;
+            await ApiClient.put(`/support/tickets/${selectedAdminTicketId}/status`, { stato });
+            await openAdminTicket(selectedAdminTicketId);
+            await loadAdminTickets();
+        }
+
+        function renderAdminTicket(ticket) {
+            const messages = Array.isArray(ticket.messaggi) ? ticket.messaggi : [];
+            return `
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                        <h2 class="font-headline text-xl font-bold text-on-surface">${escapeHtml(ticket.oggetto)}</h2>
+                        <p class="text-xs text-on-surface-variant">${escapeHtml(ticket.categoria)} - ${escapeHtml(ticket.priorita)} - ${escapeHtml(ticket.stato)}</p>
+                        <p class="text-xs text-on-surface-variant">Utente: ${escapeHtml(ticket.utente?.username || '')} - Assegnato: ${escapeHtml(ticket.assegnatoA?.username || 'Nessuno')}</p>
+                    </div>
+                    <span class="text-xs px-2 py-1 rounded-full bg-primary-container/20 text-primary-container">${escapeHtml(ticket.stato)}</span>
+                </div>
+                <div class="mt-4 space-y-3">
+                    ${messages.map((message) => `
+                        <div class="rounded-lg p-3 border ${message.staff ? 'border-primary-container/30 bg-primary-container/10' : 'border-outline-variant/20 bg-surface-container'}">
+                            <div class="flex items-center justify-between gap-2 text-xs text-on-surface-variant">
+                                <span>${escapeHtml(message.autore?.username || 'Utente')} ${message.staff ? '(staff)' : ''}</span>
+                                <span>${formatDateTime(message.creatoIl)}</span>
+                            </div>
+                            <p class="mt-2 text-sm text-on-surface whitespace-pre-wrap">${escapeHtml(message.messaggio)}</p>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function formatDateTime(value) {
+            if (!value) return '';
+            return new Date(value).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' });
+        }
+
+        function escapeHtml(value) {
+            const div = document.createElement('div');
+            div.textContent = value || '';
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

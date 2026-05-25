@@ -392,6 +392,7 @@ app.MapNotificheEndpoints();
 app.MapStripeWebhookEndpoints();
 app.MapAbbonamentiEndpoints();
 app.MapNewsletterEndpoints();
+app.MapSupportEndpoints();
 
 app.MapGroup("/registi").MapRegistiEndpoints();
 app.MapGroup("/films").MapFilmsEndpoints();

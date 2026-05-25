@@ -74,6 +74,10 @@ public class Utente
     public ICollection<AbbonamentoUtente> Abbonamenti { get; set; } = new List<AbbonamentoUtente>();
 
     public ICollection<FilmRating> FilmRatings { get; set; } = new List<FilmRating>();
+
+    public ICollection<SupportTicket> SupportTickets { get; set; } = new List<SupportTicket>();
+
+    public ICollection<SupportTicketMessage> SupportTicketMessages { get; set; } = new List<SupportTicketMessage>();
 }
 
 
