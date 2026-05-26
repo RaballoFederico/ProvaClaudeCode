@@ -1,0 +1,170 @@
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dettaglio Cinema | FilmAPI</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-light-32.png" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-dark-32.png" media="(prefers-color-scheme: dark)">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-dark-32.png">
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/styles.css">
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-container": "#de3a1f",
+                        "background": "#121415",
+                        "surface-container": "#1b1f20",
+                        "surface-container-high": "#252b2d",
+                        "on-surface": "#f3f1eb",
+                        "on-surface-variant": "#b9b8ad",
+                        "outline-variant": "#384043"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope"],
+                        "body": ["Outfit"]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col">
+    <div id="navbar-container"></div>
+    <div class="flex flex-1">
+        <div id="sidebar-container"></div>
+        <main class="page-shell flex-1 p-4 md:p-8 lg:p-10 pb-20 md:pb-6">
+            <section class="hero-banner p-6 md:p-8 mb-6 reveal-up">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <span class="section-eyebrow mb-2 inline-flex items-center gap-2">
+                            <span class="material-symbols-outlined text-sm">location_on</span>
+                            Informazioni cinema
+                        </span>
+                        <h1 id="cinema-title" class="font-headline text-3xl md:text-5xl font-semibold">Dettaglio Cinema</h1>
+                        <p id="cinema-subtitle" class="text-on-surface-variant mt-2">Caricamento informazioni in corso...</p>
+                    </div>
+                    <a href="/my-cinemas.html" class="app-btn app-btn-secondary hover-lift">
+                        <span class="material-symbols-outlined text-sm">arrow_back</span>
+                        Torna ai cinema
+                    </a>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-4 mb-6 reveal-up delay-1">
+                <article class="app-card p-3 md:p-4">
+                    <div class="relative rounded-xl overflow-hidden border border-outline-variant/30 bg-surface-container-high min-h-[360px]">
+                        <iframe id="cinema-map-frame" title="Mappa cinema" class="absolute inset-0 w-full h-full border-0" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
+                </article>
+                <aside class="app-card p-4 md:p-5">
+                    <h2 class="font-headline text-xl font-semibold mb-3">Dati struttura</h2>
+                    <div class="space-y-2 text-sm">
+                        <p><span class="text-on-surface-variant">Nome:</span> <span id="detail-name">-</span></p>
+                        <p><span class="text-on-surface-variant">Citta:</span> <span id="detail-city">-</span></p>
+                        <p><span class="text-on-surface-variant">Indirizzo:</span> <span id="detail-address">-</span></p>
+                        <p><span class="text-on-surface-variant">Capienza:</span> <span id="detail-seats">-</span></p>
+                        <p><span class="text-on-surface-variant">Codice locale:</span> <span id="detail-code">-</span></p>
+                    </div>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <button id="open-programmazione" type="button" class="app-btn app-btn-primary hover-lift">Vedi programmazione</button>
+                        <a id="open-maps-link" href="#" target="_blank" rel="noopener" class="app-btn app-btn-secondary hover-lift">Apri in mappe</a>
+                    </div>
+                </aside>
+            </section>
+        </main>
+    </div>
+    <div id="footer-container"></div>
+
+    <script src="/js/theme.js"></script>
+    <script src="/js/api-config.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/route-guard.js"></script>
+    <script src="/js/template-loader.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/utils.js"></script>
+    <script>
+        let selectedCinema = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllComponents();
+            await loadCinemaDetail();
+        });
+
+        async function loadCinemaDetail() {
+            const params = new URLSearchParams(window.location.search);
+            const cinemaId = parseInt(params.get('cinemaId') || '0');
+            if (!cinemaId) {
+                Utils.showNotification('Cinema non specificato', 'warning');
+                window.location.assign('/my-cinemas.html');
+                return;
+            }
+
+            try {
+                Utils.showLoading();
+                const cinemas = await ApiClient.get('/cinemas');
+                selectedCinema = cinemas.find((x) => x.id === cinemaId) || null;
+                if (!selectedCinema) {
+                    Utils.showNotification('Cinema non trovato', 'error');
+                    window.location.assign('/my-cinemas.html');
+                    return;
+                }
+                renderCinemaDetail(selectedCinema);
+            } catch (error) {
+                Utils.showNotification(error?.message || 'Errore caricamento dettaglio cinema', 'error');
+            } finally {
+                Utils.hideLoading();
+            }
+        }
+
+        function renderCinemaDetail(cinema) {
+            const title = document.getElementById('cinema-title');
+            const subtitle = document.getElementById('cinema-subtitle');
+            const mapFrame = document.getElementById('cinema-map-frame');
+            const mapsLink = document.getElementById('open-maps-link');
+            const openProgrammazione = document.getElementById('open-programmazione');
+
+            title.textContent = cinema.nome || 'Cinema';
+            subtitle.textContent = `${cinema.citta || '-'} - ${cinema.indirizzo || '-'}`;
+            document.getElementById('detail-name').textContent = cinema.nome || '-';
+            document.getElementById('detail-city').textContent = cinema.citta || '-';
+            document.getElementById('detail-address').textContent = cinema.indirizzo || '-';
+            document.getElementById('detail-seats').textContent = String(cinema.postiMassimi || 0);
+            document.getElementById('detail-code').textContent = cinema.codiceLocale || 'N/D';
+
+            mapFrame.src = buildGoogleMapEmbedUrl(cinema);
+            mapsLink.href = buildMapDirectionsUrl(cinema);
+            openProgrammazione.onclick = () => {
+                localStorage.setItem('selectedCinema', String(cinema.id));
+                window.location.assign(`/programmazione.html?cinemaId=${cinema.id}`);
+            };
+        }
+
+        function buildGoogleMapEmbedUrl(cinema) {
+            if (hasCinemaCoordinates(cinema)) {
+                return `https://www.google.com/maps?q=${encodeURIComponent(`${cinema.latitudine},${cinema.longitudine}`)}&output=embed`;
+            }
+            const query = `${cinema.nome || ''}, ${cinema.indirizzo || ''}, ${cinema.citta || ''}`.trim();
+            return `https://www.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
+        }
+
+        function buildMapDirectionsUrl(cinema) {
+            if (hasCinemaCoordinates(cinema)) {
+                return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(`${cinema.latitudine},${cinema.longitudine}`)}`;
+            }
+            const query = `${cinema.nome || ''}, ${cinema.indirizzo || ''}, ${cinema.citta || ''}`.trim();
+            return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+        }
+
+        function hasCinemaCoordinates(cinema) {
+            const lat = Number(cinema?.latitudine);
+            const lng = Number(cinema?.longitudine);
+            return Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 && !(lat === 0 && lng === 0);
+        }
+    </script>
+</body>
+</html>

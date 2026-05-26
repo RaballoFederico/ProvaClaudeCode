@@ -20,6 +20,7 @@ const AccessControl = {
         'categorie.html': 'admin',
         'profilo.html': 'auth',
         'programmazione.html': 'user',
+        'cinema-dettaglio.html': 'user',
         'scheda-film.html': null,
         'my-cinemas.html': 'user',
         'conferma-acquisto.html': 'auth',
