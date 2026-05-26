@@ -2,6 +2,7 @@
 // DOC: Service 'PagamentoService': implementa logica di business e integrazioni esterne (DB/TMDB/Stripe).
 using FilmAPI.Data;
 using FilmAPI.DTO;
+using FilmAPI.Model;
 using FilmAPI.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Stripe;
@@ -17,18 +18,35 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
     // DOC-METHOD: 'CalcolaImportoAsync' implementa una parte della logica backend (validazione, orchestrazione, persistenza o mapping).
     public async Task<CalcoloImportoDTO> CalcolaImportoAsync(int utenteId, CalcoloImportoRequestDTO dto)
     {
-        var show = await context.Shows.FindAsync(dto.ShowId) ?? throw new InvalidOperationException("Show non trovato");
-        var subtotale = show.PrezzoBase * dto.NumeroBiglietti;
+        var show = await context.Shows
+            .Include(s => s.Sala)
+            .FirstOrDefaultAsync(s => s.Id == dto.ShowId)
+            ?? throw new InvalidOperationException("Show non trovato");
+
+        var numeroBiglietti = Math.Max(0, dto.NumeroBiglietti);
+        var benefit = await SubscriptionBenefitCalculator.QuoteAsync(context, utenteId, show, numeroBiglietti);
+        var subtotale = benefit.ImportoFinale;
         var saldo = await creditoService.GetSaldoAsync(utenteId);
         var creditoUsato = dto.UsaCredito ? Math.Min(saldo, subtotale) : 0m;
 
         return new CalcoloImportoDTO
         {
             PrezzoUnitario = show.PrezzoBase,
+            ImportoLordo = benefit.ImportoLordo,
             Subtotale = subtotale,
+            ScontoAbbonamento = benefit.ScontoAbbonamento,
             CreditoDisponibile = saldo,
             CreditoUsato = creditoUsato,
-            DaPagareCarta = Math.Max(0m, subtotale - creditoUsato)
+            DaPagareCarta = Math.Max(0m, subtotale - creditoUsato),
+            PianoAbbonamento = benefit.Piano,
+            IngressiSettimanali = benefit.IngressiSettimanali,
+            UtilizziSettimana = benefit.UtilizziSettimana,
+            IngressiDisponibili = benefit.IngressiDisponibiliPrima,
+            IngressiAbbonamentoApplicati = benefit.IngressiApplicati,
+            Include3D = benefit.Include3D,
+            IncludeScontoSnack = benefit.IncludeScontoSnack,
+            ProiezioneCopertaDalPiano = benefit.ProiezioneCopertaDalPiano,
+            BenefitMessage = benefit.Messaggio
         };
     }
 
@@ -47,8 +65,13 @@ public class PagamentoService(FilmDbContext context, ICreditoService creditoServ
             Success = true,
             Message = "Pagamento processato",
             ImportoTotale = calc.Subtotale,
+            ImportoLordo = calc.ImportoLordo,
+            ScontoAbbonamento = calc.ScontoAbbonamento,
             CreditoUsato = calc.CreditoUsato,
-            CartaAddebitata = calc.DaPagareCarta
+            CartaAddebitata = calc.DaPagareCarta,
+            PianoAbbonamento = calc.PianoAbbonamento,
+            IngressiAbbonamentoApplicati = calc.IngressiAbbonamentoApplicati,
+            IncludeScontoSnack = calc.IncludeScontoSnack
         };
     }
 

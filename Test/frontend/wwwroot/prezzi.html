@@ -1,0 +1,362 @@
+<!-- DOC: prezzi - file del progetto; contiene logica specifica della feature/modulo. -->
+<!-- DOC: Pagina UI 'prezzi': definisce struttura, sezioni e hook JS per il flusso utente. -->
+<html lang="it" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informazioni Prezzi | FilmHub</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-light-32.png" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-dark-32.png" media="(prefers-color-scheme: dark)">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-dark-32.png">
+    <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-light.ico" media="(prefers-color-scheme: light)">
+    <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico" media="(prefers-color-scheme: dark)">
+    <link rel="shortcut icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico">
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;500;700;800&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body class="bg-background text-on-surface font-body min-h-screen flex flex-col overflow-x-hidden">
+    <div id="navbar-container"></div>
+    <div class="flex flex-1">
+        <div id="sidebar-container"></div>
+        <main class="page-shell flex-1 p-4 md:p-8 lg:p-10">
+            <section class="app-card p-6 md:p-8 reveal-up">
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                        <p class="text-xs uppercase tracking-[0.2em] text-on-surface-variant">Guida rapida</p>
+                        <h1 class="font-headline text-3xl md:text-5xl font-semibold tracking-tight mt-2">Informazioni generali sui prezzi</h1>
+                        <p class="mt-3 text-on-surface-variant max-w-3xl">Questa pagina mostra prezzi indicativi per biglietti e food. I prezzi finali possono cambiare in base a cinema, sala, orario, promozioni e piano abbonamento attivo.</p>
+                        <p id="pricing-last-update" class="mt-3 text-xs text-on-surface-variant"></p>
+                    </div>
+                    <a href="abbonamenti.html" class="app-btn app-btn-primary">Vedi abbonamenti</a>
+                </div>
+
+                <div class="mt-8 grid grid-cols-1 xl:grid-cols-2 gap-5">
+                    <article class="bg-surface-container-high rounded-2xl border border-outline-variant/20 p-4 md:p-5">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="material-symbols-outlined text-primary-container">movie</span>
+                            <h2 class="font-headline text-2xl">Prezzi biglietti (indicativi)</h2>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-left text-on-surface-variant border-b border-outline-variant/20">
+                                        <th class="py-2 pr-3">Tipologia sala</th>
+                                        <th class="py-2 pr-3">Giorni feriali</th>
+                                        <th class="py-2">Weekend/Festivi</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-on-surface">
+                                    <tr class="border-b border-outline-variant/10">
+                                        <td class="py-2 pr-3">Sala Standard 2D</td>
+                                        <td class="py-2 pr-3">EUR 8.50 - 10.00</td>
+                                        <td class="py-2">EUR 10.00 - 12.00</td>
+                                    </tr>
+                                    <tr class="border-b border-outline-variant/10">
+                                        <td class="py-2 pr-3">Sala 3D</td>
+                                        <td class="py-2 pr-3">EUR 10.50 - 12.50</td>
+                                        <td class="py-2">EUR 12.00 - 14.50</td>
+                                    </tr>
+                                    <tr class="border-b border-outline-variant/10">
+                                        <td class="py-2 pr-3">Sala Premium/Recliner</td>
+                                        <td class="py-2 pr-3">EUR 12.00 - 15.00</td>
+                                        <td class="py-2">EUR 14.00 - 17.50</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-2 pr-3">Eventi speciali/anteprime</td>
+                                        <td class="py-2 pr-3">Da EUR 14.00</td>
+                                        <td class="py-2">Da EUR 16.00</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="mt-3 text-xs text-on-surface-variant">Riduzioni under/over, convenzioni e codici promo sono applicati al checkout quando disponibili.</p>
+                    </article>
+
+                    <article class="bg-surface-container-high rounded-2xl border border-outline-variant/20 p-4 md:p-5">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="material-symbols-outlined text-primary-container">local_cafe</span>
+                            <h2 class="font-headline text-2xl">Prezzi food &amp; beverage (esempi)</h2>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-left text-on-surface-variant border-b border-outline-variant/20">
+                                        <th class="py-2 pr-3">Prodotto</th>
+                                        <th class="py-2">Prezzo indicativo</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="text-on-surface">
+                                    <tr class="border-b border-outline-variant/10">
+                                        <td class="py-2 pr-3">Popcorn piccoli</td>
+                                        <td class="py-2">EUR 4.00 - 4.50</td>
+                                    </tr>
+                                    <tr class="border-b border-outline-variant/10">
+                                        <td class="py-2 pr-3">Popcorn medi</td>
+                                        <td class="py-2">EUR 5.50 - 6.50</td>
+                                    </tr>
+                                    <tr class="border-b border-outline-variant/10">
+                                        <td class="py-2 pr-3">Bibita 40cl</td>
+                                        <td class="py-2">EUR 3.50 - 4.50</td>
+                                    </tr>
+                                    <tr class="border-b border-outline-variant/10">
+                                        <td class="py-2 pr-3">Menu combo snack + bibita</td>
+                                        <td class="py-2">EUR 8.50 - 11.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="py-2 pr-3">Nachos / dolci confezionati</td>
+                                        <td class="py-2">EUR 4.00 - 6.00</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="mt-3 text-xs text-on-surface-variant">Alcuni piani abbonamento includono vantaggi snack dedicati.</p>
+                    </article>
+                </div>
+
+                <article class="mt-5 rounded-2xl border border-primary-container/30 bg-primary-container/10 p-4 md:p-5">
+                    <h3 class="font-semibold text-lg text-on-surface">Nota importante sui prezzi</h3>
+                    <p class="mt-2 text-sm text-on-surface-variant">I prezzi mostrati sono indicativi e possono variare in base a:</p>
+                    <ul class="mt-3 space-y-2 text-sm text-on-surface-variant">
+                        <li class="flex items-start gap-2"><span class="material-symbols-outlined text-primary-container text-[18px] mt-0.5">check_circle</span><span>Piano abbonamento attivo (Free, Base, Plus, Premium) e benefit collegati.</span></li>
+                        <li class="flex items-start gap-2"><span class="material-symbols-outlined text-primary-container text-[18px] mt-0.5">check_circle</span><span>Tipologia sala e formato proiezione (2D, 3D, Premium).</span></li>
+                        <li class="flex items-start gap-2"><span class="material-symbols-outlined text-primary-container text-[18px] mt-0.5">check_circle</span><span>Fascia oraria, giorno della settimana, festivita o eventi speciali.</span></li>
+                        <li class="flex items-start gap-2"><span class="material-symbols-outlined text-primary-container text-[18px] mt-0.5">check_circle</span><span>Promozioni temporanee e convenzioni locali del cinema selezionato.</span></li>
+                    </ul>
+                    <p class="mt-3 text-sm text-on-surface">Il prezzo effettivo viene sempre mostrato prima della conferma pagamento.</p>
+                </article>
+
+                <div class="mt-5 grid grid-cols-1 xl:grid-cols-2 gap-5">
+                    <article class="bg-surface-container-high rounded-2xl border border-outline-variant/20 p-4 md:p-5">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="material-symbols-outlined text-primary-container">calculate</span>
+                            <h3 class="font-headline text-2xl">Simulatore rapido</h3>
+                        </div>
+                        <p class="text-sm text-on-surface-variant">Stima veloce del costo prima di arrivare al checkout.</p>
+                        <div class="mt-4 grid sm:grid-cols-2 gap-3">
+                            <label class="text-sm sm:col-span-2">
+                                <span class="text-on-surface-variant">Cinema</span>
+                                <select id="estimate-cinema" class="mt-1 w-full rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-2 text-sm">
+                                    <option value="">Seleziona cinema...</option>
+                                </select>
+                            </label>
+                            <label class="text-sm">
+                                <span class="text-on-surface-variant">Tipologia sala</span>
+                                <select id="estimate-room" class="mt-1 w-full rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-2 text-sm">
+                                    <option value="standard">Standard 2D</option>
+                                    <option value="3d">Sala 3D</option>
+                                    <option value="premium">Sala Premium</option>
+                                    <option value="evento">Evento speciale</option>
+                                </select>
+                            </label>
+                            <label class="text-sm">
+                                <span class="text-on-surface-variant">Giorno</span>
+                                <select id="estimate-day" class="mt-1 w-full rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-2 text-sm">
+                                    <option value="feriale">Feriale</option>
+                                    <option value="weekend">Weekend/Festivo</option>
+                                </select>
+                            </label>
+                            <label class="text-sm">
+                                <span class="text-on-surface-variant">Numero biglietti</span>
+                                <input id="estimate-tickets" type="number" min="1" max="12" value="2" class="mt-1 w-full rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-2 text-sm">
+                            </label>
+                            <label class="text-sm">
+                                <span class="text-on-surface-variant">Combo food</span>
+                                <input id="estimate-food" type="number" min="0" max="12" value="0" class="mt-1 w-full rounded-lg border border-outline-variant/30 bg-surface-container px-3 py-2 text-sm">
+                            </label>
+                        </div>
+                        <div class="mt-4 flex flex-wrap items-center gap-3">
+                            <button id="estimate-run" type="button" class="app-btn app-btn-primary">Calcola stima</button>
+                            <div id="estimate-result" class="text-sm text-on-surface-variant">Costo stimato: EUR 0.00</div>
+                        </div>
+                    </article>
+
+                    <article class="bg-surface-container-high rounded-2xl border border-outline-variant/20 p-4 md:p-5">
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="material-symbols-outlined text-primary-container">help</span>
+                            <h3 class="font-headline text-2xl">FAQ prezzi</h3>
+                        </div>
+                        <div class="space-y-2 text-sm">
+                            <details class="rounded-lg border border-outline-variant/20 bg-surface-container p-3">
+                                <summary class="cursor-pointer font-medium">Il prezzo mostrato puo cambiare all'ultimo?</summary>
+                                <p class="mt-2 text-on-surface-variant">Si, in caso di promo appena attivate/disattivate o cambio fascia oraria. Il totale valido resta quello visibile in checkout.</p>
+                            </details>
+                            <details class="rounded-lg border border-outline-variant/20 bg-surface-container p-3">
+                                <summary class="cursor-pointer font-medium">Gli abbonamenti applicano sconti automatici?</summary>
+                                <p class="mt-2 text-on-surface-variant">Si, i benefit del piano attivo vengono applicati automaticamente in pagamento quando compatibili.</p>
+                            </details>
+                            <details class="rounded-lg border border-outline-variant/20 bg-surface-container p-3">
+                                <summary class="cursor-pointer font-medium">Dove chiedo chiarimenti su prezzi o addebiti?</summary>
+                                <p class="mt-2 text-on-surface-variant">Puoi aprire un ticket dalla pagina Supporto con categoria Pagamento.</p>
+                            </details>
+                        </div>
+                        <a href="/supporto.html" class="app-btn app-btn-secondary mt-4 inline-flex">Apri supporto</a>
+                    </article>
+                </div>
+            </section>
+        </main>
+    </div>
+    <div id="footer-container"></div>
+
+    <script src="/js/theme.js"></script>
+    <script src="/js/api-config.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/route-guard.js"></script>
+    <script src="/js/api-client.js"></script>
+    <script src="/js/template-loader.js"></script>
+    <script>
+        let pricingShowsCache = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadAllComponents();
+            await initPricingExtras();
+        });
+
+        async function initPricingExtras() {
+            const lastUpdate = document.getElementById('pricing-last-update');
+            if (lastUpdate) {
+                const now = new Date();
+                lastUpdate.textContent = `Ultimo aggiornamento informativo: ${now.toLocaleDateString('it-IT')}`;
+            }
+
+            await loadCinemaChoices();
+
+            const runBtn = document.getElementById('estimate-run');
+            if (!runBtn) return;
+            runBtn.addEventListener('click', runEstimate);
+            document.getElementById('estimate-cinema')?.addEventListener('change', onCinemaChanged);
+            runEstimate();
+        }
+
+        async function loadCinemaChoices() {
+            const select = document.getElementById('estimate-cinema');
+            if (!select || typeof ApiClient === 'undefined') return;
+
+            try {
+                const cinemas = await ApiClient.get('/cinemas');
+                if (!Array.isArray(cinemas) || cinemas.length === 0) return;
+
+                const options = cinemas
+                    .map((c) => `<option value="${Number(c.id)}">${escapeHtml(c.nome)} (${escapeHtml(c.citta || 'N/D')})</option>`)
+                    .join('');
+                select.innerHTML = `<option value="">Seleziona cinema...</option>${options}`;
+
+                const preferred = Number(localStorage.getItem('selectedCinema') || 0);
+                if (preferred && cinemas.some((c) => Number(c.id) === preferred)) {
+                    select.value = String(preferred);
+                    await onCinemaChanged();
+                }
+            } catch {
+                // In caso di errore API lasciamo il simulatore in fallback statico.
+            }
+        }
+
+        async function onCinemaChanged() {
+            const select = document.getElementById('estimate-cinema');
+            if (!select || !select.value || typeof ApiClient === 'undefined') {
+                pricingShowsCache = [];
+                runEstimate();
+                return;
+            }
+
+            const cinemaId = Number(select.value);
+            if (!cinemaId) {
+                pricingShowsCache = [];
+                runEstimate();
+                return;
+            }
+
+            try {
+                const today = new Date();
+                const fromDate = formatDateOnly(today);
+                const toDateObj = new Date(today.getTime() + 1000 * 60 * 60 * 24 * 35);
+                const toDate = formatDateOnly(toDateObj);
+                const shows = await ApiClient.get(`/shows?cinemaId=${cinemaId}&fromDate=${fromDate}&toDate=${toDate}&take=300`);
+                pricingShowsCache = Array.isArray(shows) ? shows : [];
+            } catch {
+                pricingShowsCache = [];
+            }
+
+            runEstimate();
+        }
+
+        function runEstimate() {
+            const room = document.getElementById('estimate-room')?.value || 'standard';
+            const day = document.getElementById('estimate-day')?.value || 'feriale';
+            const tickets = Math.max(1, Number(document.getElementById('estimate-tickets')?.value || 1));
+            const food = Math.max(0, Number(document.getElementById('estimate-food')?.value || 0));
+            const result = document.getElementById('estimate-result');
+            if (!result) return;
+
+            const dynamicRange = getDynamicTicketRange(room, day);
+            if (dynamicRange) {
+                const comboRange = [8.5, 11];
+                const minTotal = (dynamicRange[0] * tickets) + (comboRange[0] * food);
+                const maxTotal = (dynamicRange[1] * tickets) + (comboRange[1] * food);
+                result.textContent = `Costo stimato reale: EUR ${minTotal.toFixed(2)} - EUR ${maxTotal.toFixed(2)} (dati cinema selezionato)`;
+                return;
+            }
+
+            const ranges = {
+                standard: { feriale: [8.5, 10], weekend: [10, 12] },
+                "3d": { feriale: [10.5, 12.5], weekend: [12, 14.5] },
+                premium: { feriale: [12, 15], weekend: [14, 17.5] },
+                evento: { feriale: [14, 16], weekend: [16, 18] }
+            };
+            const comboRange = [8.5, 11];
+            const ticketRange = ranges[room]?.[day] || ranges.standard.feriale;
+            const minTotal = (ticketRange[0] * tickets) + (comboRange[0] * food);
+            const maxTotal = (ticketRange[1] * tickets) + (comboRange[1] * food);
+
+            result.textContent = `Costo stimato: EUR ${minTotal.toFixed(2)} - EUR ${maxTotal.toFixed(2)} (fallback indicativo)`;
+        }
+
+        function getDynamicTicketRange(room, day) {
+            if (!Array.isArray(pricingShowsCache) || pricingShowsCache.length === 0) return null;
+
+            const bucket = pricingShowsCache.filter((show) => {
+                const roomKey = normalizeRoomType(show?.tipologiaSala);
+                const dayKey = isWeekendFromShow(show) ? 'weekend' : 'feriale';
+                return roomKey === room && dayKey === day && Number(show?.prezzoBase || 0) > 0;
+            });
+            if (bucket.length === 0) return null;
+
+            const prices = bucket.map((x) => Number(x.prezzoBase)).filter((x) => Number.isFinite(x) && x > 0);
+            if (prices.length === 0) return null;
+
+            return [Math.min(...prices), Math.max(...prices)];
+        }
+
+        function normalizeRoomType(type) {
+            const v = String(type || '').toLowerCase();
+            if (v.includes('3d')) return '3d';
+            if (v.includes('premium') || v.includes('recliner') || v.includes('vip')) return 'premium';
+            if (v.includes('evento') || v.includes('special')) return 'evento';
+            return 'standard';
+        }
+
+        function isWeekendFromShow(show) {
+            const dateValue = show?.data || show?.date || show?.giorno;
+            if (!dateValue) return false;
+            const date = new Date(dateValue);
+            if (Number.isNaN(date.getTime())) return false;
+            const day = date.getDay();
+            return day === 0 || day === 6;
+        }
+
+        function formatDateOnly(value) {
+            const y = value.getFullYear();
+            const m = String(value.getMonth() + 1).padStart(2, '0');
+            const d = String(value.getDate()).padStart(2, '0');
+            return `${y}-${m}-${d}`;
+        }
+
+        function escapeHtml(value) {
+            const div = document.createElement('div');
+            div.textContent = value || '';
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

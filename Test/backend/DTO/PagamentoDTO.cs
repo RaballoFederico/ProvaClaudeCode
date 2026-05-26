@@ -12,10 +12,21 @@ public class CalcoloImportoRequestDTO
 public class CalcoloImportoDTO
 {
     public decimal PrezzoUnitario { get; set; }
+    public decimal ImportoLordo { get; set; }
     public decimal Subtotale { get; set; }
+    public decimal ScontoAbbonamento { get; set; }
     public decimal CreditoDisponibile { get; set; }
     public decimal CreditoUsato { get; set; }
     public decimal DaPagareCarta { get; set; }
+    public string PianoAbbonamento { get; set; } = "Free";
+    public int IngressiSettimanali { get; set; }
+    public int UtilizziSettimana { get; set; }
+    public int IngressiDisponibili { get; set; }
+    public int IngressiAbbonamentoApplicati { get; set; }
+    public bool Include3D { get; set; }
+    public bool IncludeScontoSnack { get; set; }
+    public bool ProiezioneCopertaDalPiano { get; set; }
+    public string BenefitMessage { get; set; } = string.Empty;
 }
 
 public class PagamentoRequestDTO
@@ -30,8 +41,13 @@ public class PagamentoResultDTO
     public bool Success { get; set; }
     public string Message { get; set; } = string.Empty;
     public decimal ImportoTotale { get; set; }
+    public decimal ImportoLordo { get; set; }
+    public decimal ScontoAbbonamento { get; set; }
     public decimal CreditoUsato { get; set; }
     public decimal CartaAddebitata { get; set; }
+    public string PianoAbbonamento { get; set; } = "Free";
+    public int IngressiAbbonamentoApplicati { get; set; }
+    public bool IncludeScontoSnack { get; set; }
 }
 
 public class RimborsoResultDTO

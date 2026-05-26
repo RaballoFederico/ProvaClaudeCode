@@ -350,7 +350,11 @@
                     <div>Piano: <strong>${res.piano}</strong></div>
                     <div>Stato: <strong>${res.stato}</strong></div>
                     <div>Rinnovo: <strong>${new Date(res.prossimoRinnovo).toLocaleDateString('it-IT')}</strong></div>
-                    <div>Ingressi settimana: <strong>${res.utilizziSettimana}/${res.ingressiSettimanali}</strong></div>
+                    <div>Ingressi settimana: <strong>${res.utilizziSettimana}/${res.ingressiSettimanali}</strong> usati, <strong>${res.ingressiDisponibili ?? Math.max(0, (res.ingressiSettimanali || 0) - (res.utilizziSettimana || 0))}</strong> disponibili</div>
+                    <div class="mt-2 rounded-xl border border-emerald-400/20 bg-emerald-500/10 p-3 text-xs text-emerald-100">
+                        <div class="font-semibold text-emerald-200">Benefit attivi</div>
+                        <div>${escapeHtml(res.benefit?.descrizione || 'Benefit abbonamento applicati automaticamente al checkout.')}</div>
+                    </div>
                     <div class="mt-3 flex flex-wrap gap-2">
                         <button class="app-btn app-btn-secondary" onclick="usaIngresso()">Registra ingresso</button>
                         <button class="app-btn app-btn-secondary" onclick="disdiciAbbonamento()">Disdici</button>
@@ -482,6 +486,12 @@
             const nextQuery = params.toString();
             const nextUrl = nextQuery ? `${window.location.pathname}?${nextQuery}` : window.location.pathname;
             window.history.replaceState({}, '', nextUrl);
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text || '';
+            return div.innerHTML;
         }
 
         document.addEventListener('DOMContentLoaded', async () => {

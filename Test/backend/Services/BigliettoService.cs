@@ -172,7 +172,8 @@ public class BigliettoService(
         var show = locks.First().Show;
         if (show?.Sala is null) throw new InvalidOperationException("Show non valido");
 
-        var importoTotale = show.PrezzoBase * locks.Count;
+        var benefit = await SubscriptionBenefitCalculator.QuoteAsync(context, utenteId, show, locks.Count);
+        var importoTotale = benefit.ImportoFinale;
         var saldo = await creditoService.GetSaldoAsync(utenteId);
         var creditoUsato = dto.UsaCredito ? Math.Min(saldo, importoTotale) : 0m;
         var rimanenteCarta = importoTotale - creditoUsato;
@@ -214,9 +215,28 @@ public class BigliettoService(
         }
 
         var biglietti = new List<Biglietto>();
+        var activeSubscriptionId = benefit.IngressiApplicati > 0
+            ? await SubscriptionBenefitCalculator.GetActiveSubscriptionIdAsync(context, utenteId)
+            : null;
+        if (activeSubscriptionId.HasValue)
+        {
+            SubscriptionBenefitCalculator.AddUsageRecords(
+                context,
+                activeSubscriptionId.Value,
+                show.Id,
+                benefit.IngressiApplicati,
+                $"Benefit {benefit.Piano}: ingresso incluso acquisto #{acquisto.Id}");
+        }
+
+        var includedTicketIndex = 0;
         foreach (var l in locks)
         {
             l.Stato = StatoPrenotazioneTemp.CONFERMATA;
+            var coveredBySubscription = includedTicketIndex < benefit.IngressiApplicati;
+            if (coveredBySubscription)
+            {
+                includedTicketIndex++;
+            }
 
             var codiceUnivoco = Guid.NewGuid().ToString("N")[..20];
             var biglietto = new Biglietto
@@ -226,7 +246,7 @@ public class BigliettoService(
                 Posto = l.Posto,
                 SalaNumero = show.Sala.NumeroSala,
                 TipologiaSala = show.Sala.Tipologia.ToString(),
-                Prezzo = show.PrezzoBase,
+                Prezzo = coveredBySubscription ? 0m : show.PrezzoBase,
                 CodiceUnivoco = codiceUnivoco,
                 CodiceHash = Guid.NewGuid().ToString("N"),
                 CinemaId = show.Sala.CinemaId,
@@ -315,7 +335,12 @@ public class BigliettoService(
             AcquistoId = acquisto.Id,
             CodiceConferma = acquisto.CodiceConferma,
             ImportoTotale = importoTotale,
+            ImportoLordo = benefit.ImportoLordo,
+            ScontoAbbonamento = benefit.ScontoAbbonamento,
             CreditoUsato = creditoUsato,
+            PianoAbbonamento = benefit.Piano,
+            IngressiAbbonamentoApplicati = benefit.IngressiApplicati,
+            IncludeScontoSnack = benefit.IncludeScontoSnack,
             Biglietti = biglietti.Select(ToDto).ToList()
         };
     }

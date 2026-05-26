@@ -59,7 +59,12 @@ public class AcquistoResultDTO
     public int AcquistoId { get; set; }
     public string CodiceConferma { get; set; } = string.Empty;
     public decimal ImportoTotale { get; set; }
+    public decimal ImportoLordo { get; set; }
+    public decimal ScontoAbbonamento { get; set; }
     public decimal CreditoUsato { get; set; }
+    public string PianoAbbonamento { get; set; } = "Free";
+    public int IngressiAbbonamentoApplicati { get; set; }
+    public bool IncludeScontoSnack { get; set; }
     public List<BigliettoDTO> Biglietti { get; set; } = new();
 }
 

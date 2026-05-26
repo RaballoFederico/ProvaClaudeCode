@@ -3,6 +3,7 @@
 using FilmAPI.Data;
 using FilmAPI.DTO;
 using FilmAPI.Model;
+using FilmAPI.Services;
 using FilmAPI.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
@@ -116,14 +117,14 @@ public static class AbbonamentiEndpoints
                     return Results.Ok(new { hasSubscription = false });
                 }
 
-                var now = DateTime.UtcNow.Date;
-                var diffToMonday = ((int)now.DayOfWeek - (int)DayOfWeek.Monday + 7) % 7;
-                var inizioSettimana = now.AddDays(-diffToMonday);
+                var inizioSettimana = SubscriptionBenefitCalculator.GetStartOfWeek(DateTime.UtcNow);
 
                 var utilizziSettimana = (abbonamento.Utilizzi ?? new List<UtilizzoAbbonamento>())
                     .Count(u => u.DataUtilizzo >= inizioSettimana);
 
                 var piano = Piani.FirstOrDefault(p => string.Equals(p.Codice, abbonamento.Piano.ToString(), StringComparison.OrdinalIgnoreCase));
+                var ingressiSettimanali = piano?.IngressiSettimanali ?? 0;
+                var ingressiDisponibili = Math.Max(0, ingressiSettimanali - utilizziSettimana);
 
                 return Results.Ok(new
                 {
@@ -134,8 +135,19 @@ public static class AbbonamentiEndpoints
                     abbonamento.DataInizio,
                     abbonamento.ProssimoRinnovo,
                     abbonamento.DataDisdetta,
-                    ingressiSettimanali = piano?.IngressiSettimanali ?? 0,
-                    utilizziSettimana
+                    ingressiSettimanali,
+                    utilizziSettimana,
+                    ingressiDisponibili,
+                    include3D = piano?.Include3D ?? false,
+                    includeScontoSnack = piano?.IncludeScontoSnack ?? false,
+                    benefit = new
+                    {
+                        ingressiSettimanali,
+                        ingressiDisponibili,
+                        include3D = piano?.Include3D ?? false,
+                        includeScontoSnack = piano?.IncludeScontoSnack ?? false,
+                        descrizione = BuildBenefitDescription(piano)
+                    }
                 });
             }
             catch (Exception ex)
@@ -200,7 +212,7 @@ public static class AbbonamentiEndpoints
 
             var piano = Piani.FirstOrDefault(p => string.Equals(p.Codice, active.Piano.ToString(), StringComparison.OrdinalIgnoreCase));
             var weeklyLimit = piano?.IngressiSettimanali ?? 0;
-            var inizioSettimana = DateTime.UtcNow.Date.AddDays(-(int)DateTime.UtcNow.DayOfWeek + (int)DayOfWeek.Monday);
+            var inizioSettimana = SubscriptionBenefitCalculator.GetStartOfWeek(DateTime.UtcNow);
             var usatiSettimana = active.Utilizzi.Count(u => u.DataUtilizzo >= inizioSettimana);
 
             if (usatiSettimana >= weeklyLimit)
@@ -268,6 +280,26 @@ public static class AbbonamentiEndpoints
         });
 
         await db.SaveChangesAsync();
+    }
+
+    private static string BuildBenefitDescription(PianoAbbonamentoDTO? piano)
+    {
+        if (piano is null)
+        {
+            return "Nessun benefit premium attivo";
+        }
+
+        var pieces = new List<string>
+        {
+            $"{piano.IngressiSettimanali} ingressi inclusi a settimana"
+        };
+        pieces.Add(piano.Include3D ? "proiezioni 3D incluse" : "solo proiezioni 2D incluse");
+        if (piano.IncludeScontoSnack)
+        {
+            pieces.Add("sconto snack attivo");
+        }
+
+        return string.Join(", ", pieces);
     }
 }
 

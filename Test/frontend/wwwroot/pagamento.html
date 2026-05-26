@@ -123,6 +123,7 @@
                                 <span>Subtotale</span>
                                 <strong><span id="subtotal">0.00</span> EUR</strong>
                             </div>
+                            <div id="benefit-row" class="hidden rounded-lg border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-100"></div>
                             <div class="flex items-center justify-between text-sm">
                                 <span>Credito disponibile</span>
                                 <strong><span id="credito">0.00</span> EUR</strong>
@@ -232,8 +233,11 @@
         let lockCode = '';
 
         let subtotal = 0;
+        let grossSubtotal = 0;
+        let subscriptionDiscount = 0;
         let credito = 0;
         let remaining = 0;
+        let lastAmountCalculation = null;
         let useCredit = false;
         let selectedMethodId = 'stripe_checkout';
         let preferredPaymentMethodId = null;
@@ -297,8 +301,13 @@
                 const selected = Array.isArray(lock?.posti) ? lock.posti.length : 0;
                 if (!selected) throw new Error('Lock posti non valido o scaduto');
 
-                subtotal = (show.prezzoBase || 0) * selected;
-                credito = saldoRes?.saldo || 0;
+                const calc = await ApiClient.post('/acquisto/calcola-importo', {
+                    showId,
+                    numeroBiglietti: selected,
+                    usaCredito: false
+                });
+                applyAmountCalculation(calc);
+                credito = Number(calc?.creditoDisponibile ?? saldoRes?.saldo ?? 0);
 
                 await loadPreferredPaymentMethod();
                 renderMethodList();
@@ -312,6 +321,7 @@
 
                 document.getElementById('subtotal').textContent = subtotal.toFixed(2);
                 document.getElementById('credito').textContent = credito.toFixed(2);
+                renderBenefitSummary();
 
                 recalc();
                 startLockTimer();
@@ -458,12 +468,21 @@
                     throw new Error('Nessun posto selezionato o lock scaduto');
                 }
 
-                const subtotalServer = Number(showData?.prezzoBase || 0) * selectedSeatsCount;
                 const useWallet = selectedMethodId === 'credito_wallet';
                 useCredit = useWallet;
+                const calc = await ApiClient.post('/acquisto/calcola-importo', {
+                    showId,
+                    numeroBiglietti: selectedSeatsCount,
+                    usaCredito: useWallet
+                });
+                applyAmountCalculation(calc);
+                credito = Number(calc?.creditoDisponibile ?? credito ?? 0);
+                document.getElementById('subtotal').textContent = subtotal.toFixed(2);
+                document.getElementById('credito').textContent = credito.toFixed(2);
+                renderBenefitSummary();
 
                 if (useWallet) {
-                    if (credito < subtotalServer) {
+                    if (Number(calc?.daPagareCarta || 0) > 0) {
                         throw new Error('Credito insufficiente: ricarica il saldo o seleziona un metodo Stripe.');
                     }
                     remaining = 0;
@@ -474,7 +493,7 @@
                 }
 
                 // Credito non selezionato: si paga sempre con Stripe Checkout.
-                remaining = subtotalServer;
+                remaining = Number(calc?.daPagareCarta ?? subtotal);
 
                 document.getElementById('remaining').textContent = remaining.toFixed(2);
                 renderPaymentPanel();
@@ -544,11 +563,14 @@
 
             if (typeof Utils !== 'undefined' && Utils.addAppNotification) {
                 const amount = Number(subtotal || 0).toFixed(2);
+                const benefitText = subscriptionDiscount > 0
+                    ? ` Benefit abbonamento: -${subscriptionDiscount.toFixed(2)} EUR.`
+                    : '';
                 const ticketsUrl = `/user-biglietti.html?acquistoId=${conferma.acquistoId}&showId=${showId}`;
                 Utils.addAppNotification({
                     type: 'payment',
                     title: `Pagamento completato - ordine #${conferma.acquistoId}`,
-                    message: `${amount} EUR confermati. Apri i tuoi biglietti per QR e PDF.`,
+                    message: `${amount} EUR confermati.${benefitText} Apri i tuoi biglietti per QR e PDF.`,
                     url: ticketsUrl,
                     dedupeKey: `payment-${conferma.acquistoId}`
                 });
@@ -569,6 +591,41 @@
 
             Utils.showNotification('Acquisto confermato con successo', 'success');
             window.location.href = `/conferma-acquisto.html?acquistoId=${conferma.acquistoId}&showId=${showId}&codice=${encodeURIComponent(conferma.codiceConferma || '')}`;
+        }
+
+        function applyAmountCalculation(calc) {
+            lastAmountCalculation = calc || {};
+            grossSubtotal = Number(calc?.importoLordo ?? calc?.subtotale ?? 0);
+            subscriptionDiscount = Number(calc?.scontoAbbonamento ?? 0);
+            subtotal = Number(calc?.subtotale ?? Math.max(0, grossSubtotal - subscriptionDiscount));
+            remaining = Number(calc?.daPagareCarta ?? subtotal);
+        }
+
+        function renderBenefitSummary() {
+            const row = document.getElementById('benefit-row');
+            if (!row) return;
+            const piano = lastAmountCalculation?.pianoAbbonamento || 'Free';
+            const applied = Number(lastAmountCalculation?.ingressiAbbonamentoApplicati || 0);
+            const snack = !!lastAmountCalculation?.includeScontoSnack;
+            const message = lastAmountCalculation?.benefitMessage || '';
+            if (subscriptionDiscount <= 0 && !snack && piano === 'Free') {
+                row.classList.add('hidden');
+                row.innerHTML = '';
+                return;
+            }
+
+            row.classList.remove('hidden');
+            row.innerHTML = `
+                <div class="flex items-start gap-2">
+                    <span class="material-symbols-outlined text-base mt-0.5">workspace_premium</span>
+                    <div>
+                        <div class="font-semibold text-emerald-200">Piano ${escapeHtml(piano)}</div>
+                        <div>${escapeHtml(message || 'Benefit abbonamento applicati')}</div>
+                        ${subscriptionDiscount > 0 ? `<div>Risparmio biglietti: <strong>${subscriptionDiscount.toFixed(2)} EUR</strong> (${applied} ingresso/i incluso/i)</div>` : ''}
+                        ${snack ? '<div>Sconto snack attivo al cinema.</div>' : ''}
+                    </div>
+                </div>
+            `;
         }
 
         function startLockTimer() {
