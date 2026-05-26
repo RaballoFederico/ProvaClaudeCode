@@ -11,6 +11,7 @@
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-light.ico" media="(prefers-color-scheme: light)">
     <link rel="icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico" media="(prefers-color-scheme: dark)">
     <link rel="shortcut icon" type="image/x-icon" href="/assets/icons/favicon-dark.ico">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
     <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;400;500;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet"/>
@@ -83,6 +84,27 @@
                     </button>
                 </div>
 
+                <div id="cinema-map-panel" class="hidden grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_360px] gap-4 bg-surface-container-low border border-outline-variant/20 rounded-2xl p-4 md:p-5 shadow-2xl shadow-black/20">
+                    <div class="relative min-h-[320px] rounded-2xl overflow-hidden border border-outline-variant/20 bg-surface-container-high">
+                        <div id="cinema-map" class="absolute inset-0"></div>
+                        <div id="cinema-map-fallback" class="hidden absolute inset-0 bg-surface-container-high">
+                            <iframe id="cinema-map-fallback-frame" title="Mappa cinema selezionato" class="w-full h-full border-0" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                        </div>
+                    </div>
+                    <aside class="space-y-3">
+                        <div>
+                            <span class="badge-soft mb-3">
+                                <span class="material-symbols-outlined text-sm">map</span>
+                                Mappa sedi
+                            </span>
+                            <h3 class="text-xl font-headline text-on-surface">Dove sono i cinema</h3>
+                            <p class="text-sm text-on-surface-variant mt-1">Seleziona una sede per vedere posizione, indirizzo e indicazioni.</p>
+                        </div>
+                        <div id="cinema-map-list" class="space-y-2 max-h-[250px] overflow-y-auto pr-1"></div>
+                        <p id="cinema-map-note" class="text-xs text-on-surface-variant/80 leading-relaxed"></p>
+                    </aside>
+                </div>
+
                 <div id="cinemas-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 reveal-up delay-2">
                 </div>
                 <div id="empty-state" class="hidden bg-surface-container-low rounded-xl p-12 text-center">
@@ -113,9 +135,13 @@
     <script src="/js/api-client.js"></script>
     <!-- DOC-BLOCK: Dipendenza JS esterna/interna: abilita moduli condivisi (tema, auth, routing, utility). -->
     <script src="/js/utils.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
     <!-- DOC-BLOCK: Script inline pagina: gestisce eventi UI, stato locale e integrazione con ApiClient. -->
     <script>
         let currentCinemas = [];
+        let cinemaMap = null;
+        let cinemaMarkers = [];
+        let selectedCinemaId = null;
         const isManager = () => typeof Auth !== 'undefined' && Auth.canManageCatalog();
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -137,6 +163,7 @@
                 Utils.showLoading();
                 currentCinemas = await ApiClient.get('/cinemas');
                 renderCinemas();
+                renderCinemaMap();
             } catch (error) {
                 console.error('Error loading cinemas:', error);
                 Utils.showNotification('Errore nel caricamento dei cinema', 'error');
@@ -167,6 +194,7 @@
             grid.innerHTML = currentCinemas.map((cinema, index) => {
                 const icon = icons[index % icons.length];
                 const imageUrl = getCinemaImageUrl(cinema);
+                const hasCoordinates = hasCinemaCoordinates(cinema);
                 return `
                     <article class="group relative bg-surface-container-low rounded-xl overflow-hidden border border-outline-variant/10 hover:border-primary-container/30 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer hover-lift reveal-up"
                              style="animation-delay:${(index % 8) * 0.04}s"
@@ -198,6 +226,10 @@
                                         <span class="material-symbols-outlined text-sm">chair</span>
                                         ${cinema.postiMassimi || 0} posti massimi
                                     </p>
+                                    <p class="text-xs ${hasCoordinates ? 'text-tertiary' : 'text-on-surface-variant'} mt-1 flex items-center gap-1">
+                                        <span class="material-symbols-outlined text-sm">${hasCoordinates ? 'my_location' : 'travel_explore'}</span>
+                                        ${hasCoordinates ? 'Coordinate disponibili' : 'Mappa da indirizzo'}
+                                    </p>
                                 </div>
                             </div>
                             <div class="mt-4 flex justify-between items-center">
@@ -216,6 +248,107 @@
                     </article>
                 `;
             }).join('');
+        }
+
+        function renderCinemaMap() {
+            const panel = document.getElementById('cinema-map-panel');
+            const list = document.getElementById('cinema-map-list');
+            const note = document.getElementById('cinema-map-note');
+            const fallback = document.getElementById('cinema-map-fallback');
+            const fallbackFrame = document.getElementById('cinema-map-fallback-frame');
+            if (!panel || !list || !note) return;
+
+            if (!currentCinemas.length) {
+                panel.classList.add('hidden');
+                return;
+            }
+
+            panel.classList.remove('hidden');
+            if (!selectedCinemaId || !currentCinemas.some(cinema => cinema.id === selectedCinemaId)) {
+                selectedCinemaId = currentCinemas[0].id;
+            }
+
+            list.innerHTML = currentCinemas.map(cinema => `
+                <button type="button"
+                        onclick="selectCinemaOnMap(${cinema.id})"
+                        class="w-full text-left rounded-xl border ${cinema.id === selectedCinemaId ? 'border-primary-container/60 bg-primary-container/10' : 'border-outline-variant/20 bg-surface-container-high/70 hover:bg-surface-container-high'} p-3 transition-colors">
+                    <span class="block text-sm font-headline text-on-surface">${escapeHtml(cinema.nome)}</span>
+                    <span class="mt-1 flex items-center gap-1 text-xs text-on-surface-variant">
+                        <span class="material-symbols-outlined text-sm">location_on</span>
+                        ${escapeHtml(formatCinemaAddress(cinema))}
+                    </span>
+                </button>
+            `).join('');
+
+            const selected = currentCinemas.find(cinema => cinema.id === selectedCinemaId) || currentCinemas[0];
+            const cinemasWithCoordinates = currentCinemas.filter(hasCinemaCoordinates);
+            const canUseLeaflet = typeof L !== 'undefined' && cinemasWithCoordinates.length > 0;
+
+            if (canUseLeaflet) {
+                fallback?.classList.add('hidden');
+                renderLeafletMap(cinemasWithCoordinates, selected);
+                const missingCount = currentCinemas.length - cinemasWithCoordinates.length;
+                note.textContent = missingCount > 0
+                    ? `${cinemasWithCoordinates.length} cinema con coordinate precise. Gli altri restano apribili tramite indirizzo.`
+                    : 'Tutti i cinema hanno coordinate precise.';
+                return;
+            }
+
+            if (cinemaMap) {
+                cinemaMap.remove();
+                cinemaMap = null;
+                cinemaMarkers = [];
+            }
+
+            if (fallback && fallbackFrame) {
+                fallback.classList.remove('hidden');
+                fallbackFrame.src = buildGoogleMapEmbedUrl(selected);
+            }
+            note.textContent = 'Coordinate non ancora disponibili: mostro la mappa cercando indirizzo e citta.';
+        }
+
+        function renderLeafletMap(cinemasWithCoordinates, selected) {
+            const mapElement = document.getElementById('cinema-map');
+            if (!mapElement) return;
+
+            if (!cinemaMap) {
+                cinemaMap = L.map(mapElement, {
+                    scrollWheelZoom: false
+                });
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '&copy; OpenStreetMap'
+                }).addTo(cinemaMap);
+            }
+
+            cinemaMarkers.forEach(marker => marker.remove());
+            cinemaMarkers = cinemasWithCoordinates.map(cinema => {
+                const marker = L.marker([Number(cinema.latitudine), Number(cinema.longitudine)])
+                    .addTo(cinemaMap)
+                    .bindPopup(`
+                        <strong>${escapeHtml(cinema.nome)}</strong><br>
+                        ${escapeHtml(formatCinemaAddress(cinema))}<br>
+                        <a href="${buildMapDirectionsUrl(cinema)}" target="_blank" rel="noopener">Apri indicazioni</a>
+                    `);
+                marker.on('click', () => {
+                    selectedCinemaId = cinema.id;
+                    renderCinemaMap();
+                });
+                return marker;
+            });
+
+            const target = hasCinemaCoordinates(selected) ? selected : cinemasWithCoordinates[0];
+            cinemaMap.setView([Number(target.latitudine), Number(target.longitudine)], cinemasWithCoordinates.length > 1 ? 10 : 15);
+            if (cinemasWithCoordinates.length > 1) {
+                const bounds = L.latLngBounds(cinemasWithCoordinates.map(cinema => [Number(cinema.latitudine), Number(cinema.longitudine)]));
+                cinemaMap.fitBounds(bounds, { padding: [35, 35], maxZoom: 14 });
+            }
+            setTimeout(() => cinemaMap.invalidateSize(), 80);
+        }
+
+        function selectCinemaOnMap(id) {
+            selectedCinemaId = id;
+            renderCinemaMap();
         }
 
         function openDetailModal(id) {
@@ -260,7 +393,20 @@
                         <p class="font-mono text-on-surface">C-${String(cinema.id).padStart(3, '0')}</p>
                     </div>
 
+                    <div class="rounded-2xl overflow-hidden border border-outline-variant/20 bg-surface-container-high">
+                        <iframe
+                            title="Mappa ${escapeHtml(cinema.nome)}"
+                            src="${buildGoogleMapEmbedUrl(cinema)}"
+                            class="w-full h-64 border-0"
+                            loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
+
                     <div class="flex flex-wrap gap-3 pt-1">
+                        <a href="${buildMapDirectionsUrl(cinema)}" target="_blank" rel="noopener" class="inline-flex items-center gap-2 px-4 py-2 bg-tertiary-container hover:bg-tertiary-container/80 text-white rounded-lg font-semibold transition-colors">
+                            <span class="material-symbols-outlined text-base">directions</span>
+                            Apri mappa
+                        </a>
                         <a href="proiezioni-pubblico.html" class="inline-flex items-center gap-2 px-4 py-2 bg-primary-container hover:bg-[#c0000c] text-white rounded-lg font-semibold transition-colors">
                             <span class="material-symbols-outlined text-base">event</span>
                             Vedi Programmazione
@@ -305,6 +451,16 @@
                             <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">URL Foto Cinema</label>
                             <input type="url" name="imageUrl" placeholder="https://..." class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
                         </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Latitudine</label>
+                                <input type="number" name="latitudine" step="0.000001" min="-90" max="90" placeholder="45.4642" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                            </div>
+                            <div>
+                                <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Longitudine</label>
+                                <input type="number" name="longitudine" step="0.000001" min="-180" max="180" placeholder="9.1900" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                            </div>
+                        </div>
                     </div>
                     <div class="flex justify-end gap-3 mt-6">
                         <button type="button" onclick="closeModal()" class="px-4 py-2 text-on-surface-variant hover:bg-surface-container-high rounded-lg transition-colors">Annulla</button>
@@ -346,6 +502,16 @@
                             <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">URL Foto Cinema</label>
                             <input type="url" name="imageUrl" value="${escapeHtml(cinema.imageUrl || '')}" placeholder="https://..." class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
                         </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Latitudine</label>
+                                <input type="number" name="latitudine" step="0.000001" min="-90" max="90" value="${cinema.latitudine ?? ''}" placeholder="45.4642" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                            </div>
+                            <div>
+                                <label class="block text-xs uppercase tracking-widest text-on-surface-variant mb-2">Longitudine</label>
+                                <input type="number" name="longitudine" step="0.000001" min="-180" max="180" value="${cinema.longitudine ?? ''}" placeholder="9.1900" class="w-full bg-surface-container-highest border-none rounded-lg px-4 py-3 text-on-surface focus:ring-1 focus:ring-primary">
+                            </div>
+                        </div>
                     </div>
                     <input type="hidden" name="id" value="${id}">
                     <div class="flex justify-end gap-3 mt-6">
@@ -363,12 +529,20 @@
                 return;
             }
             const form = event.target;
-            const id = form.id?.value;
+            const id = form.elements.id?.value;
+            const latitudine = parseNullableDecimal(form.latitudine?.value);
+            const longitudine = parseNullableDecimal(form.longitudine?.value);
+            if ((latitudine !== null && (latitudine < -90 || latitudine > 90)) || (longitudine !== null && (longitudine < -180 || longitudine > 180))) {
+                Utils.showNotification('Coordinate non valide: controlla latitudine e longitudine', 'error');
+                return;
+            }
             const data = {
                 nome: form.nome.value,
                 indirizzo: form.indirizzo.value,
                 citta: form.citta.value,
                 postiMassimi: parseInt(form.postiMassimi.value, 10) || 0,
+                latitudine,
+                longitudine,
                 imageUrl: (form.imageUrl?.value || '').trim() || null
             };
 
@@ -440,6 +614,36 @@
             const seedBase = `${cinema?.nome || 'cinema'}-${cinema?.citta || 'italia'}`.toLowerCase();
             const safeSeed = seedBase.replace(/[^a-z0-9-]/g, '-');
             return `https://picsum.photos/seed/${safeSeed}/1200/800`;
+        }
+
+        function parseNullableDecimal(value) {
+            const normalized = String(value || '').trim().replace(',', '.');
+            if (!normalized) return null;
+            const parsed = Number(normalized);
+            return Number.isFinite(parsed) ? parsed : null;
+        }
+
+        function hasCinemaCoordinates(cinema) {
+            return Number.isFinite(Number(cinema?.latitudine)) && Number.isFinite(Number(cinema?.longitudine));
+        }
+
+        function formatCinemaAddress(cinema) {
+            return [cinema?.indirizzo, cinema?.citta].filter(Boolean).join(', ');
+        }
+
+        function buildMapQuery(cinema) {
+            if (hasCinemaCoordinates(cinema)) {
+                return `${cinema.latitudine},${cinema.longitudine}`;
+            }
+            return formatCinemaAddress(cinema) || cinema?.nome || 'cinema';
+        }
+
+        function buildGoogleMapEmbedUrl(cinema) {
+            return `https://www.google.com/maps?q=${encodeURIComponent(buildMapQuery(cinema))}&output=embed`;
+        }
+
+        function buildMapDirectionsUrl(cinema) {
+            return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(buildMapQuery(cinema))}`;
         }
     </script>
 </body>
