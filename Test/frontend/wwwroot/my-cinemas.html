@@ -186,7 +186,7 @@
             }
 
             grid.innerHTML = filtered.map((c, index) => `
-                <article class="app-card border ${selectedCinemaId === c.id ? 'border-primary-container/60' : 'border-outline-variant/20'} overflow-hidden hover-lift reveal-up" style="animation-delay:${(index % 8) * 0.04}s">
+                <article class="app-card border ${selectedCinemaId === c.id ? 'border-primary-container/60' : 'border-outline-variant/20'} overflow-hidden hover-lift reveal-up cursor-pointer" style="animation-delay:${(index % 8) * 0.04}s" data-action="open-detail" data-cinema-id="${c.id}">
                     <div class="h-28 relative overflow-hidden">
                         <img
                             src="${getCinemaImageUrl(c)}"
@@ -204,7 +204,6 @@
                         <div class="mt-3 text-xs text-on-surface-variant">Codice locale: ${escapeHtml(c.codiceLocale || 'N/D')}</div>
                     </div>
                     <div class="px-4 pb-4 mt-2 flex flex-wrap gap-2">
-                        <button type="button" data-action="open-detail" data-cinema-id="${c.id}" class="app-btn app-btn-secondary hover-lift">Dettagli e mappa</button>
                         <button type="button" data-action="open-programmazione" data-cinema-id="${c.id}" class="app-btn app-btn-primary hover-lift">Vedi Programmazione</button>
                         <button type="button" data-action="set-preferred" data-cinema-id="${c.id}" class="app-btn app-btn-secondary hover-lift">Imposta Preferito</button>
                     </div>
@@ -217,9 +216,9 @@
         function bindCinemaActions() {
             const grid = document.getElementById('cinemas-grid');
 
-            grid.querySelectorAll('[data-action="open-detail"]').forEach((btn) => {
-                btn.addEventListener('click', () => {
-                    const id = parseInt(btn.getAttribute('data-cinema-id') || '0');
+            grid.querySelectorAll('article[data-action="open-detail"]').forEach((card) => {
+                card.addEventListener('click', () => {
+                    const id = parseInt(card.getAttribute('data-cinema-id') || '0');
                     if (!id) return;
                     persistCinemaSelection(id);
                     window.location.assign(`/cinema-dettaglio.html?cinemaId=${id}`);
@@ -227,7 +226,8 @@
             });
 
             grid.querySelectorAll('[data-action="open-programmazione"]').forEach((btn) => {
-                btn.addEventListener('click', () => {
+                btn.addEventListener('click', (event) => {
+                    event.stopPropagation();
                     const id = parseInt(btn.getAttribute('data-cinema-id') || '0');
                     if (!id) return;
                     persistCinemaSelection(id);
@@ -236,7 +236,8 @@
             });
 
             grid.querySelectorAll('[data-action="set-preferred"]').forEach((btn) => {
-                btn.addEventListener('click', async () => {
+                btn.addEventListener('click', async (event) => {
+                    event.stopPropagation();
                     const id = parseInt(btn.getAttribute('data-cinema-id') || '0');
                     if (!id) return;
                     await setPreferredCinema(id);
