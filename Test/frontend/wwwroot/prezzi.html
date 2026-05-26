@@ -242,9 +242,23 @@
                     .join('');
                 select.innerHTML = `<option value="">Seleziona cinema...</option>${options}`;
 
-                const preferred = Number(localStorage.getItem('selectedCinema') || 0);
-                if (preferred && cinemas.some((c) => Number(c.id) === preferred)) {
-                    select.value = String(preferred);
+                let preferredCinemaId = 0;
+
+                if (typeof Auth !== 'undefined' && typeof Auth.isAuthenticated === 'function' && Auth.isAuthenticated()) {
+                    try {
+                        const pref = await ApiClient.get('/user/cinema-preferito');
+                        preferredCinemaId = Number(pref?.cinemaId || 0);
+                    } catch {
+                        preferredCinemaId = 0;
+                    }
+                }
+
+                if (!preferredCinemaId) {
+                    preferredCinemaId = Number(localStorage.getItem('selectedCinema') || 0);
+                }
+
+                if (preferredCinemaId && cinemas.some((c) => Number(c.id) === preferredCinemaId)) {
+                    select.value = String(preferredCinemaId);
                     await onCinemaChanged();
                 }
             } catch {
