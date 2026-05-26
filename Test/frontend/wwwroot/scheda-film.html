@@ -317,7 +317,10 @@
 
         async function loadRatingsSummary() {
             try {
-                ratingSummary = await ApiClient.get(`/films/${filmId}/ratings/summary`);
+                ratingSummary = await ApiClient.request(`/films/${filmId}/ratings/summary`, {
+                    method: 'GET',
+                    bypassCache: true
+                });
             } catch {
                 ratingSummary = null;
             }

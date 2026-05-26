@@ -194,7 +194,7 @@
                     const importoTotale = Number(a.importoTotale || 0);
                     const cartaUsata = Math.max(0, importoTotale - creditoUsato);
                     const pagamentoMisto = creditoUsato > 0 && cartaUsata > 0;
-                    const canRefund = String(a.stato || '').toUpperCase() === 'PAGATO';
+                    const canRefund = Boolean(a.rimborsoDisponibile);
                     return `
                         <div class="rounded-xl border border-outline-variant/20 bg-surface-container-high p-3 text-sm flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                             <div class="text-on-surface-variant">Acquisto #${a.id} - ${new Date(a.dataAcquisto).toLocaleDateString('it-IT')}</div>
@@ -204,7 +204,7 @@
                             <div class="text-on-surface-variant">${pagamentoMisto ? `Misto: credito ${creditoUsato.toFixed(2)} EUR + carta ${cartaUsata.toFixed(2)} EUR` : (creditoUsato > 0 ? `Pagato con credito: ${creditoUsato.toFixed(2)} EUR` : `Pagato con carta: ${cartaUsata.toFixed(2)} EUR`)}</div>
                             <div class="flex items-center gap-2">
                                 <button type="button" onclick="downloadAcquistoPdf(${a.id})" class="px-3 py-2 bg-surface-container border border-outline-variant/40 text-on-surface rounded-lg text-xs hover-lift">Scarica PDF</button>
-                                ${canRefund ? `<button type="button" onclick="richiediRimborso(${a.id})" class="px-3 py-2 bg-amber-500/20 border border-amber-400/40 text-amber-200 rounded-lg text-xs hover-lift">Richiedi rimborso</button>` : ''}
+                                ${canRefund ? `<button type="button" onclick="richiediRimborso(${a.id})" class="px-3 py-2 bg-amber-500/20 border border-amber-400/40 text-amber-200 rounded-lg text-xs hover-lift">Richiedi rimborso</button>` : `<span class="text-xs text-on-surface-variant">Rimborso non disponibile</span>`}
                             </div>
                         </div>
                     `;

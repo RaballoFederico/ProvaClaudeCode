@@ -86,6 +86,7 @@ public static class UserEndpoints
         {
             var userId = GetUserId(context);
             if (userId == null) return Results.Unauthorized();
+            var now = DateTime.Now;
             var acquisti = await db.Acquisti
                 .Where(a => a.UtenteId == userId.Value)
                 .OrderByDescending(a => a.DataAcquisto)
@@ -100,10 +101,28 @@ public static class UserEndpoints
                     a.MetodoPagamentoSalvato,
                     Stato = a.Stato.ToString(),
                     a.CodiceConferma,
-                    a.ShowId
+                    a.ShowId,
+                    ShowData = a.Show.Data,
+                    ShowOra = a.Show.OraInizio,
+                    HasBigliettiValidati = a.Biglietti.Any(b => b.Validato)
                 })
                 .ToListAsync();
-            return Results.Ok(acquisti);
+            return Results.Ok(acquisti.Select(a => new
+            {
+                a.Id,
+                a.DataAcquisto,
+                a.ImportoTotale,
+                a.CreditoUsato,
+                a.MetodoPagamento,
+                a.MetodoPagamentoEtichetta,
+                a.MetodoPagamentoSalvato,
+                a.Stato,
+                a.CodiceConferma,
+                a.ShowId,
+                RimborsoDisponibile = string.Equals(a.Stato, StatoAcquisto.PAGATO.ToString(), StringComparison.OrdinalIgnoreCase)
+                                     && !a.HasBigliettiValidati
+                                     && a.ShowData.ToDateTime(a.ShowOra) > now
+            }));
         });
 
         group.MapGet("/payment-preference", async (HttpContext context, FilmDbContext db) =>

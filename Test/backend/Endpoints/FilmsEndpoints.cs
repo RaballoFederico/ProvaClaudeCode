@@ -1039,14 +1039,35 @@ public static class FilmsEndpoints
         public string? Commento { get; set; }
     }
 
-    private static Task<bool> UserCanRateFilmAsync(FilmDbContext db, int userId, int filmId)
+    private static async Task<bool> UserCanRateFilmAsync(FilmDbContext db, int userId, int filmId)
     {
-        return db.Acquisti
+        var purchasedExactFilm = await db.Acquisti
             .AsNoTracking()
             .AnyAsync(a =>
                 a.UtenteId == userId &&
-                a.Stato == StatoAcquisto.PAGATO &&
+                (a.Stato == StatoAcquisto.PAGATO || a.Stato == StatoAcquisto.REFUNDED) &&
                 a.Show.FilmId == filmId);
+        if (purchasedExactFilm) return true;
+
+        // Fallback robusto: se esistono duplicati del film con stesso titolo normalizzato,
+        // abilitiamo il voto anche quando l'acquisto e legato a un ID gemello.
+        var currentFilm = await db.Films
+            .AsNoTracking()
+            .Where(f => f.Id == filmId)
+            .Select(f => new { f.Id, f.Titolo })
+            .FirstOrDefaultAsync();
+        if (currentFilm is null || string.IsNullOrWhiteSpace(currentFilm.Titolo)) return false;
+
+        var normalizedTitle = NormalizeFilmTitleKey(currentFilm.Titolo);
+        if (string.IsNullOrWhiteSpace(normalizedTitle)) return false;
+
+        var purchasedTitles = await db.Acquisti
+            .AsNoTracking()
+            .Where(a => a.UtenteId == userId && (a.Stato == StatoAcquisto.PAGATO || a.Stato == StatoAcquisto.REFUNDED))
+            .Select(a => a.Show.Film != null ? a.Show.Film.Titolo : string.Empty)
+            .ToListAsync();
+
+        return purchasedTitles.Any(title => NormalizeFilmTitleKey(title ?? string.Empty) == normalizedTitle);
     }
 
     private static List<T> DeduplicateByTitle<T>(

@@ -147,6 +147,36 @@ public static class DashboardEndpoints
             var currentWeekTotal = decimal.Round(revenueSeries.Sum(x => x.amount), 2);
             var previousWeekStart = revenueStart.AddDays(-range.LengthDays);
             var previousWeekEnd = revenueStart;
+            var previousPaidPurchases = await db.Acquisti
+                .AsNoTracking()
+                .Where(a =>
+                    a.Stato == Model.StatoAcquisto.PAGATO &&
+                    a.DataAcquisto >= previousWeekStart &&
+                    a.DataAcquisto < previousWeekEnd)
+                .Select(a => new
+                {
+                    a.DataAcquisto,
+                    a.ImportoTotale
+                })
+                .ToListAsync();
+            var previousSeries = range.Buckets.Select(bucket =>
+            {
+                var offsetDays = (bucket.Start.Date - revenueStart.Date).Days;
+                var prevBucketStart = previousWeekStart.AddDays(offsetDays);
+                var prevBucketEnd = prevBucketStart.AddDays((bucket.End.Date - bucket.Start.Date).Days);
+                if (prevBucketEnd > previousWeekEnd) prevBucketEnd = previousWeekEnd;
+                var amount = previousPaidPurchases
+                    .Where(a => a.DataAcquisto >= prevBucketStart && a.DataAcquisto < prevBucketEnd)
+                    .Sum(a => a.ImportoTotale);
+
+                return new
+                {
+                    date = prevBucketStart.ToString("yyyy-MM-dd"),
+                    label = bucket.Label,
+                    amount = decimal.Round(amount, 2)
+                };
+            }).ToList();
+
             var previousWeekTotal = decimal.Round(await db.Acquisti
                 .AsNoTracking()
                 .Where(a =>
@@ -217,6 +247,7 @@ public static class DashboardEndpoints
                     label = range.Label,
                     days = range.LengthDays,
                     series = revenueSeries,
+                    previousSeries,
                     currentWeekTotal,
                     previousWeekTotal,
                     delta,

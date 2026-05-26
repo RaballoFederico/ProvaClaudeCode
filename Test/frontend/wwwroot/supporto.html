@@ -163,11 +163,20 @@
                 }
 
                 const payload = {
-                    oggetto: document.getElementById('support-subject').value,
+                    oggetto: String(document.getElementById('support-subject').value || '').trim(),
                     categoria: document.getElementById('support-category').value,
                     priorita: document.getElementById('support-priority').value,
-                    messaggio: document.getElementById('support-message').value
+                    messaggio: String(document.getElementById('support-message').value || '').trim()
                 };
+                if (!payload.messaggio) {
+                    feedback.classList.remove('hidden');
+                    feedback.className = 'mt-2 text-xs text-red-300';
+                    feedback.textContent = 'Inserisci un messaggio per aprire il ticket.';
+                    return;
+                }
+                if (!payload.oggetto) {
+                    payload.oggetto = `Richiesta supporto - ${payload.categoria}`;
+                }
 
                 try {
                     await ApiClient.post('/support/tickets', payload);
@@ -179,7 +188,7 @@
                 } catch (error) {
                     feedback.classList.remove('hidden');
                     feedback.className = 'mt-2 text-xs text-red-300';
-                    feedback.textContent = error?.message || 'Errore durante invio ticket.';
+                    feedback.textContent = error?.message || error?.response?.message || 'Errore durante invio ticket.';
                 }
             });
         }

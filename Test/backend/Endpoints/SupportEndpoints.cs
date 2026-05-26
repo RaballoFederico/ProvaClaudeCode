@@ -69,8 +69,15 @@ public static class SupportEndpoints
             var userId = GetUserId(context);
             if (userId is null) return Results.Unauthorized();
 
-            var oggetto = Normalize(request.Oggetto, 160);
-            var messaggio = Normalize(request.Messaggio, 4000);
+            var oggetto = Normalize(request.Oggetto ?? request.Subject ?? request.Title, 160);
+            var messaggio = Normalize(request.Messaggio ?? request.Message ?? request.Body, 4000);
+            var categoriaRaw = request.Categoria ?? request.Category;
+            var prioritaRaw = request.Priorita ?? request.Priority;
+
+            if (string.IsNullOrWhiteSpace(oggetto) && !string.IsNullOrWhiteSpace(messaggio))
+            {
+                oggetto = $"Richiesta supporto - {Normalize(categoriaRaw, 40) ?? "Altro"}";
+            }
             if (string.IsNullOrWhiteSpace(oggetto) || string.IsNullOrWhiteSpace(messaggio))
             {
                 return Results.BadRequest(new { message = "Oggetto e messaggio sono obbligatori." });
@@ -81,8 +88,8 @@ public static class SupportEndpoints
             {
                 UtenteId = userId.Value,
                 Oggetto = oggetto,
-                Categoria = ParseEnum(request.Categoria, SupportTicketCategory.Altro),
-                Priorita = ParseEnum(request.Priorita, SupportTicketPriority.Media),
+                Categoria = ParseEnum(categoriaRaw, SupportTicketCategory.Altro),
+                Priorita = ParseEnum(prioritaRaw, SupportTicketPriority.Media),
                 Stato = SupportTicketStatus.Aperto,
                 CreatoIl = now,
                 AggiornatoIl = now,
@@ -306,9 +313,15 @@ public static class SupportEndpoints
     private sealed class CreateSupportTicketRequest
     {
         public string? Oggetto { get; set; }
+        public string? Subject { get; set; }
+        public string? Title { get; set; }
         public string? Categoria { get; set; }
+        public string? Category { get; set; }
         public string? Priorita { get; set; }
+        public string? Priority { get; set; }
         public string? Messaggio { get; set; }
+        public string? Message { get; set; }
+        public string? Body { get; set; }
     }
 
     private sealed class AddSupportMessageRequest
