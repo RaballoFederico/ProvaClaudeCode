@@ -1285,6 +1285,7 @@ a {
 .footer-shell {
     overflow: hidden;
     position: relative;
+    border-top-color: transparent !important;
 }
 
 .footer-shell::before {
