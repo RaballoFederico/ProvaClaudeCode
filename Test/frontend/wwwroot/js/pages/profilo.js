@@ -725,6 +725,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     const params = new URLSearchParams(window.location.search);
+    document.getElementById('profile-logout-btn')?.addEventListener('click', async () => {
+        const shouldLogout = await Utils.confirmDialog('Vuoi davvero disconnetterti dal sito?');
+        if (!shouldLogout) return;
+        await Auth.logout();
+    });
+
     /* DOC-FN: 'if' gestisce logica applicativa locale (input, stato UI, chiamate API o trasformazioni dati). */
     if (params.get('edit') === '1') {
         const openEdit = () => {
