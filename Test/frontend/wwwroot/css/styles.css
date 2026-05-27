@@ -1285,13 +1285,14 @@ a {
 .footer-shell {
     overflow: hidden;
     position: relative;
-    border-top-color: transparent !important;
-    border-top-width: 0 !important;
+    background: color-mix(in srgb, var(--surface) 88%, transparent) !important;
+    border: 1px solid color-mix(in srgb, var(--outline) 78%, transparent) !important;
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
+    box-shadow: 0 16px 28px -22px rgba(0, 0, 0, 0.52) !important;
 }
 
-.footer-shell.bg-surface-container::after {
+.footer-shell::after {
     display: none !important;
 }
 
